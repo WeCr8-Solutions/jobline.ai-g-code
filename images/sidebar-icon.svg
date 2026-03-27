@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
   <!-- JobLine "JL" monogram — bold, clean, legible at 24 px activity bar size -->
-  <!-- J: vertical stem -->
-  <rect x="0.5" y="1" width="3" height="9.5"/>
-  <!-- J: bottom hook — quarter-circle curving right              -->
+  <!-- J: vertical stem (right side of J space) -->
+  <rect x="4" y="1" width="3" height="9.5"/>
+  <!-- J: bottom hook — quarter-circle curving left               -->
   <!--   circle center (4, 10.5), r=3.5                           -->
-  <!--   start = right-most point (7.5, 10.5)                     -->
-  <!--   end   = bottom point     (4, 14)     CW sweep=1          -->
-  <path d="M7.5,10.5 A3.5,3.5 0 0,1 4,14 L0.5,14 L0.5,10.5 Z"/>
+  <!--   start = left-most point (0.5, 10.5)                      -->
+  <!--   end   = bottom point    (4, 14)     CCW sweep=0          -->
+  <path d="M0.5,10.5 A3.5,3.5 0 0,0 4,14 L7,14 L7,10.5 Z"/>
   <!-- L: vertical stem -->
-  <rect x="9.5" y="1" width="3" height="12.5"/>
+  <rect x="9" y="1" width="3" height="12.5"/>
   <!-- L: horizontal base -->
-  <rect x="9.5" y="11" width="6" height="2.5"/>
+  <rect x="9" y="11" width="6.5" height="2.5"/>
 </svg>
