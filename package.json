@@ -3,7 +3,7 @@
   "displayName": "JobLine G-Code Intelligence",
   "description": "Deep G-code intelligence for CNC machinists — syntax highlighting, hover tooltips, canned cycle detection, Macro B evaluation, and live sidebar views for Fanuc, Haas, Siemens, Mazak, and Okuma controls.",
   "version": "0.1.0",
-  "publisher": "wecr8",
+  "publisher": "WeCr8-Solutions",
   "license": "MIT",
   "author": {
     "name": "WeCr8 Solutions, LLC",
