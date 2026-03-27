@@ -71,13 +71,15 @@ function buildModelFromActiveDocument(): ProgramModel | null {
   const editor = vscode.window.activeTextEditor;
   if (!isGCodeDocument(editor?.document)) return null;
 
+  const text = editor?.document.getText();
+  if (!text) return null;
+
   try {
     const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
-    const tokenized = tokenizer.tokenizeDocument(editor!.document.getText());
+    const tokenized = tokenizer.tokenizeDocument(text);
     const blocks = blockParser.parseDocument(tokenized);
     return modelBuilder.build(blocks, controlType);
-  } catch (error) {
-    console.error('JobLine sidebar parse failed:', error);
+  } catch {
     return null;
   }
 }

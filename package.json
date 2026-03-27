@@ -1,12 +1,26 @@
 {
   "name": "jobline-gcode",
   "displayName": "JobLine G-Code Intelligence",
-  "description": "Deep G-code intelligence with DNC machine connectivity — canned cycle validation, Macro B evaluation, crash-prevention safety checks, and CNC file management for Fanuc, Haas, Siemens, Mazak, and Okuma controls.",
+  "description": "Deep G-code intelligence for CNC machinists — syntax highlighting, hover tooltips, canned cycle detection, Macro B evaluation, and live sidebar views for Fanuc, Haas, Siemens, Mazak, and Okuma controls.",
   "version": "0.1.0",
   "publisher": "wecr8",
+  "license": "MIT",
+  "author": {
+    "name": "WeCr8 Solutions, LLC",
+    "url": "https://github.com/WeCr8-Solutions"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/WeCr8-Solutions/jobline.ai-g-code.git"
+  },
+  "homepage": "https://github.com/WeCr8-Solutions/jobline.ai-g-code#readme",
+  "bugs": {
+    "url": "https://github.com/WeCr8-Solutions/jobline.ai-g-code/issues"
+  },
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#161B33",
+    "theme": "dark"
   },
   "engines": {
     "vscode": "^1.85.0"
@@ -26,7 +40,12 @@
     "siemens",
     "mazak",
     "okuma",
-    "machining"
+    "machining",
+    "nc",
+    "canned cycle",
+    "macro b",
+    "mill",
+    "lathe"
   ],
   "main": "./out/src/extension.js",
   "contributes": {

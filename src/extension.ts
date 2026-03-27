@@ -13,8 +13,6 @@ import { registerSidebarTreeProviders } from './providers/sidebarTreeProviders';
 const LANGUAGE_ID = 'gcode';
 
 export function activate(context: vscode.ExtensionContext): void {
-  console.log('JobLine G-Code Intelligence activating...');
-
   // Register static sidebar trees so contributed views always have data providers.
   registerSidebarTreeProviders(context);
 
@@ -22,7 +20,6 @@ export function activate(context: vscode.ExtensionContext): void {
   const config = loadConfig(
     (key: string) => vscode.workspace.getConfiguration().get(key)
   );
-  console.log(`JobLine: Control type = ${config.controlType}, Machine = ${config.machineType}`);
 
   // =========================================================================
   // Register Hover Provider
@@ -110,16 +107,14 @@ export function activate(context: vscode.ExtensionContext): void {
           (key: string) => vscode.workspace.getConfiguration().get(key)
         );
         updateStatusBar(controlStatusBar, newConfig.controlType);
-        console.log(`JobLine: Config updated — ${newConfig.controlType}`);
       }
     })
   );
 
-  console.log('JobLine G-Code Intelligence activated.');
 }
 
 export function deactivate(): void {
-  console.log('JobLine G-Code Intelligence deactivated.');
+  // intentionally empty — VS Code disposes subscriptions automatically
 }
 
 // =============================================================================
