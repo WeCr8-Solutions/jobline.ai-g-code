@@ -1,12 +1,17 @@
 .vscode/**
 .vscode-test/**
+.codacy/**
+.github/**
+.eslintrc.js
 src/**
 test/**
 bridges/**
+docs/**
 out/test/**
 **/*.ts
 **/*.map
 .gitignore
 tsconfig.json
 *.md
+*.code-workspace
 node_modules/**

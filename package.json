@@ -4,6 +4,10 @@
   "description": "Deep G-code intelligence with DNC machine connectivity — canned cycle validation, Macro B evaluation, crash-prevention safety checks, and CNC file management for Fanuc, Haas, Siemens, Mazak, and Okuma controls.",
   "version": "0.1.0",
   "publisher": "wecr8",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WeCr8-Solutions/jobline.ai-g-code.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
