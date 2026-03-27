@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "C:/Users/Zach/Downloads/files/jobline-gcode/jobline-gcode/.vscode"
+		},
+		{
+			"path": "C:/Users/Zach/Downloads/files/jobline-gcode/jobline-gcode/src"
+		},
+		{
+			"path": "C:/Users/Zach/Downloads/files/jobline-gcode/jobline-gcode/test"
+		},
+		{
+			"path": "C:/Users/Zach/Downloads/files/jobline-gcode/jobline-gcode/data"
+		},
+		{
+			"path": "C:/Users/Zach/Downloads/files/jobline-gcode/jobline-gcode/syntaxes"
+		},
+		{
+			"path": "C:/Users/Zach/Downloads/files/jobline-gcode/jobline-gcode/{syntaxes,src"
+		}
+	],
+	"settings": {}
+}

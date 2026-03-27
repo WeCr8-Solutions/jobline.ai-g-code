@@ -1,8 +1,8 @@
 {
   "name": "jobline-gcode",
   "displayName": "JobLine G-Code Intelligence",
-  "description": "Deep G-code intelligence for CNC machinists — syntax highlighting, hover tooltips, canned cycle detection, Macro B evaluation, and live sidebar views for Fanuc, Haas, Siemens, Mazak, and Okuma controls.",
-  "version": "0.2.0",
+  "description": "Deep G-code and robot-program intelligence for CNC machinists and automation engineers — syntax highlighting, hover tooltips, canned cycle & probing detection, Macro B evaluation, Fanuc/Haas/Siemens/Mazak/Okuma CNC dialects, Fanuc Robot TP, and ABB RAPID.",
+  "version": "0.3.0",
   "publisher": "WeCr8-Solutions",
   "license": "MIT",
   "author": {
@@ -36,10 +36,14 @@
     "cnc",
     "dnc",
     "fanuc",
+    "fanuc robot",
     "haas",
     "siemens",
     "mazak",
     "okuma",
+    "abb",
+    "rapid",
+    "robot",
     "machining",
     "nc",
     "canned cycle",
@@ -69,11 +73,46 @@
           ".min"
         ],
         "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "fanuc-tp",
+        "aliases": [
+          "Fanuc TP",
+          "Fanuc Robot",
+          "LS Program"
+        ],
+        "extensions": [
+          ".ls",
+          ".tp"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "abb-rapid",
+        "aliases": [
+          "ABB RAPID",
+          "RAPID"
+        ],
+        "extensions": [
+          ".mod",
+          ".pgf"
+        ],
+        "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
       {
         "language": "gcode",
+        "scopeName": "source.gcode",
+        "path": "./syntaxes/gcode.tmLanguage.json"
+      },
+      {
+        "language": "fanuc-tp",
+        "scopeName": "source.gcode",
+        "path": "./syntaxes/gcode.tmLanguage.json"
+      },
+      {
+        "language": "abb-rapid",
         "scopeName": "source.gcode",
         "path": "./syntaxes/gcode.tmLanguage.json"
       }
@@ -89,16 +128,20 @@
             "haas",
             "siemens",
             "mazak",
-            "okuma"
+            "okuma",
+            "fanuc-robot",
+            "abb"
           ],
           "enumDescriptions": [
-            "Fanuc 0i / 30i / 31i series",
+            "Fanuc 0i / 30i / 31i CNC series",
             "Haas NGC controls",
             "Siemens Sinumerik 840D / 828D",
             "Mazak Smooth / Matrix controls",
-            "Okuma OSP-P controls"
+            "Okuma OSP-P controls",
+            "Fanuc Robot — TP / LS teach-pendant programs",
+            "ABB Robot — RAPID .mod programs"
           ],
-          "description": "CNC control type for dialect-specific parsing and validation."
+          "description": "CNC or robot control dialect for dialect-specific parsing and validation."
         },
         "jobline.machineType": {
           "type": "string",
@@ -164,7 +207,7 @@
     "commands": [
       {
         "command": "jobline.selectControl",
-        "title": "JobLine: Select CNC Control Type"
+        "title": "JobLine: Select CNC / Robot Control Type"
       },
       {
         "command": "jobline.validateProgram",
@@ -199,12 +242,40 @@
         "title": "JobLine Toolbox: Uppercase G/M Codes"
       },
       {
+        "command": "jobline.toolbox.removeDwells",
+        "title": "JobLine Toolbox: Remove All Dwells (G04/G4)"
+      },
+      {
         "command": "jobline.toolbox.addBlockSkip",
         "title": "JobLine Toolbox: Add Block Skip (/)"
       },
       {
         "command": "jobline.toolbox.removeBlockSkip",
         "title": "JobLine Toolbox: Remove Block Skip (/)"
+      },
+      {
+        "command": "jobline.toolbox.scaleFeedRates",
+        "title": "JobLine Toolbox: Scale Feed Rates"
+      },
+      {
+        "command": "jobline.toolbox.scaleSpindleSpeeds",
+        "title": "JobLine Toolbox: Scale Spindle Speeds"
+      },
+      {
+        "command": "jobline.toolbox.clampFeedRates",
+        "title": "JobLine Toolbox: Clamp Maximum Feed Rate"
+      },
+      {
+        "command": "jobline.toolbox.shiftX",
+        "title": "JobLine Toolbox: Shift X Axis"
+      },
+      {
+        "command": "jobline.toolbox.shiftY",
+        "title": "JobLine Toolbox: Shift Y Axis"
+      },
+      {
+        "command": "jobline.toolbox.shiftZ",
+        "title": "JobLine Toolbox: Shift Z Axis"
       },
       {
         "command": "jobline.toolbox.addSafetyHeader",
@@ -217,8 +288,64 @@
       {
         "command": "jobline.toolbox.removeBlankLines",
         "title": "JobLine Toolbox: Remove Extra Blank Lines"
+      },
+      {
+        "command": "jobline.toolbox.insertSafeZ",
+        "title": "JobLine Toolbox: Insert Safe-Z Before Tool Changes"
+      },
+      {
+        "command": "jobline.toolbox.addCoolant",
+        "title": "JobLine Toolbox: Add Coolant On/Off (M08/M09)"
+      },
+      {
+        "command": "jobline.toolbox.addBlanksBetweenOps",
+        "title": "JobLine Toolbox: Add Blank Lines Between Operations"
+      },
+      {
+        "command": "jobline.toolbox.findNextToolChange",
+        "title": "JobLine Toolbox: Find Next Tool Change"
+      },
+      {
+        "command": "jobline.toolbox.findNextCannedCycle",
+        "title": "JobLine Toolbox: Find Next Canned Cycle"
+      },
+      {
+        "command": "jobline.tools.addToolChange",
+        "title": "Add Tool Change",
+        "icon": "$(add)"
+      },
+      {
+        "command": "jobline.tools.goToTool",
+        "title": "Go To Tool in Editor",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "jobline.tools.removeToolChange",
+        "title": "Remove Tool Change",
+        "icon": "$(trash)"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "jobline.tools.addToolChange",
+          "when": "view == jobline.toolsTree",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "jobline.tools.goToTool",
+          "when": "view == jobline.toolsTree && viewItem == toolItem",
+          "group": "inline@1"
+        },
+        {
+          "command": "jobline.tools.removeToolChange",
+          "when": "view == jobline.toolsTree && viewItem == toolItem",
+          "group": "inline@2"
+        }
+      ]
+    },
     "viewsContainers": {
       "activitybar": [
         {
@@ -258,6 +385,10 @@
         {
           "id": "jobline.alarmsTree",
           "name": "Alarms & Warnings"
+        },
+        {
+          "id": "jobline.commandsTree",
+          "name": "Commands"
         }
       ]
     }
@@ -267,7 +398,11 @@
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
     "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');\"",
+    "test:diagnostics": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/diagnostics.test.ts');\"",
+    "test:all": "npm test && npm run test:diagnostics",
     "test:typecheck": "tsc --noEmit -p tsconfig.json",
+    "qa": "npx ts-node --transpileOnly scripts/qa-runner.ts",
+    "qa:docker": "docker compose -f docker-compose.qa.yml up --build --abort-on-container-exit",
     "package": "vsce package",
     "precompile": "npm run lint"
   },

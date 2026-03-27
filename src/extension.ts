@@ -8,15 +8,33 @@
 import * as vscode from 'vscode';
 import { loadConfig } from './config';
 import { getHoverContent } from './providers/hoverProvider';
-import { registerSidebarTreeProviders } from './providers/sidebarTreeProviders';
+import { registerSidebarTreeProviders, registerToolsCommands, registerCommandsTree } from './providers/sidebarTreeProviders';
 import { openExplanationPanel } from './providers/explanationProvider';
 import { ToolboxViewProvider, registerToolboxCommands } from './providers/toolboxProvider';
+import { registerDiagnosticsProvider } from './providers/diagnosticsProvider';
+import { registerFormatter } from './providers/formatterProvider';
+import { registerSubprogramProvider } from './providers/subprogramProvider';
 
 const LANGUAGE_ID = 'gcode';
 
 export function activate(context: vscode.ExtensionContext): void {
   // Register static sidebar trees so contributed views always have data providers.
   registerSidebarTreeProviders(context);
+
+  // Register the Commands panel tree
+  registerCommandsTree(context);
+
+  // Register tools tree commands (Add / Go-To / Remove tool change)
+  registerToolsCommands(context);
+
+  // Register diagnostic squiggles provider
+  registerDiagnosticsProvider(context);
+
+  // Register G-Code formatter
+  registerFormatter(context);
+
+  // Register subprogram navigation (Go to Definition, Document Links, Workspace Symbols)
+  registerSubprogramProvider(context);
 
   // =========================================================================
   // Register Toolbox WebviewView (sidebar panel)
@@ -61,11 +79,13 @@ export function activate(context: vscode.ExtensionContext): void {
     'jobline.selectControl',
     async () => {
       const controls = [
-        { label: 'Fanuc', description: '0i / 30i / 31i series', id: 'fanuc' },
-        { label: 'Haas', description: 'NGC controls', id: 'haas' },
-        { label: 'Siemens', description: 'Sinumerik 840D / 828D', id: 'siemens' },
-        { label: 'Mazak', description: 'Smooth / Matrix controls', id: 'mazak' },
-        { label: 'Okuma', description: 'OSP-P controls', id: 'okuma' },
+        { label: '$(circuit-board) Fanuc CNC',    description: '0i / 30i / 31i series',           id: 'fanuc' },
+        { label: '$(circuit-board) Haas',          description: 'NGC controls',                    id: 'haas' },
+        { label: '$(circuit-board) Siemens',       description: 'Sinumerik 840D / 828D',           id: 'siemens' },
+        { label: '$(circuit-board) Mazak',         description: 'Smooth / Matrix controls',        id: 'mazak' },
+        { label: '$(circuit-board) Okuma',         description: 'OSP-P controls',                  id: 'okuma' },
+        { label: '$(robot) Fanuc Robot',           description: 'TP / LS teach-pendant programs',  id: 'fanuc-robot' },
+        { label: '$(robot) ABB RAPID',             description: 'ABB robot RAPID .mod programs',   id: 'abb' },
       ];
 
       const selected = await vscode.window.showQuickPick(controls, {
@@ -143,12 +163,15 @@ export function deactivate(): void {
 
 function updateStatusBar(item: vscode.StatusBarItem, controlType: string): void {
   const labels: Record<string, string> = {
-    fanuc: 'Fanuc',
+    fanuc: 'Fanuc CNC',
     haas: 'Haas',
     siemens: 'Siemens',
     mazak: 'Mazak',
     okuma: 'Okuma',
+    'fanuc-robot': 'Fanuc Robot',
+    abb: 'ABB RAPID',
   };
-  item.text = `$(tools) [${labels[controlType] ?? controlType}]`;
-  item.tooltip = 'JobLine: Click to change CNC control type';
+  const icon = (controlType === 'fanuc-robot' || controlType === 'abb') ? '$(robot)' : '$(tools)';
+  item.text = `${icon} [${labels[controlType] ?? controlType}]`;
+  item.tooltip = 'JobLine: Click to change CNC / robot control type';
 }

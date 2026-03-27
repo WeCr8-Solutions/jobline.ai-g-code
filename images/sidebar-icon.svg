@@ -1,9 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
-  <!-- JobLine brand mark: 3 italic parallelograms + D-curve, monochrome for VS Code activity bar -->
-  <!-- Shape 1: rounded-ish parallelogram (leftmost block) -->
-  <polygon points="0,12 2,4 5,4 3,12"/>
-  <!-- Shape 2: parallelogram (middle block) -->
-  <polygon points="4.5,12 6.5,4 10.5,4 8.5,12"/>
-  <!-- Shape 3: parallelogram + D-curve (rightmost block, open right edge) -->
-  <path d="M9.5,12 L11.5,4 L12,4 A4,4 0 0,1 12,12 Z"/>
+  <!-- JobLine "JL" monogram — bold, clean, legible at 24 px activity bar size -->
+  <!-- L: vertical stem -->
+  <rect x="0.5" y="1" width="3" height="12.5"/>
+  <!-- L: horizontal base -->
+  <rect x="0.5" y="11" width="6.5" height="2.5"/>
+  <!-- J: vertical stem -->
+  <rect x="12" y="1" width="3" height="9.5"/>
+  <!-- J: bottom hook — quarter-circle curving left               -->
+  <!--   circle center (12, 10.5), r=3.5                          -->
+  <!--   start = left-most point (8.5, 10.5)                      -->
+  <!--   end   = bottom point    (12, 14)    CCW sweep=0          -->
+  <path d="M8.5,10.5 A3.5,3.5 0 0,0 12,14 L15,14 L15,10.5 Z"/>
 </svg>

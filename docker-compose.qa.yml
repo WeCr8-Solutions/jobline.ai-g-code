@@ -1,0 +1,16 @@
+name: jobline-qa
+
+services:
+  qa-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.qa
+    environment:
+      # Windows/Mac Docker Desktop — reach host Ollama via special DNS name
+      - OLLAMA_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=qwen2.5-coder:7b
+    volumes:
+      # Write the report back to the host so you can open it in VS Code
+      - ./qa-report.md:/app/qa-report.md
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

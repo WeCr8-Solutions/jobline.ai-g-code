@@ -1,0 +1,6 @@
+node_modules
+out
+*.vsix
+qa-report.md
+.git
+.vscode

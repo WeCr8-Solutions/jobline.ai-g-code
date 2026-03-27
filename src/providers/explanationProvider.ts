@@ -53,35 +53,44 @@ function buildExplanations(text: string, dialect: string): LineExplanation[] {
 // HTML generation
 // ---------------------------------------------------------------------------
 
-function generateHtml(explanations: LineExplanation[], _webview: vscode.Webview): string {
+function generateHtml(
+  explanations: LineExplanation[],
+  _webview: vscode.Webview,
+  programName: string,
+  totalLines: number
+): string {
   const rows = explanations.map(e => {
     const rawEscaped = escHtml(e.raw || '\u00a0'); // nbsp for empty lines
     const explanationEscaped = escHtml(e.explanation || '\u00a0');
     const hasContent = e.explanation.trim().length > 0;
-    return `<div class="line-row${hasContent ? '' : ' empty'}" data-line="${e.lineNum - 1}">
+    return `<div class="line-row${hasContent ? '' : ' empty'}" data-line="${e.lineNum - 1}" title="${rawEscaped}">
   <span class="ln">${e.lineNum}</span>
-  <span class="raw">${rawEscaped}</span>
   <span class="expl">${explanationEscaped}</span>
 </div>`;
   }).join('\n');
+
+  const headerTitle = escHtml(programName || 'G-Code Program');
 
   return /* html */`<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 <style>
   :root {
     --bg: var(--vscode-editor-background, #1e1e1e);
     --fg: var(--vscode-editor-foreground, #d4d4d4);
     --border: var(--vscode-editorGroup-border, #444);
     --ln-fg: var(--vscode-editorLineNumber-foreground, #858585);
-    --raw-fg: var(--vscode-textPreformat-foreground, #9cdcfe);
     --expl-fg: var(--vscode-editor-foreground, #d4d4d4);
     --hl-bg: var(--vscode-editor-lineHighlightBackground, rgba(255,255,255,0.06));
-    --font: var(--vscode-editor-font-family, 'Consolas', monospace);
-    --font-size: var(--vscode-editor-font-size, 13px);
+    --accent: var(--vscode-focusBorder, #007acc);
+    --font: var(--vscode-font-family, sans-serif);
+    --editor-font: var(--vscode-editor-font-family, 'Consolas', monospace);
+    --font-size: var(--vscode-font-size, 13px);
     --line-height: 1.5;
+    --header-bg: var(--vscode-sideBarSectionHeader-background, #2d2d2d);
+    --header-fg: var(--vscode-sideBarSectionHeader-foreground, #ccc);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -92,32 +101,67 @@ function generateHtml(explanations: LineExplanation[], _webview: vscode.Webview)
     line-height: var(--line-height);
     overflow-x: hidden;
   }
+  #sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--header-bg);
+    color: var(--header-fg);
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #sticky-header .prog-name {
+    font-weight: 700;
+    font-size: 0.9em;
+    font-family: var(--editor-font);
+    letter-spacing: 0.03em;
+  }
+  #sticky-header .prog-info {
+    font-size: 0.78em;
+    opacity: 0.7;
+  }
+  #col-header {
+    position: sticky;
+    top: 33px;
+    z-index: 10;
+    background: var(--vscode-titleBar-activeBackground, #3c3c3c);
+    color: var(--vscode-titleBar-activeForeground, #aaa);
+    font-size: 0.75em;
+    padding: 3px 0.5em;
+    display: grid;
+    grid-template-columns: 3.5em 1fr;
+    gap: 0 1em;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+  }
+  #col-header span { font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
   #container { width: 100%; }
   .line-row {
     display: grid;
-    grid-template-columns: 3.5em 1fr 1fr;
+    grid-template-columns: 3.5em 1fr;
     gap: 0 1em;
-    padding: 0 0.5em;
+    padding: 1px 0.5em;
     min-height: calc(var(--font-size) * var(--line-height));
     align-items: baseline;
-    border-bottom: 1px solid transparent;
+    cursor: pointer;
+    border-left: 2px solid transparent;
   }
-  .line-row:hover  { background: var(--hl-bg); }
-  .line-row.active { background: var(--hl-bg); border-left: 2px solid var(--vscode-focusBorder, #007acc); }
-  .line-row.empty .expl { opacity: 0.3; }
+  .line-row:hover { background: var(--hl-bg); }
+  .line-row.active {
+    background: var(--hl-bg);
+    border-left: 2px solid var(--accent);
+  }
+  .line-row.empty .expl { opacity: 0.35; }
   .ln {
     color: var(--ln-fg);
     text-align: right;
     user-select: none;
-    flex-shrink: 0;
-    font-size: 0.9em;
-  }
-  .raw {
-    color: var(--raw-fg);
-    white-space: pre;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-family: var(--font);
+    font-size: 0.85em;
+    font-family: var(--editor-font);
   }
   .expl {
     color: var(--expl-fg);
@@ -125,27 +169,15 @@ function generateHtml(explanations: LineExplanation[], _webview: vscode.Webview)
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  #header {
-    position: sticky;
-    top: 0;
-    background: var(--vscode-titleBar-activeBackground, #3c3c3c);
-    color: var(--vscode-titleBar-activeForeground, #ccc);
-    font-size: 0.85em;
-    padding: 4px 0.5em;
-    display: grid;
-    grid-template-columns: 3.5em 1fr 1fr;
-    gap: 0 1em;
-    border-bottom: 1px solid var(--border);
-    user-select: none;
-    z-index: 10;
-  }
-  #header span { font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 </style>
 </head>
 <body>
-<div id="header">
-  <span></span>
-  <span>G-Code</span>
+<div id="sticky-header">
+  <span class="prog-name">${headerTitle}</span>
+  <span class="prog-info">${totalLines} lines</span>
+</div>
+<div id="col-header">
+  <span>#</span>
   <span>Plain Language</span>
 </div>
 <div id="container">
@@ -154,24 +186,24 @@ ${rows}
 <script>
   const vscode = acquireVsCodeApi();
 
-  // Scroll sync: receive first-visible-line from extension
+  // Click to navigate editor to that line
+  document.getElementById('container').addEventListener('click', function(e) {
+    const row = e.target.closest('.line-row');
+    if (!row) return;
+    const lineNum = parseInt(row.getAttribute('data-line'), 10);
+    vscode.postMessage({ type: 'goToLine', line: lineNum });
+  });
+
+  // Receive messages from extension
   window.addEventListener('message', event => {
     const msg = event.data;
-    if (msg.type === 'scroll') {
-      const firstLine = msg.firstLine;
-      const el = document.querySelector('[data-line="' + firstLine + '"]');
-      if (el) {
-        // Remove previous active marker
-        document.querySelectorAll('.active').forEach(e => e.classList.remove('active'));
-        el.classList.add('active');
-        // Scroll so this element is near the top
-        const containerTop = document.getElementById('header').offsetHeight;
-        const elTop = el.getBoundingClientRect().top + window.scrollY - containerTop;
-        window.scrollTo({ top: elTop, behavior: 'smooth' });
-      }
+    if (msg.type === 'highlight') {
+      // Highlight a line without scrolling (independent scroll)
+      document.querySelectorAll('.active').forEach(el => el.classList.remove('active'));
+      const el = document.querySelector('[data-line="' + msg.line + '"]');
+      if (el) el.classList.add('active');
     }
     if (msg.type === 'refresh') {
-      // Full refresh: reload via command
       vscode.postMessage({ type: 'requestRefresh' });
     }
   });
@@ -218,13 +250,14 @@ export function openExplanationPanel(context: vscode.ExtensionContext): void {
 
   refreshPanel();
 
-  // Scroll sync: listen to editor visible range changes
-  scrollListener = vscode.window.onDidChangeTextEditorVisibleRanges(event => {
+  // Highlight the current editor line in the webview — but do NOT force scroll
+  // The webview maintains its own independent scroll position
+  scrollListener = vscode.window.onDidChangeTextEditorSelection(event => {
     if (!activePanel) return;
     const editor = event.textEditor;
     if (!isGCodeDoc(editor.document)) return;
-    const firstLine = event.visibleRanges[0]?.start.line ?? 0;
-    activePanel.webview.postMessage({ type: 'scroll', firstLine });
+    const activeLine = editor.selection.active.line;
+    activePanel.webview.postMessage({ type: 'highlight', line: activeLine });
   });
   context.subscriptions.push(scrollListener);
 
@@ -247,6 +280,14 @@ export function openExplanationPanel(context: vscode.ExtensionContext): void {
   // Handle messages from the webview
   activePanel.webview.onDidReceiveMessage(msg => {
     if (msg.type === 'requestRefresh') refreshPanel();
+    if (msg.type === 'goToLine') {
+      const editor = vscode.window.activeTextEditor;
+      if (editor && isGCodeDoc(editor.document)) {
+        const pos = new vscode.Position(msg.line as number, 0);
+        editor.selection = new vscode.Selection(pos, pos);
+        editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
+      }
+    }
   }, undefined, context.subscriptions);
 
   // Cleanup
@@ -273,12 +314,25 @@ function refreshPanel(): void {
     return;
   }
 
-  activePanel.webview.html = generateHtml(explanations, activePanel.webview);
+  // Derive program name from first O-number line or file name
+  const firstOLine = text.split(/\r?\n/).find(l => /^\s*[Oo]\d+/.test(l));
+  const oMatch = firstOLine ? firstOLine.trim().match(/[Oo](\d+)/) : null;
+  const fileName = editor.document.fileName.replace(/\\/g, '/').split('/').pop() ?? '';
+  const programName = oMatch
+    ? `O${oMatch[1]} — ${fileName}`
+    : fileName;
 
-  // Scroll to current editor position after render
-  const firstLine = editor.visibleRanges[0]?.start.line ?? 0;
+  activePanel.webview.html = generateHtml(
+    explanations,
+    activePanel.webview,
+    programName,
+    explanations.length
+  );
+
+  // Highlight the current cursor line after render (no forced scroll)
+  const activeLine = editor.selection.active.line;
   setTimeout(() => {
-    activePanel?.webview.postMessage({ type: 'scroll', firstLine });
+    activePanel?.webview.postMessage({ type: 'highlight', line: activeLine });
   }, 150);
 }
 

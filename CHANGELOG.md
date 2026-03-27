@@ -6,44 +6,146 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.1.0] — 2026-03-27
+## [0.3.0] — 2026-03-27
+
+First full-featured release. Consolidates all development from the initial parser
+foundation through diagnostics, formatting, and subprogram navigation into a single
+production-ready package.
 
 ### Added
 
-- **Syntax highlighting** — TextMate grammar covering G-codes, M-codes, addresses, macro variables, Siemens CYCLE calls, Okuma `$` program numbers, comments (parenthesized and semicolon), block skip, and N-line numbers across all five control dialects (Fanuc, Haas, Siemens, Mazak, Okuma).
-- **Hover tooltips** — Rich descriptions for 100+ G-codes, M-codes, address letters, and Siemens CYCLE calls. Includes parameter lists and usage notes.
-- **Control type selector** — Status bar indicator (`[Fanuc]`) that opens a quick-pick menu to switch the active CNC control dialect. Setting persists per workspace.
-- **Live sidebar panel** — JobLine activity bar entry with five tree views (Operations, Tools, Offsets, Canned Cycles, Alarms & Warnings) that parse the active G-code document in real time.
-- **3-stage parser pipeline** — Tokenizer → Block Parser → Program Model, validated against production fixture files for Fanuc, Haas, Siemens, and Okuma dialects.
-- **Modal state machine** — Tracks spindle, coolant, feed rate, work offsets, tool compensation, canned cycle state, and absolute/incremental position across an entire program.
-- **Macro B evaluator** — Resolves `#variable` references and bracket expressions (`[#1 + 0.5]`, `SIN[30]`, `SQRT[4]`) where possible; marks unresolvable branches without false positives.
-- **Canned cycle detection** — Identifies G73–G89 cycles, links repeat-at-position blocks to their parent cycle definition, and counts total execution instances correctly.
-- **Language configuration** — Bracket matching, auto-closing pairs, comment toggling, and word pattern for the `gcode` language ID.
-- **File type association** — Automatic language detection for `.nc`, `.gcode`, `.ngc`, `.tap`, `.cnc`, `.mpf`, `.spf`, `.prg`, `.min`.
-- **56 unit tests** across 15 suites — Tokenizer, Block Parser, Program Model, Modal State, Macro Evaluator, and 5 fixture file pipelines; 100% pass rate.
+#### Parser & Intelligence Core
 
-### Commands (placeholders — full implementation in upcoming releases)
+- **3-stage parser pipeline** — Tokenizer → Block Parser → Program Model validated
+  against production fixture files for Fanuc, Haas, Siemens, and Okuma dialects.
+- **Modal state machine** — Tracks spindle, coolant, feed rate, work offsets, tool
+  compensation, canned cycle state, and absolute/incremental position across an entire
+  program.
+- **Macro B evaluator** — Resolves `#variable` references and bracket expressions
+  (`[#1 + 0.5]`, `SIN[30]`, `SQRT[4]`) where possible; marks unresolvable branches
+  without false positives.
+- **Canned cycle detection** — Identifies G73–G89 cycles, links repeat-at-position
+  blocks to their parent cycle, and counts total execution instances correctly.
 
-- `JobLine: Validate Program` — Registered; full diagnostic squiggles ship in v0.2.
-- `JobLine: Format G-Code` — Registered; formatter ships in v0.3.
+#### Live Sidebar
+
+- **JobLine activity bar panel** with eight tree views:
+  - **Operations** — operation summaries with tool, work offset, feed range, spindle speed.
+  - **Tools** — per-tool usage with Add / Go-To / Remove inline actions.
+  - **Offsets** — active work coordinate offsets (G54–G59, G54.1 Pn).
+  - **Canned Cycles** — cycle list tailored to the active machine type profile.
+  - **Probing** — G31 and G38.x probe instances with target position and feed rate.
+  - **Toolbox** — webview sidebar for one-click editing tools (see below).
+  - **Alarms & Warnings** — mirrors diagnostics with severity badges.
+  - **Commands** — one-click access to all major commands without the command palette.
+- Sidebar trees refresh live on document change and on configuration change.
+- **Machine type setting** (`jobline.machineType`) — selects cycle catalog (mill,
+  lathe, mill-turn, grinder).
+
+#### Diagnostic Squiggles
+
+- Inline diagnostics via `vscode.languages.createDiagnosticCollection`, debounced 500 ms.
+- **Canned cycle errors** (red): missing `Z` depth, missing `R` R-plane, missing `Q`
+  peck depth (G83/G73), missing `F` feed rate for G84/G74 tapping cycles.
+- **Safety warnings** (yellow): M06 without a G28/G53 Z retract in the preceding 15
+  lines; spindle still running at M30; coolant still on at M30.
+- **Arc geometry errors** (red): G02/G03 where I,J,K center offset produces a start
+  radius that doesn't match the endpoint radius within `jobline.validation.arcTolerance`
+  (default 0.001).
+
+#### G-Code Formatter
+
+- `jobline.formatDocument` command — also registered as `DocumentFormattingEditProvider`
+  so **Shift+Alt+F** works.
+- **Word spacing**: `G01X1.5Y2.0` → `G01 X1.5 Y2.0`.
+- **Uppercase G/M codes**: `g01` → `G01`, `m06` → `M06`.
+- **Decimal normalization**: rounds coordinates to `jobline.formatter.decimalPlaces`
+  (null = off). Coordinate-like addresses only; O, N, G, M, T, H, D, F, S are excluded.
+- Comment lines and macro assignment lines are left untouched.
+
+#### Subprogram Navigation
+
+- **Go to Definition** for M98 Pxxx — Ctrl+click on a `P` word in an M98 call jumps
+  to the `Oxxx` definition in the same file first, then workspace search.
+- **Document Links** — M98 P-words are underlined; clicking opens the subprogram file.
+- **Workspace Symbol Provider** — all `Oxxx` program numbers in G-code files appear
+  in workspace symbol search (Ctrl+T).
+
+#### Machinist Toolbox
+
+- Insert / remove / renumber N-words (line numbers).
+- Strip comments; uppercase G/M codes.
+- Add / remove block skip (`/`).
+- Add safety header (`G17 G40 G49 G80`); append program end (`M30 + %`).
+- Remove extra blank lines; add blank separators between operations.
+- **Feed rate scaling** — scale all F-words by percentage or clamp to a maximum.
+- **Spindle speed scaling** — scale all S-words by percentage.
+- **Coordinate shift X / Y / Z** — add a signed offset to every coordinate of a chosen
+  axis. Macro-assignment lines and bracket expressions are untouched.
+- **Insert Safe-Z before tool changes** — inserts `G91 G28 Z0.` / `G90` before every
+  M06; skips lines that already have it.
+- **Add Coolant On/Off** — inserts M08 after each tool change, M09 before M30/M02.
+- **Remove All Dwells** — removes every G04/G4 dwell line in one click.
+- **Navigate: Next Tool Change / Next Canned Cycle** — jump to next M06 or G7x/G8x
+  line with wrap-around.
+- **Plain-Language Explainer** button directly in the Toolbox panel.
+
+#### Plain-Language Explainer
+
+- Webview panel with a human-readable summary: operations, tools, cycle types, work
+  offsets, probing usage.
+- Independent scrolling; sticky header (program number, file name, line count).
+- Click any row to move the editor cursor to that line.
+
+#### Hover Tooltips
+
+- Rich descriptions for 100+ G-codes, M-codes, address letters, and Siemens CYCLE calls,
+  including parameter lists and usage notes.
+
+#### Robot Control Support
+
+- **Fanuc Robot (TP / LS)** — `.ls` / `.tp` files open with G-code syntax highlighting
+  and the full JobLine sidebar. Hover tooltips cover Fanuc TP motion codes (J, L, C).
+- **ABB RAPID** — `.mod` / `.pgf` files registered as `abb-rapid`. Select "ABB RAPID"
+  in the control picker to activate.
+- **Robot icon in status bar** — `$(robot)` icon when a robot dialect is active.
+
+#### Language Support
+
+- **Syntax highlighting** — TextMate grammar covering G/M-codes, addresses, macro
+  variables, Siemens CYCLE calls, Okuma `$` program numbers, comments, block skip, and
+  N-line numbers across all five CNC dialects plus Fanuc Robot TP and ABB RAPID.
+- **File associations** — `.nc`, `.gcode`, `.ngc`, `.tap`, `.cnc`, `.mpf`, `.spf`,
+  `.prg`, `.min`, `.ls`, `.tp`, `.mod`, `.pgf`.
+- **Language configuration** — bracket matching, auto-closing pairs, comment toggling,
+  and word pattern for the `gcode` language ID.
+- **Control type selector** — status bar indicator that opens a quick-pick to switch
+  CNC dialect; persists per workspace.
+
+#### UX
+
+- **"JL" monogram** activity-bar icon — bold L + J with quarter-circle hook, readable
+  at all VS Code zoom levels.
+- `$(circuit-board)` icons for CNC dialects, `$(robot)` icons for robot dialects in
+  the control picker.
+
+### Fixed
+
+- **Multi-O-program spindle/coolant false negatives** — spindle-running and coolant-on
+  checks now fire and reset at each M30/M02, so missing M05/M09 in earlier sub-programs
+  are no longer masked by a later sub-program that shuts down correctly.
+- **G76 threading false positive** — removed G76 from the canned-cycle code set. Fanuc
+  G76 uses a 2-line format where the first line carries no Z, so it was incorrectly
+  flagged as "Canned cycle requires Z (depth)".
+- **5-axis sample unsafe tool-change warning** — added `G91 G28 Z0.` / `G90` safe-Z
+  retract to `samples/mill-5axis.nc` before the first T01 M06.
 
 ---
 
 ## Upcoming
 
-### [0.2.0] — Diagnostics
-- Inline squiggles for canned cycle parameter errors (missing Z/R, invalid P/Q)
-- Safety rule violations: missing safe-Z before tool change, spindle still running at M30
-- Arc geometry validation for G02/G03
-
-### [0.3.0] — Formatter
-- Word spacing normalization (`G01X1.5` → `G01 X1.5`)
-- Decimal place normalization
-- Uppercase G/M code enforcement
-
-### [0.4.0] — Navigation
-- Go-to-definition for subprogram calls (M98, CALL OB)
-- Cross-file subprogram resolution
-
 ### [1.0.0] — DNC Connectivity
-- Direct file transfer to and from CNC controls over serial/Ethernet
+
+- Direct file transfer to and from CNC controls over RS-232 / Ethernet via the
+  JobLine MachineConnect service.
+- Transfer status and machine health visible inside VS Code.

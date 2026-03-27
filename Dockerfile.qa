@@ -1,0 +1,23 @@
+# JobLine QA Runner — isolated Node.js test environment
+# Talks to Ollama on the Docker host via host.docker.internal
+
+FROM node:20-slim
+
+WORKDIR /app
+
+# Install curl (used by qa-runner to call Ollama HTTP API)
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
+# Install dependencies first (layer cache)
+COPY package.json package-lock.json ./
+RUN npm ci --prefer-offline
+
+# Copy source (excluding node_modules via .dockerignore)
+COPY . .
+
+# Compile TypeScript
+RUN npm run compile
+
+# Default: run QA
+CMD ["node", "-e", \
+  "require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./scripts/qa-runner.ts');"]
