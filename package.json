@@ -1,0 +1,212 @@
+{
+  "name": "jobline-gcode",
+  "displayName": "JobLine G-Code Intelligence",
+  "description": "Deep G-code intelligence with DNC machine connectivity — canned cycle validation, Macro B evaluation, crash-prevention safety checks, and CNC file management for Fanuc, Haas, Siemens, Mazak, and Okuma controls.",
+  "version": "0.1.0",
+  "publisher": "wecr8",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "gcode",
+    "g-code",
+    "cnc",
+    "dnc",
+    "fanuc",
+    "haas",
+    "siemens",
+    "mazak",
+    "okuma",
+    "machining"
+  ],
+  "main": "./out/src/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "gcode",
+        "aliases": [
+          "G-Code",
+          "gcode",
+          "NC"
+        ],
+        "extensions": [
+          ".nc",
+          ".gcode",
+          ".ngc",
+          ".tap",
+          ".cnc",
+          ".mpf",
+          ".spf",
+          ".prg",
+          ".min"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "gcode",
+        "scopeName": "source.gcode",
+        "path": "./syntaxes/gcode.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "JobLine G-Code",
+      "properties": {
+        "jobline.controlType": {
+          "type": "string",
+          "default": "fanuc",
+          "enum": [
+            "fanuc",
+            "haas",
+            "siemens",
+            "mazak",
+            "okuma"
+          ],
+          "enumDescriptions": [
+            "Fanuc 0i / 30i / 31i series",
+            "Haas NGC controls",
+            "Siemens Sinumerik 840D / 828D",
+            "Mazak Smooth / Matrix controls",
+            "Okuma OSP-P controls"
+          ],
+          "description": "CNC control type for dialect-specific parsing and validation."
+        },
+        "jobline.machineType": {
+          "type": "string",
+          "default": "mill",
+          "enum": [
+            "mill",
+            "lathe",
+            "mill-turn",
+            "grinder"
+          ],
+          "enumDescriptions": [
+            "Mill profile: drilling/spotface cycles like G81/G82/G83 plus rigid tapping.",
+            "Lathe profile: turning-oriented cycles such as G74/G76 and drilling cycles.",
+            "Mill-turn profile: combined mill + lathe cycle families.",
+            "Grinder profile: simplified drilling/position cycles (commonly G81/G82)."
+          ],
+          "description": "Machine type profile used to tailor cycle lists and axis assumptions in JobLine views."
+        },
+        "jobline.units": {
+          "type": "string",
+          "default": "inch",
+          "enum": [
+            "inch",
+            "metric"
+          ],
+          "description": "Default unit system (can be overridden by G20/G21 in program)."
+        },
+        "jobline.validation.enableSafetyChecks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable crash-prevention safety rules (safe Z before tool change, spindle stop, etc.)."
+        },
+        "jobline.validation.enableArcValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Validate G02/G03 arc endpoint geometry and plane correctness."
+        },
+        "jobline.validation.arcTolerance": {
+          "type": "number",
+          "default": 0.001,
+          "description": "Arc endpoint tolerance in current units (default 0.001 inch)."
+        },
+        "jobline.formatter.wordSpacing": {
+          "type": "boolean",
+          "default": true,
+          "description": "Add spaces between G-code words (G01X1.5 → G01 X1.5)."
+        },
+        "jobline.formatter.decimalPlaces": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null,
+          "description": "Fixed decimal places for coordinates (null = don't change)."
+        },
+        "jobline.formatter.uppercaseGM": {
+          "type": "boolean",
+          "default": true,
+          "description": "Uppercase G and M codes."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "jobline.selectControl",
+        "title": "JobLine: Select CNC Control Type"
+      },
+      {
+        "command": "jobline.validateProgram",
+        "title": "JobLine: Validate Program"
+      },
+      {
+        "command": "jobline.formatDocument",
+        "title": "JobLine: Format G-Code"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "jobline-explorer",
+          "title": "JobLine",
+          "icon": "$(tools)"
+        }
+      ]
+    },
+    "views": {
+      "jobline-explorer": [
+        {
+          "id": "jobline.operationsTree",
+          "name": "Operations"
+        },
+        {
+          "id": "jobline.toolsTree",
+          "name": "Tools"
+        },
+        {
+          "id": "jobline.offsetsTree",
+          "name": "Offsets"
+        },
+        {
+          "id": "jobline.cannedCyclesTree",
+          "name": "Canned Cycles"
+        },
+        {
+          "id": "jobline.alarmsTree",
+          "name": "Alarms & Warnings"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');\"",
+    "test:typecheck": "tsc --noEmit -p tsconfig.json",
+    "package": "vsce package",
+    "precompile": "npm run lint"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^2.22.0",
+    "eslint": "^8.56.0",
+    "mocha": "^10.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {}
+}
