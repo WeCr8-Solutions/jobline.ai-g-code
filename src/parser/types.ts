@@ -232,6 +232,9 @@ export interface ProgramModel {
   /** All canned cycle instances (including repeats) */
   cannedCycles: CannedCycleInstance[];
 
+  /** All probing instances (G31, G38.2–G38.5) */
+  probingInstances: ProbeInstance[];
+
   /** All diagnostics from conditions + safety + arc validators */
   diagnostics: GCodeDiagnostic[];
 
@@ -270,6 +273,18 @@ export interface CannedCycleInstance {
   repeatCount: number;      // Including repeat-at-position lines
   repeatLines: number[];
   conditionResults: ConditionResult[];
+}
+
+export interface ProbeInstance {
+  /** G31, 38.2, 38.3, 38.4, or 38.5 */
+  code: number;
+  line: number;
+  /** toward = G31/G38.2/G38.3, away = G38.4/G38.5 */
+  direction: 'toward' | 'away';
+  /** G38.2/G38.4 alarm if contact not achieved; G38.3/G38.5 silent */
+  errorOnNoContact: boolean;
+  targetPosition: { X?: number; Y?: number; Z?: number };
+  feedRate: number | null;
 }
 
 export interface ConditionResult {

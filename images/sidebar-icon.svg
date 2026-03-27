@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+  <!-- JobLine brand mark: 3 italic parallelograms + D-curve, monochrome for VS Code activity bar -->
+  <!-- Shape 1: rounded-ish parallelogram (leftmost block) -->
+  <polygon points="0,12 2,4 5,4 3,12"/>
+  <!-- Shape 2: parallelogram (middle block) -->
+  <polygon points="4.5,12 6.5,4 10.5,4 8.5,12"/>
+  <!-- Shape 3: parallelogram + D-curve (rightmost block, open right edge) -->
+  <path d="M9.5,12 L11.5,4 L12,4 A4,4 0 0,1 12,12 Z"/>
+</svg>

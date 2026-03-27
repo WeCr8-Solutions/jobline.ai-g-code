@@ -17,6 +17,7 @@ import {
   Operation,
   ToolUsage,
   CannedCycleInstance,
+  ProbeInstance,
   createDefaultModalState,
   cloneModalState,
 } from './types';
@@ -24,6 +25,10 @@ import { ModalStateUpdater } from '../utils/modalState';
 
 // Canned cycle G-codes
 const CANNED_CYCLE_CODES = new Set([73, 74, 76, 81, 82, 83, 84, 85, 86, 87, 88, 89]);
+
+// Probing G-codes (G31 = skip function, G38.x = standard probing)
+const PROBE_TOWARD_CODES = new Set([31, 38.2, 38.3]);
+const PROBE_ERROR_CODES = new Set([38.2, 38.4]); // alarm if contact not achieved/lost
 
 // Position-only address letters (for cycle repeat detection)
 const POSITION_LETTERS_MILL = new Set(['X', 'Y']);
@@ -42,6 +47,7 @@ export class ProgramModelBuilder {
       operations: [],
       tools: [],
       cannedCycles: [],
+      probingInstances: [],
       diagnostics: [],
       totalLines: blocks.length,
       dialect,
@@ -182,6 +188,30 @@ export class ProgramModelBuilder {
         if (Math.floor(g.code) === 80 && currentCycle) {
           model.cannedCycles.push(currentCycle);
           currentCycle = null;
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // Probing instance detection (G31, G38.2–G38.5)
+      // -----------------------------------------------------------------------
+      for (const g of block.gCodes) {
+        const intCode = Math.floor(g.code);
+        if (intCode === 31 || intCode === 38) {
+          const isToward = PROBE_TOWARD_CODES.has(g.code) || intCode === 31;
+          const isError = g.code === 31 || PROBE_ERROR_CODES.has(g.code);
+          const probe: ProbeInstance = {
+            code: g.code,
+            line: i,
+            direction: isToward ? 'toward' : 'away',
+            errorOnNoContact: isError,
+            targetPosition: {
+              X: block.addresses.get('X')?.resolvedValue ?? undefined,
+              Y: block.addresses.get('Y')?.resolvedValue ?? undefined,
+              Z: block.addresses.get('Z')?.resolvedValue ?? undefined,
+            },
+            feedRate: block.addresses.get('F')?.resolvedValue ?? state.activeF,
+          };
+          model.probingInstances.push(probe);
         }
       }
 

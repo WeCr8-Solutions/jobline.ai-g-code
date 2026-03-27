@@ -9,12 +9,25 @@ import * as vscode from 'vscode';
 import { loadConfig } from './config';
 import { getHoverContent } from './providers/hoverProvider';
 import { registerSidebarTreeProviders } from './providers/sidebarTreeProviders';
+import { openExplanationPanel } from './providers/explanationProvider';
+import { ToolboxViewProvider, registerToolboxCommands } from './providers/toolboxProvider';
 
 const LANGUAGE_ID = 'gcode';
 
 export function activate(context: vscode.ExtensionContext): void {
   // Register static sidebar trees so contributed views always have data providers.
   registerSidebarTreeProviders(context);
+
+  // =========================================================================
+  // Register Toolbox WebviewView (sidebar panel)
+  // =========================================================================
+  const toolboxProvider = new ToolboxViewProvider(context.extensionUri);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(ToolboxViewProvider.viewId, toolboxProvider)
+  );
+
+  // Register toolbox commands (also accessible via command palette)
+  registerToolboxCommands(context);
 
   // Load configuration
   const config = loadConfig(
@@ -68,6 +81,13 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   );
   context.subscriptions.push(selectControlCmd);
+
+  // Open plain-language explanation panel
+  const explainCmd = vscode.commands.registerCommand(
+    'jobline.openExplainer',
+    () => openExplanationPanel(context)
+  );
+  context.subscriptions.push(explainCmd);
 
   // Validate program (placeholder — full implementation in Phase 3)
   const validateCmd = vscode.commands.registerCommand(

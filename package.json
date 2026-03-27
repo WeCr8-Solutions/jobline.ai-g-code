@@ -2,7 +2,7 @@
   "name": "jobline-gcode",
   "displayName": "JobLine G-Code Intelligence",
   "description": "Deep G-code intelligence for CNC machinists — syntax highlighting, hover tooltips, canned cycle detection, Macro B evaluation, and live sidebar views for Fanuc, Haas, Siemens, Mazak, and Okuma controls.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "WeCr8-Solutions",
   "license": "MIT",
   "author": {
@@ -173,6 +173,50 @@
       {
         "command": "jobline.formatDocument",
         "title": "JobLine: Format G-Code"
+      },
+      {
+        "command": "jobline.openExplainer",
+        "title": "JobLine: Open Plain Language Explanation"
+      },
+      {
+        "command": "jobline.toolbox.insertLineNumbers",
+        "title": "JobLine Toolbox: Insert Line Numbers"
+      },
+      {
+        "command": "jobline.toolbox.removeLineNumbers",
+        "title": "JobLine Toolbox: Remove Line Numbers"
+      },
+      {
+        "command": "jobline.toolbox.renumberLines",
+        "title": "JobLine Toolbox: Renumber Lines"
+      },
+      {
+        "command": "jobline.toolbox.stripComments",
+        "title": "JobLine Toolbox: Strip Comments"
+      },
+      {
+        "command": "jobline.toolbox.uppercaseGM",
+        "title": "JobLine Toolbox: Uppercase G/M Codes"
+      },
+      {
+        "command": "jobline.toolbox.addBlockSkip",
+        "title": "JobLine Toolbox: Add Block Skip (/)"
+      },
+      {
+        "command": "jobline.toolbox.removeBlockSkip",
+        "title": "JobLine Toolbox: Remove Block Skip (/)"
+      },
+      {
+        "command": "jobline.toolbox.addSafetyHeader",
+        "title": "JobLine Toolbox: Add Safety Header"
+      },
+      {
+        "command": "jobline.toolbox.addProgramEnd",
+        "title": "JobLine Toolbox: Add Program End (M30 + %)"
+      },
+      {
+        "command": "jobline.toolbox.removeBlankLines",
+        "title": "JobLine Toolbox: Remove Extra Blank Lines"
       }
     ],
     "viewsContainers": {
@@ -180,7 +224,7 @@
         {
           "id": "jobline-explorer",
           "title": "JobLine",
-          "icon": "$(tools)"
+          "icon": "images/sidebar-icon.svg"
         }
       ]
     },
@@ -201,6 +245,15 @@
         {
           "id": "jobline.cannedCyclesTree",
           "name": "Canned Cycles"
+        },
+        {
+          "id": "jobline.probingTree",
+          "name": "Probing"
+        },
+        {
+          "id": "jobline.toolboxView",
+          "name": "Toolbox",
+          "type": "webview"
         },
         {
           "id": "jobline.alarmsTree",

@@ -88,8 +88,10 @@ function formatGCodeHover(token: GCodeToken): string | null {
   const code = token.code;
   if (code === undefined) return null;
 
-  const key = String(code);
-  const info = gCodeData[key];
+  // For subcoded G-codes (G38.2, G54.1, G90.1 etc.), extract from raw text
+  const subcodeMatch = token.raw.match(/[Gg]\s*(\d{1,3})(\.\d)/);
+  const key = subcodeMatch ? `${subcodeMatch[1]}${subcodeMatch[2]}` : String(code);
+  const info = gCodeData[key] ?? gCodeData[String(code)];
 
   if (!info) {
     return `**G${code}** — Unknown G-code`;
@@ -97,8 +99,8 @@ function formatGCodeHover(token: GCodeToken): string | null {
 
   let md = `**G${code}** — ${info.name}\n\n${info.desc}`;
 
-  // Add parameter hints for canned cycles
-  const paramHints = getCycleParameters(code);
+  // Add parameter hints for canned cycles and probing
+  const paramHints = getCycleParameters(code, token.raw);
   if (paramHints) {
     md += `\n\n**Parameters:**\n${paramHints}`;
   }
@@ -157,8 +159,22 @@ function formatSiemensCycleHover(token: GCodeToken): string | null {
   return `**${name}** — ${desc}\n\nSiemens positional parameter syntax: ${name}(param1, param2, ...)`;
 }
 
-function getCycleParameters(code: number): string | null {
+function getCycleParameters(code: number, raw?: string): string | null {
+  // For G38.x, use raw token text to distinguish subcode
+  if (Math.floor(code) === 38 && raw) {
+    const m = raw.match(/G38\.(\d)/i);
+    const sub = m ? parseInt(m[1]) : 2;
+    const probeParams: Record<number, string> = {
+      2: '`X` `Y` `Z` target position · `F` feed rate · **Alarm** if no contact made',
+      3: '`X` `Y` `Z` target position · `F` feed rate · Silent if no contact made',
+      4: '`X` `Y` `Z` target position · `F` feed rate · **Alarm** if contact not lost',
+      5: '`X` `Y` `Z` target position · `F` feed rate · Silent if contact not lost',
+    };
+    return probeParams[sub] ?? '`X` `Y` `Z` target · `F` feed rate';
+  }
+
   const params: Record<number, string> = {
+    31:  '`X` `Y` `Z` target position · `F` feed rate · Contact result stored in #5061–#5066',
     73: '`Z` final depth · `R` retract plane · `Q` peck depth · `F` feed rate',
     81: '`Z` final depth · `R` retract plane · `F` feed rate',
     82: '`Z` final depth · `R` retract plane · `P` dwell (sec) · `F` feed rate',

@@ -39,6 +39,7 @@ type SidebarSnapshot = {
   tools: JobLineTreeItem[];
   offsets: JobLineTreeItem[];
   cycles: JobLineTreeItem[];
+  probing: JobLineTreeItem[];
   alarms: JobLineTreeItem[];
 };
 
@@ -112,6 +113,7 @@ function buildSnapshot(): SidebarSnapshot {
     tools: [new JobLineTreeItem('No tools parsed yet')],
     offsets: [new JobLineTreeItem('No work offsets detected')],
     cycles: [new JobLineTreeItem('No canned cycles detected', 'Open a program with G81/G83/etc.')],
+    probing: [new JobLineTreeItem('No probing cycles detected', 'Open a program with G31/G38.x')],
     alarms: [new JobLineTreeItem('No alarms', 'Validation results will appear here')],
   };
 
@@ -158,11 +160,27 @@ function buildSnapshot(): SidebarSnapshot {
     cycles.unshift(new JobLineTreeItem('No canned cycles found in active file'));
   }
 
+  // Probing instances (G31, G38.x)
+  const probing: JobLineTreeItem[] = [];
+  if (model.probingInstances.length > 0) {
+    for (const p of model.probingInstances) {
+      const codeName = p.code === 31 ? 'G31' : `G${p.code}`;
+      const coords = Object.entries(p.targetPosition)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => `${k}${v}`)
+        .join(' ');
+      const feed = p.feedRate !== null ? ` F${p.feedRate}` : '';
+      probing.push(new JobLineTreeItem(codeName, `L${p.line + 1} ${coords}${feed}`));
+    }
+  } else {
+    probing.push(new JobLineTreeItem('No probing cycles found', 'G31 / G38.2–G38.5'));
+  }
+
   const alarms = model.diagnostics.length > 0
     ? model.diagnostics.map(d => new JobLineTreeItem(`[${d.severity}] L${d.line + 1}`, d.message))
     : [new JobLineTreeItem('No alarms', 'Validation results will appear here')];
 
-  return { operations, tools, offsets, cycles, alarms };
+  return { operations, tools, offsets, cycles, probing, alarms };
 }
 
 export function registerSidebarTreeProviders(context: vscode.ExtensionContext): void {
@@ -172,6 +190,7 @@ export function registerSidebarTreeProviders(context: vscode.ExtensionContext): 
   const toolsProvider = new DynamicTreeDataProvider(() => snapshot.tools);
   const offsetsProvider = new DynamicTreeDataProvider(() => snapshot.offsets);
   const cannedCyclesProvider = new DynamicTreeDataProvider(() => snapshot.cycles);
+  const probingProvider = new DynamicTreeDataProvider(() => snapshot.probing);
   const alarmsProvider = new DynamicTreeDataProvider(() => snapshot.alarms);
 
   const refreshAll = (): void => {
@@ -180,6 +199,7 @@ export function registerSidebarTreeProviders(context: vscode.ExtensionContext): 
     toolsProvider.refresh();
     offsetsProvider.refresh();
     cannedCyclesProvider.refresh();
+    probingProvider.refresh();
     alarmsProvider.refresh();
   };
 
@@ -188,6 +208,7 @@ export function registerSidebarTreeProviders(context: vscode.ExtensionContext): 
     vscode.window.registerTreeDataProvider('jobline.toolsTree', toolsProvider),
     vscode.window.registerTreeDataProvider('jobline.offsetsTree', offsetsProvider),
     vscode.window.registerTreeDataProvider('jobline.cannedCyclesTree', cannedCyclesProvider),
+    vscode.window.registerTreeDataProvider('jobline.probingTree', probingProvider),
     vscode.window.registerTreeDataProvider('jobline.alarmsTree', alarmsProvider),
     vscode.window.onDidChangeActiveTextEditor(() => refreshAll()),
     vscode.workspace.onDidChangeTextDocument(event => {
