@@ -159,8 +159,25 @@ function stepDiagnosticsTests(): StepResult {
   return { name: 'Diagnostics engine tests', passed: ok, output };
 }
 
+function stepVisualTests(): StepResult {
+  log('Step 4: Visual test framework...');
+  const cmd = [
+    'node -e "',
+    "require('ts-node').register({",
+    "  transpileOnly:true,",
+    "  compilerOptions:{module:'commonjs',target:'ES2020',",
+    "    esModuleInterop:true,resolveJsonModule:true,strict:false}",
+    "});",
+    "require('./scripts/visual-test-runner.ts');",
+    '"',
+  ].join('');
+  const { ok, output } = runShell(cmd);
+  log(ok ? '  PASS' : '  FAIL');
+  return { name: 'Visual test framework', passed: ok, output };
+}
+
 async function stepOllamaReviews(): Promise<FixtureReview[]> {
-  log('Step 4: Ollama QWEN domain review...');
+  log('Step 5: Ollama QWEN domain review...');
 
   const ncFiles: string[] = [];
 
@@ -286,6 +303,7 @@ async function main(): Promise<void> {
     stepCompile(),
     stepUnitTests(),
     stepDiagnosticsTests(),
+    stepVisualTests(),
   ];
 
   const reviews = await stepOllamaReviews();
