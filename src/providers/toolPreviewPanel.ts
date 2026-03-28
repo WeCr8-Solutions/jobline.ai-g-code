@@ -244,54 +244,98 @@ export class ToolPreviewPanel {
 
   <script>
     const vscode = acquireVsCodeApi();
-
-    // Three.js CDN — must match the version in extension
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r155/three.min.js';
-    document.head.appendChild(script);
-
-    script.onload = () => {
-      setupScene();
-      refreshPreview();
-    };
-
     let scene, camera, renderer;
     let isDragging = false;
     let cameraRotation = { x: 0.3, y: 0.5 };
     let previousMousePosition = { x: 0, y: 0 };
     let animationId;
+    let threeReady = false;
+
+    // Load Three.js from CDN with fallback
+    function loadThreeJS() {
+      if (window.THREE) {
+        threeReady = true;
+        setupScene();
+        refreshPreview();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/three@r155/build/three.min.js';
+      script.timeout = 10000;
+
+      script.onload = () => {
+        console.log('[ToolPreview] Three.js loaded');
+        threeReady = true;
+        setupScene();
+        refreshPreview();
+      };
+
+      script.onerror = () => {
+        console.error('[ToolPreview] Failed to load Three.js from CDN');
+        document.body.innerHTML += '<div style="color:red;padding:20px;">Failed to load 3D library. Please check your internet connection.</div>';
+      };
+
+      document.head.appendChild(script);
+    }
+
+    // Start loading when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadThreeJS);
+    } else {
+      loadThreeJS();
+    }
 
     function setupScene() {
       const canvas = document.getElementById('canvas');
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x1a1a1a);
+      if (!canvas) {
+        console.error('[ToolPreview] Canvas element not found');
+        return;
+      }
 
-      camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-      camera.position.set(2, 1.5, 2);
-      camera.lookAt(0, 0.5, 0);
+      console.log('[ToolPreview] Setting up scene, canvas:', canvas.clientWidth, 'x', canvas.clientHeight);
 
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.shadowMap.enabled = true;
+      try {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a1a);
 
-      // Lights
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-      scene.add(ambientLight);
+        camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+        camera.position.set(2, 1.5, 2);
+        camera.lookAt(0, 0.5, 0);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
-      directionalLight.position.set(5, 8, 5);
-      directionalLight.castShadow = true;
-      directionalLight.shadow.camera.left = -10;
-      directionalLight.shadow.camera.right = 10;
-      directionalLight.shadow.camera.top = 10;
-      directionalLight.shadow.camera.bottom = -10;
-      scene.add(directionalLight);
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        console.log('[ToolPreview] Renderer created');
+      } catch (err) {
+        console.error('[ToolPreview] Error setting up renderer:', err);
+        return;
+      }
 
-      // Grid
-      const gridHelper = new THREE.GridHelper(4, 8, 0x444444, 0x222222);
-      gridHelper.position.y = -0.05;
-      scene.add(gridHelper);
+      try {
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        directionalLight.position.set(5, 8, 5);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.camera.left = -10;
+        directionalLight.shadow.camera.right = 10;
+        directionalLight.shadow.camera.top = 10;
+        directionalLight.shadow.camera.bottom = -10;
+        scene.add(directionalLight);
+
+        // Grid
+        const gridHelper = new THREE.GridHelper(4, 8, 0x444444, 0x222222);
+        gridHelper.position.y = -0.05;
+        scene.add(gridHelper);
+        console.log('[ToolPreview] Scene setup complete');
+      } catch (err) {
+        console.error('[ToolPreview] Error setting up scene objects:', err);
+        return;
+      }
 
       // Mouse controls
       canvas.addEventListener('mousedown', (e) => {
@@ -337,38 +381,54 @@ export class ToolPreviewPanel {
       });
 
       // Animation loop
-      function animate() {
-        animationId = requestAnimationFrame(animate);
-        renderer.render(scene, camera);
+      try {
+        function animate() {
+          animationId = requestAnimationFrame(animate);
+          if (renderer && scene && camera) {
+            renderer.render(scene, camera);
+          }
+        }
+        animate();
+        console.log('[ToolPreview] Animation loop started');
+      } catch (err) {
+        console.error('[ToolPreview] Error starting animation loop:', err);
       }
-      animate();
     }
 
     function refreshPreview() {
-      // Clear old tool (and its children)
-      const toRemove = [];
-      scene.traverse((obj) => {
-        if (obj.userData.isTool || (obj.parent && obj.parent.userData.isTool)) {
-          toRemove.push(obj);
-        }
-      });
-      toRemove.forEach((obj) => {
-        if (obj.parent) obj.parent.remove(obj);
-        if (obj.geometry) obj.geometry.dispose();
-        if (obj.material) obj.material.dispose();
-      });
+      if (!threeReady || !scene) {
+        console.warn('[ToolPreview] Scene not ready, skipping refresh');
+        return;
+      }
 
-      const type = document.getElementById('toolType').value;
-      const dia = parseFloat(document.getElementById('diameter').value) || 0.5;
-      const len = parseFloat(document.getElementById('length').value) || 3;
-      const stick = parseFloat(document.getElementById('stickOut').value) || 1.5;
-      const flutes = parseInt(document.getElementById('flutes').value) || 2;
-      const color = document.getElementById('colorInput').value;
+      try {
+        // Clear old tool (and its children)
+        const toRemove = [];
+        scene.traverse((obj) => {
+          if (obj.userData.isTool || (obj.parent && obj.parent.userData.isTool)) {
+            toRemove.push(obj);
+          }
+        });
+        toRemove.forEach((obj) => {
+          if (obj.parent) obj.parent.remove(obj);
+          if (obj.geometry) obj.geometry.dispose();
+          if (obj.material) obj.material.dispose();
+        });
 
-      if (!scene) return; // Safety check
-      const toolGeom = buildToolGeometry(type, dia, len, stick, flutes, color);
-      toolGeom.userData.isTool = true;
-      scene.add(toolGeom);
+        const type = document.getElementById('toolType').value;
+        const dia = parseFloat(document.getElementById('diameter').value) || 0.5;
+        const len = parseFloat(document.getElementById('length').value) || 3;
+        const stick = parseFloat(document.getElementById('stickOut').value) || 1.5;
+        const flutes = parseInt(document.getElementById('flutes').value) || 2;
+        const color = document.getElementById('colorInput').value;
+
+        const toolGeom = buildToolGeometry(type, dia, len, stick, flutes, color);
+        toolGeom.userData.isTool = true;
+        scene.add(toolGeom);
+        console.log('[ToolPreview] Tool geometry created:', type);
+      } catch (err) {
+        console.error('[ToolPreview] Error in refreshPreview:', err);
+      }
     }
 
     function buildToolGeometry(type, dia, len, stick, flutes, color) {
