@@ -52,6 +52,7 @@ export class ProgramModelBuilder {
       totalLines: blocks.length,
       dialect,
       detectedMachineType: this.detectMachineType(blocks, dialect),
+      stockDimensions: this.extractStockDimensions(blocks),
     };
 
     let state = createDefaultModalState();
@@ -321,6 +322,24 @@ export class ProgramModelBuilder {
     }
 
     return null;
+  }
+
+  /**
+   * Extract stock dimensions from comments (STOCK: W=4 D=4 H=2)
+   */
+  private extractStockDimensions(blocks: GCodeBlock[]): { width: number; depth: number; height: number } | undefined {
+    for (const block of blocks) {
+      if (!block.comment) continue;
+      const match = block.comment.match(/STOCK:\s*W[=\s]*(\d+\.?\d*)\s*D[=\s]*(\d+\.?\d*)\s*H[=\s]*(\d+\.?\d*)/i);
+      if (match) {
+        return {
+          width: parseFloat(match[1]),
+          depth: parseFloat(match[2]),
+          height: parseFloat(match[3]),
+        };
+      }
+    }
+    return undefined;
   }
 
   /**

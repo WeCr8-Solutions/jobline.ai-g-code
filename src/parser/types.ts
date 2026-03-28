@@ -245,6 +245,13 @@ export interface ProgramModel {
 
   /** Auto-detected machine type (mill, lathe, mill-turn, etc.) */
   detectedMachineType: string;
+
+  /** Extracted stock dimensions (W x D x H in current units) */
+  stockDimensions?: {
+    width: number;
+    depth: number;
+    height: number;
+  };
 }
 
 export interface Operation {

@@ -371,6 +371,10 @@
       {
         "command": "jobline.selectMachineType",
         "title": "JobLine: Select Machine Type"
+      },
+      {
+        "command": "jobline.insertStockHeader",
+        "title": "JobLine: Insert Stock Header"
       }
     ],
     "menus": {

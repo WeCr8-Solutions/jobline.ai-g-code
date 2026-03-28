@@ -329,6 +329,44 @@ export function activate(context: vscode.ExtensionContext): void {
   machineStatusBar.show();
   context.subscriptions.push(machineStatusBar);
 
+  // Insert stock header command
+  const insertStockCmd = vscode.commands.registerCommand(
+    'jobline.insertStockHeader',
+    async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || editor.document.languageId !== 'gcode') {
+        vscode.window.showWarningMessage('Open a G-code file first.');
+        return;
+      }
+
+      const w = await vscode.window.showInputBox({
+        prompt: 'Stock Width (X) in inches',
+        value: '4',
+      });
+      if (w === undefined) return;
+
+      const d = await vscode.window.showInputBox({
+        prompt: 'Stock Depth (Y) in inches',
+        value: '4',
+      });
+      if (d === undefined) return;
+
+      const h = await vscode.window.showInputBox({
+        prompt: 'Stock Height (Z) in inches',
+        value: '2',
+      });
+      if (h === undefined) return;
+
+      const header = `( STOCK: W=${w} D=${d} H=${h} )\n`;
+      editor.edit((editBuilder) => {
+        editBuilder.insert(new vscode.Position(0, 0), header);
+      });
+
+      vscode.window.showInformationMessage('Stock header inserted.');
+    }
+  );
+  context.subscriptions.push(insertStockCmd);
+
   // =========================================================================
   // Watch for configuration changes
   // =========================================================================
