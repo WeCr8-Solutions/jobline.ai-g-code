@@ -37,9 +37,14 @@ export function activate(context: vscode.ExtensionContext): void {
         function loadPathFromEditor() {
           const editor = vscode.window.activeTextEditor;
           if (!editor || editor.document.languageId !== 'gcode') return false;
-          playback.path = parseGCodeToPath(editor.document.getText());
-          playback.idx = 0;
-          return true;
+          try {
+            playback.path = parseGCodeToPath(editor.document.getText());
+            playback.idx = 0;
+            return true;
+          } catch (err) {
+            vscode.window.showErrorMessage('JobLine: Failed to parse G-code: ' + String(err));
+            return false;
+          }
         }
 
         function stopPlayback() {
@@ -50,6 +55,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
         // Play command
         const playCmd = vscode.commands.registerCommand('jobline.gcode.play', () => {
+          if (!ToolpathVisualizerPanel.currentPanel) {
+            vscode.window.showWarningMessage('Open the visualizer first (click the 3D icon in the toolbar).');
+            return;
+          }
           if (!loadPathFromEditor()) {
             vscode.window.showWarningMessage('Open a G-code file to play.');
             return;
@@ -57,7 +66,10 @@ export function activate(context: vscode.ExtensionContext): void {
           stopPlayback();
           playback.playing = true;
           function step() {
-            if (!playback.playing) return;
+            if (!playback.playing || !ToolpathVisualizerPanel.currentPanel) {
+              stopPlayback();
+              return;
+            }
             updateVisualizerAt(playback.idx);
             playback.idx++;
             if (playback.idx < playback.path.length) {
@@ -78,7 +90,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
         // Step Forward command
         const stepFwdCmd = vscode.commands.registerCommand('jobline.gcode.stepForward', () => {
-          if (!playback.path.length && !loadPathFromEditor()) return;
+          if (!playback.path.length) loadPathFromEditor();
+          if (!playback.path.length) return;
           stopPlayback();
           if (playback.idx < playback.path.length - 1) playback.idx++;
           updateVisualizerAt(playback.idx);
@@ -87,7 +100,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
         // Step Back command
         const stepBackCmd = vscode.commands.registerCommand('jobline.gcode.stepBack', () => {
-          if (!playback.path.length && !loadPathFromEditor()) return;
+          if (!playback.path.length) loadPathFromEditor();
+          if (!playback.path.length) return;
           stopPlayback();
           if (playback.idx > 0) playback.idx--;
           updateVisualizerAt(playback.idx);
@@ -96,7 +110,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
         // Jump to Line command
         const jumpCmd = vscode.commands.registerCommand('jobline.gcode.jumpToLine', async () => {
-          if (!playback.path.length && !loadPathFromEditor()) return;
+          if (!playback.path.length) loadPathFromEditor();
+          if (!playback.path.length) return;
           stopPlayback();
           const val = await vscode.window.showInputBox({ prompt: 'Enter toolpath point index (0-based)', validateInput: v => isNaN(Number(v)) ? 'Enter a number' : undefined });
           if (val === undefined) return;
@@ -114,8 +129,9 @@ export function activate(context: vscode.ExtensionContext): void {
         }
         const gcode = editor.document.getText();
         const path = parseGCodeToPath(gcode);
-        // Example: Use a fixed cutter size and highlight the last point
-        sendToolpathUpdate(path, 10, path.length - 1);
+        // Use fixed cutter size; highlight last point if path exists
+        const highlightIdx = path.length > 0 ? path.length - 1 : 0;
+        sendToolpathUpdate(path, 10, highlightIdx);
         vscode.window.showInformationMessage('Toolpath visualizer updated.');
       });
       context.subscriptions.push(updateVisualizerCmd);
