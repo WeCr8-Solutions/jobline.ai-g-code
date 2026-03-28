@@ -241,6 +241,10 @@ export class ToolPreviewPanel {
     };
 
     let scene, camera, renderer;
+    let isDragging = false;
+    let cameraRotation = { x: 0.3, y: 0.5 };
+    let previousMousePosition = { x: 0, y: 0 };
+    let animationId;
 
     function setupScene() {
       const canvas = document.getElementById('canvas');
@@ -248,29 +252,33 @@ export class ToolPreviewPanel {
       scene.background = new THREE.Color(0x1a1a1a);
 
       camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-      camera.position.set(0, 0, 3);
+      camera.position.set(2, 1.5, 2);
+      camera.lookAt(0, 0.5, 0);
 
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
       renderer.setSize(canvas.clientWidth, canvas.clientHeight);
       renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.shadowMap.enabled = true;
 
       // Lights
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
       scene.add(ambientLight);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      directionalLight.position.set(5, 5, 5);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+      directionalLight.position.set(5, 8, 5);
+      directionalLight.castShadow = true;
+      directionalLight.shadow.camera.left = -10;
+      directionalLight.shadow.camera.right = 10;
+      directionalLight.shadow.camera.top = 10;
+      directionalLight.shadow.camera.bottom = -10;
       scene.add(directionalLight);
 
       // Grid
-      const gridHelper = new THREE.GridHelper(5, 10, 0x333333, 0x222222);
-      gridHelper.position.z = -2;
+      const gridHelper = new THREE.GridHelper(4, 8, 0x444444, 0x222222);
+      gridHelper.position.y = -0.05;
       scene.add(gridHelper);
 
-      // Orbit controls (simplified)
-      let isDragging = false;
-      let previousMousePosition = { x: 0, y: 0 };
-
+      // Mouse controls
       canvas.addEventListener('mousedown', (e) => {
         isDragging = true;
         previousMousePosition = { x: e.clientX, y: e.clientY };
@@ -282,17 +290,28 @@ export class ToolPreviewPanel {
         const deltaY = e.clientY - previousMousePosition.y;
         previousMousePosition = { x: e.clientX, y: e.clientY };
 
-        camera.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), deltaX * 0.01);
-        camera.position.applyAxisAngle(
-          new THREE.Vector3(1, 0, 0),
-          deltaY * 0.01
-        );
-        camera.lookAt(0, 0, 0);
+        cameraRotation.y += deltaX * 0.005;
+        cameraRotation.x += deltaY * 0.005;
+        cameraRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraRotation.x));
+
+        const distance = 3;
+        camera.position.x = Math.sin(cameraRotation.y) * Math.cos(cameraRotation.x) * distance;
+        camera.position.y = Math.sin(cameraRotation.x) * distance + 1;
+        camera.position.z = Math.cos(cameraRotation.y) * Math.cos(cameraRotation.x) * distance;
+        camera.lookAt(0, 0.5, 0);
       });
 
       canvas.addEventListener('mouseup', () => {
         isDragging = false;
       });
+
+      canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const distance = camera.position.length();
+        const newDistance = Math.max(1, Math.min(10, distance + e.deltaY * 0.001));
+        const scale = newDistance / distance;
+        camera.position.multiplyScalar(scale);
+      }, { passive: false });
 
       window.addEventListener('resize', () => {
         const w = canvas.clientWidth;
@@ -302,14 +321,27 @@ export class ToolPreviewPanel {
         renderer.setSize(w, h);
       });
 
-      renderer.render(scene, camera);
+      // Animation loop
+      function animate() {
+        animationId = requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+      }
+      animate();
     }
 
     function refreshPreview() {
-      // Clear old tool
-      scene.children = scene.children.filter(
-        (c) => !(c instanceof THREE.Mesh && c.userData.isTool)
-      );
+      // Clear old tool (and its children)
+      const toRemove = [];
+      scene.traverse((obj) => {
+        if (obj.userData.isTool || (obj.parent && obj.parent.userData.isTool)) {
+          toRemove.push(obj);
+        }
+      });
+      toRemove.forEach((obj) => {
+        if (obj.parent) obj.parent.remove(obj);
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+      });
 
       const type = document.getElementById('toolType').value;
       const dia = parseFloat(document.getElementById('diameter').value) || 0.5;
@@ -318,11 +350,10 @@ export class ToolPreviewPanel {
       const flutes = parseInt(document.getElementById('flutes').value) || 2;
       const color = document.getElementById('colorInput').value;
 
+      if (!scene) return; // Safety check
       const toolGeom = buildToolGeometry(type, dia, len, stick, flutes, color);
       toolGeom.userData.isTool = true;
       scene.add(toolGeom);
-
-      renderer.render(scene, camera);
     }
 
     function buildToolGeometry(type, dia, len, stick, flutes, color) {
@@ -330,96 +361,191 @@ export class ToolPreviewPanel {
       const colorNum = parseInt(color.slice(1), 16);
       const holderType = document.getElementById('holder').value;
 
-      // Cutting portion (stick-out)
+      // Position tool so tip is at origin, extends upward along Z
+      // This way we can see it centered and properly scaled
+      const toolOffsetZ = len / 2; // Center of tool at origin Z
+
+      // Cutting portion (stick-out) — the working end of the tool
       if (type === 'End Mill') {
         const cuttingGeom = new THREE.CylinderGeometry(dia / 2, dia / 2, stick, 16);
-        const cuttingMesh = new THREE.Mesh(
-          cuttingGeom,
-          new THREE.MeshPhongMaterial({ color: colorNum })
-        );
-        cuttingMesh.position.z = stick / 2;
+        const cuttingMat = new THREE.MeshPhongMaterial({
+          color: colorNum,
+          shininess: 80,
+          side: THREE.DoubleSide
+        });
+        const cuttingMesh = new THREE.Mesh(cuttingGeom, cuttingMat);
+        cuttingMesh.castShadow = true;
+        cuttingMesh.receiveShadow = true;
+        // Position: tip at -stick/2, base at +stick/2, so stick-out extends upward from holder
+        cuttingMesh.position.z = -toolOffsetZ + stick / 2;
         group.add(cuttingMesh);
 
-        // Flutes (helix lines)
+        // Flutes (helix lines) — visible spiral grooves
         for (let i = 0; i < flutes; i++) {
           const angle = (i / flutes) * Math.PI * 2;
           const points = [];
-          for (let j = 0; j < stick * 20; j++) {
-            const z = (j / (stick * 20)) * stick;
-            const x = (dia / 2) * Math.cos(angle + z * 2);
-            const y = (dia / 2) * Math.sin(angle + z * 2);
+          for (let j = 0; j < Math.max(2, stick * 10); j++) {
+            const t = j / Math.max(1, stick * 10 - 1);
+            const z = -toolOffsetZ + (t * stick);
+            const helix = angle + t * Math.PI * 4;
+            const x = (dia / 2 * 0.95) * Math.cos(helix);
+            const y = (dia / 2 * 0.95) * Math.sin(helix);
             points.push(new THREE.Vector3(x, y, z));
           }
-          const lineGeom = new THREE.BufferGeometry().setFromPoints(points);
-          const line = new THREE.Line(lineGeom, new THREE.LineBasicMaterial({ color: 0x333333 }));
-          group.add(line);
+          if (points.length > 1) {
+            const lineGeom = new THREE.BufferGeometry().setFromPoints(points);
+            const line = new THREE.Line(lineGeom, new THREE.LineBasicMaterial({ color: 0x555555, linewidth: 2 }));
+            group.add(line);
+          }
         }
 
-        // Shank
+        // Shank (the part that fits in the holder)
         const shankRad = dia / 2.5;
-        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, len - stick, 16);
-        const shankMesh = new THREE.Mesh(shankGeom, new THREE.MeshPhongMaterial({ color: 0x888888 }));
-        shankMesh.position.z = stick + (len - stick) / 2;
+        const shankLen = len - stick;
+        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16);
+        const shankMat = new THREE.MeshPhongMaterial({
+          color: 0x888888,
+          shininess: 60,
+          side: THREE.DoubleSide
+        });
+        const shankMesh = new THREE.Mesh(shankGeom, shankMat);
+        shankMesh.castShadow = true;
+        shankMesh.receiveShadow = true;
+        // Position shank above cutting portion
+        shankMesh.position.z = -toolOffsetZ + stick + shankLen / 2;
         group.add(shankMesh);
       } else if (type === 'Drill') {
-        // Cylinder + cone tip
-        const geom = new THREE.CylinderGeometry(dia / 2, dia / 2, stick * 0.9, 16);
-        const mesh = new THREE.Mesh(geom, new THREE.MeshPhongMaterial({ color: colorNum }));
-        mesh.position.z = (stick * 0.9) / 2;
-        group.add(mesh);
+        // Drill body (cylindrical)
+        const bodyLen = stick * 0.85;
+        const bodyGeom = new THREE.CylinderGeometry(dia / 2, dia / 2, bodyLen, 16);
+        const bodyMat = new THREE.MeshPhongMaterial({
+          color: colorNum,
+          shininess: 80,
+          side: THREE.DoubleSide
+        });
+        const bodyMesh = new THREE.Mesh(bodyGeom, bodyMat);
+        bodyMesh.castShadow = true;
+        bodyMesh.receiveShadow = true;
+        bodyMesh.position.z = -toolOffsetZ + bodyLen / 2;
+        group.add(bodyMesh);
 
-        // Tip (cone)
-        const tipGeom = new THREE.ConeGeometry(dia / 2, stick * 0.2, 16);
-        const tipMesh = new THREE.Mesh(tipGeom, new THREE.MeshPhongMaterial({ color: colorNum }));
-        tipMesh.position.z = stick;
+        // Drill tip (cone with sharp point)
+        const tipLen = stick * 0.15;
+        const tipGeom = new THREE.ConeGeometry(dia / 2, tipLen, 16);
+        const tipMat = new THREE.MeshPhongMaterial({
+          color: colorNum,
+          shininess: 100,
+          side: THREE.DoubleSide
+        });
+        const tipMesh = new THREE.Mesh(tipGeom, tipMat);
+        tipMesh.castShadow = true;
+        tipMesh.receiveShadow = true;
+        tipMesh.position.z = -toolOffsetZ - tipLen / 2;
         group.add(tipMesh);
 
-        // Flute lines (2)
+        // Flute lines (2 straight flutes for drill)
         for (let i = 0; i < 2; i++) {
           const angle = (i / 2) * Math.PI;
           const points = [];
-          for (let j = 0; j < stick * 10; j++) {
-            const z = (j / (stick * 10)) * stick;
-            const x = (dia / 2) * Math.cos(angle);
-            const y = (dia / 2) * Math.sin(angle) * (z / stick);
+          for (let j = 0; j < 15; j++) {
+            const t = j / 14;
+            const z = -toolOffsetZ + (t * bodyLen);
+            const x = (dia / 2 * 0.9) * Math.cos(angle);
+            const y = (dia / 2 * 0.9) * Math.sin(angle);
             points.push(new THREE.Vector3(x, y, z));
           }
           const lineGeom = new THREE.BufferGeometry().setFromPoints(points);
-          const line = new THREE.Line(lineGeom, new THREE.LineBasicMaterial({ color: 0x333333 }));
+          const line = new THREE.Line(lineGeom, new THREE.LineBasicMaterial({ color: 0x555555, linewidth: 2 }));
           group.add(line);
         }
 
         // Shank
         const shankRad = dia / 3;
-        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, len - stick, 16);
-        const shankMesh = new THREE.Mesh(shankGeom, new THREE.MeshPhongMaterial({ color: 0x888888 }));
-        shankMesh.position.z = stick + (len - stick) / 2;
+        const shankLen = len - stick;
+        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16);
+        const shankMat = new THREE.MeshPhongMaterial({
+          color: 0x888888,
+          shininess: 60,
+          side: THREE.DoubleSide
+        });
+        const shankMesh = new THREE.Mesh(shankGeom, shankMat);
+        shankMesh.castShadow = true;
+        shankMesh.receiveShadow = true;
+        shankMesh.position.z = -toolOffsetZ + stick + shankLen / 2;
         group.add(shankMesh);
       } else if (type === 'Face Mill') {
-        // Flat disc
-        const discGeom = new THREE.CylinderGeometry(dia / 2, dia / 2, dia * 0.3, 32);
-        const discMesh = new THREE.Mesh(discGeom, new THREE.MeshPhongMaterial({ color: colorNum }));
-        discMesh.position.z = stick - dia * 0.15;
+        // Cutting head (flat disc with inserts)
+        const headRad = dia / 2;
+        const headThick = dia * 0.25;
+        const discGeom = new THREE.CylinderGeometry(headRad, headRad, headThick, 32);
+        const discMat = new THREE.MeshPhongMaterial({
+          color: colorNum,
+          shininess: 70,
+          side: THREE.DoubleSide
+        });
+        const discMesh = new THREE.Mesh(discGeom, discMat);
+        discMesh.castShadow = true;
+        discMesh.receiveShadow = true;
+        discMesh.position.z = -toolOffsetZ + stick - headThick / 2;
         group.add(discMesh);
 
         // Shank
         const shankRad = dia / 4;
-        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, len - stick, 16);
-        const shankMesh = new THREE.Mesh(shankGeom, new THREE.MeshPhongMaterial({ color: 0x888888 }));
-        shankMesh.position.z = stick + (len - stick) / 2;
+        const shankLen = len - stick;
+        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16);
+        const shankMat = new THREE.MeshPhongMaterial({
+          color: 0x888888,
+          shininess: 60,
+          side: THREE.DoubleSide
+        });
+        const shankMesh = new THREE.Mesh(shankGeom, shankMat);
+        shankMesh.castShadow = true;
+        shankMesh.receiveShadow = true;
+        shankMesh.position.z = -toolOffsetZ + stick + shankLen / 2;
         group.add(shankMesh);
       } else {
-        // Generic cylinder
-        const geom = new THREE.CylinderGeometry(dia / 2, dia / 2, len, 16);
-        const mesh = new THREE.Mesh(geom, new THREE.MeshPhongMaterial({ color: colorNum }));
-        mesh.position.z = len / 2;
+        // Generic cylinder (default/custom tool type)
+        const geom = new THREE.CylinderGeometry(dia / 2, dia / 2, stick, 16);
+        const mat = new THREE.MeshPhongMaterial({
+          color: colorNum,
+          shininess: 70,
+          side: THREE.DoubleSide
+        });
+        const mesh = new THREE.Mesh(geom, mat);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.position.z = -toolOffsetZ + stick / 2;
         group.add(mesh);
+
+        // Shank
+        const shankRad = dia / 2.5;
+        const shankLen = len - stick;
+        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16);
+        const shankMat = new THREE.MeshPhongMaterial({
+          color: 0x888888,
+          shininess: 60,
+          side: THREE.DoubleSide
+        });
+        const shankMesh = new THREE.Mesh(shankGeom, shankMat);
+        shankMesh.castShadow = true;
+        shankMesh.receiveShadow = true;
+        shankMesh.position.z = -toolOffsetZ + stick + shankLen / 2;
+        group.add(shankMesh);
       }
 
-      // Holder (generic for all types)
-      const holderGeom = new THREE.CylinderGeometry(dia / 1.5, dia / 1.5, len * 0.3, 16);
-      const holderMesh = new THREE.Mesh(holderGeom, new THREE.MeshPhongMaterial({ color: 0xcccccc }));
-      holderMesh.position.z = len + len * 0.15;
+      // Holder/Coupling body (visible at top of shank)
+      const holderRad = Math.max(dia / 1.2, 0.4);
+      const holderLen = (len - (len - stick)) * 0.4; // Proportional to overall size
+      const holderGeom = new THREE.CylinderGeometry(holderRad * 1.2, holderRad, holderLen, 24);
+      const holderMat = new THREE.MeshPhongMaterial({
+        color: 0xbbbbbb,
+        shininess: 50,
+        side: THREE.DoubleSide
+      });
+      const holderMesh = new THREE.Mesh(holderGeom, holderMat);
+      holderMesh.castShadow = true;
+      holderMesh.receiveShadow = true;
+      holderMesh.position.z = -toolOffsetZ + len - holderLen / 2;
       group.add(holderMesh);
 
       return group;
