@@ -34,6 +34,13 @@ export class ToolpathVisualizerPanel {
     this._panel = panel;
     this._panel.webview.html = this._getHtmlForWebview();
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+
+    // Handle messages from webview (playback commands)
+    this._panel.webview.onDidReceiveMessage(msg => {
+      if (msg.command) {
+        vscode.commands.executeCommand(msg.command);
+      }
+    });
   }
 
   public dispose() {
@@ -99,6 +106,19 @@ export class ToolpathVisualizerPanel {
         <button id="viewLeft">Left</button>
         <button id="viewRight">Right</button>
         <button id="viewIso">Isometric</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="group-label">Playback</div>
+      <div id="playbackIdx" style="font-size:0.9em; margin-bottom:8px; color:#aaa;">Segment: --</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:8px;">
+        <button id="playBtn">▶ Play</button>
+        <button id="pauseBtn">⏸ Pause</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+        <button id="stepBackBtn">◀ Back</button>
+        <button id="stepFwdBtn">Fwd ▶</button>
       </div>
     </div>
 
@@ -263,13 +283,29 @@ export class ToolpathVisualizerPanel {
       return mesh;
     }
 
-    function drawToolpath(points) {
+    function drawToolpath(points, highlightIdx = -1) {
       if (LAYERS.path.mesh) scene.remove(LAYERS.path.mesh);
       if (!points || points.length < 2) return;
       const geom = new THREE.BufferGeometry();
       const verts = points.flatMap(p => [p.x || 0, p.y || 0, p.z || 0]);
       geom.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-      const mat = new THREE.LineBasicMaterial({ color: new THREE.Color(LAYERS.path.color), linewidth: 2 });
+
+      // Color segments: rapids (blue), feed (green), highlight (red)
+      const colors = [];
+      for (let i = 0; i < points.length; i++) {
+        let color;
+        if (i === highlightIdx) {
+          color = new THREE.Color(0xff0000); // Red for current segment
+        } else if (points[i].isRapid) {
+          color = new THREE.Color(0x0000ff); // Blue for rapids
+        } else {
+          color = new THREE.Color(LAYERS.path.color); // Yellow for feed
+        }
+        colors.push(color.r, color.g, color.b);
+      }
+      geom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+      const mat = new THREE.LineBasicMaterial({ vertexColors: true, linewidth: 3 });
       LAYERS.path.mesh = new THREE.Line(geom, mat);
       LAYERS.path.mesh.visible = LAYERS.path.visible;
       scene.add(LAYERS.path.mesh);
@@ -340,6 +376,19 @@ export class ToolpathVisualizerPanel {
     document.getElementById('viewRight').addEventListener('click', () => setCamera(300, 0, 0));
     document.getElementById('viewIso').addEventListener('click', () => setCamera(200, 200, 200));
 
+    document.getElementById('playBtn').addEventListener('click', () => {
+      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.play' });
+    });
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.pause' });
+    });
+    document.getElementById('stepBackBtn').addEventListener('click', () => {
+      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.stepBack' });
+    });
+    document.getElementById('stepFwdBtn').addEventListener('click', () => {
+      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.stepForward' });
+    });
+
     ['stock', 'fixture', 'jaws'].forEach(name => {
       const capName = name[0].toUpperCase() + name.slice(1);
       document.getElementById('manual' + capName).addEventListener('click', () => {
@@ -389,7 +438,11 @@ export class ToolpathVisualizerPanel {
       const msg = event.data;
       if (msg.type === 'update') {
         document.getElementById('cutterSize').textContent = msg.cutterSize ?? '-';
-        if (msg.path) drawToolpath(msg.path);
+        if (msg.path) {
+          drawToolpath(msg.path, msg.highlightIdx ?? -1);
+          const idx = msg.highlightIdx ?? 0;
+          document.getElementById('playbackIdx').textContent = 'Segment: ' + idx + '/' + msg.path.length;
+        }
       }
     });
 
