@@ -5,6 +5,7 @@
 .eslintrc.js
 gen-icon.js
 images/*.js
+!images/sidebar-icon.svg
 src/**
 test/**
 bridges/**
@@ -18,3 +19,4 @@ SETUP.md
 JobLine_SETUP.md
 *.code-workspace
 node_modules/**
+machines/**

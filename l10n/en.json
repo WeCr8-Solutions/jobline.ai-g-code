@@ -1,0 +1,18 @@
+{
+  "jobline.selectControl": "JobLine: Select CNC / Robot Control Type",
+  "jobline.validateProgram": "JobLine: Validate Program",
+  "jobline.formatDocument": "JobLine: Format G-Code",
+  "jobline.openExplainer": "JobLine: Open Plain Language Explanation",
+  "diagnostics.cannedCycleRequiresZ": "Canned cycle requires Z (depth)",
+  "diagnostics.cannedCycleRequiresR": "Canned cycle requires R (R-plane)",
+  "diagnostics.cannedCycleRequiresQ": "Canned cycle requires Q (peck depth)",
+  "diagnostics.cannedCycleRequiresF": "Canned cycle requires F (feed rate)",
+  "diagnostics.noSafeZBeforeToolChange": "No G28/G53 Z retract before tool change in preceding 15 lines",
+  "diagnostics.spindleStillRunning": "Spindle may still be running at program end",
+  "diagnostics.coolantStillOn": "Coolant may still be on at program end",
+  "diagnostics.arcGeometryError": "Arc endpoint radius mismatch",
+  "toolbox.stripComments": "JobLine Toolbox: Strip Comments",
+  "toolbox.insertLineNumbers": "JobLine Toolbox: Insert Line Numbers",
+  "toolbox.scaleFeedRates": "JobLine Toolbox: Scale Feed Rates",
+  "toolbox.insertSafeZ": "JobLine Toolbox: Insert Safe-Z Before Tool Changes"
+}

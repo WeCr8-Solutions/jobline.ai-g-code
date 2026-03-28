@@ -1,6 +1,6 @@
 # JobLine G-Code Intelligence
 
-**Deep G-code intelligence for VS Code** — syntax highlighting, rich hover tooltips, live canned cycle detection, Macro B support, and a real-time sidebar for Fanuc, Haas, Siemens, Mazak, and Okuma CNC controls.
+**Deep G-code intelligence for VS Code** — syntax highlighting, rich hover tooltips, live canned cycle detection, Macro B support, a real-time sidebar, and 3D toolpath visualization for Fanuc, Haas, Siemens, Mazak, and Okuma CNC controls.
 
 ---
 
@@ -59,6 +59,25 @@ Variables (`#1`, `#100`, `#5041`), expressions (`Z[#1 + 0.5]`), and control flow
 
 ---
 
+### G-Code Toolpath Visualizer
+Open a live 3D preview of your G-code path with full setup geometry support:
+
+**Visualize:**
+- Toolpath (XYZ linear moves as a 3D line)
+- Cutting tool and holder
+- Stock material (imported STL or manual box/cylinder)
+- Fixture and jaws (imported STL or manual geometry)
+
+**Interactive controls:**
+- 7 camera view presets: Top, Bottom, Front, Back, Left, Right, Isometric
+- Drag to orbit the scene; scroll to zoom
+- Per-layer visibility toggles and live color pickers
+- Import STL files or enter custom dimensions for any geometry
+
+Access via the **G-Code: Show Toolpath Visualizer** command.
+
+---
+
 ## Requirements
 
 - VS Code **1.85** or newer
@@ -84,13 +103,20 @@ Variables (`#1`, `#100`, `#5041`), expressions (`Z[#1 + 0.5]`), and control flow
 
 ## Commands
 
-Open the Command Palette (`Ctrl+Shift+P`) and type **JobLine**:
+Open the Command Palette (`Ctrl+Shift+P`) and type **JobLine** or **G-Code**:
 
 | Command | Description |
 |---|---|
 | `JobLine: Select CNC Control Type` | Switch the active control dialect |
 | `JobLine: Validate Program` | Run safety and arc validation |
 | `JobLine: Format G-Code` | Apply formatter rules to the active file |
+| `G-Code: Show Toolpath Visualizer` | Open the 3D toolpath visualization panel |
+| `G-Code: Update Toolpath Visualizer` | Refresh the visualizer with the current file's path |
+| `G-Code: Play` | Animate the toolpath playback (350ms per step) |
+| `G-Code: Pause` | Pause toolpath playback |
+| `G-Code: Step Forward` | Advance one step in the toolpath |
+| `G-Code: Step Back` | Go back one step in the toolpath |
+| `G-Code: Jump to Line` | Jump to a specific step in the toolpath |
 
 ---
 

@@ -6,6 +6,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.3.1] — 2026-03-27
+
+### Added
+
+#### Multi-Language Support
+
+- **Internationalization (i18n)** infrastructure using VS Code's native `vscode.l10n` API
+  - Language files in `l10n/` directory for English, Spanish, German, French, Chinese, and Japanese
+  - Multi-language G-code reference data in `data/gcode-reference-i18n.json` covering common G/M codes in all supported languages
+  - Community contribution guide for adding new languages (see GitHub issues)
+- **G-code reference translations** — hover tooltips and sidebar descriptions now available in 6 languages
+- Full internationalization scaffolding ready for extension UI strings
+
+### Fixed
+
+- **Multi-O-program spindle/coolant false negatives** — spindle-running and coolant-on checks now fire and reset at each M30/M02, correctly flagging missing M05/M09 in earlier sub-programs
+- **G76 threading false positive** — removed G76 from the canned-cycle code set. Fanuc G76 uses a 2-line format where the first line carries no Z, preventing incorrect "Canned cycle requires Z" flags
+- **5-axis sample unsafe tool-change warning** — added `G91 G28 Z0.` / `G90` safe-Z retract to `samples/mill-5axis.nc` before the first T01 M06
+
+### Technical
+
+- Updated `package.json` to include `@vscode/l10n` dependency for localization support
+
+---
+
 ## [0.3.0] — 2026-03-27
 
 First full-featured release. Consolidates all development from the initial parser

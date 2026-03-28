@@ -16,7 +16,6 @@ import * as path from 'path';
 import { spawnSync } from 'child_process';
 import { Tokenizer } from '../src/parser/tokenizer';
 import { BlockParser } from '../src/parser/blockParser';
-import { ProgramModelBuilder } from '../src/parser/programModel';
 
 const FIXTURE_DIR = path.join(__dirname, '../test/fixtures/diagnostics');
 const SNAPSHOTS_DIR = path.join(__dirname, '../test/fixtures/visual/snapshots');
@@ -106,8 +105,8 @@ class VisualTestRunner {
     filename: string
   ): Promise<ToolpathGeometry> {
     const content = fs.readFileSync(filePath, 'utf-8');
-    const tokens = this.tokenizer.tokenize(content);
-    const blocks = this.blockParser.parseTokens(tokens);
+    const tokenizedLines = this.tokenizer.tokenizeDocument(content);
+    const blocks = this.blockParser.parseDocument(tokenizedLines);
 
     const geometry: ToolpathGeometry = {
       file: filename,

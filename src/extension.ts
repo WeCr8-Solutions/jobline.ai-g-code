@@ -1,3 +1,5 @@
+import { sendToolpathUpdate, parseGCodeToPath } from './providers/toolpathMessaging';
+import { ToolpathVisualizerPanel } from './providers/toolpathVisualizer';
 /**
  * JobLine G-Code Intelligence — Extension Entry Point
  * Architecture v0.4.0
@@ -18,6 +20,110 @@ import { registerSubprogramProvider } from './providers/subprogramProvider';
 const LANGUAGE_ID = 'gcode';
 
 export function activate(context: vscode.ExtensionContext): void {
+        // Playback state
+        const playback = {
+          path: [] as ReturnType<typeof parseGCodeToPath>,
+          cutterSize: 10,
+          idx: 0,
+          timer: undefined as undefined | NodeJS.Timeout,
+          playing: false
+        };
+
+        function updateVisualizerAt(idx: number) {
+          if (!playback.path.length) return;
+          sendToolpathUpdate(playback.path, playback.cutterSize, idx);
+        }
+
+        function loadPathFromEditor() {
+          const editor = vscode.window.activeTextEditor;
+          if (!editor || editor.document.languageId !== 'gcode') return false;
+          playback.path = parseGCodeToPath(editor.document.getText());
+          playback.idx = 0;
+          return true;
+        }
+
+        function stopPlayback() {
+          playback.playing = false;
+          if (playback.timer) clearTimeout(playback.timer);
+          playback.timer = undefined;
+        }
+
+        // Play command
+        const playCmd = vscode.commands.registerCommand('jobline.gcode.play', () => {
+          if (!loadPathFromEditor()) {
+            vscode.window.showWarningMessage('Open a G-code file to play.');
+            return;
+          }
+          stopPlayback();
+          playback.playing = true;
+          function step() {
+            if (!playback.playing) return;
+            updateVisualizerAt(playback.idx);
+            playback.idx++;
+            if (playback.idx < playback.path.length) {
+              playback.timer = setTimeout(step, 350); // 350ms per step
+            } else {
+              stopPlayback();
+            }
+          }
+          step();
+        });
+        context.subscriptions.push(playCmd);
+
+        // Pause command
+        const pauseCmd = vscode.commands.registerCommand('jobline.gcode.pause', () => {
+          stopPlayback();
+        });
+        context.subscriptions.push(pauseCmd);
+
+        // Step Forward command
+        const stepFwdCmd = vscode.commands.registerCommand('jobline.gcode.stepForward', () => {
+          if (!playback.path.length && !loadPathFromEditor()) return;
+          stopPlayback();
+          if (playback.idx < playback.path.length - 1) playback.idx++;
+          updateVisualizerAt(playback.idx);
+        });
+        context.subscriptions.push(stepFwdCmd);
+
+        // Step Back command
+        const stepBackCmd = vscode.commands.registerCommand('jobline.gcode.stepBack', () => {
+          if (!playback.path.length && !loadPathFromEditor()) return;
+          stopPlayback();
+          if (playback.idx > 0) playback.idx--;
+          updateVisualizerAt(playback.idx);
+        });
+        context.subscriptions.push(stepBackCmd);
+
+        // Jump to Line command
+        const jumpCmd = vscode.commands.registerCommand('jobline.gcode.jumpToLine', async () => {
+          if (!playback.path.length && !loadPathFromEditor()) return;
+          stopPlayback();
+          const val = await vscode.window.showInputBox({ prompt: 'Enter toolpath point index (0-based)', validateInput: v => isNaN(Number(v)) ? 'Enter a number' : undefined });
+          if (val === undefined) return;
+          const idx = Math.max(0, Math.min(playback.path.length - 1, Number(val)));
+          playback.idx = idx;
+          updateVisualizerAt(playback.idx);
+        });
+        context.subscriptions.push(jumpCmd);
+      // Example: Command to send current editor G-code to visualizer
+      const updateVisualizerCmd = vscode.commands.registerCommand('jobline.gcode.updateVisualizer', () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document.languageId !== 'gcode') {
+          vscode.window.showWarningMessage('Open a G-code file to visualize.');
+          return;
+        }
+        const gcode = editor.document.getText();
+        const path = parseGCodeToPath(gcode);
+        // Example: Use a fixed cutter size and highlight the last point
+        sendToolpathUpdate(path, 10, path.length - 1);
+        vscode.window.showInformationMessage('Toolpath visualizer updated.');
+      });
+      context.subscriptions.push(updateVisualizerCmd);
+    // Register Toolpath Visualizer command
+    const showVisualizerCmd = vscode.commands.registerCommand('jobline.gcode.showVisualizer', () => {
+      ToolpathVisualizerPanel.show(context.extensionUri);
+    });
+    context.subscriptions.push(showVisualizerCmd);
   // Register static sidebar trees so contributed views always have data providers.
   registerSidebarTreeProviders(context);
 

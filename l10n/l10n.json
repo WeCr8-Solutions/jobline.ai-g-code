@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "fallbackLanguage": "en",
+  "translations": {
+    "es": "l10n/es.json",
+    "de": "l10n/de.json",
+    "fr": "l10n/fr.json",
+    "zh-cn": "l10n/zh.json",
+    "ja": "l10n/ja.json"
+  },
+  "comments": "Language pack for JobLine G-Code Intelligence. Translations are community-driven. To contribute, submit pull requests to https://github.com/WeCr8-Solutions/jobline.ai-g-code"
+}

@@ -1,0 +1,18 @@
+{
+  "jobline.selectControl": "JobLine：选择 CNC/机器人控制类型",
+  "jobline.validateProgram": "JobLine：验证程序",
+  "jobline.formatDocument": "JobLine：格式化 G 代码",
+  "jobline.openExplainer": "JobLine：打开自然语言解释",
+  "diagnostics.cannedCycleRequiresZ": "预定义循环需要 Z（深度）",
+  "diagnostics.cannedCycleRequiresR": "预定义循环需要 R（R 平面）",
+  "diagnostics.cannedCycleRequiresQ": "预定义循环需要 Q（啄钻深度）",
+  "diagnostics.cannedCycleRequiresF": "预定义循环需要 F（进给速度）",
+  "diagnostics.noSafeZBeforeToolChange": "工具更换前 15 个块内没有 G28/G53 Z 回退",
+  "diagnostics.spindleStillRunning": "程序结束时主轴可能仍在运转",
+  "diagnostics.coolantOn": "程序结束时冷却液可能仍然开启",
+  "diagnostics.arcGeometryError": "圆弧半径不匹配错误",
+  "toolbox.stripComments": "JobLine Toolbox：删除注释",
+  "toolbox.insertLineNumbers": "JobLine Toolbox：插入行号",
+  "toolbox.scaleFeedRates": "JobLine Toolbox：缩放进给速度",
+  "toolbox.insertSafeZ": "JobLine Toolbox：在工具更换前插入 Safe-Z"
+}

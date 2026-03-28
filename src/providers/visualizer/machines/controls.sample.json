@@ -1,0 +1,14 @@
+{
+  "Fanuc":       ["0i-MF", "0i-TF", "16i", "18i", "21i", "Series 30i", "Series 31i", "Series 32i"],
+  "HAAS":        ["NGC (Next Generation Control)"],
+  "Siemens":     ["Sinumerik 840D sl", "Sinumerik 840D pl", "Sinumerik 828D", "Sinumerik 810D"],
+  "Mazatrol":    ["SmoothX", "SmoothG", "SmoothC", "Matrix", "Matrix Nexus", "Smart"],
+  "Okuma OSP":   ["OSP-P300S", "OSP-P300M", "OSP-P300L"],
+  "Heidenhain":  ["TNC 640", "TNC 530", "iTNC 530", "TNC 7"],
+  "Mitsubishi":  ["M800W", "M800S", "M700W", "M700VS", "M80"],
+  "Fagor":       ["8060", "8065", "8070"],
+  "Manual":      ["Manual / DRO"],
+  "Other":       ["Hurco WinMax", "Brother CNC-C00", "Citizen CINCOM", "FlowMaster", "OMAX Intelli-MAX", "Charmilles Spark", "Renishaw Renscan5", "Zeiss CALYPSO", "Studer StuderGRIND", "Makino Pro 5"],
+  "Fanuc Robot": ["R-30iB", "R-30iB Plus", "R-30iA"],
+  "ABB":         ["RAPID (IRC5)", "RAPID (OmniCore)"]
+}

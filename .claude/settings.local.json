@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:\\\\Users\\\\Zach\\\\AppData\\\\Local\\\\Programs\\\\Microsoft VS Code\\\\bin\\\\code.cmd\" --install-extension \"d:\\\\MajorProjects\\\\jobline.ai-g-code\\\\jobline-gcode-0.3.0.vsix\")",
+      "Bash(docker --version)",
+      "Bash(docker-compose --version)",
+      "Bash(docker compose:*)",
+      "Bash(curl -s http://localhost:11434/api/tags)",
+      "Bash(npm run:*)",
+      "Bash(node -e \":*)",
+      "Bash(npx vsce:*)",
+      "Bash(grep -n '\"\"menus\"\"' package.json)",
+      "Bash(npm test:*)",
+      "Bash(npx vitest:*)"
+    ],
+    "additionalDirectories": [
+      "d:\\MajorProjects\\jobline.ai-g-code\\src"
+    ]
+  }
+}

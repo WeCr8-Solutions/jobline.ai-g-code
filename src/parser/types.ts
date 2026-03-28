@@ -321,7 +321,29 @@ export interface QuickFix {
 // Dialect Types
 // =============================================================================
 
-export type ControlType = 'fanuc' | 'haas' | 'siemens' | 'mazak' | 'okuma';
+/**
+ * Unified ControlType — superset of shift-handover-hub and jobline.ai-g-code.
+ *
+ * Core parsing dialects (g-code ext):
+ *   fanuc | haas | siemens | mazak | okuma
+ * Additional shop-floor controllers (from hub):
+ *   mitsubishi | heidenhain | manual | unknown
+ * Robot / special-purpose dialects (g-code ext only):
+ *   fanuc-robot | abb
+ */
+export type ControlType =
+  | 'fanuc'
+  | 'haas'
+  | 'siemens'
+  | 'mazak'
+  | 'okuma'
+  | 'mitsubishi'
+  | 'heidenhain'
+  | 'manual'
+  | 'unknown'
+  | 'fanuc-robot'
+  | 'abb';
+
 export type MachineType = 'mill' | 'lathe' | 'mill-turn' | 'grinder';
 
 // =============================================================================

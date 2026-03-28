@@ -1,0 +1,8952 @@
+
+Machines
+ABB
+ACCUTEX
+AL
+400SA
+Standard
+500SA
+Standard
+560SA
+Standard
+600SA
+Standard
+750SA
+Standard
+AU
+300iA
+500iA
+600iA
+Standard
+750iA
+Standard
+860iA
+Standard
+900iA
+Standard
+1000iA
+Standard
+1400iA
+Standard
+GA
+43L
+GE
+43
+S
+SP
+500i
+ACE MICROMATIC (AMS)
+DTC
+400
+XL
+Jobber
+500
+Standard
+LT series
+20-C
+Standard
+LT-2 LM 500
+MSY
+MY
+MCV
+300
+Standard
+450
+Standard
+SLT
+10
+LM
+VTL Series
+45 XL
+M
+ACER
+ATM
+1454
+Standard
+AERRE
+CL
+55100
+Standard
+AGIE CHARMILLES
+EDM Drill
+20
+Standard
+300
+ITS-MA2-S-100_BA
+Standard
+Cut P
+550
+Pro
+EDM Series
+Agie 100/200/300
+AGIEVISION
+CHARMILLES
+CHARMILLES FANUC
+CHARMILLES MILLENNIUM
+CHARMILLES ORANGE
+CUT 20/30
+HMI
+ROBOFIL
+330F
+UNIQUA
+AKIRA SEIKI
+Performa
+V5
+Standard
+V 2.5 XP
+V 4.5 XP
+Standard
+SL
+40
+Standard
+ALMAC
+CU
+2007
+3X
+5X (Lehmann TF510/510)
+ALZMETALL
+BAZ - 3x
+35
+GS - 5x
+1200-5
+FDT
+AMS (LEGACY)
+DTC
+400
+XL
+MCV
+300
+Standard
+AMS TECH
+EDM Series
+AW Series
+3SL
+ANAYAK
+VH Plus
+3000
+5X
+APSX
+NANO
+Standard
+ARIX
+CNC
+100 B
+Standard
+V Series
+1000
+Standard
+ATRUMP
+B8AC
+Standard
+AUDATRONIX
+BETA
+F
+Standard
+AVEREX
+HS Series
+450i
+540i
+AWEA
+AF
+1000
+BM
+850
+3X
+1020
+3X
+EP
+3016
+Standard
+FP
+1000
+Standard
+VP
+2012
+AXA
+VHC 3
+3000 XTS
+BA
+BC
+VSC 2 - 3+1
+3000 XTS
+Left
+Right
+Standard
+AXON
+LU Series
+720
+Standard
+800
+Standard
+BEAM
+Mobile
+MobileCLAD
+Additive
+BELOTTI
+FLA
+2617
+Standard
+6526
+Standard
+MDL
+3048
+Standard
+TRIM
+4015
+Standard
+BENZINGER
+GoFuture
+B4
+T1Y- S1-TS
+BERTSCHE
+X-Mill
+Standard
+BETTS - BRIDGEFORD
+E
+84 NC
+Standard
+BFW
+BMV
+45+
+TC24
+60+
+TC24
+Dhruva HE Series
+4070 Hybrid
+Standard
+Omega Penta Series
+40
+S
+BIESSE
+Rover
+A FT 1531
+Standard
+BIGLIA - EUROTECH
+Multipla Series
+B446
+T3Y3
+B465
+T3Y3
+B481
+T3Y3
+Quattroflex Series
+420
+SLL-Y
+710
+SLL-Y
+Rapido Series
+B436 Y2
+B438-SY2
+BMX45-Y2
+Single Turret Series
+501
+YS
+510
+Standard
+735
+SLY
+B301
+YS
+B545
+SLY
+YS
+B550
+Standard
+B565
+Y
+YS
+B620
+YS
+B650
+Y
+B658
+SLY
+B750
+Y
+YS
+B835
+SLY
+B1200
+Standard
+B1250
+YS
+E42
+SL
+SmartTurn
+B1200
+S
+Standard
+SmartTurn II
+B1200
+S
+Trofeo Series
+B446
+SY2
+B465
+SY2
+T2Y
+B481
+SY2
+BOCHI (Baoji Zhongcheng Import & Export Co.)
+CH Series
+46
+DY
+VMC Series
+850
+B
+BOEHRINGER
+VDF
+250C
+M
+Standard
+315C
+Standard
+BOLEY
+BE Series
+BE42Y
+BOST
+VTL
+55-C
+5.000
+BOSTOMATIC
+1000
+Standard
+1440
+Standard
+BRETON
+MATRIX
+1000
+Standard
+BRIDGEPORT
+GX
+480
+Standard
+Series 1
+Knee Mill
+Standard
+VMC
+600 / 22
+Standard
+760 / 22
+Standard
+800 / 22
+Standard
+1000
+22
+XP2
+XP3
+VMC - 3+1
+1000
+XP2
+XR
+1600
+XR - 3x
+1000
+Standard
+1500
+Standard
+BROTHER
+Speedio - 3x
+F600X1
+Standard
+R450X1
+Standard
+R450X2
+Standard
+R650X1
+Standard
+R650X2
+40 Magazine
+Standard
+S300X1
+Standard
+S300X2
+Standard
+S500X1
+Standard
+S500X2
+Standard
+S700XD1
+150mm Riser
+S700X1
+Standard
+S700X2
+Standard
+S1000X1
+350mm Riser
+Standard
+W1000XD1
+Standard
+Speedio - 3+1
+F600X1
+Standard
+R450X1
+Standard
+R450X2
+Standard
+R650X1
+Standard
+R650X2
+40 Magazine
+Standard
+S300X1
+Standard
+S300X2
+Standard
+S500X1
+Standard
+S500X2
+Standard
+S700X1
+Standard
+S700X2
+Standard
+S1000X1
+350mm Riser
+Standard
+W1000XD1
+Standard
+Speedio - 3+2
+F600X1
+Standard
+R450X1
+Standard
+R450X2
+Standard
+R650X1
+Standard
+R650X2
+40 Magazine
+Standard
+S300X1
+Standard
+S300X2
+Standard
+S500X1
+Standard
+S500X2
+Standard
+S700XD1
+150mm Riser
+S700X1
+Standard
+S700X2
+Standard
+S1000X1
+350mm Riser
+Standard
+U500XD1
+5AX
+Standard
+U500XD2
+5AX
+W1000XD1
+Standard
+W1000XD2
+Standard
+Speedio - 5X - MillTurn
+M140X1
+Standard
+M140X2
+Standard
+M200Xd1
+Milling
+MillTurn
+M200X3
+Standard
+M300Xd1
+5ax
+M300X3
+Standard
+TC - 3x
+22B-O
+32 A
+Standard
+32 B QT
+Standard
+32BN-QT
+Nikken 5AX-2MT-105
+Standard
+229
+Standard
+S2A
+Standard
+S2B
+Standard
+S2C-0
+Standard
+TC - 3+1
+32 A
+Standard
+TC - 3+2
+32BN-QT
+Standard
+BULLARD
+DYNATROL VTL
+46
+4-Sided Turret
+BULOVA
+BT
+400
+S
+BUMOTEC
+191 neo
+FT-PRM
+Standard
+FT-R
+65mm
+FT-RP
+65mm
+FTL-RP
+50mm
+65mm
+s181 Series
+FT-P
+32mm
+s191H Series
+FTL-PRM
+32mm
+FTL-R
+32mm
+FTL-RP
+65mm
+C.B.FERRARI
+A Series - 3x
+13
+3X
+17
+A Series - 5x
+176
+Standard
+B
+13
+3X
+15
+3X
+17
+3X
+130
+3X
+GT Series - 5x
+2000
+Standard
+ML Series - 5x
+45
+CAMU
+Power Turn
+14-18TF
+Standard
+Powerdrill - 3x
+2500
+CAZENEUVE
+CTN Series
+210
+Standard
+CELORIA
+FM
+742
+Standard
+CHENBANG
+AV
+260
+Standard
+AVL
+850e
+Standard
+DU
+320
+Standard
+SL
+50
+WY
+CHETO
+CC
+1000
+Standard
+CHEVALIER
+FNL
+250
+SY
+FVM-DCL
+4016
+3X
+QP
+2040
+Standard
+QP-L
+2440
+3X
+UNi5X
+400
+Standard
+CHIRON
+08 Series MT
+FZ 08 MT
+FX
+Precision+
+12 Series
+DZ12-S
+DZ12-W
+FZ12W - 3X
+FZ12KS
+FZ12MT
+Standard
+FZ12KW
+Standard
+FZ12FX
+15 Series
+DZ 15 S Magnum
+Standard
+FZ15 - S
+715 Series
+MT 715 two plus
+Standard
+FZ
+08
+W
+Micro5
+V3
+Standard
+MILL
+2000
+full
+left
+right
+CHMER
+CW Series
+322 S
+Standard
+HM Series
+4030L
+CINCINNATI
+FTV
+1040
+Standard
+CINCINNATI LAMB
+CFV Series
+800i
+Standard
+1050i
+Standard
+CINCINNATI MILACRON
+Arrow
+VMC-1000
+Standard
+VMC-1250
+Standard
+Duplex Mill
+V56
+Lathe
+18
+Standard
+Sabre
+500
+3X
+750
+3X
+CINCOM BY CITIZEN
+A Series
+A16-1F6P
+A20-1F6
+A20-2F7
+A20-3F7
+A32-1M7
+B Series
+B12-3F
+6N
+B16E-1F
+6
+C Series
+C16-1M
+7
+9
+C32-1M8
+D Series
+D25-1M
+7
+8
+E Series
+E32-3M
+4
+K Series
+K12-1F7P
+K16E-1M7
+K16-1F7P
+L Series
+L12-1M
+7
+L12-2M
+10
+L16/20-3M
+7
+L16/20-5M
+7
+8
+L20E-1M
+08
+09
+L20X-1M10
+L20E-2M
+08
+09
+10
+12
+ATC
+L20E-3M
+08
+09
+10
+12
+12 B5
+12B5 ATC
+L20-7M
+7
+8
+L25/32-4M
+L32-1M
+08
+09
+10
+12
+ATC
+L32-6M7
+M Series
+M16-2M
+3
+M16-3M
+3
+5
+M16-4M
+5
+7
+8
+M20-1M
+M20-2M
+3
+M20-3M
+3
+5
+M20-4M
+5
+M32-2M
+3
+M32-3M
+3
+5
+M32-4M
+3
+5
+7
+8
+M32-5M
+5
+7
+8
+R Series
+R04-2F6
+R07-2F6
+CLAUSING
+BVS
+4BVSCNC40
+Standard
+EVS
+4EVSQCNC3L
+Standard
+VMC
+1020S
+CMS
+Antares K
+26-17
+PX5
+Ares
+48-18
+PX5
+Athena
+4020
+Standard
+MX
+5
+PX 5
+CMZ
+TA
+25-YS-640
+30-Y-1100
+30-YS-1100
+Z640 - 15S
+15-YS
+20-YS
+30-YS
+Z 400 - 12S
+15-M
+20
+Z 640 - 12S
+20-Y
+20-YS
+25-YS
+30-Y
+TBI
+Z1350 - 12S
+30
+TC
+35
+Y
+YSR
+Z 1350
+35-Y
+TD
+30-YS-800 (legacy)
+35-Y-1350 (legacy)
+35-YS-2200 (legacy)
+45-Y
+Z800
+Z1350
+Z800 - 12S
+30-YS
+Z800 - 16S
+20-Y
+30-Y
+30-YS
+Z1100 - 12S
+35-Y
+Z1350 - 12S
+30-Y
+35-Y
+Z1350 - 16S
+15Y
+20-Y
+30-Y
+35-Y
+Z2200 - 12S
+25-Y
+Z2200 - 16S
+35-Y
+Z3200 - 16S
+30-Y
+TTL
+52-52
+T1Y-T2Y
+66-66
+T1Y-T2Y
+TTS
+38-38
+T1Y
+T1Y-T2Y
+46-46
+T1Y
+T1Y-T2Y
+52-52
+T1Y
+T1Y-T2Y
+66-66
+T1Y
+T1Y-T2Y
+TX
+66
+Y2 Quattro
+Y3
+CNS
+Jazz
+10
+Standard
+CORREA
+AXIA - 5x
+85
+Standard
+L70
+Standard
+Fenix
+75
+Standard
+FOX - 5x
+50
+Standard
+FOX M - 5x
+170
+Standard
+Norma - 5x
+35
+Standard
+Norma MG - 5x
+25
+Standard
+COSMOS
+CVM - 3+1
+1370
+Standard
+CVM - 3+2
+1160
+Standard
+CR ONSRUD
+E Series
+122E
+24
+194E
+M Series
+145M
+Super Duty
+96C18
+CUBIC
+GTV Series
+27
+SD Series
+12
+16
+20
+CURRENT
+EDM Drill
+CT
+300
+400
+500
+RT
+3038
+SD
+6040AS
+DAEWOO
+ACE
+H100
+DMV
+4020
+4020 Nikken CNC 260
+MYNX - 3x
+500
+Standard
+PUMA
+18
+Standard
+200
+C
+230
+MSB
+240
+B/C
+MSB
+250
+B
+LM
+500
+Standard
+Puma TX Series
+200
+YY
+Puma V Series
+15-3A
+DAHLIH
+MCV - 3X
+1020
+Standard
+DATRON
+C5 Series
+C5
+M8Cube
+M8Cube
+M10 Pro
+Standard
+Standard
+ML Cube
+ML Cube
+ML Cube B
+Standard
+Neo
+Standard
+DEBER
+MDM
+12
+DKD
+TurnMaster
+55300
+DMC
+DL B Series
+22
+LMB
+DL Series
+22
+LSY
+DL-T
+8TH
+Standard
+DMG MORI
+AL
+2
+Standard
+ALX
+2000 / 12ST
+/ 300
+/ 500
+/ 1000
+/ 2000
+MC / 500
+MC / 1000
+MC / 2000
+SMC / 500
+SMC / 1000
+SY / 500
+SY / 1000
+Y / 500
+Y / 1000
+Y / 2000
+2500
+/ 500
+/ 1000
+/ 2000
+MC / 500
+MC / 1000
+MC / 2000
+SY / 500
+SY / 1000
+Y / 500
+Y / 1000
+Y / 2000
+CL
+15
+25
+B
+200
+B
+B/500
+2000
+CLX
+350 V3
+350 V4
+350 V6
+450 TC-V7
+HSK63
+450 TC-V8
+CaptoC6
+CaptoC6_SR
+HSK63
+HSK63_SR
+450 TC-V8 ISO
+CaptoC6
+CaptoC6_SR
+HSK63
+HSK63_SR
+450 V1
+Standard
+450 V3
+Standard
+450 V3 (Gen.1)
+450 V4
+450 V6
+550 TC-V8
+HSK63
+550 V3
+550 V4
+550 V6
+750 V1
+Standard
+750 V3
+Standard
+750 V4
+Standard
+750 V6
+SR
+750 V6 ISO
+SR
+CMX U
+50
+70
+70 InlineMaster
+Standard
+CMX V
+1100
+Standard
+CMX V - 3+1
+600
+Fanuc
+800
+Standard
+1100
+Fanuc
+Standard
+CMX V - 3+1 (Obsolete)
+600
+Standard
+1100
+Standard
+CMX V - 3+2
+1100
+Fanuc
+Standard
+CMX V (Legacy)
+600
+600 EA510.L
+800
+800 EA510.L
+1100
+1100 EA510.L
+CTV
+160 L
+V4
+160 R
+V4
+250 L
+V3_T13_VDI40
+V3_T13H_VDI40
+V3_VDI40
+250 R
+V3_T13_VDI40
+V3_T13H_VDI40
+V3_VDI40
+315 R
+V3_T13_VDI40
+V3_VDI40
+CTV (3G)
+250 L
+V3_T13_VDI40
+250 R
+V3_T13_VDI40
+CTX 510
+1250_12ST
+Std.
+Gildemeister
+Std.
+CTX 2500
+700
+MC
+SY
+SY - ISO
+Y
+1250_12ST_10In
+SY
+SY - ISO
+1250_18ST_12In
+MC
+SY
+Y
+CTX - Gen. 6 - Stealth Design
+350 V4
+S1-65_Disc-HPT-12_VDI30
+S1-76_Disc-HPT-12_VDI30
+350 4A
+T1-Y-12_T2-12
+450 V6
+S1-80_S2-65_VDI40
+550 V6
+S1-80_S2-65_VDI40
+S1-102_S2-80_VDI40
+CTX alpha
+300 V3
+Standard
+300 V4
+500 V3
+Standard
+500 V4
+500 V6
+CTX beta 500
+linear V4
+linear V6
+CTX beta 800
+4A
+4A Twin concept
+S1-76_S2-76_T1-12-Y_T2-12
+S1-76_S2-76_T1-16-Y_T2-16-SR
+S1-102_S2-76_T1-12-Y_T2-12
+TC4A-V10
+TC-V7
+TC-V7 ISO
+HSP-76
+TC-V8
+HSP76
+HSP102
+TC-V8 ISO
+V3-Gen1
+Standard
+V3-Gen2
+Standard
+V4
+12 Stations
+16 Stations
+18 Stations
+V6
+Gildemeister
+ISO
+CTX beta 1250
+4A
+ISM76
+Standard
+4A Twin concept
+TC4A-V10
+S1-76_S2-76_T4-12
+S1-76_S2-76_T4-12_StartOnSub
+S1-76_S2-76_T4-Y-12
+S1-102_S2-102_T4-12
+S1-102_S2-102_T4-Y-12
+S1-102_S2-76_T4-12
+S1-102_S2-76_T4-12_SR
+S1-102_S2-76_T4-Y-12
+TC4A-V10-Gen1
+Standard
+TC-V7
+SR-X3_ISM76
+SR-X3.1_ISM76_NoZ3
+Standard
+TC-V7 ISO
+SR-X3_ISM76
+Standard
+TC-V8
+TC-V8-Gen 1.5
+S1-102_S2-52
+TC-V8-Gen 2
+S1-76_S2-76
+S1-76_S2-76_SR
+S1-102_S2-52
+S1-102_S2-76
+S1-102_S2-76_SR
+TC-V8 ISO
+V3
+Standard
+V4
+V6
+CTX beta 2000
+4A
+TC4A-V10
+TC-V7
+TC-V8
+TC-V8 ISO
+V3
+Standard
+V4
+V6
+CTX beta TC - Stealth Design
+450 V8
+S1-76_S2-102
+S1-76_S2-76
+S1-102_S2-102
+S1-102_S2-76
+CTX ecoline
+210 V3
+310 V3
+310 V4
+510 V3
+510 V4
+CTX gamma 1250
+TC4A-V10-Gen1
+S1-102_S2-76_T4-12
+TC4A-V10-Gen2
+S1-102_S2-102_T4-12
+S1-102_S2-76_T4-12
+TC-V7
+TC-V7 ISO
+TC-V8
+TC-V8 ISO
+V4
+CTX gamma 2000
+TC4A-V10
+TC4A-V10-Gen1
+Standard
+TC4A-V10-Gen2
+S1-102_S2-102_T4-12
+TC-V7
+TC-V7-Gen1- ISO
+HSP-102_HSK-100_ST
+HSP-102_HSK-100_ST_TS_extended
+HSP-102_HSK-63A_ST
+TC-V8
+S1-102_S2-102_HSK100-C8
+S1-102_S2-102_HSK63-C6
+TC-V8 ISO
+S1-102_S2-102_HSK100_C8
+S1-102_S2-102_HSK63_C6
+TC-V8 ISO legacy
+TC-V9
+Standard
+CTX gamma 3000
+TC4A-V10
+TC-V7
+HSP-127_HSK-63A_ST
+TC-V7 ISO
+TC-V8
+TC-V8 ISO
+CTX linear
+320 V4
+Standard
+320 V6
+400
+V3
+410 V3
+Standard
+420 V3
+Standard
+420 V4
+Standard
+510 V3 (old)
+520 V3
+Standard
+620
+V3
+DL
+20
+151
+Y
+DMC duoBLOCK (1G)
+125 U hi-dyn
+Standard
+DMC duoBLOCK (2G)
+80 FD
+Standard
+100 U2
+Standard
+125 FD
+DMC duoBLOCK (3G)
+80 FD
+Standard
+100 U3
+Standard
+125 U3
+Standard
+DMC duoBLOCK (4G)
+60 FD
+60 U
+80 FD
+80 U
+100 U
+125 FD
+125 FD - A Head
+125 U
+160 FD
+160 U
+DMC H linear (2G)
+55 H2
+60 H (5X)
+60 H I
+60 H II
+80 H2 (5X)
+DMC H monoBLOCK
+65H
+AB_HSK-A63
+AC_HSK-A63
+DMC monoBLOCK (2G)
+65
+65 FD
+75
+Standard
+85
+85 FD
+85-RPS3
+Standard
+DMC Portal (1G)
+340 FD
+Standard
+DMC Portal (2G)
+210 FD
+210 U
+270 FD
+270 U
+340 FD
+340 U
+A-Head
+B-Head
+DMC V
+63
+75 linear
+Standard
+103
+Standard
+104
+3X
+635
+650
+650 EA510.L
+835
+850
+850 EA510.L
+1035
+1035 EA510.L
+1150
+1150 EA510.L
+1450
+1450 EA510.L
+1850
+1850 EA520.L
+DMC V - 3+1
+635
+Standard
+1035
+Standard
+1150
+Standard
+1450
+Standard
+DMC V ecoline
+635
+635 EA510.L
+1035
+1035 EA510.L
+DMF
+180
+180 B Standard
+180 BA
+180-7 B
+SK40
+180-7 BC
+Speedmaster
+180-7 BC Standard
+200-8
+B
+Standard
+Table leftside
+200-8 FD BC
+Standard
+250
+Standard
+250 B
+Left - SK40
+Right - SK40
+Standard - SK40
+260-7
+260-7 B Standard
+260-7 BA
+260-7 BC
+260-11
+260-11 B Standard
+260-11 BA
+260-11 BC
+HSK63 speedMASTER
+HSK63 speedMASTER - left
+HSK63 speedMASTER (Right Rotary Table)
+HSK100
+Standard
+300-8 BC
+Standard
+300-8 FD BC
+Stealth Design
+300-11 FD
+Left - HSK100
+Right - HSK100
+Standard - HSK100
+360-7 B Standard
+360-11
+360-11 BA
+360-11 BC - right C-axis
+SK40 - HSK-A63
+SK50 - HSK-A100
+360-11 BC - left C-axis
+360-11 FD BC
+Standard
+400-11 BA
+Standard
+400-11 BC
+HSK100 - full
+400-11 FD BC
+HSK100 - full
+HSK100 - left
+HSK100 - right
+Standard
+DMF - 3+1
+260-7
+Standard
+360 linear
+left
+right
+DMF - 4+1
+180 B
+Standard
+180-7 B
+Speedmaster
+250 B
+Left - SK40
+Right - SK40
+Standard - SK40
+260-7 B
+HSK63
+Standard
+260-11
+HSK63 speedMASTER - right
+HSK63 speedMASTER - full
+Standard
+300-8
+A Table
+Standard
+300-11B
+Standard
+360-11 B
+HSK-A63
+Left - HSK-A63
+Right - HSK-A63
+SK50 - HSK-A100
+Standard
+400-11B
+HSK 100
+600-11 B
+HSK100 - full
+DMF - 5+1
+360-11 BC
+Standard
+DMP - 3+1
+70
+Standard
+DMP - 5x
+35
+Standard
+70
+Standard
+DMU (1G)
+50
+3X
+5X
+5x Manual
+DMU (2G)
+50
+50 Blum
+50 T (old)
+70
+DMU (3G)
+40
+Stealth Design
+50
+Model 2017
+Model 2018
+Stealth Design
+50 - Legacy
+DMU duoBLOCK (1G) - 5x
+60P Hi-Dyn
+Standard
+60 P
+Standard
+80P Hi-Dyn
+Standard
+DMU duoBLOCK (2G) - 5x
+80 P
+Standard
+100 P
+SK40
+SK50
+DMU duoBLOCK (3G) - 5x
+125 FD
+HSK-A 100
+DMU duoBLOCK (4G)
+60 FD
+60 P
+80 FD
+80 P - SK50/HSK100
+80 P - SK40/HSK63
+HSK 63
+90 FD
+90 P
+SK40_HSK63
+SK50-HSK100
+100 FD
+100 P
+125 FD
+125 P
+160 FD
+160 P
+200 P
+DMU ecoline
+50
+DMU eVo
+40
+Probe
+Standard
+40 FD
+40 linear
+50
+60
+60 FD
+60 linear
+70
+70 Linear
+Standard
+80
+80 FD
+80 linear
+100 FD
+100 linear
+DMU eVo (2G)
+60 linear
+Round Table
+Standard
+Standard - U-Axis
+DMU Gantry (1G)
+200 - A90
+200 - B45
+200 - B45 (4000)
+Standard
+340 - A90
+340 - B45
+340 - B50
+X6000 HSK-A63
+X8400 HSK-A63
+600 linear
+DMU Gantry Stealth Design
+200 - 2000
+45° B-axis-head - speedMASTER 20,000
+200 - 4000
+45° B-axis-head - speedMASTER 20,000
+DMU H monoBLOCK
+65
+AB_HSK-A63
+AC_HSK-A63
+AC_LPP Pallet
+65 FD
+AC
+LPP Pallet
+DMU H monoBLOCK (2G)
+65
+AB_HSK-A63
+85
+AC_HSK-100
+DMU H monoBLOCK Stealth Design
+85 FD
+AC_HSK-100
+DMU monoBLOCK (1G)
+40
+60
+80
+100
+DMU monoBLOCK (2G)
+65
+65 FD
+Standard
+Ultrasonic
+75
+Speedmaster
+Standard
+75 FD
+85
+85 FD
+HSK63
+HSK100
+Ultrasonic
+95
+95 FD
+105
+105 FD
+125
+125 FD
+DMU monoBLOCK (2G) Stealth Design
+65 FD
+speedMASTER HSK-A63 - 20.000
+75
+speedMASTER HSK-A63 - 20.000
+DMU Portal
+200 P
+Standard
+210 FD
+210 P
+210 P2
+HSK-A100
+270 P
+340 P
+600 P
+DMU T
+50
+Standard
+60
+60 T2
+Standard
+100
+DMU T - 4x
+100
+Standard
+DMU T (2G) - 5x
+80
+SK40 - 12000
+100
+SK40 - 10000
+DMU V
+50
+Hybrid
+DMV
+60
+inlineSPINDLE 12.000
+110
+inlineSPINDLE 12.000
+115
+Standard
+145
+inlineSPINDLE 12.000
+speedMASTER 20.000
+185
+inlineMASTER 15.000
+DMX U Series
+60 U
+inlineSPINDLE 12,000
+80 U
+inlineSPINDLE 12,000
+DuraCenter
+5
+Standard
+DuraCenter - 3+1
+5
+Standard
+DuraCenter (Legacy)
+5
+DuraTurn
+2030
+Standard
+2050
+Standard
+2550
+Standard
+DuraVertical
+635
+Ecoline
+1035
+Ecoline
+5060
+Standard
+5100
+Standard
+Duravertical - 3+1
+5100
+Standard
+Duravertical - 3+2
+5100
+Standard
+DuraVertical (Legacy)
+1035 eco
+5060
+5080
+5100
+ecoMill
+50
+70
+ecoMill V
+600
+635
+635 EA510.L
+1035
+1035 EA510.L
+1100
+1100 EA510.L
+ecoTurn
+310
+450
+510
+510 V3 (XZ)
+510 V4 (XZY)
+650
+F-M
+1
+Standard
+FP - 3x
+3-50
+Standard
+4
+Standard
+Frontier
+M2
+GD
+32
+Standard
+Gildemeister CT
+40
+Standard
+Gildemeister CTX
+200E
+Standard
+500E
+Standard
+GMX
+250
+Linear
+S Linear
+400
+Linear V7 - Gildemeister
+Linear V7 - ISO
+Standard
+Graziano CTX
+510
+12 Stations
+Graziano GR
+300
+C
+Graziano GT
+300
+T1Y-2S
+T1-TS
+GV
+503 5AX
+HSC (1G)
+20 linear
+30 linear
+70 linear
+HSC (2G)
+105 Linear
+Standard
+HSC (2G) - 5x
+55 linear
+75 linear
+105 linear
+i-Series
+i30v
+40 Taper
+i-Series (Legacy)
+i 30 V
+INH
+63
+Standard
+80
+Standard
+LASERTEC DED HYBRID
+65 FD
+125 FD
+Standard
+4300
+LL
+8
+M
+300-A3
+4X
+M
+M1
+Standard
+M2
+Standard
+MAHO MH
+800
+C
+1000
+E
+MH
+50
+Standard
+633
+5x
+Standard
+MILLTAP
+700
+700 DDR
+700 Lehmann EA
+500 EA
+700 Lehmann TF
+MT
+1500
+2000
+SZ
+2500
+1500 S
+1500 SZ
+4000
+BT
+MV
+40
+M
+65
+50
+MV - 3+1
+65
+50
+MV (Legacy)
+40
+M
+NEF
+400 V3
+600 V3
+NH
+4000 DCG
+Standard
+5000
+40 Taper
+5000 DCG
+40 Taper
+50 Taper
+6300 DCG
+Standard
+6300 DCG II
+Standard
+8000 DCG
+Standard
+NH (Legacy)
+4000
+5000
+CAT40
+CAT50
+6300
+8000
+NHX (1G) (Legacy)
+4000
+5000
+5500
+6300
+8000
+10000
+NHX (2G) (Legacy)
+4000
+Standard
+5000
+Standard
+5500
+Standard
+6300
+Standard
+8000
+Standard
+10000
+Standard
+NHX (3G) (Legacy)
+4000
+Standard
+5000
+Standard
+8000
+Standard
+NHX (Gen1)
+4000
+Standard
+5000
+Standard
+5500
+Standard
+8000
+Standard
+NHX (Gen2)
+4000
+Standard
+5000
+Standard
+5500
+HSK100
+Standard
+6300
+Siemens
+Standard
+8000
+HSK100
+NHX (Gen3)
+4000
+Standard
+5000
+Standard
+NL
+1500
+/ 500
+MC / 500
+S / 500
+SMC / 500
+SY / 500
+Y / 500
+2000 / 12ST
+/ 500
+MC / 500
+S / 500
+SMC / 500
+SY / 500
+Y / 500
+2000 / 20ST
+2000-500SMC
+2500
+/ 700
+/ 1250
+MC / 700
+MC / 1250
+S / 700
+S / 1250
+SMC / 700
+SMC / 1250
+SY / 700
+SY / 1250
+Y / 700
+Y / 1250
+2500-700SY
+2500-700Y
+2500-1250SMC
+2500-1250SY
+3000
+/ 700
+/ 1250
+/ 2000
+/ 3000
+MC / 700
+MC / 1250
+MC / 2000
+MC / 3000
+Y / 700
+Y / 1250
+Y / 2000
+Y / 3000
+NLX (1G)
+1500
+/ 500
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+1500 / 12ST_Sauter
+/ 500
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+1500 / 16ST
+/ 500
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+1500 / 20ST
+/ 500
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+2000
+/ 500
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+2000 / 10ST
+/ 500
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+2000 / 12ST_Sauter
+/ 500
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+2000 / 16ST
+/ 500
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+2000 / 20ST
+/ 500
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+2500
+/ 700
+/ 1250
+MC / 700
+MC / 1250
+SMC / 700
+SMC / 1250
+SY / 700
+SY / 1250
+Y / 700
+Y / 1250
+3000
+/ 700
+MC / 700
+Y / 700
+3000 / 10ST
+/ 700
+MC / 700
+Y / 700
+3000 / 12ST_Sauter
+/ 700
+MC / 700
+Y / 700
+4000 / 10ST
+Y / 750
+NLX (2G)
+1500 / 12ST
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+1500 / 20ST
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+2000 / 12ST
+500
+MC / 500
+SMC / 500
+SY
+SY / 500
+Y / 500
+2000 / 20ST
+MC / 500
+SMC / 500
+SY / 500
+Y / 500
+2500 / 10ST
+500
+700_Standard
+MC/700
+MC/1250
+SMC/700
+SMC/1250
+SY/700
+SY/1250
+Y/700
+Y/1250
+2500 / 12ST
+500
+700
+MC/700
+MC/1250
+SMC/700
+SMC/1250
+SY/700
+SY/1250
+Y/700
+Y/1250 - 1SR
+2500 / 12ST_Sauter
+700
+1250
+MC / 700
+MC / 1250
+SMC / 700
+SMC / 1250
+SY / 700
+SY / 1250
+SY / 1250 / noT
+Y / 700
+Y / 1250
+2500 / 20ST
+500
+700
+MC/700
+MC/1250
+SMC/700
+SMC/1250
+SY/700
+SY/700-8in
+SY/1250
+Y/700
+Y/1250
+Y/1250 - 1SR
+3000 / 10ST
+Y / 3000
+3000 / 12ST
+/ 700
+/ 2000
+MC / 700
+MC / 1250
+MC / 2000
+MC / 3000
+Y / 700
+Y / 2000
+4000 / 10ST
+A / 750
+AY / 750
+4000 / 12ST
+A / 750 MT5
+AMC / 750 MT5
+AY / 750 MT5
+B / 1500 SLU-4
+BMC / 1500 SLU-4
+BY / 1500
+6000
+/ 1000
+/ 2000
+BY/2000
+MC/1000
+MC/2000
+Y/1000
+Y/2000
+NLX (2G) Stealth Design
+2500 / 12ST_BMT60
+700 / SY
+700 / SY - Siemens
+2500 / 20ST_BMT40
+700 / SY - Siemens
+NLX (3G)
+2500 / 12ST
+RS/700_83mm Spec
+NMH
+6300
+50 Taper
+10000
+Standard
+NMH (Legacy)
+6300
+10000
+NMV
+1500
+Standard
+Turning Spec
+3000
+AWC
+Standard
+Turning Spec
+5000
+Standard
+Tap-Pallet
+Turning Spec
+8000
+Standard
+Turning Spec
+NMV (Legacy)
+1500 DCG
+With Turning
+Without Turning
+3000 DCG
+With Turning
+Without Turning
+5000 DCG
+With Turning
+Without Turning
+8000 DCG
+With Turning
+Without Turning
+NT
+1000 WZ
+Standard
+3100 DCG
+500 C
+1000
+1000 S
+3150 DCG
+500 C
+500 CZ
+1000
+1000 S
+1000 SZ
+1000 Z
+3200 DCG
+500 C
+500 CZ
+1000
+1000 S
+1000 SZ
+1000 Z
+4200 DCG
+700 C
+700 CZ
+1000
+1000 S
+1000 SZ
+1000 Z
+1500
+1500 S
+1500 SZ
+1500 Z
+4250 DCG
+700 C
+700 CZ
+1000
+1000 S
+1000 SZ
+1000 Z
+1500
+1500 S
+1500 S - 1SR
+1500 SZ
+1500 SZM
+1500 Z
+4300 DCG
+700 C
+700 CZ
+1000
+1000 S
+1000 SZ
+1000 Z
+1500
+1500 S
+1500 S
+1500 SZ
+1500 SZM
+1500 Z
+5400 DCG
+1200 C
+1200 CZ
+1800
+1800 S
+1800 SZ
+1800 Z
+6600 DCG
+3000B TS
+3000 CS
+3000 CS_1SR
+3000 CS_2SR
+4000 LBB_1SR
+4000 LBB_1SR_TS
+6000 CS
+6000 CS_2SR
+6000 LBB_2SR
+NTX
+1000 (1G) - SZM
+1000 (2G)
+S
+S - ISO
+1000 (2G) - SZM
+1000 (2G) - SZM - StartOnSub
+1000 WZ
+Standard
+S
+NTX (1G)
+1000
+SZ
+SZM
+W
+2000
+S
+SZ
+SZM
+T
+TZ
+TZM
+NTX (2G)
+500
+S1-50_S2-50
+S1-50_S2-50_T-Y-16
+S1-83_S2-50_T-Y-12
+S1-83_S2-50_T-Y-12 - Siemens
+S1-83_S2-50_T-Y-16
+T
+1000
+S
+S CH
+SZ
+SZ CH
+SZM
+SZM - Siemens
+SZM CH
+T
+TZ
+TZM
+2000
+S
+SZ
+SZ - T10_CH
+SZ - T12
+SZM
+SZM-T10_CH
+SZMY/1500-T12 - Siemens
+SZYM - T12
+SZYM-T10_CH
+T
+TZ
+TZM
+TZYM
+2500
+S
+S - 1SR
+SZ-T10
+SZ-T12
+SZ/3000-T10 LBB
+SZM-T10
+SZM-T12
+SZY/3000-T10 LBB
+SZYM-T10
+SZYM-T12
+T
+TZ
+TZM
+TZYM
+3000
+S
+S - 1SR
+S - Siemens
+SZ - T10
+SZ - T12
+SZM
+SZM/3000 - T12
+SZYM
+SZYM - Siemens
+T
+TZ
+TZM
+TZYM
+NTX (3G)
+2000
+1500S
+1500SZYM-T12
+2500
+1500S
+SZM-T12_Siemens
+3000
+3000_S1-111_S2-91_B1_ST-S_Siemens
+NV
+5000
+a1A - 40 Taper
+a1B - 40 Taper
+7000
+40 Taper
+50 Taper
+NV - 3+1
+5000
+a1A - 40 Taper
+a1B - 40 Taper
+7000
+50 Taper
+NV - 3+2
+5000
+a1A - 40 Taper - RC
+NV (Legacy)
+NV 5000 Alpha1A-40 RC200 mm
+NV 5000 Alpha1A-40 Standard
+NV 5000 Alpha1B-40 Standard
+NV 7000-50 Standard 10K-15K RPM
+NVD
+1500
+Standard
+4000
+Standard
+NVD (Legacy)
+NVD 1500 DCG Standard
+NVX (1G) (Legacy)
+NVX 5060-40
+NVX 5080-40
+NVX 5100-40
+NVX 7000-40
+NVX 7000-50
+NVX (2G) (Legacy)
+NVX 5060-40 II
+NVX 5060-50 II
+NVX 5080-40 II
+NVX 5080-50 II
+NVX 5100-40 II
+NVX 5100-50 II
+NVX (Gen1)
+5080
+40 Taper
+7000
+40 Taper
+50 Taper
+NVX (Gen1) - 3+1
+7000
+50 Taper
+NVX (Gen1) - 3+2
+7000
+40 Taper
+50 Taper RC
+NVX (Gen2)
+5080
+50 Taper
+5100
+40 Taper
+50 Taper
+NVX (Gen2) - 3+1
+5080 EXTD
+40 Taper
+5100
+40 Taper
+50 Taper
+NVX (Gen2) - 3+2
+5080
+40 Taper
+40 Taper - T-Slots
+5100
+40 Taper
+50 Taper
+NZ
+1500
+T2
+T2Y
+T2Y2
+T3
+T3Y2
+T3Y3
+2000
+T2
+T2Y
+T2Y2
+T3
+T3Y2
+T3Y3
+NZ DUE - L
+T1-B_T2-B
+S1-72_S2-65_BMT42
+NZ DUE - S
+T1-B_T2-B
+S1-65_S2-65_BMT42
+NZ TRE - L
+T1-B_T2-B_T4_B-T3_SR
+S1-72_S2-72_BMT40
+T1_T2_T4_T3-SR
+S1-72_S2-72_BMT40
+NZ TRE - S
+T1_T3_T4
+S1-72_S2-72_BMT40
+NZX
+1500
+/ 800S
+/ 800ST
+/ 800STY2
+/ 800STY3
+/ 800SY
+/ 800SY2
+2000
+/ 800S
+/ 800ST
+/ 800STY2
+/ 800STY3
+/ 800SY
+/ 800SY2
+2500
+/ 1000Y
+4000A
+1000L
+NZX (2G)
+1500
+/ 800S
+/ 800ST
+/ 800STY2
+/ 800STY3
+/ 800SY
+/ 800SY2
+2000
+/800 S1-91_S2-73_T1-MC-16_T4-MC-16_PR
+/ 800S
+/ 800ST
+/ 800STY2
+/ 800STY3
+/ 800SY
+/ 800SY2
+/ 800SY2 - ULT
+2500
+/ 600SY
+/ 600SY2
+/ 1000Y
+4000A
+/ 1000
+/ 1000 MC
+/ 1000 Y
+/ 2000
+/ 2000 MC
+/ 2000 Y
+/ 3000
+/ 3000 MC
+/ 3000 Y
+4000B
+/ 1000
+/ 1000 MC
+/ 1000 Y
+/ 2000
+/ 2000 MC
+/ 2000 Y
+/ 3000
+/ 3000 MC
+/ 3000 Y
+4000C
+/ 1000
+/ 1000 MC
+/ 1000 Y
+/ 2000
+/ 2000 MC
+/ 2000 Y
+/ 3000
+/ 3000 MC
+/ 3000 Y
+SH
+400
+Standard
+500
+Standard
+630
+Standard
+SH (Legacy)
+400
+503
+Standard
+8000
+SL
+3
+H
+4
+B
+T
+6
+B
+15
+Standard
+25
+B
+B5
+B - T12
+B/1000
+MC
+Standard
+Y / 500
+35
+B
+Standard
+65
+A
+75
+A
+Std.
+80
+B
+150
+SMC
+Std.
+Y
+153
+SY
+154
+SY
+200
+SMC
+Std.
+203
+MC
+204
+250
+B
+BSMC/1000
+Standard
+253
+Standard
+300
+MC
+303
+MC
+403
+800B
+2000B
+2000B - 1SR
+2000BMC
+603
+2000
+2000BMC
+B / 1000
+2500
+Y / 650
+Sprint
+20-5
+20-8
+20-8 linear
+32 linear "Classic"
+32-5
+32-8
+32-8 KIT SWISS TYPE
+Standard
+42 linear "Classic"
+42-8 linear
+42-10 Kit Swiss Type
+Standard
+42-10 linear
+50-2T - Twin Concept
+50-2T FANUC
+50-3TB
+No Z5
+Standard
+65-2T
+65-2T - Twin Concept
+65-3T FANUC
+65-3T linear
+Old Version
+Standard
+65-3TB
+Standard
+SV
+403
+Standard
+500
+40 Taper
+SV - 3x (Legacy)
+500
+Standard
+SV - 3+1
+500
+Standard
+SVL
+5020
+Standard
+SVL - 3x (Legacy)
+5020
+T
+T1 V3
+Pro
+TL
+40
+B
+MC/2000
+Twin
+65
+Ultrasonic (1G)
+20 linear
+Standard
+Ultrasonic (2G) - 3x
+20 linear
+Standard
+Ultrasonic (2G) - 5x
+20 linear
+Standard
+Ultrasonic (3G) - 5x
+20 linear
+Standard
+Wasino A Series
+12
+18S
+150Y-18
+Wasino LJ series
+LJ 63
+M
+ZL
+15
+M
+150
+SMC
+250
+MC/600
+ZT
+1500
+Y
+YB
+2500
+Y
+DOERRIES / SCHARMANN
+HTL
+60
+2
+DOOSAN / DN SOLUTIONS
+ACE
+DB
+130C
+BM Series
+1530M
+2035M
+2740M
+2740U
+BVM Series
+5700
+BVM Series 3+1
+5700
+BVM Series 3+2
+5700
+DB Series
+130CX
+DBC Series
+110 II
+110 S
+130S
+130L II
+130 II
+130SL
+160
+250L II
+250 II
+DHF
+8000
+DMV Series
+3016 L
+DNM 5AX Series
+200
+350
+DNM Series
+400
+500 II
+510
+650 II
+750 /50 II
+750 II
+750 L II
+4000
+4500
+4500S
+5700
+5700S
+6700
+6700 12K Spindle
+DNM Series - 3+1
+400
+400 II
+500 II
+650
+650 II
+750 II
+750 L II
+4500
+4500S
+5700
+5700S
+5700 L
+6700
+6700S
+DNM Series - 3+2
+650 II
+4500S
+5700
+DNX Series
+2100
+SB
+DVF
+4000 15K Spindle
+C Type Table
+5000
+5000 18K Spindle
+A Type Table
+B Type Table
+C Type Table
+D Type Table
+6500
+6500 T
+8000
+8000T
+DVF 2nd Gen
+5000
+5000 - 20K Spindle
+HC
+400 II
+500 II
+HM
+1000
+1250
+1250W
+HP
+4000 II
+5100
+5100 II
+LEO
+1600
+Standard
+Lynx Series
+200
+LM
+210
+A / B
+220
+A / B / C
+G Super
+L (A / B / C)
+LM (A / C)
+LMS (A / C)
+LSY (A / C)
+LSY (A / C) / 24ST
+LY (A / C)
+LY (A / C) / 24ST
+M (A / C)
+Y (A / C)
+300
+M
+STD
+2100
+A / B
+L (A / B / C)
+LM (A / B)
+LMS (A / B)
+LSY (A / B)
+LY (A /B)
+M (A / B)
+2100 / 24ST
+LM (A / B)
+LMS (A / B)
+LSY (A / B)
+LY (A / B)
+M (A / B)
+2600 / 24ST
+SY
+Y
+MV
+3016-LD
+Mynx
+500
+530
+540
+5400
+5400/50
+6500
+6500/50
+7500
+7500/50
+7500/50 II
+9500
+Mynx Series - 3+1
+5400
+9500
+Mynx Series - 3+2
+9500
+NHM Series
+6300
+Standard
+NHP
+4000
+5000
+5500
+6300
+8000
+NM Series
+510
+Puma DNT Series
+2600
+M
+PUMA GT Series
+2100
+300
+300 M
+B
+M
+STD
+Y II
+2600
+L
+LM
+M
+STD
+XLB
+3100
+L
+LM
+M
+STD
+Puma MX Series
+1600
+/735
+S
+S / 735
+ST
+ST / 735
+STD
+T
+T / 735
+2100
+L
+LS
+LST
+LT
+S
+ST
+STD
+T
+2500
+ST
+2600
+S
+ST
+STD
+T
+3100
+S
+STD
+Puma Series
+240
+B / C
+M
+MS
+280
+B/C
+LM
+M
+300
+B/C
+L
+LM
+M
+MS
+S
+400
+A / B / C
+L (A / B / C)
+LM (A / B / C)
+M (A / B / C)
+XL (A / B / C)
+XLM (A / B / C)
+480
+L
+480 XL
+D
+M
+STD
+600
+L
+LM
+LY
+M
+STD
+XL
+XLM
+XLY
+700
+L
+LM
+LY
+M
+STD
+XL
+XLM
+XLY
+800
+B
+L
+LB
+LM
+LY
+M
+STD
+XL
+XLM
+XLY
+1000
+MA
+1500
+L
+LM
+LMS
+LS
+LSY
+LY
+M
+MS
+S
+STD
+SY
+Y
+2000
+S
+STD
+SY
+2100
+L
+LM
+LMS
+LS
+LSY
+LY
+M
+MS
+S
+STD
+SY
+SY / 24ST
+Y
+2500
+LY
+2600
+500
+L
+LM
+LMB
+LMS
+LS
+LSY
+LSY II
+LY
+LYB
+M
+M 500
+MS
+S
+STD
+SY
+SYB II
+SYII
+Y
+Y / 24ST
+Y II
+YB II
+YII / 24ST
+3100
+L
+LM
+LSY / 24ST
+LY
+M
+STD
+SY
+UL
+ULM
+ULY
+XL
+XLM
+XLY
+Y
+4100
+A / B / C
+L
+LM
+LMA
+M
+MB
+XLM
+5100
+A / B / C
+L
+LM
+LY
+M
+XLYB
+Puma SMX Series
+2100
+S
+SB-Siemens
+ST
+ST - Siemens
+ST_24Station
+2600
+S
+ST
+STD
+3100
+L
+LS
+S
+ST
+STD
+5100
+LB
+LSB - Siemens
+Puma ST Series
+20 GS
+PUMA TL Series
+2000
+Standard
+Puma TT Series
+1300
+SYY
+1500
+MS
+S
+SY
+1800
+MS
+S
+SY
+1800 / 24ST
+SY
+2000
+MS
+S
+SY
+2100
+SYY
+2500
+MS
+S
+SY
+PUMA TW Series
+2100
+M
+STD
+2600
+M
+STD
+Puma V Series
+400
+M
+Std
+550
+M
+Standard
+8300
+L - Standard
+M
+Standard
+9300
+M
+Standard
+Puma VT Series
+900M
+Standard
+1100M
+Standard
+Puma VTR Series
+1012F
+1012FC
+1216
+1216F
+1216M
+1216FC
+1620
+1620M
+Puma VTS Series
+1214M
+Standard
+1620M
+Standard
+S Series
+310
+M
+SVM Series
+4100
+Standard
+5100 L
+T Series
+4000L
+Standard
+VC
+320
+430
+500
+Standard
+510
+3600
+VC 5AX Series
+630
+VCF 850 II Series
+L
+LSR
+SR
+Standard
+VCF 850 II Series - 3+1
+L
+Standard
+VCF 850 II Series - 3+2
+L
+Standard
+VCF 850 II Series - 4+1
+LSR
+SR
+VCF 850 II Series - 5x
+LSR
+SR
+VCF Series - 3x
+5500
+L
+VM
+6500
+DURANGO
+Mill
+3-Axis
+Standard
+EDM Drillmate
+EDB-640sp
+EDB-640sp
+EDM MAX
+EDM
+Standard
+EIKON
+MCV
+2000
+EMAG
+VL
+3 Duo
+EMCO
+Concept Mill
+55
+ECOMILL
+X10000 Y2500 Z1300
+AC
+W1500 ABC
+ECOMILL PLUS
+HPC3
+Universal Head 6x
+EMCOMILL
+E350
+3X
+EMCOTURN
+332
+B
+420MC
+E25
+TCM
+E45
+MY
+SMY
+E65
+SMY
+HYPERTURN
+45
+Standard
+45 G3
+SMY-PLUS
+65 Powermill
+SYB
+665MC
+Standard
+MaxxMill
+400
+630
+Standard
+750
+Standard
+MAXXTURN
+45
+M
+MY
+SM
+SMY
+45 G2
+Standard
+65
+M
+MY
+SM
+SMY
+95-G2
+MY
+UMILL
+750
+Standard
+1800 FD
+Electrospindle_head
+VERTICAL TURN VT
+160
+MY
+260
+MY
+400
+MY
+ENSHU
+GE
+40H
+Standard
+460H
+Standard
+480H
+BIG Plus / CAT40 - 15K
+WE
+30Ve
+2APC
+ERNAULT TOYODA
+HES Series
+32/62
+Standard
+ETASIS
+VL Series - 3x
+1100
+Standard
+EUROTECH SWISS
+Xtreme
+42
+SLY2-B
+EXCETEK
+G Plus Series
+V400G Plus
+Standard
+WG Series
+W350G
+Standard
+WX Series
+1280
+Standard
+EXERON
+HSC
+MP9
+HSK-E50
+FADAL
+VMC
+15
+Standard
+2016L
+Std.
+3016
+FX
+Std.
+3020
+Std.
+VH65
+3320R-II
+3X
+4020
+B-II
+B-II w/ Index Designs TR-8
+5020
+A
+B-II
+6030
+Std.
+8030
+Std.
+VMC - 3+1
+4020
+B-II
+FAGIMA
+Dominus
+5X
+Jazz L
+5AX
+Kreos
+270
+Standard
+400
+Standard
+FAMUP
+MCL - 3+1
+1200
+Standard
+FANUC
+EDM Series
+ROBOCUT iA
+ROBOCUT iB
+ROBOCUT iC
+ROBOCUT iD
+ROBOCUT iE
+Robodrill
+a-T
+14ia
+14ib
+14iFB
+21ia
+21id
+21iDE
+21iDL-4X
+21iE
+21iE-5X
+21iF
+Large
+a-D14Li
+a-D21Li
+a-D21Li Kitagawa TT200
+a-D21Li - DDR-260i
+a-D21Li - DDRT - 700
+a-D21Li - RN-100-2
+a-D21Li - RTT-111CA
+a-D21Li - RWA-160
+a-D21Li - TWA-130
+a-D21Li - TWA-160
+a-D21Li 200mm Riser - DTT-260iB
+a-D21Li 300mm Riser
+a-D21Li TN-131
+a-D21LiB5
+a-D21LiB5 Plus - Nikken 5AX-2MT-105
+a-D28LiB5ADV Plus Y500 200mm Riser
+a-D28LiB5ADV Plus Y500 300mm Riser
+a-T21iEL
+a-T21iFLa
+a-T21iFLa 100m Riser Nikken 5AX-2MT
+Mate
+Standard
+Medium
+a-21DMi Kitagawa TT182BF0-10
+a-D14Mi
+a-D21Mi
+a-D21Mi Haeberle DTT260iB
+a-D21Mi RWE 160L
+a-D21Mi TN-131
+a-D21Mi TTNC-102-1
+a-D21Mi TWA 130
+a-T14iFa
+a-T14iFe
+Small
+a-D14Si
+a-D21Si
+a-D21Si Tsudakoma RTT111
+a-D21Si Tsudakoma RZ160
+Robodrill - 5x
+Medium
+a-D21MiB5
+FASYS
+Esprit
+ToolList
+Standard
+FAUSTO MARINELLO
+FM
+251 i
+vertical
+FEELER
+FV
+1600
+Standard
+HV Series
+800
+Standard
+1000
+Standard
+1100V
+U Series
+800
+VB Series
+1400
+Standard
+1650
+Standard
+VMP Series
+580
+APC
+FEHLMANN
+PICOMAX
+60
+M
+90
+M
+Picomax 3+2
+60-M
+Standard
+Versa
+825
+FEMCO
+HL
+25
+DM
+35
+Standard
+55S
+1250
+FERMAT
+WFC
+11
+WFT
+11
+Standard
+FIDIA
+GTF
+32
+M5A
+FIVES - GIDDINGS & LEWIS
+FTR Series
+3500
+A/C Head - B Table
+G
+60
+Standard
+HBM
+Floor Type
+Standard
+HMC
+1600
+Standard
+HS
+15
+987
+Standard
+Maxim
+630
+MC
+60
+Standard
+1250
+Standard
+1600
+Standard
+MCP
+155
+Standard
+PT Series
+1800 HBM
+RAM
+630
+Standard
+RT Series
+1250
+RTP Series
+130
+SmartTurn Series
+505
+VTC Series
+512
+Standard
+1600
+E
+Standard
+2000
+Standard
+2500
+VTL Series
+48
+VTM Series
+1600
+520
+FLEX MACHINE TOOLS
+FlexCNC
+G-Series-SE
+FOCASEIKI
+PM
+1160
+1500
+FOREST LINE
+Modumill
+250G
+Standard
+FORTUNE
+Vturn
+A26
+Y
+FPT
+Dinox
+350 IAT
+Standard
+LEM Series
+2
+RONIN
+EVO
+6X
+Tessen
+EVO 35
+Standard
+FRESADORAS JM
+5 Axes Rotary table
+Standard
+Standard
+FRYER
+MB Series
+15R
+MC
+45
+Standard
+VB Series
+60
+FUJI
+Acuflex
+400S
+12 Station_LongNeck_BMT60_SubSpindle
+12 Station_ShortNeck_BMT60_SubSpindle
+20 Station_LongNeck_BMT45_SubSpindle
+20 Station_ShortNeck_BMT45_SubSpindle
+ANW Series
+300III
+NT08L
+400III
+HM12B
+HT12B
+NT08L
+3500
+Single Channel
+Standard
+CS Series
+D300
+II
+II R
+S300
+II
+Gyroflex
+T4000
+HM Series
+34
+3400
+Standard
+TN II Series
+300
+II
+400
+II
+II R
+GANESH (EXPAND)
+CYCLONE Series
+3TMY
+52
+TTMY
+52
+Gen Mill Series
+5X
+12
+24
+Gen Turn Series
+32
+CS
+36
+CS
+52
+BY2
+CS
+CSY2
+78
+MSY
+TTMY
+KSL Series
+76
+Standard
+VMC - 3+1
+2818
+Standard
+GDW
+Conturline
+C 280Z
+Standard
+GEMINIS
+GM Series
+7
+Standard
+9
+Standard
+GT Series
+7i
+G2 1600-3000
+9i
+G2 2000-7000
+GENERIC
+Lathe
+1 Turret, 1 Spindle
+3x
+Mill
+3x
+GENERTEC
+Mill Series
+4X
+GOODWAY
+GS
+2800
+Standard
+3300
+Y
+GROB
+Access Series - 5x
+G350a
+Pallet
+G
+320
+Standard
+350 (Gen0)
+350 (Gen1)
+Standard
+350 (Gen2)
+Interpolation Turning
+Pallet Changer System
+Standard
+550T
+550 (Gen0)
+550 (Gen1)
+Standard
+550 (Gen2)
+Standard
+750 (Gen0)
+GSK
+T
+Standard
+T2MY
+Standard
+T2MYB
+Standard
+T2M2Y
+Standard
+TMY
+Standard
+V5
+Standard
+GURUTZPE
+GL
+20
+GLH
+30
+HAAS
+CL
+1
+CM
+1
+20 Pocket Tool Changer
+36 Pocket Tool Changer
+1 TRT70
+CM - 3+2
+1
+Standard
+DESKTOP
+Mill
+Standard
+DM
+1
+1 TRT100
+2
+DM - 3+1
+1
+Standard
+2
+Standard
+DM - 3+2
+1
+Standard
+2
+Standard
+DS
+20Y
+12-Station BMT Turret
+30
+30Y
+12-Station BMT Turret
+24-Station BMT Turret
+Hybrid Turret
+30Y(Gen2)
+12-Station BMT Turret
+24-Station BMT Turret
+30SS
+30SSY
+12-Station BMT Turret
+24-Station BMT Turret
+24-Station Hybrid Turret
+DT
+1
+1 EC
+Standard
+2
+Standard
+DT - 3+2
+1
+EC
+Standard
+2
+Standard
+EC
+300
+400
+Pallet Pool
+Standard
+500
+50 Taper
+Standard
+1600
+1600ZT
+1600ZT-4
+1600ZT-5AX
+1600YZT
+1600-4A
+GM
+2
+Standard
+2-5AX
+Dual-Support Spindle
+Standard
+GR
+510
+High Z
+Standard
+712
+HL
+2
+Standard
+HS
+1
+Standard
+4
+R
+MDC
+500
+Standard
+MINI MILL
+1
+Standard
+Super
+1 (Gen 2)
+Super
+1 TR160Y
+Super
+2
+Standard
+Super
+2 HRT160
+Standard
+Super
+MINI MILL - 3+1
+1
+Standard
+Super
+MINI MILL - 3+2
+2
+Standard
+Super
+SL
+10
+10Y
+20
+10-Station BOT Turret
+Hybrid Turret
+20Y
+30
+Bolt-On Turret
+Hybrid Turret
+30Y
+40
+Bolt-On Turret
+Hybrid Turret
+VDI Turret
+40Y
+ST
+10
+Bolt-On Turret
+Hybrid Turret
+VDI Turret
+10Y
+BMT Turret
+Hybrid Turret
+15
+15Y
+12-Station Hybrid Turret
+12-Station Hybrid Turret with Sub Spindle
+24-Station BMT Turret with Sub Spindle
+BMT Turret
+20
+BMT Turret
+Bolt-On Turret
+Hybrid Turret
+VDI Turret
+20L
+Bolt-On Turret
+20Y
+12-Station BMT Turret
+12-Station BMT Turret with Sub Spindle
+24-Station BMT Turret
+24-Station BMT Turret with Sub Spindle
+Hybrid Turret
+20SSY
+24-Station BMT Turret
+20LY
+24-Station BMT Turret
+25
+12-Station BMT Turret
+12 Station Hybrid BOT/VDI Turret
+12-Station VDI Tool Turret
+Bolt-On Turret
+25Y
+12-Station BMT Turret
+24-Station BMT Turret
+24-Station BMT Turret with Sub Spindle
+28Y
+12-Station BMT Turret
+24-Station BMT Turret
+30
+Bolt-On Turret
+Hybrid Turret
+VDI Turret
+30L
+Bolt-On Turret
+30Y
+12-Station BMT Turret
+12-Station BMT Turret with Sub Spindle
+24-Station BMT Turret
+Hybrid Turret
+VDI Turret
+30SSY
+35
+BMT Turret
+Bolt-On Turret
+35L
+12-Station BMT Turret
+24-Station BMT Turret
+Bolt-On Turret
+VDI Turret
+35Y
+12-Station BMT Turret with Sub-Spindle
+24-Station BMT Turret with Sub-Spindle
+BMT Turret
+Hybrid Turret
+35LY
+12-Station BMT Turret
+24-Station BMT Turret
+Bolt-On Turret
+VDI Turret
+40
+Bolt-On Turret
+Hybrid Turret
+40L
+Bolt-On Turret
+Hybrid Turret
+45
+Bolt-On Turret
+Hybrid Turret
+45L
+Bolt-On Turret
+Hybrid Turret
+50
+55
+TL
+1
+2
+3
+TM
+0
+Standard
+0P
+Standard
+1
+1P
+1 HRT160
+2
+2P
+3
+3P
+TM - 3+1
+0
+Standard
+0P
+Standard
+1
+Standard
+1P
+Standard
+2
+Standard
+2P
+Standard
+TM - 3+2
+0
+Standard
+0P
+Standard
+1
+Standard
+1P
+Standard
+2
+Standard
+2P
+Standard
+3
+Standard
+3P
+Standard
+UMC
+350
+HD
+Standard
+500
+10-Station Pallet Pool
+20-Station Pallet Pool
+SS
+SS - 15K RPM
+Standard
+750
+P
+SS
+Standard
+750 (2020)
+SS
+Standard
+1000
+SS
+Standard
+1250
+SS
+Standard
+1500-DUO
+SS
+Standard
+UMC Hybrid
+750
+Standard
+1000
+Standard
+VC
+400
+SS
+Standard
+VF
+0
+0E
+1
+1 HA5C
+1 HRT160
+1YT
+1YT TR210
+Standard
+1 TRT100
+Standard
+2
+Side-Mount Tool Changer
+SS
+Umbrella Tool Changer
+2 HA5C
+SS
+Standard
+2 HRT160
+SS
+Standard
+2 HRT210
+2TR
+2YT
+Side Mount Tool Changer
+SS
+Umbrella Tool Changer
+2YT HRT160
+Side Mount Tool Changer
+SS
+Umbrella Tool Changer
+2YT HRT210
+Side Mount Tool Changer
+SS
+Umbrella Tool Changer
+2YT TRT160
+SS
+2 TR160
+SS
+2 TR200Y
+Standard
+2 TRT100
+SS
+2 TRT160
+SS
+Standard
+3
+SS
+Standard
+3 HRT160
+3 HRT160-2
+Standard
+3 HRT210
+3YT
+50 Taper
+SS
+Standard
+3YT HRT210
+SS
+Standard
+3YT HRT310
+3YT HRT450
+Standard
+3 T5C4
+3 TR160
+SS
+Standard
+3 TR160Y
+3 TR200Y
+SS
+Standard
+3 TR210
+SS
+Standard
+3 TRT160
+SS
+4
+SS
+Standard
+4 HRT160
+Standard
+4 HRT210
+4 HRT210SP
+SS
+4 TR160
+4 TR200Y X
+4 TR200Y Y
+4 TR210
+4 TRT160
+5
+40 Taper
+50 Taper
+Super Speed
+5 HRT210
+5TR
+40 Taper
+50 Taper
+5SS HRT310
+5XT
+40 Taper
+50 Taper
+5 TR210
+5 TRT160
+SS
+5 40XT HRT310
+6
+40 Taper
+50 Taper
+6 HRT210
+6TR
+6 TR310
+7
+7 HRT310
+7 TR210
+7 TR310
+8
+8 HRT210
+8 SS
+40 Taper - 12K
+8 TR210
+9
+9 TR310
+10
+11
+11 HRT210
+11 HRT310
+12
+14
+50 Taper
+VF - 3+1
+0
+Standard
+1
+Standard
+2
+BHE - 12k
+SS
+Standard
+Umbrella Tool Changer
+2YT
+SS
+Standard
+3
+SS
+Standard
+3YT
+50 Taper
+SS
+Standard
+4
+SS
+Standard
+5
+40
+50
+SS
+6
+40 Taper
+50
+SS
+7
+Standard
+8
+40 Taper
+9
+Standard
+10
+40 Taper
+11
+40
+50
+12
+40 Taper
+50 Taper
+14
+50 Taper
+VF - 3+2
+1
+Standard
+2
+SS
+Standard
+2YT
+SS
+Standard
+3
+SS
+Standard
+3YT
+SS
+Standard
+4
+SS
+Standard
+5
+40
+SS
+6
+40
+50
+SS
+7
+40
+50
+8
+40
+50
+SS
+9
+40
+50
+11
+40
+50
+14
+50 Taper
+VM
+2
+2 T5C
+3
+3 HRT160
+Standard
+3 HRT210 & HA5CSB
+3 TR210
+Standard
+6
+6 HRT210
+6 TR310
+VM - 3+1
+2
+Standard
+3
+Standard
+6
+Standard
+VM - 3+2
+2
+Standard
+3
+Standard
+6
+Standard
+VR
+8
+Standard
+9
+Standard
+VS
+1
+Standard
+3
+Standard
+VS - 3+1
+1
+Standard
+3
+Standard
+VS - 3+2
+1
+Standard
+3
+Standard
+HAIMER
+MICROSET
+PRESETTER
+Standard
+HAISEN
+SH
+325
+HAMUEL
+HSTM
+1000
+B
+HANKOOK
+DYNATURN
+13R
+12000
+PROTEC
+9N
+C
+VTB/VTC Series
+VTB 140
+Standard
+VTC 100
+VTC 140F
+VTC 160E
+VTC 200E
+HANWHA
+SL Series
+12
+H
+32
+HP
+STL Series
+STL
+32H
+38H
+XD Series
+12
+H
+20
+M
+Standard
+20H
+Standard
+20V
+20-II
+M
+Standard
+26H
+26-III
+BTC
+32
+H
+32II-NY
+38H
+38II-R
+Standard
+42H
+i20
+i32
+Standard
+XE Series
+20H
+XPS Series
+16
+HARDINGE
+Bridgeport GX
+480
+3X
+1000
+3X
+Bridgeport V Series
+V480APC
+V710
+V1000
+Bridgeport V Series - 3+1
+V480
+APC
+Bridgeport XR
+1000
+3X
+Bridgeport XT
+630 5AX
+Standard
+CHNC
+27
+SP
+42SP
+Cobra
+42
+Conquest
+GT
+27
+Standard
+H
+51
+T
+42SP Sub Spindle
+42SP Tailstock
+Elite II
+6/42
+Standard
+8/51
+Standard
+GS Series
+51
+MS
+200
+Standard
+H Series
+51 S
+HLV
+H
+Standard
+Quest
+6/42
+Standard
+8/51
+VDI
+VDI w/ Sub Spindle
+10/65
+VDI
+RS Series
+51
+MS
+MSY
+65
+MSY
+SR Series
+200
+MY
+Standard
+T Series
+T-42
+M
+MS
+MSY
+MT
+MY
+MYT
+S
+SP
+T
+T-51
+M
+MS
+MSY - 12St
+MSY - 16St
+MT
+MY
+MYT
+S
+T
+T-65
+M
+MS
+MSY
+MT
+MY
+MYT
+S
+T
+Talent
+6/45
+Standard
+SV150
+8/52
+Standard
+51
+MSY
+VMC Series
+1000
+Standard
+HARRISON
+Alpha
+550
+S
+HARTFORD (SHE HONG)
+HB Series - 3x
+3190SG
+Standard
+HCMC - 3x
+1270
+40 Taper
+1682
+Standard
+HCMC - 4x
+2082
+Standard
+HSA EA & EAY
+323
+EA
+LG Series
+1000
+3X
+1370
+MVP Series
+8
+3X
+Pro Series
+800
+3X
+3150
+3X
+4X
+4209
+4X
+4210
+4X
+VMC Series - 3x
+1020
+3X
+HASEGAWA (EXPAND)
+C Series
+C42
+MSY
+CW42
+Standard
+CW52
+Standard
+H Series
+30
+Standard
+J Series
+J25
+Standard
+PM Series
+PM250
+Standard
+PM-320
+Standard
+HECKERT
+Athletic Series - 5x
+HEC 800
+X5 MT
+ATHLETIC Series - 4x
+HEC 800
+Standard
+H Series
+90
+Standard
+HEDELIUS
+Acura Series
+50
+Standard
+65
+EL
+85
+Standard
+C Series - 3x
+60 Magnum
+Standard
+FORTE Series
+65 Single 1320
+EL
+RS Series - 5x
+80
+Standard
+605
+K20
+TILTENTA
+7-3200 -5x
+Full
+Left
+Right
+11-3600 5x
+Full
+HELLER
+BZV
+07-2000
+Standard
+C Series
+CT 8000
+F Series
+FP 6000
+Standard
+H Series
+10000
+MillTurn (U-Axis)
+Standard
+14000
+Standard
+HF Series
+3500
+Standard
+5500
+Mill-Turn
+Standard
+MC Series
+16
+Standard
+HERMLE
+C
+12 U
+20U
+22 U
+30 U
+30 U - PW160 400x400
+Standard
+32 U
+Standard
+40 U
+SRT 420
+Table Zero point clamping system
+40 U - Legacy
+42 U
+MT
+MT - PW850
+SRT 440 - BLUM
+SRT 800
+Standard
+52 U
+MT
+Standard
+62 U
+MT
+250
+HS Flex - Lang QuickPoint 52
+Schunk Vero S system
+SRT-450X360
+Standard
+400
+SRT 440
+SRT 650
+400 - 3x
+Standard
+400 U
+Table D440
+400 U - Legacy
+600U
+Standard
+650
+SRT 900x750
+800 U
+U Series
+740
+5X
+1130
+Extended Z
+Standard
+HIMILE
+CHX Series
+6510
+S
+ST
+XHQ Series
+400
+Standard
+HITACHI SEIKI
+HiCell
+30
+HITEC-TURN
+20S II
+Standard
+20RIII
+25G
+VA
+85
+HNK
+HB - 4+1
+130
+CX
+VTC
+28/30
+Standard
+HOMMA
+HT
+12F
+HONOR SEIKI
+VL Series
+125
+C
+CM
+HUAZHONG
+5 Axis
+i200
+Standard
+IMU 400
+Standard
+HÜLLER HILLE
+Bluestar
+5
+Standard
+NBH Series - 4x
+6+
+Standard
+290
+Standard
+800
+Standard
+HURCO
+BMC Series - 3x
+30 HT/M
+Standard
+2416
+BX Series
+BX40i
+BX40Ui
+BX60i
+Standard
+DCX Series - 3x
+22i
+Standard
+HMX
+500i
+Standard
+TMM Series
+TMM8
+TMX Series
+TMX8i
+TMX8MYi
+TMX8MYSi
+TMX10i
+TMX10MYi
+TMX10MYSi
+VC/VCX Series
+VC 500 i
+VM Series
+VM1
+VM5i
+Standard
+VM10
+VM10i
+VM10U
+VM10Ui
+VM10HSi
+VM15Di
+VM20i
+VM30i
+VM ONE
+VMX Series
+VMX10Ui
+VMX24S
+VMX30
+3X
+VMX30i
+VMX30Di
+5X
+VMX30Ui
+VMX42
+VMX42i
+VMX42i
+VMX42i with A Axis
+VMX42T
+4X
+VMX42U
+Standard
+VMX42Ui
+VMX42SR
+VMX42SRTi
+VMX50i
+VMX60
+40T
+VMX60i
+Standard
+VMX64
+VMX64i
+VMX6030i
+3X
+4X
+VMX Series - 5x
+60 SRTi
+Standard
+60 SWi
+Standard
+VTX
+VTX-U
+HURON
+FX
+Standard
+Standard
+GXB Series
+311 TF
+Standard
+K2X Series
+10
+Standard
+Kmill Series -3x
+10
+Standard
+KX Series - 3x
+10
+Standard
+20
+Standard
+MX Series - 5x
+16
+MT
+VX Series
+4
+Standard
+6
+Standard
+8
+Standard
+10
+Standard
+HWACHEON
+C Series
+C1
+Cutex
+160B
+Standard
+180
+BMC(A/B)
+BYSMC(A/B/C)
+LYSMC (A/B/C)
+YSMC (A/B/C)
+240
+SMC (A/B)
+D Series
+D2-5AX
+HI-ECO
+31
+A
+35
+Standard
+Hi-TECH
+230
+A/B/C
+L (A/B/C)
+LMC (A/B/C)
+LSMC (A/B/C)
+LYMC (A/B/C)
+LYSMC (A/B/C)
+MC (A/B/C)
+XLYSMC (A/B/C)
+YMC (A/B/C)
+300
+700 MC (A/B/C)
+400
+Standard
+450
+CL
+LYSMC (A/B/C)
+YSMC (A/B/C)
+550
+A/B/C
+i
+2
+Standard
+M Series
+M2-5AX
+SIRIUS
+1750
+Standard
+T2 Series
+SMC
+YSMC
+Vesta
+1000
+Nikken_5AX-201
+Standard
+1300
+Vesta - 3+1
+1000+
+Standard
+1050B
+Standard
+Vesta - 3+2
+1000+
+Standard
+VT Series
+550
+MC
+650
+YMC
+1150
+MC
+2000
+ML
+HYUNDAI WIA
+E Series
+160
+A
+200
+A
+F Series
+400
+500
+ATS Accu-Rock RT160
+Std.
+500 PLUS
+3X
+650 PLUS
+3X
+HD Series
+2200
+MC
+SY
+SY 24 Station
+Y
+2600
+Standard
+3100
+SYA
+SYA_24St
+HS
+4000
+Standard
+5000
+i
+i-CUT Series
+400
+T
+TD
+KF Series - 3x
+4600
+KF Series - 3+2
+3500
+5A
+5600C TR-200FF
+KIT
+450
+KL series
+7000LY
+L
+1600TTSY
+3000LY
+L160 Series
+LSMA
+Standard
+L200 series
+200Y
+L210 Series
+A
+Standard
+L230 Series
+LMSA
+Standard
+L300 Series
+LMA
+Standard
+L400 Series
+A
+C
+LC
+LMC
+MA
+MC
+L2600 / 12ST
+SY
+L2600 / 24ST
+SY
+L4000 Series
+LMC
+LM
+1600TTMS
+1600TTS
+1600TTSY
+1800TTMS
+1800TTS
+1800TTSY
+2500TT
+2500TTM
+2500TTMS
+2500TTS
+2500TTSY
+LV Series
+800
+L
+R
+1100
+RM
+SE Series
+2200
+LM
+LSY
+LY
+SKT
+21
+LMS
+210
+SY
+250
+L
+V80R
+Standard
+SPT Series
+V30
+TD
+V160
+Standard
+XF Series
+6300
+Standard
+XM Series
+2600
+ST
+HYUNDAI-KIA
+SKT
+15
+L
+21
+LM
+LMS
+VX
+500
+650 Plus
+Standard
+IBARMIA
+THC Extreme
+12
+Standard
+THC Multiprocess
+12
+Standard
+THR Extreme
+16
+Standard
+THR Multiprocess
+12
+Standard
+ZVH Extreme
+45L/2200
+Standard
+55/L4000
+Standard
+ZVH Multiprocess
+55/L3000
+Standard
+ZVH Star
+45/L1500
+45/L3000
+ZVH Star - 4+1
+45/L3000
+Standard
+IKEGAI
+Genesis
+1208
+Standard
+1210
+Standard
+IMT
+VBM
+25
+INDEX
+ABC
+42
+Standard
+65
+Standard
+XZ S4 S1 S3 S5 / XZ S2
+ABC
+B Series
+400
+with Subspindle
+C
+65
+Standard
+100 - 2 Turrets
+10 Stations
+100 - 3 Turrests - 14 Stations
+100 - 3 Turrets
+10 Stations
+200 - 10 Stations
+Fanuc
+Standard
+200 - 14 Stations
+G
+200
+B-Axis
+Standard
+200.2
+220
+HSK40 12-Station Lower, 18K Sp., 4-Wing Stations
+HSK40 18-Station Lower
+HSK63 12-Station Lower
+220.3
+VDI 25 - 15 Stations
+VDI 30 - 12 Stations
+300 - 2S_2T
+YB
+320.3
+VDI 40 - 12 stations
+GU
+800
+Standard
+I_PRUN
+Step List
+R
+200
+Standard
+INGERSOLL
+Duplex Mill
+C51
+C52
+ISPER
+HSP - 5x
+643RB
+HSK50
+ITAMA
+FBF
+70
+Standard
+IWAMA
+modeling machine
+MM-1000T
+JAPAX
+LU
+3B
+JINGDIAO
+GRA
+200
+Standard
+JINN FA
+JSL
+20
+AB
+42
+AB
+JOBS
+LinxCompact - 5x
+OLD
+Universal Head
+JOHNFORD
+BMC Series
+110
+130
+160
+SL Series
+35
+SV Series
+48H
+VMC Series
+2030
+HD
+JSWAY
+A Series
+36
+6
+B Series
+8D
+Standard
+D Series
+20
+6
+JS Series
+500
+Standard
+JTEKT
+5000 Series
+FH5000S-i
+Standard
+VB Series
+215
+Standard
+315
+Standard
+JUARISTI
+TX Series
+3S
+ZSB
+JUPITER
+CFV
+600
+JYOTI
+ABX Series
+40
+Standard
+PX nvu Series
+10
+RDX Series - 3+2
+RDX30
+Standard
+KAFO
+OM
+KFV40
+KAO MING
+KMC-CE - 3x
+168
+Standard
+KMC-HIS - 3x
+218
+Standard
+KEDE
+KMC
+600S
+U
+KTX
+1250
+TC_LT
+KEKEISEN
+VFB-R - 5x
+2000
+Standard
+KENT
+JM
+450
+Standard
+KERN
+Micro
+Vario
+Standard
+Pyramid Nano
+HSK-40
+3-Axis
+5-Axis
+KIHEUNG
+KNC - 3x
+U650
+Standard
+KNC - 5x
+U1250 BT
+Standard
+KINGSTON
+CK Series
+3000
+Standard
+KIRA
+KN Series
+40Va
+PCV Series
+30
+KITAMURA
+Bridgecenter Series
+Bridgecenter 8
+G Series
+Mycenter-3XG
+Mycenter-3020G
+15K
+15K Sparkchanger
+20K
+20K Sparkchanger
+MedCenter Series
+MedCenter 5AX
+MedCenter 5AX Gen 2
+Mycenter-HX
+250iG
+300iF
+Standard
+300iG
+300mm Table
+400mm Table
+400
+Standard
+400i
+Standard
+400iF
+Standard
+400iG
+400mm Table
+500mm Table
+500i
+Standard
+500iG/#40
+500mm Table
+630mm Table
+500iG/#50
+500mm Table
+630mm Table
+500iTGA
+Standard
+630G
+630mm Table
+800mm Table
+630i
+Standard
+TGA
+800G
+800mm Table
+1000mm Table
+Mytrunnion Series
+2G
+4G
+5
+5G
+Standard
+Supercell Series
+300G
+X Series
+Mycenter-3XiF
+Mycenter-3XiF Tsudakoma TN-161
+X Series - 3+1
+Mycenter-7X
+#40
+#50
+X Series - 3+2
+Mycenter-4XiF
+XD Series
+Mycenter-2XD "Sparkchanger"
+Mycenter-3XD
+Mycenter-4XD#40
+Mycenter-4XD#40 Koma RNA-251R
+Mycenter-4XD#50
+Mycenter-4XiD
+XT Series
+Mycenter-3XT
+XV Series - 3x
+3XV
+40 Taper
+XV Series - 3+1
+4XV
+40 Taper
+KIWA Japan
+KH Series
+KH-45
+Standard
+KH-4100kai
+KH-4500kai
+Triple H40
+Standard
+Triple V21i-R
+3x
+KNUTH
+X Mill
+1000
+KOMO
+MachXtreme
+510
+Standard
+VMC
+40/180
+144
+185
+KONDIA
+CM
+2200
+Standard
+KOPRETINA
+VMC
+1320
+KSI
+TCM
+20SII
+26SII
+32S
+32SII
+38H(Y2)
+38SII
+KUNZMANN
+WF Series
+400
+MC
+410
+MC
+600
+MC
+KURAKI
+AKB
+13
+KBH
+18
+Standard
+KBM
+11
+KBM - 4+1
+11
+Standard
+KBT
+11
+DX
+WA
+11 WA
+13
+13 A
+13 DX
+KH
+50
+KHM
+125
+KMV
+130
+Standard
+LAGUN
+GML
+10
+Standard
+L Series - 3x
+850
+Standard
+LAZATTI
+HB
+130T
+Standard
+LEADWELL
+LTC Series
+25
+A
+30
+Standard
+35
+CXXL
+35 M
+L
+T
+6
+Standard
+V Series
+50L
+Standard
+80i
+Standard
+V40
+Standard
+V Series - 3+1
+V40
+Standard
+VE Series
+V-52AF
+VMC Series - 3x
+25
+Standard
+LEBLOND MAKINO
+FNC
+106-A
+LGB
+30.20
+Horizontal
+Standard
+Vertical
+Standard
+LICO
+LNDD Series
+LND42D
+LNTS Series
+3 Slide
+4 Slide
+3-BMT 8ST30
+4-BMT
+36S-S4
+42S-S3
+51S-S4
+LITZ
+LU
+620
+Standard
+LK
+MV
+1050
+Standard
+LMW
+LX Series
+20T
+L3
+LODGE & SHIPLEY
+2X Lathe
+Standard
+LUCAS
+42B-120
+Standard
+MACRO MICRO
+Momentum Series
+375B
+Standard
+MAG
+Specht Series
+600
+A - DUO
+AB - SINGLE
+MAIER
+Hybrid Series
+MLK
+20
+32
+36
+Hybrid X Series
+MLK-32 C6
+Proline Series
+C5
+Standard
+C5Y
+Standard
+D
+Standard
+DY
+Standard
+DY2
+Standard
+E
+Standard
+F3.5
+Standard
+F4
+Standard
+F6
+Standard
+MAKA
+PM
+270
+Standard
+270-2
+Standard
+MAKINO
+1-Series
+5-Axis
+a500Z
+400mm
+a40
+a51
+a51 - 14K Spindle
+a51nx
+a51nx - 20K Spindle
+a55
+500mm
+a61
+a61nx
+a71
+a71nx
+630mm
+a81
+a81nx
+a82
+a82M
+a88
+a88e
+800mm
+a92
+1000mm
+a120nx
+D Series
+D200Z
+Standard
+D500
+D800Z
+DA300
+DA500
+Standard
+E Series
+E33
+Standard
+EDM Series
+DUO43,DUO64
+SP43,SP64
+U3, U6
+U32J U53J U53TJ
+U32j, U53j
+U86
+U1310
+UP6
+UPH-2
+UPN-01
+UPV-3, UPV-5
+F Series
+F3
+F5
+F5-5XR
+F8
+F9
+F Series - 3+1
+F5
+iQ Series
+iQ300
+KE Series
+55
+Standard
+L Series
+L2
+APC
+MC Series
+98
+PS Series
+PS65
+PS95
+PS105
+PS105 RWA-250R
+PS105 TWA-160
+PS Series - 3+1
+PS95
+PS105
+Standard
+S Series
+S33
+Standard
+S56
+Standard
+Tsudakoma TTNC-1-102
+Slim Series
+3n
+3X 16K Spindle
+3X APC 16K Spindle
+U-Series
+U6
+H.E.A.T.
+UX-Series
+3
+Standard
+V Series
+33i
+Standard
+55-5XA
+56i
+Standard
+V22
+5XB
+Standard
+V80S
+MANDELLI
+M
+7
+4X
+8
+5X
+SPARK X
+2100
+4X
+STORM
+1400
+4X
+Thunder
+630
+Standard
+MAS
+MCV
+750
+Standard
+SPU
+20
+MATEC
+HV - 4+1
+30-3000
+Standard
+HV - 5X
+30-3000
+Standard
+HV (legacy)
+30-FD
+Standard
+30-2000
+MATSUURA
+CUBLEX Series
+35
+63
+Standard
+ES Series
+450H
+Standard
+450H II
+Standard
+800 V
+H. Plus Series
+300
+400
+405
+405 (old)
+Standard
+500
+504
+630
+LF Series
+160
+Standard
+LS Series
+160
+LX Series
+160
+MAM72 Series
+3VS
+25V
+35V
+Gen 1
+Gen 2
+42V
+52V
+Standard
+63V
+70V
+100H
+MC Series
+600V
+Standard
+MX Series
+330
+330-PC10
+420-PC10
+520
+520T
+520-PC4
+850
+R.Plus Series
+550
+Standard
+RA Series
+1X
+Standard
+IF
+Standard
+IG
+Standard
+IIF
+Standard
+IIIF
+Standard
+V.Plus Series
+800
+Standard
+VX Series
+660
+1000
+1500
+BT40 (Standard)
+MAXIMART
+VMC
+1050
+3X
+MAXMILL
+Mastarr Series
+QMC
+850
+MAZAK
+AJV
+25/404
+Standard
+35/80
+60/80
+CV5
+500
+Standard
+Cybertech
+4500 M
+3000u
+4000u
+4500 MT
+3000u
+5500 M
+4000u
+Dual Turn
+20
+200 W
+FH
+480
+Standard
+580
+Standard
+880
+Standard
+4000
+Standard
+4800
+Standard
+5800
+Standard
+6800
+Standard
+8800
+Standard
+10800
+Standard
+FJV
+5 Face 60/160
+5 Face 60/80
+20
+Standard
+35/60
+60/80
+200
+250
+HCN II
+4000
+5000
+6000
+6800
+8K Spindle
+Standard
+8800
+10800
+12800
+HCN III
+4000
+5000
+6000
+6800
+8800
+10800
+12500 Q
+12800
+HCN Neo
+4000
+8K Spindle
+10K Spindle (Standard)
+16K Spindle
+5000
+8K Spindle
+10K Spindle (Standard)
+16K Spindle
+6800
+8K Spindle
+10K Spindle (Standard)
+16K Spindle
+HCR
+5000S
+HQR
+100 MSY
+150 MSY
+200 MS
+850u
+1300u
+200 MSY
+850u
+850u 16D
+1300u
+200 MY
+850u
+1300u
+250 MS
+850u
+1300u
+250 MSY
+850u
+850u 16D
+1300u
+250 MY
+850u
+1300u
+HQR Neo
+200/3
+850u 16D
+250/3
+850u 12D
+HTC
+400
+Integrex (Legacy)
+30Y
+Integrex e-H
+410
+1500u
+3000u
+410 S
+1500u
+420
+1500u
+3000u
+420 S
+1500u
+3000u
+420 ST
+2000u
+500
+1500u
+2000u
+3000u
+4000u
+500 S
+1500u
+3000u
+650
+3000u
+4000u
+6000u
+650 S
+3000u
+4000u
+670
+3000u
+4000u
+6000u
+670 S
+2000u
+3000u
+4000u
+800
+4000u
+6000u
+8000u
+Integrex e-Ramtec
+V/12
+Integrex e-V
+800 V/5
+1060 V/8
+1250 V/8
+1550 V/10
+1600 V/10
+1600 V/10S
+1850 V/12
+Integrex i
+100
+100 Bartac S
+100 Bartac ST
+100 S
+100 ST
+150
+200
+1000u
+1500u
+200 S
+1000u
+1500u
+200 S AM
+200 ST
+1500u
+1500u - Lower Milling
+300
+1000u
+1500u
+2500u
+300 S
+1500u
+2500u
+300 S AM
+300 ST
+1500u
+400
+1000u
+1500u
+2500u
+400 AM
+400 R
+1500u
+400 S
+1500u
+2500u
+400 S AM
+400 ST
+1500u
+500
+1500u
+2500u
+3000u
+500 S
+1500u
+2500u
+3000u
+500 ST
+1500u
+2500u
+Integrex i-H
+100 S
+850u
+100 ST
+850u
+200
+590u
+200 S
+850u
+200 ST
+850u
+850u Slant Lower Turret
+250
+1000u
+250 S
+1000u
+1500u
+250 ST
+1500u
+1500u Slant Lower Turret
+350
+1000u
+1500u
+350 S
+1500u
+350 ST
+1500u (Orthogonal/12D/Milling/VDI With Steady)
+1500u (Orthogonal/12D/Milling/VDI)
+1500u Slant Lower Turret
+450
+1500u
+450 S
+1500u
+2500u
+L 2500u (With Steady Rest)
+450 ST
+1500u BOT
+1500u Slant Lower Turret
+500 S
+1500u (With Steady Rest)
+Integrex i-V
+500 V/5
+630 V/6
+800 V/8
+Integrex j
+200
+500u
+1000u
+200 S
+1000u
+300
+650u
+1000u
+1200u
+400
+650u
+1200u
+Integrex Mark I
+100 SY
+100 Y
+200 SY
+200 Y
+300 SY
+300 Y
+400 SY
+400 Y
+Integrex Mark II
+200SY
+1000u
+300 SY
+1000u
+Integrex Mark III
+100
+100 S
+100 ST
+200
+200 S
+200 ST
+300
+1000u
+1500u
+1500u SteadyRest
+300 S
+1000u
+1500u
+300 ST
+400
+1000u
+1500u
+400 S
+1000u
+1500u
+400 ST
+400 T
+1000u
+Integrex Mark IV
+100
+100 S
+100 ST
+200
+Standard
+SteadyRest
+200 S
+200 ST
+1000u
+1500u
+300
+1000u
+1500u
+300 S
+1000u
+1500u
+300 ST
+400
+1000u
+1500u
+1500u SteadyRest
+400 S
+1000u
+1500u
+2500u
+400 ST
+400 T
+1000u
+Integrex Y
+200
+400
+M-5N
+Standard
+Mazatech - 3+1
+V
+815/120
+Mega
+8800
+Mega Turn
+400
+Standard
+500
+Standard
+500 M
+Standard
+600
+Standard
+600 M
+Standard
+900
+Standard
+900 M
+Standard
+1600
+Standard
+1600 M
+Standard
+Megaturn Nexus
+900
+MTV
+414/22
+515/40
+655/60
+655/80
+815/120
+Standard
+MTV - 3+1
+655/60
+Standard
+655/80
+Standard
+815/120
+Standard
+MTV - 3+2
+655/60
+Standard
+Multiplex
+610
+6100 Y
+6200 Y
+6250
+Standard
+6300-II Y
+6300 Y
+Multiplex W
+200
+200 Y
+300
+300 Y
+Optiplex
+Nexus
+3015
+Orbitec
+20
+Standard
+PFH
+5800
+6800
+POWER MASTER
+UNIVERSAL
+6000u
+QT-COMPACT
+100 MY L
+500U
+QT-Ez
+8 M
+8 MSY
+8 MY
+10 M
+10 MSY
+10 MY
+12 M
+12 MSY
+12 MY
+QTE
+200 MSY SG
+500u 12D
+300 MSY SG
+500u 12D
+QTU
+200
+200 MSY
+500u
+200 MY
+500u
+250
+500u
+250 MY
+500u
+350
+500u
+1000u
+350 MSY
+500u
+350 MY
+500u
+1000u
+Quick Turn
+15
+Standard
+30
+Standard
+100
+100 MS
+100 MSY
+100 MY
+200
+500u
+200MA
+500U
+1000U
+200 M
+500u
+200 MS
+500u
+200 MSY
+500u
+1000u
+200 MY
+500u
+1000u
+250
+500u
+1000u
+250 M
+500u
+1000u
+1500u
+250 MS
+500u
+250 MSY
+250 MY
+500u
+1000u
+1500u
+300 MY
+1250u
+350
+650u
+1500u
+350 M
+650u
+1500u
+350 MSY
+650u
+1500u
+350 MY
+650u
+1500u
+2000u
+400
+1000u
+2000u
+400 M
+1000u
+450
+1000u
+2000u
+3000u
+450 M
+1000u
+2000u
+3000u
+450 MY
+2000u
+3000u
+500 LBB
+3000u
+Quick Turn Nexus
+100-II M
+100-II MS
+300u
+100 M
+100 MS
+100 MSY
+100 MY
+150
+300u
+500u
+200
+500u
+1000u
+200-II M
+500u
+200 M
+500u
+1000u
+200 MS
+200 MSY
+200 MY
+500u
+1000u
+250
+500u
+1000u
+250-II MY
+500u
+1000u
+250 M
+500u
+1000u
+250 MS
+250 MSY
+250 MY
+500u
+1000u
+1500u
+300
+650u
+1200u
+1500u
+300 M
+650u
+1200u
+1500u
+300 MY
+650u
+1500u
+350
+650u
+1200u
+1500u
+350-II MY
+650u
+1500u
+350 M
+650u
+1200u
+1500u
+350 MSY
+650u
+1500u
+350 MY
+650u
+1500u
+400
+1000u
+2000u
+3000u
+400 M
+1000u
+2000u
+3000u
+400 MY
+2000u
+3000u
+450
+1000u
+2000u
+3000u
+450-II
+1000u
+450 M
+1000u
+2000u
+3000u
+450 MY
+2000u
+3000u
+450 MY LBB
+3000u
+500
+3000u
+4000u
+500 LBB
+3000u
+500 MY
+3000u
+4000u
+500 MY LBB
+3000u
+Quick Turn Smart
+200
+500u
+200M
+500u
+250M
+500u
+350M
+650u
+Slant Turn (640T)
+50N
+2000u
+3000u
+4000u
+60N
+2000u
+3000u
+4000u
+80N
+450
+3000u
+Slant Turn (Nexus)
+450
+3000u
+500
+1000u
+2000u
+3000u
+4000u
+550
+1000u
+2000u
+3000u
+4000u
+550 M
+3000u
+4000u
+600
+4000u
+Slant Turn (Smooth)
+550
+4000u
+SQR
+200
+1000u
+250
+600u
+1000u
+Super Quick Turn
+28M
+1000u
+100 MSY
+500u
+200 M
+500u
+200 MS
+200 MSY
+250 M
+500u
+Syncrex
+20/
+7
+8
+9
+9-5X
+25/
+7
+8
+9
+9-5X
+32/
+8
+9
+9-5X
+38/
+8
+9
+9-5X
+UD
+400/5X
+Standard
+V
+20
+Standard
+V - 3+1
+655/60
+Standard
+V - 3+2
+655/60
+Standard
+Variaxis (Legacy)
+200
+Standard
+500
+500 5x
+Variaxis c
+600
+20K Spindle
+Standard
+Variaxis i
+300 AWC
+500
+600
+600
+2 Pallet Changer
+700
+700 T
+800
+800 T
+1050
+1050 T
+Variaxis i Neo
+700
+Variaxis II
+500 5x
+630 5x
+730 5x
+Variaxis j
+500
+600
+600 AM
+VC
+300 A
+300 A/5X
+500 A/5X
+500 C
+VC 500A/5X AM
+VC 500A/5X AM HWD
+VC - 3+1
+500 C
+Standard
+VC-Ez
+16
+16X
+20
+20X
+26
+32
+VC-Ez 3+1
+20
+VCN
+410 A
+410 B-II
+430 A
+430 A MR250R
+430 B
+430 B MR160R
+460
+510 C
+530 C
+530 C MR200R
+530 C/5X
+535
+570 C
+575 C
+700 D
+700 E
+700 E-II
+705 D
+705 E
+Compact 5X
+VCN - 3+1
+410 B
+Standard
+430 B
+Standard
+510 C
+Standard
+530 C
+HS
+Standard
+535 C
+Standard
+570 C
+Standard
+700 D
+Standard
+700 E-II
+Standard
+VCN - 3+2
+510C/5X
+Standard
+VCS
+430A
+530C
+VCU
+300 A
+400 A/5X
+400 B
+500 A
+2 PC
+500 A/5X
+500 C
+Versatech
+V-100N
+240
+V-140N
+280
+360
+Vortex e-V
+1060 V/8
+1250 V/8
+1600 V/10
+Vortex Horizontal Profiler
+160 XP
+Vortex i-V
+630 V/6
+630 V/6S
+High Torque
+800 V/8
+Vortex II
+815/120-II
+1400/160-II
+VTC
+16C
+16 A
+200 B
+200 C
+200 G
+250 D/50
+300 C
+530 C
+Standard
+760C
+800G/SR AM
+800/30 SDR
+800/30 SR
+805 E
+805 G
+VTC - 3+1
+16 C
+Standard
+41 M
+Nikken CNC200
+200 C
+Standard
+250 D
+Standard
+300 C
+Standard
+VTC - 4+1
+800G/SR AM
+Standard
+800 G-30S
+Standard
+800/30 SR
+Standard
+VTC-Ez
+30
+CAT 40
+MC MACHINERY
+DM Series
+800G
+1200G
+DV Series
+800
+1000
+1200
+1400
+1600
+2000
+LT3 Series
+LT3-52Y2M
+LT Series
+250
+MCV Series
+600
+800
+1000
+B
+Standard
+1200
+1400
+Standard
+1600
+B
+2000
+B
+3000
+B
+MCM
+ATL Heavy Plus
+6000
+Standard
+Clock
+800
+Standard
+1000
+MillTurn
+Standard
+Tank - 5x
+1300
+Standard
+Tracyl
+MECTRON
+MTV series - 3x
+T471
+Standard
+MELTIO
+3D Printer
+M450
+Standard
+METHODS
+MB Series
+650U
+MV Series
+800H
+1100
+GB
+1600H
+Standard
+MICRO DYNAMICS
+Mega
+30V
+Standard
+30VT
+Standard
+MICROCUT
+LT Series
+52
+Standard
+MCU Series
+MCU-5X
+Standard
+VM Series - 3x
+1000
+Standard
+VMC Series
+1300
+3X
+MICROLUTION
+ML
+5
+MR
+4
+MIGHTY VIPER
+LR - 3+1
+1688
+AG
+PRW Series
+5340
+Standard
+VMC
+1632
+AG
+VT Series
+40
+AX 3000
+BX 3000
+MIKRON
+HEM
+500 U
+700 U
+HPM
+450U
+Standard
+600U
+800U
+Standard
+1150U
+Standard
+1350U
+Standard
+1850U
+Standard
+HPM - 3x
+600
+Standard
+HSM
+200U LP
+200 LP
+400U
+400U LP
+500
+Mill
+E500 U
+E700U
+E800
+Standard
+P500U
+MSP
+Standard
+P800UD
+Standard
+P900
+S200U
+Standard
+S400U
+S500
+UCP
+600
+600 Vario
+Standard
+710
+5X
+800 Duro
+Standard
+800 W
+Standard
+VCE - 3x
+800
+Standard
+1000Pro
+1200Pro
+VCP - 3x
+1000
+Standard
+MILLTRONICS
+ML Series
+14
+Standard
+MM Series
+3017
+RH Series
+30
+30 - Koma 5x Rotary
+RW Series
+12
+Standard
+14
+Standard
+SL Series
+6
+Standard
+10
+Standard
+TRM Series
+30
+HT
+VM Series
+25IL
+3018
+Standard
+4222IL
+5020
+EZ
+MIND
+Dart
+SL 40 L
+Standard
+Mach
+VMC 1000/A
+MITSUBISHI
+EDM Drill
+ED 2000NC
+EDM Series
+BA
+C
+C2
+CX
+EAV Die sinking
+28-V Advance
+FA
+FAP
+FAS
+FAV
+FX
+FXK
+H1
+HA
+MD+Pro
+MP
+MV
+MVR
+1200
+2400
+MVS
+MX
+NA
+PA
+QA
+RA
+SA
+SB
+SX
+SZ
+MVR
+30
+MITSUI SEIKI
+HS Series
+5A
+6A
+HU Series
+40
+A
+63
+HU-5X Series
+50A
+Standard
+Jig Borers
+J6CN
+Vertex 5x Series
+550-5x
+II
+750-5x
+II
+VS Series
+5A
+MIYANO
+ABX Series
+SY
+SY2
+SYY
+SYY2
+64
+TH
+TH2
+TH3
+THY
+THY2
+ANX Series
+ANX-42SYY
+BNA Series
+DHY
+34
+42
+DHY2
+42
+DHY3
+42
+GTY
+42
+MSY
+42
+S
+42
+SY
+42 (2-Channel Mode)
+BNC Series
+34
+C3
+T
+BND Series
+S
+34
+S2
+51
+SY2
+51
+T
+BNE Series
+BNE-34/51S(Y)5
+BNE-51MSY
+BNE-51MYY
+BNE-65MYY
+SY6
+42
+51
+BNJ Series
+S1
+34
+SY1
+34
+42
+SY2
+51
+SY3
+42
+51
+SY6
+42
+51
+BNX Series
+51MSY
+LZ Series
+01R2
+02RY
+MOMENTUM
+MFB
+4050
+Sub Carriage, Boring Attachment, Tailstock
+MONARCH
+Shaft Lathe
+Model 32
+Standard
+VMC
+45B
+175B
+Standard
+VMC - 3+1
+75B
+Standard
+200B
+Standard
+MONFORTS
+RNC
+2
+250
+4
+Standard
+400
+Standard
+MOORE TOOLS
+G Series
+18
+48
+8400
+Holes
+Profiles
+MOTCH
+VNC
+119VNC
+Standard
+219VNC
+Standard
+MT EVO
+UE
+110-5A
+Standard
+UEF
+110-5A
+Standard
+V - 3X
+130y
+12TH
+MTE
+FBF-M
+3000
+AFK
+FBF-S
+6000
+BFK C Turn
+MUEGA
+i Series
+iTwin S
+Standard
+iUltimate S
+Standard
+T6
+Twin
+Standard
+MULTICAM
+5000 Series
+Standard
+APEX
+3R
+204
+MURATEC
+MD
+60
+100
+120
+200
+MT
+MT 12
+Standard
+MT 20
+Standard
+MT 100
+2 Turrets
+3 Turrets
+MT 200 GT
+2 Turrets
+3 Turrets
+MW
+35
+40
+50
+80
+100
+120
+120G
+120II
+120EX
+180
+200
+400
+NAKAMURA
+AS
+200
+MY
+200L
+JX
+200
+S(2-Turret) 80L 65R
+S(2-Turret) 80L 80R
+250
+S (2-Turret)
+W (3-Turret)
+MX
+100
+12K Spindle
+20K Spindle
+NTJ-100
+NTJ-100
+NTJX
+Super NTJX
+NTM3
+Super NTM3
+NTMX Series
+NTMX
+NTRX Series
+NTRX
+300L R-Spindle (Short Type Tool Spindle)
+300 R-Spindle
+300 R-Spindle (Short Type Tool Spindle)
+300 Tailstock
+NTX
+Super NTX
+Standard
+NTY3 Series
+100
+150
+250
+SC Series
+100
+Standard
+X2
+150
+200L
+Standard
+250
+MC
+Standard
+300
+Standard
+300II
+LMY
+LMYB
+MY
+MYB
+TMC
+15
+20
+TW
+8
+8
+M - 42mm
+10
+20
+M
+MY2
+30
+Standard
+WT
+100
+150
+150II
+250
+250II
+300
+Gen 1
+Gen 2
+WY
+100
+100V
+15 Station
+24 Station
+100II
+150
+150V
+24 Station 65L 51R
+24 Station 80L 65R
+250
+300
+NAKASHI
+Desktop Series 5X
+NAK 1229
+Standard
+NEWLAND
+NVT
+1600
+Standard
+2000
+Standard
+NEXTURN
+SA Series
+20
+B
+32
+Legacy
+NICOLAS CORREA
+Axia
+5-Axis
+Standard
+NIIGATA
+High Speed Linear
+N7
+HN Series
+1250
+S-BAR
+HN80
+E
+HN130
+B
+Multi-Tasking & 5 Axis
+HN63-5X
+SPN Series - 4x
+901
+NIKKEI
+MCX
+5
+NIKKEN
+Presetter
+IS
+Standard
+NOMURA
+DST Series
+36
+D
+40
+A
+HBA Series
+110T
+R3
+135P
+R5
+J Series
+20J2
+Standard
+20J3
+20J3XB
+B2
+Standard
+32J
+Standard
+38JXB
+Standard
+SB Series
+16SB6
+UB8 Series
+20
+25
+32
+38
+YB Series
+25YB
+32YB
+32YB2
+Back Tool 22A
+32YB2 XB
+32YB3
+32YB3 XB
+O-M
+Neo
+20
+Standard
+OHTORI
+FTD
+500HV
+OKK
+HM Series
+100S
+Standard
+400
+600
+630
+Standard
+800
+S
+1250S
+Standard
+6300S
+x6000
+Standard
+X6100
+Standard
+X8000
+Standard
+HM Series - 4+1
+600
+Standard
+HMC Series
+400
+Standard
+500
+Standard
+KCV Series
+800
+KCV Series - 3+1
+800
+KCV Series - 3+2
+800
+800-5AX
+MCV Series
+660
+MCV Series - 3+1
+660
+MCV Series - 3+2
+660
+MH Series
+3
+NCP
+PCV Series
+40
+I
+II
+60
+Standard
+PCV Series - 3+1
+40
+I
+II
+VB Series
+53
+VCX Series
+VC-X350
+VC-X500
+VM Series
+5 III
+5 III - 5 Axis
+7III
+53R
+76R
+900
+VM Series - 3+1
+7III
+53R
+76R
+VM Series - 3+2
+7 III
+53R
+76R
+VP Series
+400
+500
+600
+VP Series - 3+1
+400
+OKUMA
+1SP-V Series
+60
+R
+80
+L
+R
+100
+R
+760EX
+R
+920EX
+R
+2SP-H Series
+150
+2500
+2SP-V Series
+80
+760
+920
+Cadet Series
+L1420
+650
+1250
+LNC8
+C
+Captain Series
+L370
+L370M
+L470
+L470M
+Crown Series
+L1060
+762S
+762S-BB
+L1420
+769S
+B650 1SC
+ES-L Series
+L8II
+L10II
+ES-V Series
+ES-V3016
+Base Model
+GENOS L Series
+L200
+e-M
+e-MY
+L250
+L250II
+e-C500
+L300
+e-M
+e-MY (BMT)
+e-MY (VDI)
+M (VDI)
+MW
+MY (VDI)
+MYW
+L400
+L2000-E
+500
+L3000e
+L3000e-M
+450
+1000
+L3000e-MY
+1000
+L3000e-MYW
+Standard
+GENOS M Series
+GENOS M460V-5AX
+GENOS M460-VE
+GENOS M460-VE + KOMA TN-131
+GENOS M560
+5AX
+V
+V (3+1)
+V (3+1) + U Axis Turning
+V (3+2)
+V (3+2) +U Axis Turning
+V + U Axis Turning
+V High Column
+V High Column - KOMO-TWA-160
+V High Column - TSUDAKOMA-TWA-160
+V KITAGAWA TMX200
+V KOMA RWA-200R
+V KOMA RWA-250R
+V KOMA RWA-320R
+V KOMA TN-161
+V KOMA TWA-160
+V KOMA TWA-200
+V NIKKEN 5AX-201
+VB
+GENOS M660
+V
+V (3+1)
+V-TSDUAKOMA-160
+Grinder Series
+GA
+26W
+GI
+20NII
+HJ Series
+250E
+LB EX Series
+2000
+BB300M
+3000
+950MYC
+BB800MYW
+4000
+750
+BBMY1500
+MC1500
+LB EX-II Series
+2000 EX-II
+300M
+450MY
+500MC
+500MC (VDI)
+2500 EX-II
+3000 EX-II
+450MY
+500C
+500M
+500MYW
+800MW
+800MYW
+950MYC
+1000C
+1000M (BMT)
+1000M (VDI)
+1250MYC
+BB450MYW
+BB500MY
+BB1000MY
+4000 EX-II
+750
+750M
+750MY
+750MYW
+1500
+1500M
+1500MY
+1500MY With Steady Rest
+2000MY
+LB EX-III Series
+2000 EX-III
+450MYW
+3000 EX-III
+500C
+4000 EX-III
+720MYW
+LB Series
+10
+15
+15-II
+B520C
+25
+35-III
+2000C
+45-II
+1000C
+M 2000C
+45-III
+2000C
+4000C
+M 2000C
+MY 2000C
+MY 3000C
+300M
+300-MW
+Standard
+400M
+LC Series
+20
+1ST
+2ST
+30
+50
+LR Series
+45
+1050 2S T
+LT EX Series
+2000
+2T1MY
+2T2MY
+3T3MY
+3000
+2T1MY
+2T2MY
+3-Turrets
+LT Series
+200
+MY
+300
+MY
+LU EX Series
+3000 EX
+2SC-1000 (BMT)
+2SC-1000 (VDI)
+2SW-1000
+MY
+4000 EX
+MY-650
+MY-3000
+7000 EX
+M-2SC-2500
+LU Series
+15
+M
+MW
+25
+35-II
+1500 2SC M (VDI)
+2000 2SC M (VDI)
+45
+45-II
+2000 2SC
+300
+600C
+M 2ST (VDI)
+MY
+400
+2000
+M-650C (VDI)
+M-1250C
+MA-H Series
+MA-400H
+MA-500H
+MA-500HII
+MA-600H
+MA-600HII
+MA-600HIII
+MA-600HIII (4+1)
+MA-800H
+MA-4000H
+MA-8000H
+MA-12500H
+MA-V Series
+MA-550VB
+MA-650VB
+MacTurn Series
+1000 250W
+1000 350W
+2000 550C
+2000 550W
+MB-H Series
+MB-4000H
+MB-5000H
+MB-5000H II
+MB-8000H
+MB-10000H
+MB-V Series
+MB-46
+VA
+VAE
+VAE (3+1)
+VAE High Column
+VAE NIKKEN CNC180FA
+VB
+VBE
+VBE High Column
+MB-56
+VA
+VA (3+1)
+VA (3+2)
+VA High Column
+VA Lyndex 180MM
+VB
+VB High Column
+VII High Column (3+2)
+MB-66
+VA
+VA High Column
+VA Tsudakoma RG-320
+VB
+VB (3+2)
+VB High Column
+VB High Column (3+2)
+MB-80
+V
+MC-H Series - 4x
+60H
+MC-V4020
+Base Model
+TSUDAKOMA RNA 250R
+MC-V Series
+4
+VAE
+6
+VA
+MC-V3016
+Base Model
+MCR
+A5C
+20 x 40
+25 x 50
+A5CII
+25 x 40
+30 x 50
+BIII
+30E 30 x 50
+MF
+46 VA
+3X
+MILLAC MC Series
+50VA
+MILLAC V Series
+44V
+561V
+561V II
+761V
+852V
+852V II
+852VE II
+3050 (3+1)
+1052V
+1052V II
+1052VE II
+3050 (3+1)
+MILLAC VH Series
+1000VH
+MU-H Series
+MU-10000H
+MU-V Series
+MU-400VII
+MU-500VA-L
+MU-4000V
+MU-4000V-L
+MU-5000V
+MU-5000V LASER EX
+MU-5000V-L
+MU-6300V
+MU-6300V LASER EX
+MU-6300V-L
+MU-8000V
+MU-8000V LASER EX
+MU-8000V-L
+MU-S600V
+MULTUS B Series
+B200II-W
+B200-W
+B250W-II
+B250II-C
+B300II-C
+B300II-W
+B300-W
+B400-C
+B400II-W
+B400II-W - Steady Rest
+1500
+B400-W
+B550
+2000 W
+3000 W
+B550II-W
+Standard
+B750
+B750-W
+3000
+4000
+MULTUS U Series
+U3000
+1000 1SW
+1000 1SW Compact H1
+1000 2SW
+1000 2SW Compact H1
+1500 1SC
+1500 1SW
+1500 1SW Compact H1
+1500 2SC
+1500 2SW
+1500 2SW Compact H1
+U4000
+1500 1SC Compact H1
+1500 1SC Std.
+1500 1SW
+1500 1SW Compact H1
+1500 2SC
+1500 2SW
+1500 2SW Compact H1
+2000 1SW Compact H1 - Steady Rest
+2000 2SW
+2000 2SW Compact H1
+U5000
+2000 2SW Compact H1
+SB 2SW 2000
+MX Series
+45
+VAE
+50
+HB
+55
+VB
+VH Series
+VH-40
+VTM Series
+65
+100
+200
+VTM-YB Series
+80
+120
+200
+1200
+1200 High Column
+2000
+VTR-A Series
+160A
+OLYMPIA
+HT
+140 x 80
+Standard
+V
+80
+L
+OMEGA
+60
+12
+22
+A
+B
+Standard
+72
+Standard
+80
+Standard
+120
+Standard
+OMNITURN
+GT
+75
+Standard
+OMV
+HM
+1700
+Standard
+HSC
+1400
+SHARK - 5x
+3000
+Standard
+ONA
+EDM Series
+ONA AIRON/ARICUT
+ONA PRIMA
+OPS INGERSOLL
+Eagle
+V5
+V9
+OPTIPRO
+OptiSonic
+500 Series
+550X
+550X_Milling Only
+PADOVANI
+Labor
+185
+Standard
+E275
+Standard
+PAMA
+SPEEDMAT
+3800-25
+4X
+SPEEDMAT HP
+2
+A HD
+SPEEDRAM
+2000
+4X
+PARPAS
+ROLLER - 5x
+Y2030
+Standard
+PCI
+Meteor
+TS (Twin Spindle)
+900V
+PENTAMAC
+XHL
+3000
+PFG
+CLV Series - 3X
+1000
+2B
+PHOENIX
+4 Meter Mill
+4X
+Standard
+PIETRO CARNAGHI
+TVN
+2
+Standard
+PINNACLE
+AX series
+500
+Standard
+BX series
+700
+Standard
+DV series
+1432
+Standard
+PITTLER
+PV Series
+800
+1S-1H
+1S-1HY
+PO LY GIM
+Diamond
+CSL
+42-2Y-II
+POCKET NC
+Version
+V2
+PORTATEC
+BASIC Series
+III
+sl
+POS
+POSmill C Series
+CE 1000
+Standard
+POSmill E Series
+1100
+Standard
+POSmill H Series
+800 U
+PRO BEAM
+K
+40
+Standard
+PROMAC
+Levante
+GTR
+1.2
+Zephyr
+VTR
+1.2
+PROTEO
+TL Series
+32
+Standard
+QIOVA
+VULQ
+1
+QUASER
+HX Series
+404E
+B
+MF Series
+MF400
+C
+MF500
+C
+U
+MF630
+U
+MF700
+C
+MK
+603SE
+3X
+MTG
+500
+Standard
+MV Series
+154
+E
+P
+PL
+184
+C
+E
+205
+P
+214
+P
+400
+C
+UX Series - 5x
+500
+15C
+QUICKTECH
+i-Ultimate Series
+60
+Standard
+RAMBAUDI
+RAMMATIC
+Standard
+Standard
+REICHENBACHER
+Vision
+I
+Standard
+REMA CONTROL
+ICARO
+5X
+Leonard
+LT5 16
+LT5 33
+Standard
+Newton BIG
+NBT5 2.5
+5X
+Raffaello
+R5A.4
+Standard
+RETROFIT
+CME
+3
+Standard
+ROEDERS
+RXP Series
+501
+ROEPERWERK
+WeboTurn
+WT400
+Standard
+ROKU ROKU
+HC Series
+548 EX
+Standard
+658
+ROMI
+D Hybrid Series
+800 Hybrid
+Standard
+D Series - 3x
+D600
+D800
+D1000
+D1250
+Standard
+D Series - 3+1
+D800
+Standard
+D1250
+Standard
+DCM
+620
+GL Series
+300
+T
+M
+17
+Standard
+ROSILIO
+C Series - 5x
+1020 5A
+Standard
+SACHMAN
+TS Series
+10 Plus
+Standard
+SAEILO
+M Series
+850
+Standard
+SAMSUNG
+SL
+15
+E
+MC
+20
+E
+25
+ASY
+BSY
+35E
+45MC
+2200BB
+65
+2000 BSY
+2500BY
+Vertical Machining Centers
+MCV 400
+MCV 500
+MCV 1060
+MCV 5000
+PCV 400
+Vertical Machining Centers - 3+1
+MCV 1060
+SARIX
+SX Series
+SX80 HPM
+Standard
+SCHAUBLIN
+Turn
+125 CCN
+R-T
+Turning Grinding
+202TG
+SEIBU
+M
+50
+B
+M25LP
+Standard
+SERRTECH
+M
+3
+3X
+SHAPEOKO
+CNC Router
+3 XL
+SHARNOA
+CNC Systems
+3x Mill
+Standard
+SHARP
+SV Series
+2412
+Standard
+Super
+2414
+S-iF
+SHIBAURA
+BTH
+150
+R35
+TMD
+16
+Standard
+TUE
+150(S)
+Standard
+SHIZUOKA
+SP
+CHN
+Standard
+SHOPSABRE
+Pro Series
+408
+SHW
+Uni Speed Series
+5T
+Standard
+SIGMA
+Leader
+6
+Standard
+Mission
+2
+5
+3X
+SIMAK
+Mill - 3X
+Standard
+Standard
+SKODA
+SR
+2
+18 B
+SMART
+KT
+360
+D
+NL
+2000
+BSY
+BSY 24 Stations
+M
+Y 24 Station
+2500
+BM
+BY
+SY
+4000
+M
+5000
+LM
+LY
+M
+6000
+M
+Standard
+NX
+5000
+Standard
+SL
+3500
+Standard
+SM
+965
+1165
+1365
+1565
+1575
+1608
+1682-50
+Standard
+1688
+2082-50
+Standard
+2600
+SV
+1
+Standard
+SX
+4000
+SMEC
+SL
+2000
+BSY
+BSY 24 Stations
+BY 24 Stations
+Y 24 Stations
+2500
+ASY
+BM
+BSY
+BY
+4500
+CXM / 2200BB
+SLV
+800M
+RH
+SNK
+Prodigy
+GT
+27
+RB-M Series
+4VM
+RB-MII
+5
+Standard
+SNK IKEGAI
+NB
+130
+PE3.5
+SNK NISSIN
+BP Series
+130
+3.0
+3.5
+SODICK
+ALN
+400G
+iGE+
+EDM Series
+AD325L LN1W
+AG400L AG600L
+AG600LH LN2W
+AL400P AL600P
+ALC400G ALC600G
+ALC400P ALC600P
+I groove
+ALC800G
+ALN400G ALN600G
+I groove
+Standard
+ALN800G
+AP250L
+AP450L
+AQ300L AQ327L AQ537L AQ750L LQ1W
+AQ325L AQ535L
+AQ327L AQ537L LP1W
+AQ360L AQ560L AD360L
+AQ400L AQ600L LN2W
+AQ537-AQ327-LQ1W
+AQ750L AQ900L LN2W
+AQ750LH LN2WH
+Mark series
+SL400G SL600G
+SL400Q SL600Q
+SLC600G
+SLN400G SLN600G
+VL400Q VL600Q
+VN400Q VN600Q
+VZ300L VZ500L AD325L LN2W
+K Series
+K3HS
+Standard
+K4HL
+MC
+430L
+3X
+UH Series
+UH650L
+SORALUCE
+FL Series
+5000
+6X Table left side A Axis
+6X Table right side C Axis
+Standard
+8000
+Standard
+FLP Series
+12000
+5+1 optional table on left side
+6X Table right side C Axis
+FP Series
+1000
+Standard
+8000
+5 Axis Head
+Traditional Quill
+FR Series
+16000
+Standard
+SPECIAL
+ESPRIT4PROFIT-Milling
+Extra Large
+3X
+Large
+3X
+Medium
+3X
+Small
+3X
+ESPRIT4PROFIT-Turning
+Single
+Standard
+UTILITY
+APT
+Additive-Robot
+SPINNER
+Microturn LTBS
+36
+Standard
+MT Series
+350
+750AT
+TC
+77
+MCY
+300-52
+SMCY
+400-52
+MC
+600-65
+MC
+MCY
+SMCY
+800L-110
+MCY
+800-77
+MCY
+800-110
+SMCY
+TD
+42
+Triplex
+TTC
+300-52 SMMCY
+TTS
+65 Triplex
+Standard
+U5 Compact Series - 5x
+1530
+Standard
+U Advanced Series
+630
+5
+VC Series
+450
+3X
+850
+3X
+4X
+1000
+3x
+1150
+3X
+1650
+4X
+SSG
+HB Series
+600
+Standard
+800
+Standard
+STAMA
+MT
+MC726
+Standard
+System 5
+MC 526
+4X
+STAR
+ECAS Series
+12
+20
+20T
+32T
+SA Series
+SA-12
+SA-16R
+SB Series
+SB-12
+SB-12R
+Type G
+SB-16
+Type C
+Type E
+SB-20R
+Type C
+Type E
+Type G
+SD Series
+SD-26
+C
+E
+G
+S
+SF Series
+SF25
+SK Series
+SK-51
+Type A
+SL Series
+SL-10
+SP Series
+SP-20
+SP-23
+SR Series
+SR-10J
+SR-16R
+SR-20
+SR-20J
+SR-20R
+SR-20JII
+A
+B
+SR-20RII
+SR-20RIII
+SR-20RIV
+A
+B
+SR-32
+SR-32J
+SR-32JII
+A
+B
+SR-32JIII
+A
+B
+SR-38
+A
+B
+SR-38J
+SR-38N
+B
+ST Series
+20
+38
+SV Series
+SV-12
+SV-20
+SV-20R
+SV-32
+SV-32JII
+SV-38R
+SW Series
+SW 07
+SW 12RII
+SW 20
+SX Series
+SX-38
+STAR SU
+NXT Series
+NXT
+STUDER
+S Series
+42
+turning
+STYLE
+MC
+1000
+4X
+1500
+4X
+SUGINO
+GIGAFEEDER
+4 Heads
+SUN FIRM
+CST Series
+42
+42240 12A
+SW
+BA 322i
+Standard
+SYJC
+CAK Series
+50
+85
+T5.2 Series
+500Q
+VMC Series
+640
+850
+Q
+VMU Series
+63P
+SYSTEMROBOT
+CL Series
+Extrema
+Standard
+TACCHI
+HD
+3
+Standard
+TAIYO KOKI
+CVG
+6
+Standard
+TAJMAC-ZPS
+DEPOCUT - 3x
+2012
+Standard
+MCFV - 3x
+2080
+Standard
+TAKAMAZ
+XL Series
+100
+Standard
+XW Series
+XW-130
+XY Series
+XY-120
+TAKISAWA
+EX Series
+110
+LA Series
+LA-250YS
+NEX Series
+108
+TCN Series
+2600
+CM L3
+CM L6
+TM Series
+4000 Y2
+Standard
+TMM Series
+Module 3
+TS Series
+2000
+YS
+3000
+YS
+4000
+YS
+TAKISAWA TAIWAN
+EX Series
+308
+Standard
+FX Series
+800
+Standard
+LX Series
+3000
+YL7_T12
+NX
+2500
+YS
+VTL Series
+760
+MR
+950
+MR
+TAKUMI
+H
+10
+12
+Standard
+16
+Standard
+TECHNO
+LC Series
+59120
+THERMWOOD
+Model 42
+3 Axis
+Standard
+Multipurpose
+67
+TIGER
+TMT
+5 RT
+Standard
+TITAN EDM
+Force
+60
+Standard
+1600
+Standard
+TNB
+TN 5 M
+Standard
+Standard
+TONGIL
+TNV Series
+80
+Standard
+TONGTAI
+SH
+5000(P)
+VP
+10
+Standard
+TRJ Rotary
+TOOLMEX
+TUR
+800 MN
+78
+TORMACH
+Lathes
+15L Slant-PRO
+Starter
+Turret
+PCNC
+440
+770M
+1100 Series 3
+TORNOS
+Delta
+12
+5
+20
+5
+DT Series
+13
+26
+26 HP
+Standard
+EvoDeco
+16
+Standard
+Gamma
+20
+6
+GT Series
+13
+26
+26B
+II
+III
+32
+32B
+Sigma
+20
+8
+ST Series
+26
+26-CE
+SwissDeco
+36TB
+36TB-ISO
+SwissNano
+SwissNano 4/6
+SwissNano 7-ISO
+TOS VARNSDORF
+FUQ - 3x
+150
+Standard
+FUQ - 5x
+150
+AC
+BC
+WH Series
+105
+Q13
+5X
+WRD - 3x
+130
+Standard
+TOSHIBA
+BTD Series
+110H
+R16
+R18
+BTH Series
+110
+R18
+130
+R18
+TSS-C Series
+30/55
+Standard
+TOYODA
+BM
+1600
+Standard
+FA
+630
+SX-i
+800
+S-5Axis
+1050
+S
+S-5Axis
+FH-J - 4+1
+500
+Standard
+FH-S
+80
+Standard
+450
+Standard
+550
+Standard
+FH-SX
+550
+Standard
+630
+Standard
+FH-SX - 5X
+630
+Standard
+LB
+421
+YZM
+SB
+316
+Standard
+YM 800mm Z Travel
+YM 1000mm Z Travel
+Stealth
+AA1165
+UA
+2090
+Standard
+Ti
+TRAK MACHINE TOOLS (Southwestern Industries)
+2op
+Standard
+DPM RX Series
+DPM RX2
+DPM RX3
+DPM RX5
+DPM RX7
+DPM Series
+DPM
+DPM2
+DPM3
+Standard
+K3 Series
+K3
+TMC Series
+TMC10
+TRL Series
+1630
+RX
+1630HS-SX
+1845RX
+TRAUB
+TNA
+300
+TNC
+65
+2-Turrets
+TND
+400
+Standard
+TNL
+18-7B
+Standard
+20-11
+26
+TNX
+65
+2-Turrets
+3-Turrets
+TREVISAN
+DS
+300-70C
+Standard
+600-200C
+RAM
+Standard
+TRIMILL
+VC - 3x
+2314
+TROTEC
+Speedy
+400
+TRUMPF
+LASMA
+1052
+HL101P
+1054
+HL101P
+HL304P
+TruLaser Cell Series
+3010
+TruFiber 500
+TSUGAMI
+B0 Series
+38T
+123-II/124-II/125-II/203-II/204-II/205-II
+123-II
+124-II
+125-II
+203-II
+204-II
+205-II
+123-III/124-III/125-III/203-III/204-III/205-III
+074-III
+075-III
+123-III
+124-III
+125-III
+203-III
+204-III
+205-III
+123-V/125-V/203-V/205-V
+205-V
+126-II/206-II
+126-II
+206-II
+126-III/206-III
+126-III
+206-III
+126-V/206-V
+126-V
+206-V
+265-II/325-II/266-II/326-II
+265-II
+266-II
+325-II
+326-II
+265-III/325-III/385-III
+265-III
+325V
+325-III
+326-III/386-III
+326-III
+386-III
+385C
+385L
+BE Series
+12V
+20V
+BH Series
+20
+38
+BS Series
+12
+B-III
+C-III
+C-V
+18
+C-III
+19
+B-III
+20
+B-II
+B-III
+C-II
+C-III
+D-III
+26
+B-II
+B-III
+C-III
+V
+32
+III
+BU Series
+26
+38
+BW Series
+12
+128Z
+129Z
+209Z
+329Z
+M06/M08 Series
+M08
+J
+SY
+MU Series
+26
+38
+P0 Series
+P014
+P034
+P036W
+S Series
+16/20/25
+16
+20
+25
+205
+206
+S205-II
+S206-II
+SS Series
+SS20
+SS20M-5AX
+SS20MH-5AX-III
+SS26
+SS32
+SS38MH-5AX
+SS207
+5AX
+SS207-II
+5AX
+SS327
+5AX
+Non-5AX
+SS327-III
+5AX
+TMA8 Series
+TMA8
+TMB Series
+TMB2R
+TMU Series
+TMU1
+TMU1R
+VA Series
+VA2
+VA3S
+UNIONCHEMNITZ
+BFT
+130
+5
+F Series
+F
+1
+P Series
+PC
+150
+PR
+150
+T Series
+TC Series
+110
+UNISIGN
+Uniport
+4
+Standard
+6000
+HV
+Standard
+Univers
+4000
+3X
+VHF
+Classic - 3X
+Profil
+Standard
+VICTOR
+Vcenter
+P136
+3X
+Vcenter-H
+H630
+HS
+Vturn
+A20
+YSCV
+A26-85
+YCV
+VITECH
+VMC - 3x
+2000
+Standard
+VMC - 4X
+TW 2000
+Standard
+WALDRICH-COBURG
+Double Column Horizontal Boring Mill
+Double Column Horizontal Boring Mill
+MultiTurn
+5500 AM-TM2
+Standard
+Universal Head
+WARDJET
+Z Series
+2543
+WARNER & SWASEY
+SC
+28
+Standard
+WEILER
+E
+70
+Standard
+90
+Standard
+WEISSER
+Artery
+M-2R
+MT
+WELE
+AA
+1680
+3X
+AQ
+1465
+3X
+HMC
+500
+630
+800
+UG
+630
+Standard
+WFL
+M Series
+M35
+M40
+M50
+Standard
+M60
+M80
+Standard
+M120
+M150
+Standard
+WIDMA
+VU
+1150
+WILLEMIN-MACODEL
+MT Series
+308MT
+Standard
+408MT
+408MT Neo
+508MT
+508MT2
+X300
+X400
+S Series
+308S2
+Standard
+408S2
+Standard
+508S2
+X400
+XYZ
+RMX
+5000
+Standard
+VMC
+710
+LR
+YAMA SEIKI
+AF - 3+1
+1250
+Standard
+BM
+1600
+GLS Series
+2000
+L
+LYS
+GS
+4000
+Standard
+GTW Series
+1500Y
+GTZ Series
+2000
+2600
+SUPER GV Series
+GVH-2000
+GVH-2500
+SW Series
+20
+Standard
+32
+VMB Series
+1600
+YANG
+ML
+25A
+Standard
+YASDA
+H Series
+H-40i
+PX Series
+PX-30i
+YBM Series
+Vi40
+YMC Series
+YMC430 RT10
+YCM (Yeong Chin Machinery)
+CX
+4
+Standard
+D
+212
+DM
+FX
+380A
+GT
+300
+A
+300M
+H
+630
+B
+NDV
+102A
+3X
+NFX
+400A
+400A Aerospace
+Standard
+500A
+NSV - 3+2
+102
+A
+NXV
+560A
+APC
+1020A
+3X
+4X
+1680A
+3X
+SY1
+L8
+Standard
+UV
+650
+Standard
+WV
+108
+B
+XV
+1020A
+YOU JI
+HBM Series
+130
+VTB Series
+3000
+2ATC-2R+C
+VTL Series
+1200
+ATC+C
+1600
+ATC-1
+YSP
+Summit
+VL 850
+HL
+ZAYER
+KF
+4000
+5x manual head
+XIOS
+    3000
+        Head 45° automatic
+    5000
+        Head 45° automatic
+ZIMMERMANN
+    FZP
+        22
+            S2
+ZOLLER
+    Presetter
+        Pilot
+            Standard
+ZORN
+    Micro
+        V4
+            MHT
+                Standard

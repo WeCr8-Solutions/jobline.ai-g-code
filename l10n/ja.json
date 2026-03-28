@@ -1,0 +1,18 @@
+{
+  "jobline.selectControl": "JobLine：CNC/ロボット制御タイプを選択",
+  "jobline.validateProgram": "JobLine：プログラムを検証",
+  "jobline.formatDocument": "JobLine：G コードをフォーマット",
+  "jobline.openExplainer": "JobLine：自然言語説明を開く",
+  "diagnostics.cannedCycleRequiresZ": "定義済みサイクルには Z（深さ）が必要です",
+  "diagnostics.cannedCycleRequiresR": "定義済みサイクルには R（R プレーン）が必要です",
+  "diagnostics.cannedCycleRequiresQ": "定義済みサイクルには Q（ペック深さ）が必要です",
+  "diagnostics.cannedCycleRequiresF": "定義済みサイクルには F（送り速度）が必要です",
+  "diagnostics.noSafeZBeforeToolChange": "工具交換前の 15 ブロック以内に G28/G53 Z リトラクトがありません",
+  "diagnostics.spindleStillRunning": "プログラム終了時にスピンドルがまだ回転しているかもしれません",
+  "diagnostics.coolantOn": "プログラム終了時にクーラントがまだ流出しているかもしれません",
+  "diagnostics.arcGeometryError": "円弧半径不一致エラー",
+  "toolbox.stripComments": "JobLine Toolbox：コメントを削除",
+  "toolbox.insertLineNumbers": "JobLine Toolbox：行番号を挿入",
+  "toolbox.scaleFeedRates": "JobLine Toolbox：送り速度をスケール",
+  "toolbox.insertSafeZ": "JobLine Toolbox：工具交換前に Safe-Z を挿入"
+}

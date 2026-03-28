@@ -1,0 +1,3 @@
+[See attachment: c:\Users\Zach\Downloads\Esprit Machine Library.txt]
+
+// This file contains a comprehensive list of manufacturers and models for CNC, EDM, additive, and other machines as used in Esprit and other CAM software. To be parsed and structured for digital use.

@@ -1,14 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
-  <!-- JobLine "JL" monogram — bold, clean, legible at 24 px activity bar size -->
-  <!-- J: vertical stem (right side of J space) -->
-  <rect x="4" y="1" width="3" height="9.5"/>
-  <!-- J: bottom hook — quarter-circle curving left               -->
-  <!--   circle center (4, 10.5), r=3.5                           -->
-  <!--   start = left-most point (0.5, 10.5)                      -->
-  <!--   end   = bottom point    (4, 14)     CCW sweep=0          -->
-  <path d="M0.5,10.5 A3.5,3.5 0 0,0 4,14 L7,14 L7,10.5 Z"/>
-  <!-- L: vertical stem -->
-  <rect x="9" y="1" width="3" height="12.5"/>
-  <!-- L: horizontal base -->
-  <rect x="9" y="11" width="6.5" height="2.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+  <!-- J -->
+  <path d="M7 4h3v11.2c0 3.1-2.2 4.8-5.2 4.8H2v-3h2.4c1.7 0 2.6-.7 2.6-2.3V4z"/>
+
+  <!-- L -->
+  <path d="M11.5 4h3v13h6v3h-9V4z"/>
+
+  <!-- End mill top -->
+  <rect x="15.5" y="4" width="2.4" height="2.0"/>
+
+  <!-- End mill body with one long contained flute void -->
+  <path fill-rule="evenodd" d="
+    M15.5 6.0h2.4v9.4h-2.4z
+
+    M15.82 6.55
+    C16.28 6.82, 16.72 7.28, 17.00 7.85
+    C16.78 8.18, 16.40 8.55, 16.00 8.92
+    C15.78 9.12, 15.68 9.30, 15.68 9.52
+    C15.68 9.76, 15.82 9.98, 16.05 10.22
+    C16.42 10.58, 16.75 10.92, 17.00 11.35
+    C16.78 11.72, 16.40 12.10, 16.00 12.45
+    C15.78 12.66, 15.68 12.82, 15.68 13.05
+    C15.68 13.28, 15.82 13.48, 16.05 13.72
+    C16.32 14.00, 16.58 14.25, 16.82 14.55
+    C16.40 14.78, 16.05 14.92, 15.82 14.98
+    C15.95 14.65, 16.02 14.38, 16.02 14.12
+    C16.02 13.82, 15.92 13.55, 15.72 13.32
+    C15.48 13.05, 15.35 12.74, 15.35 12.38
+    C15.35 12.02, 15.48 11.72, 15.72 11.45
+    C15.92 11.22, 16.02 10.98, 16.02 10.70
+    C16.02 10.42, 15.92 10.18, 15.72 9.95
+    C15.48 9.68, 15.35 9.36, 15.35 8.98
+    C15.35 8.55, 15.50 8.12, 15.82 7.72
+    Z
+  "/>
+
+  <!-- End mill bottom -->
+  <rect x="15.5" y="15.4" width="2.4" height="1.2"/>
 </svg>

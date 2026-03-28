@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Multi-language G-code and M-code reference for JobLine. Extend by adding language codes as keys.",
+    "sourceLanguage": "en"
+  },
+  "languages": {
+    "en": { "name": "English" },
+    "es": { "name": "Español (Spanish)" },
+    "de": { "name": "Deutsch (German)" },
+    "fr": { "name": "Français (French)" },
+    "zh": { "name": "中文 (Chinese)" },
+    "ja": { "name": "日本語 (Japanese)" }
+  },
+  "descriptions": {
+    "G0": {
+      "en": "Rapid Positioning — Move to position at maximum traverse rate. No cutting.",
+      "es": "Posicionamiento rápido — Movimiento a posición a velocidad máxima. Sin corte.",
+      "de": "Schnellpositionierung — Bewegung zur Position mit maximaler Geschwindigkeit. Kein Schnitt.",
+      "fr": "Positionnement rapide — Déplacement à la position à la vitesse maximale. Pas de coupe.",
+      "zh": "快速定位 — 以最大速度移动到位置。无切割。",
+      "ja": "高速位置決め — 最大速度で位置に移動します。切削なし。"
+    },
+    "G1": {
+      "en": "Linear Interpolation — Move to position at feedrate F. Cutting move.",
+      "es": "Interpolación lineal — Movimiento a posición con velocidad de avance F. Movimiento de corte.",
+      "de": "Lineare Interpolation — Bewegung zur Position mit Vorschubgeschwindigkeit F. Schnittkörper.",
+      "fr": "Interpolation linéaire — Mouvement à la position à la vitesse d'avance F. Coup de coupe.",
+      "zh": "线性插补 — 以进给速率 F 移动到位置。切割移动。",
+      "ja": "直線補間 — 送り速度 F で位置に移動します。切削移動。"
+    },
+    "G2": {
+      "en": "Circular Interpolation CW — Clockwise arc. Use I/J/K for center or R for radius.",
+      "es": "Interpolación circular CW — Arco en sentido horario. Use I/J/K para el centro o R para el radio.",
+      "de": "Zirkuläre Interpolation CW — Uhr-Bogen. Verwenden Sie I/J/K für die Mitte oder R für den Radius.",
+      "fr": "Interpolation circulaire CW — Arc dans le sens des aiguilles d'une montre. Utilisez I/J/K pour le centre ou R pour le rayon.",
+      "zh": "圆弧插补 CW — 顺时针弧。使用 I/J/K 表示圆心或 R 表示半径。",
+      "ja": "円弧補間 CW — 時計回りの円弧。中心は I/J/K、半径は R を使用してください。"
+    },
+    "G3": {
+      "en": "Circular Interpolation CCW — Counter-clockwise arc. Use I/J/K for center or R for radius.",
+      "es": "Interpolación circular CCW — Arco en sentido antihorario. Use I/J/K para el centro o R para el radio.",
+      "de": "Zirkuläre Interpolation CCW — Gegen-Bogen. Verwenden Sie I/J/K für die Mitte oder R für den Radius.",
+      "fr": "Interpolation circulaire CCW — Arc dans le sens inverse des aiguilles d'une montre. Utilisez I/J/K pour le centre ou R pour le rayon.",
+      "zh": "圆弧插补 CCW — 逆时针弧。使用 I/J/K 表示圆心或 R 表示半径。",
+      "ja": "円弧補間 CCW — 反時計回りの円弧。中心は I/J/K、半径は R を使用してください。"
+    },
+    "G17": {
+      "en": "XY Plane Selection — Select XY as the active plane for arcs and canned cycles.",
+      "es": "Selección del plano XY — Seleccione XY como el plano activo para arcos y ciclos predefinidos.",
+      "de": "XY-Ebenenauswahl — Wählen Sie XY als aktive Ebene für Bögen und Konturzyklen.",
+      "fr": "Sélection du plan XY — Sélectionnez XY comme plan actif pour les arcs et les cycles prédéfinis.",
+      "zh": "XY 平面选择 — 选择 XY 作为圆弧和预定义循环的活动平面。",
+      "ja": "XY 平面選択 — 円弧と定義済みサイクルの活動平面として XY を選択します。"
+    },
+    "M3": {
+      "en": "Spindle On Clockwise — Start spindle rotation clockwise.",
+      "es": "Husillo en sentido horario — Iniciar rotación del husillo en sentido horario.",
+      "de": "Spindel Ein im Uhrzeigersinn — Spindelrotation im Uhrzeigersinn starten.",
+      "fr": "Broche en avant — Démarrer la rotation de la broche dans le sens des aiguilles d'une montre.",
+      "zh": "主轴顺时针启动 — 启动主轴顺时针旋转。",
+      "ja": "スピンドル時計回り ON — スピンドル回転を時計回りで開始します。"
+    },
+    "M5": {
+      "en": "Spindle Off — Stop spindle rotation.",
+      "es": "Husillo apagado — Detener la rotación del husillo.",
+      "de": "Spindel Aus — Spindelrotation stoppen.",
+      "fr": "Broche arrêt — Arrêter la rotation de la broche.",
+      "zh": "主轴停止 — 停止主轴旋转。",
+      "ja": "スピンドルオフ — スピンドル回転を停止します。"
+    },
+    "M6": {
+      "en": "Tool Change — Automatic tool change from current tool to selected tool.",
+      "es": "Cambio de herramienta — Cambio automático de herramienta de la herramienta actual a la herramienta seleccionada.",
+      "de": "Werkzeugwechsel — Automatischer Werkzeugwechsel vom aktuellen Werkzeug zum ausgewählten Werkzeug.",
+      "fr": "Changement d'outil — Changement automatique d'outil de l'outil actuel à l'outil sélectionné.",
+      "zh": "刀具更换 — 从当前刀具自动更换为选定的刀具。",
+      "ja": "工具交換 — 現在の工具から選択した工具への自動工具交換。"
+    },
+    "M8": {
+      "en": "Coolant On — Start coolant/flood supply.",
+      "es": "Refrigerante encendido — Iniciar suministro de refrigerante/inundación.",
+      "de": "Kühlmittel Ein — Kühlmittel-/Flutversorgung starten.",
+      "fr": "Arrosage activé — Démarrer l'alimentation en liquide de refroidissement.",
+      "zh": "冷却液启动 — 启动冷却液/喷雾供应。",
+      "ja": "クーラント ON — クーラント/フラッドの供給を開始します。"
+    },
+    "M9": {
+      "en": "Coolant Off — Stop coolant supply.",
+      "es": "Refrigerante apagado — Detener suministro de refrigerante.",
+      "de": "Kühlmittel Aus — Kühlmittelversorgung stoppen.",
+      "fr": "Arrosage arrêté — Arrêter l'alimentation en liquide de refroidissement.",
+      "zh": "冷却液停止 — 停止冷却液供应。",
+      "ja": "クーラント OFF — クーラント供給を停止します。"
+    },
+    "M30": {
+      "en": "Program End — End program and reset to program start.",
+      "es": "Fin del programa — Finalizar programa y restablecer al inicio del programa.",
+      "de": "Programmende — Programm beenden und auf Programmanfang zurücksetzen.",
+      "fr": "Fin du programme — Terminer le programme et réinitialiser au début du programme.",
+      "zh": "程序结束 — 结束程序并重置为程序开始。",
+      "ja": "プログラムエンド — プログラムを終了し、プログラム開始にリセットします。"
+    }
+  }
+}

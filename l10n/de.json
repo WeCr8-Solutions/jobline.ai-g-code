@@ -1,0 +1,18 @@
+{
+  "jobline.selectControl": "JobLine: CNC-/Robotersteuerungstyp wählen",
+  "jobline.validateProgram": "JobLine: Programm validieren",
+  "jobline.formatDocument": "JobLine: G-Code formatieren",
+  "jobline.openExplainer": "JobLine: Erklärung in Klartext öffnen",
+  "diagnostics.cannedCycleRequiresZ": "Konturkreis erfordert Z (Tiefe)",
+  "diagnostics.cannedCycleRequiresR": "Konturkreis erfordert R (R-Ebene)",
+  "diagnostics.cannedCycleRequiresQ": "Konturkreis erfordert Q (Pickhub)",
+  "diagnostics.cannedCycleRequiresF": "Konturkreis erfordert F (Vorschubgeschwindigkeit)",
+  "diagnostics.noSafeZBeforeToolChange": "Kein G28/G53 Z-Auszug vor Werkzeugwechsel in den letzten 15 Blöcken",
+  "diagnostics.spindleStillRunning": "Spindel läuft möglicherweise noch am Programmende",
+  "diagnostics.coolantOn": "Kühlmittel läuft möglicherweise noch am Programmende",
+  "diagnostics.arcGeometryError": "Fehler bei Radiusabweichung des Bogens",
+  "toolbox.stripComments": "JobLine Toolbox: Kommentare entfernen",
+  "toolbox.insertLineNumbers": "JobLine Toolbox: Zeilennummern einfügen",
+  "toolbox.scaleFeedRates": "JobLine Toolbox: Vorschubgeschwindigkeiten skalieren",
+  "toolbox.insertSafeZ": "JobLine Toolbox: Safe-Z vor Werkzeugwechsel einfügen"
+}

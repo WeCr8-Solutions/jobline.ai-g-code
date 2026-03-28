@@ -8,6 +8,7 @@
  */
 
 import { GCodeBlock, ModalState } from '../parser/types';
+import type { MachineLibraryEntry } from '../types/machineLibrary';
 
 // ── Public types ─────────────────────────────────────────────────────────────
 
@@ -26,6 +27,13 @@ export interface DiagnosticConfig {
   arcTolerance: number;
   enableSafetyChecks: boolean;
   enableArcValidation: boolean;
+  /**
+   * Optional machine profile loaded from the hub marketplace.
+   * When present, axis travel limits are validated and warnings are emitted
+   * for any motion block whose absolute position exceeds the machine's travel.
+   * If absent, travel-limit checks are silently skipped (graceful no-op).
+   */
+  machineProfile?: MachineLibraryEntry;
 }
 
 export const DEFAULT_CONFIG: DiagnosticConfig = {
@@ -37,6 +45,7 @@ export const DEFAULT_CONFIG: DiagnosticConfig = {
 
 // ── Canned cycle codes that require Z and R ───────────────────────────────────
 
+// Note: G76 removed — Fanuc G76 uses 2-line format (line 1 has no Z)
 const CANNED_CYCLE_CODES = new Set([73, 74, 81, 82, 83, 84, 85, 86, 87, 88, 89]);
 
 // ── Main engine entry point ───────────────────────────────────────────────────
@@ -146,6 +155,31 @@ export function runDiagnosticEngine(
         }
       }
     }
+
+    // ── Rule set 4: Machine travel limit check ────────────────────────────
+    // Only runs when a machine profile is loaded (graceful no-op otherwise).
+    // Checks absolute-mode motion blocks (G0, G1, G2, G3) against the
+    // machine's max axis travel stored in the hub MachineLibraryEntry.
+    //
+    // Unit handling:
+    //   G20 (activeUnits === 20) → program is in inches → multiply by 25.4
+    //   G21 (activeUnits === 21) → program is in metric (mm) → use as-is
+    //   Hub stores travel limits in mm.
+    //
+    // Limitation: positions are work-offset-relative (G54, etc.), not
+    // machine-absolute. This heuristic is useful for catching obvious
+    // out-of-range values but may produce false positives for large offsets.
+    if (config.machineProfile && state.activePositioning === 90) {
+      const isMotionBlock = block.gCodes.some(g => {
+        const c = Math.floor(g.code);
+        return c === 0 || c === 1 || c === 2 || c === 3;
+      });
+
+      if (isMotionBlock) {
+        const travelDiags = checkTravelLimits(block.line, state, config.machineProfile);
+        for (const d of travelDiags) diags.push(d);
+      }
+    }
   }
 
   // Tag source and sort
@@ -187,6 +221,47 @@ function checkArcGeometry(
       `Arc endpoint doesn't match center offset (radius error: ${delta.toFixed(6)})`);
   }
   return null;
+}
+
+// ── Travel limit checker ──────────────────────────────────────────────────────
+
+/**
+ * Checks X/Y/Z positions in the current modal state against the machine's
+ * travel limits from the hub MachineLibraryEntry.
+ *
+ * Returns zero or more warning diagnostics — one per axis that exceeds its
+ * limit. Warnings (not errors) are used because work-offset-relative positions
+ * can legitimately appear large without truly exceeding machine travel.
+ */
+function checkTravelLimits(
+  line: number,
+  state: ModalState,
+  profile: MachineLibraryEntry,
+): EngineDiagnostic[] {
+  const diags: EngineDiagnostic[] = [];
+
+  // Conversion factor: hub stores travel in mm; G20 programs are in inches.
+  const toMm = state.activeUnits === 20 ? 25.4 : 1;
+
+  const axes: Array<{ letter: string; pos: number | undefined; limit: number | null }> = [
+    { letter: 'X', pos: state.currentPosition.X, limit: profile.max_x_travel },
+    { letter: 'Y', pos: state.currentPosition.Y, limit: profile.max_y_travel },
+    { letter: 'Z', pos: state.currentPosition.Z, limit: profile.max_z_travel },
+  ];
+
+  for (const { letter, pos, limit } of axes) {
+    if (pos === undefined || pos === null || limit === null) continue;
+    const posMm = Math.abs(pos) * toMm;
+    if (posMm > limit) {
+      diags.push(warn(
+        line,
+        `${letter} position ${pos.toFixed(4)} exceeds machine travel limit ` +
+        `(${letter}: ${limit} mm | profile: ${profile.manufacturer} ${profile.model})`,
+      ));
+    }
+  }
+
+  return diags;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

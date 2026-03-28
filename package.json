@@ -2,7 +2,7 @@
   "name": "jobline-gcode",
   "displayName": "JobLine G-Code Intelligence",
   "description": "Deep G-code and robot-program intelligence for CNC machinists and automation engineers — syntax highlighting, hover tooltips, canned cycle & probing detection, Macro B evaluation, Fanuc/Haas/Siemens/Mazak/Okuma CNC dialects, Fanuc Robot TP, and ABB RAPID.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "WeCr8-Solutions",
   "license": "MIT",
   "author": {
@@ -206,6 +206,34 @@
     },
     "commands": [
       {
+        "command": "jobline.gcode.updateVisualizer",
+        "title": "G-Code: Update Toolpath Visualizer"
+      },
+      {
+        "command": "jobline.gcode.play",
+        "title": "G-Code: Play"
+      },
+      {
+        "command": "jobline.gcode.pause",
+        "title": "G-Code: Pause"
+      },
+      {
+        "command": "jobline.gcode.stepForward",
+        "title": "G-Code: Step Forward"
+      },
+      {
+        "command": "jobline.gcode.stepBack",
+        "title": "G-Code: Step Back"
+      },
+      {
+        "command": "jobline.gcode.jumpToLine",
+        "title": "G-Code: Jump to Line"
+      },
+      {
+        "command": "jobline.gcode.showVisualizer",
+        "title": "G-Code: Show Toolpath Visualizer"
+      },
+      {
         "command": "jobline.selectControl",
         "title": "JobLine: Select CNC / Robot Control Type"
       },
@@ -326,6 +354,38 @@
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "jobline.gcode.showVisualizer",
+          "when": "resourceLangId == gcode",
+          "group": "navigation@0"
+        },
+        {
+          "command": "jobline.gcode.play",
+          "when": "resourceLangId == gcode",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jobline.gcode.pause",
+          "when": "resourceLangId == gcode",
+          "group": "navigation@2"
+        },
+        {
+          "command": "jobline.gcode.stepBack",
+          "when": "resourceLangId == gcode",
+          "group": "navigation@3"
+        },
+        {
+          "command": "jobline.gcode.stepForward",
+          "when": "resourceLangId == gcode",
+          "group": "navigation@4"
+        },
+        {
+          "command": "jobline.gcode.jumpToLine",
+          "when": "resourceLangId == gcode",
+          "group": "navigation@5"
+        }
+      ],
       "view/title": [
         {
           "command": "jobline.tools.addToolChange",
@@ -419,5 +479,9 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.3.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@types/three": "^0.183.1",
+    "@vscode/l10n": "^0.0.18",
+    "three": "^0.183.2"
+  }
 }

@@ -161,17 +161,9 @@ function stepDiagnosticsTests(): StepResult {
 
 function stepVisualTests(): StepResult {
   log('Step 4: Visual test framework...');
-  const cmd = [
-    'node -e "',
-    "require('ts-node').register({",
-    "  transpileOnly:true,",
-    "  compilerOptions:{module:'commonjs',target:'ES2020',",
-    "    esModuleInterop:true,resolveJsonModule:true,strict:false}",
-    "});",
-    "require('./scripts/visual-test-runner.ts');",
-    '"',
-  ].join('');
-  const { ok, output } = runShell(cmd);
+  const { ok, output } = runShell(
+    "npx ts-node --transpile-only --compiler-options '{\"module\":\"commonjs\",\"strict\":false}' scripts/visual-test-runner.ts"
+  );
   log(ok ? '  PASS' : '  FAIL');
   return { name: 'Visual test framework', passed: ok, output };
 }

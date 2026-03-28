@@ -1,0 +1,18 @@
+{
+  "jobline.selectControl": "JobLine: Sélectionner le type de contrôle CNC / Robot",
+  "jobline.validateProgram": "JobLine: Valider le programme",
+  "jobline.formatDocument": "JobLine: Formater le code G",
+  "jobline.openExplainer": "JobLine: Ouvrir l'explication en langage naturel",
+  "diagnostics.cannedCycleRequiresZ": "Le cycle prédéfini nécessite Z (profondeur)",
+  "diagnostics.cannedCycleRequiresR": "Le cycle prédéfini nécessite R (plan R)",
+  "diagnostics.cannedCycleRequiresQ": "Le cycle prédéfini nécessite Q (profondeur de piquage)",
+  "diagnostics.cannedCycleRequiresF": "Le cycle prédéfini nécessite F (vitesse d'avance)",
+  "diagnostics.noSafeZBeforeToolChange": "Pas de rétraction Z G28/G53 avant changement d'outil dans les 15 derniers blocs",
+  "diagnostics.spindleStillRunning": "La broche peut encore fonctionner à la fin du programme",
+  "diagnostics.coolantOn": "Le liquide de refroidissement peut encore être actif à la fin du programme",
+  "diagnostics.arcGeometryError": "Erreur de rayon d'arc",
+  "toolbox.stripComments": "JobLine Toolbox: Supprimer les commentaires",
+  "toolbox.insertLineNumbers": "JobLine Toolbox: Insérer les numéros de ligne",
+  "toolbox.scaleFeedRates": "JobLine Toolbox: Mettre à l'échelle les vitesses d'avance",
+  "toolbox.insertSafeZ": "JobLine Toolbox: Insérer Safe-Z avant les changements d'outil"
+}
