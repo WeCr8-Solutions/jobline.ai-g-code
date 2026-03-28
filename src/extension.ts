@@ -26,7 +26,8 @@ export function activate(context: vscode.ExtensionContext): void {
           cutterSize: 10,
           idx: 0,
           timer: undefined as undefined | NodeJS.Timeout,
-          playing: false
+          playing: false,
+          speed: 1.0
         };
 
         function updateVisualizerAt(idx: number) {
@@ -54,7 +55,8 @@ export function activate(context: vscode.ExtensionContext): void {
         }
 
         // Play command
-        const playCmd = vscode.commands.registerCommand('jobline.gcode.play', () => {
+        const playCmd = vscode.commands.registerCommand('jobline.gcode.play', (speed?: number) => {
+          if (speed !== undefined) playback.speed = speed;
           if (!ToolpathVisualizerPanel.currentPanel) {
             vscode.window.showWarningMessage('Open the visualizer first (click the 3D icon in the toolbar).');
             return;
@@ -73,7 +75,8 @@ export function activate(context: vscode.ExtensionContext): void {
             updateVisualizerAt(playback.idx);
             playback.idx++;
             if (playback.idx < playback.path.length) {
-              playback.timer = setTimeout(step, 350); // 350ms per step
+              const stepMs = Math.max(50, 350 / playback.speed); // Speed-adjusted step time
+              playback.timer = setTimeout(step, stepMs);
             } else {
               stopPlayback();
             }
@@ -269,6 +272,22 @@ export function activate(context: vscode.ExtensionContext): void {
           (key: string) => vscode.workspace.getConfiguration().get(key)
         );
         updateStatusBar(controlStatusBar, newConfig.controlType);
+      }
+    })
+  );
+
+  // =========================================================================
+  // Watch for G-code file changes — auto-reload visualizer
+  // =========================================================================
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
+      if (e.document.languageId === LANGUAGE_ID && ToolpathVisualizerPanel.currentPanel) {
+        try {
+          const path = parseGCodeToPath(e.document.getText());
+          sendToolpathUpdate(path, playback.cutterSize, Math.max(0, playback.idx));
+        } catch (err) {
+          // Silently ignore parse errors during auto-reload
+        }
       }
     })
   );

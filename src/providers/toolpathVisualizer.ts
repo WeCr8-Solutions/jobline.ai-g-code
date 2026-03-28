@@ -38,7 +38,8 @@ export class ToolpathVisualizerPanel {
     // Handle messages from webview (playback commands)
     this._panel.webview.onDidReceiveMessage(msg => {
       if (msg.command) {
-        vscode.commands.executeCommand(msg.command);
+        // Pass speed along with command if present
+        vscode.commands.executeCommand(msg.command, msg.speed);
       }
     });
   }
@@ -116,9 +117,13 @@ export class ToolpathVisualizerPanel {
         <button id="playBtn">▶ Play</button>
         <button id="pauseBtn">⏸ Pause</button>
       </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:8px;">
         <button id="stepBackBtn">◀ Back</button>
         <button id="stepFwdBtn">Fwd ▶</button>
+      </div>
+      <div style="margin-top:8px;">
+        <label style="display:block; font-size:0.85em; margin-bottom:4px;">Speed: <span id="speedVal">1.0x</span></label>
+        <input type="range" id="speedSlider" min="0.1" max="3" step="0.1" value="1" style="width:100%;">
       </div>
     </div>
 
@@ -377,7 +382,8 @@ export class ToolpathVisualizerPanel {
     document.getElementById('viewIso').addEventListener('click', () => setCamera(200, 200, 200));
 
     document.getElementById('playBtn').addEventListener('click', () => {
-      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.play' });
+      const speed = parseFloat(document.getElementById('speedSlider').value);
+      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.play', speed });
     });
     document.getElementById('pauseBtn').addEventListener('click', () => {
       window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.pause' });
@@ -387,6 +393,12 @@ export class ToolpathVisualizerPanel {
     });
     document.getElementById('stepFwdBtn').addEventListener('click', () => {
       window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.stepForward' });
+    });
+
+    document.getElementById('speedSlider').addEventListener('change', e => {
+      const speed = parseFloat(e.target.value);
+      document.getElementById('speedVal').textContent = speed.toFixed(1) + 'x';
+      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.setSpeed', speed });
     });
 
     ['stock', 'fixture', 'jaws'].forEach(name => {
