@@ -37,7 +37,10 @@ export class ToolpathVisualizerPanel {
 
     // Handle messages from webview (playback commands)
     this._panel.webview.onDidReceiveMessage(msg => {
-      if (msg.command) {
+      if (msg.type === 'toolData' || msg.type === 'stockOrigin' || msg.type === 'layerToggle') {
+        // Forward sidebar messages to visualizer webview
+        this._panel.webview.postMessage(msg);
+      } else if (msg.command) {
         // Pass speed along with command if present
         vscode.commands.executeCommand(msg.command, msg.speed);
       }
@@ -110,21 +113,32 @@ export class ToolpathVisualizerPanel {
       </div>
     </div>
 
-    <div class="section">
+    <div class="section" id="playbackSection">
       <div class="group-label">Playback</div>
-      <div id="playbackIdx" style="font-size:0.9em; margin-bottom:8px; color:#aaa;">Segment: --</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:8px;">
-        <button id="playBtn">▶ Play</button>
-        <button id="pauseBtn">⏸ Pause</button>
+      <div id="segmentReadout" style="font-size:1em; font-weight:bold; color:#fff; background:#111; border:1px solid #444; border-radius:4px; padding:4px 8px; margin-bottom:8px; text-align:center; letter-spacing:0.05em;">
+        Segment &mdash; / &mdash;
       </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:8px;">
-        <button id="stepBackBtn">◀ Back</button>
-        <button id="stepFwdBtn">Fwd ▶</button>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:4px;">
+        <button id="jumpStartBtn" title="Jump to Start" style="font-size:1.3em; padding:6px 2px; text-align:center;">⏮</button>
+        <button id="stepGroupBackBtn" title="Step Back Group" style="font-size:1.1em; padding:6px 2px; text-align:center;">&#x23EA;</button>
+        <button id="stepBackBtn" title="Step Back 1 Line" style="font-size:1.1em; padding:6px 2px; text-align:center;">◀1</button>
       </div>
-      <div style="margin-top:8px;">
-        <label style="display:block; font-size:0.85em; margin-bottom:4px;">Speed: <span id="speedVal">1.0x</span></label>
-        <input type="range" id="speedSlider" min="0.1" max="3" step="0.1" value="1" style="width:100%;">
+      <button id="playPauseBtn" style="font-size:1.6em; padding:8px; width:100%; background:#0e639c; color:#fff; border:none; border-radius:6px; cursor:pointer; margin-bottom:4px; text-align:center; font-weight:bold;">▶ Play</button>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:8px;">
+        <button id="stepFwdBtn" title="Step Forward 1 Line" style="font-size:1.1em; padding:6px 2px; text-align:center;">1▶</button>
+        <button id="stepGroupFwdBtn" title="Step Forward Group" style="font-size:1.1em; padding:6px 2px; text-align:center;">&#x23E9;</button>
+        <button id="jumpEndBtn" title="Jump to End" style="font-size:1.3em; padding:6px 2px; text-align:center;">⏭</button>
       </div>
+      <div>
+        <label style="display:block; font-size:0.85em; margin-bottom:4px; color:#aaa;">
+          Speed: <span id="speedVal">1.0x</span>
+        </label>
+        <input type="range" id="speedSlider" min="0.1" max="5" step="0.1" value="1" style="width:100%; accent-color:#0e639c;">
+      </div>
+      <label style="display:flex; align-items:center; gap:4px; cursor:pointer; margin-top:8px;">
+        <input type="checkbox" id="mStopToggle" checked>
+        <span style="font-size:0.8em; color:#aaa;">Pause at M0/M1</span>
+      </label>
     </div>
 
     <div class="section">
@@ -198,14 +212,119 @@ export class ToolpathVisualizerPanel {
   </div>
 
   <div id="main">
+    <div id="unitBar" style="display:flex; align-items:center; gap:6px; padding:4px 8px; background:#1a1a1a; border-bottom:1px solid #333; font-size:0.85em;">
+      <span style="color:#aaa;">Units:</span>
+      <button id="unitInBtn" class="unit-btn active" onclick="setSceneUnit('in')" style="background:#333; color:#eee; border:1px solid #555; padding:6px 10px; font-size:0.8em; cursor:pointer; margin:0;">in</button>
+      <button id="unitMmBtn" class="unit-btn" onclick="setSceneUnit('mm')" style="background:#333; color:#eee; border:1px solid #555; padding:6px 10px; font-size:0.8em; cursor:pointer; margin:0;">mm</button>
+      <span id="unitHint" style="color:#666; margin-left:4px; font-size:0.8em;">G20/G21 auto-detected</span>
+    </div>
     <div id="info">Cutter Size: <span id="cutterSize">-</span> mm</div>
     <canvas id="canvas"></canvas>
   </div>
 
   <script>
+    const vs = acquireVsCodeApi();
     let renderer, scene, camera;
     let orbitState = { down: false, x: 0, y: 0, rotX: 0, rotY: 0 };
     const canvas = document.getElementById('canvas');
+
+    // Playback and visualization state
+    let isPlaying = false;
+    let currentUnit = 'in';
+    let currentPathLength = 0;
+    let currentPathIdx = 0;
+
+    // Helper functions
+    function setSceneUnit(unit) {
+      currentUnit = unit;
+      document.getElementById('unitInBtn').classList.toggle('active', unit === 'in');
+      document.getElementById('unitMmBtn').classList.toggle('active', unit === 'mm');
+      const hint = document.getElementById('unitHint');
+      hint.textContent = unit === 'in' ? 'Inches (G20)' : 'Millimeters (G21)';
+    }
+
+    function updateToolCylinder(pt, cutterDiameter) {
+      if (!pt) return;
+      const radius = (cutterDiameter || 5) / 2;
+      const geom = new THREE.CylinderGeometry(radius, radius, radius * 2, 16);
+      const mat = new THREE.MeshPhongMaterial({
+        color: new THREE.Color(LAYERS.tool.color),
+        transparent: true,
+        opacity: 0.85
+      });
+      if (LAYERS.tool.mesh) scene.remove(LAYERS.tool.mesh);
+      LAYERS.tool.mesh = new THREE.Mesh(geom, mat);
+      LAYERS.tool.mesh.position.set(pt.x || 0, (pt.y || 0) + radius, pt.z || 0);
+      LAYERS.tool.mesh.visible = LAYERS.tool.visible;
+      scene.add(LAYERS.tool.mesh);
+    }
+
+    function drawCutTrail(path, upToIdx) {
+      if (!path || upToIdx < 1) return;
+      const slicedPath = path.slice(0, upToIdx);
+      const geom = new THREE.BufferGeometry();
+      const verts = slicedPath.flatMap(p => [p.x || 0, p.y || 0, p.z || 0]);
+      geom.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+      const mat = new THREE.LineBasicMaterial({ color: 0xff8800, linewidth: 2 });
+      const trail = new THREE.Line(geom, mat);
+      if (window._cutTrail) scene.remove(window._cutTrail);
+      scene.add(trail);
+      window._cutTrail = trail;
+
+      // Draw swept tube using current tool radius
+      drawSweptTube(path, upToIdx, window._toolRadius || 0.125);
+    }
+
+    function drawSweptTube(path, upToIdx, toolRadius) {
+      if (!path || upToIdx < 2) return;
+      const pts = path.slice(0, upToIdx).map(p =>
+        new THREE.Vector3(p.x || 0, p.y || 0, p.z || 0)
+      );
+      // Use CatmullRom curve for smooth interpolation
+      const curve = new THREE.CatmullRomCurve3(pts);
+      const tubeGeom = new THREE.TubeGeometry(curve, upToIdx, toolRadius, 8, false);
+      const tubeMat = new THREE.MeshPhongMaterial({
+        color: 0xff6600,
+        transparent: true,
+        opacity: 0.45,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const tube = new THREE.Mesh(tubeGeom, tubeMat);
+      if (window._sweptTube) scene.remove(window._sweptTube);
+      scene.add(tube);
+      window._sweptTube = tube;
+    }
+
+    function handleStockSettings(msg) {
+      if (!msg || !msg.w) return;
+      const factor = msg.unit === 'mm' ? 1 / 25.4 : 1.0;
+      const w = (msg.w || 4) * factor;
+      const d = (msg.d || 4) * factor;
+      const h = (msg.h || 2) * factor;
+      if (LAYERS.stock.mesh) scene.remove(LAYERS.stock.mesh);
+      const geom = new THREE.BoxGeometry(w, h, d);
+      const mat = new THREE.MeshPhongMaterial({
+        color: new THREE.Color(msg.color || LAYERS.stock.color),
+        transparent: true,
+        opacity: 0.28,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      });
+      LAYERS.stock.mesh = new THREE.Mesh(geom, mat);
+      LAYERS.stock.mesh.position.set(0, h / 2, 0);
+      LAYERS.stock.mesh.visible = LAYERS.stock.visible;
+      scene.add(LAYERS.stock.mesh);
+    }
+
+    function showMStopNotice(code) {
+      const notice = document.getElementById('mStopNotice');
+      const labels = { 'M0': 'Program Stop', 'M1': 'Optional Stop', 'M2': 'Program End', 'M30': 'End & Rewind' };
+      notice.textContent = code + ' — ' + (labels[code] || 'Stop');
+      notice.style.display = 'block';
+      clearTimeout(notice._timer);
+      notice._timer = setTimeout(() => { notice.style.display = 'none'; }, 3000);
+    }
 
     const LAYERS = {
       holder:  { mesh: null, color: '#8844aa', visible: true },
@@ -381,24 +500,74 @@ export class ToolpathVisualizerPanel {
     document.getElementById('viewRight').addEventListener('click', () => setCamera(300, 0, 0));
     document.getElementById('viewIso').addEventListener('click', () => setCamera(200, 200, 200));
 
-    document.getElementById('playBtn').addEventListener('click', () => {
-      const speed = parseFloat(document.getElementById('speedSlider').value);
-      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.play', speed });
+    // Play/Pause Toggle
+    document.getElementById('playPauseBtn').addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      const btn = document.getElementById('playPauseBtn');
+      if (isPlaying) {
+        btn.textContent = '⏸ Pause';
+        btn.style.background = '#c9302c';
+        const speed = parseFloat(document.getElementById('speedSlider').value);
+        vs.postMessage({ command: 'jobline.gcode.play', speed });
+      } else {
+        btn.textContent = '▶ Play';
+        btn.style.background = '#0e639c';
+        vs.postMessage({ command: 'jobline.gcode.pause' });
+      }
     });
-    document.getElementById('pauseBtn').addEventListener('click', () => {
-      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.pause' });
+
+    // Jump controls
+    document.getElementById('jumpStartBtn').addEventListener('click', () => {
+      isPlaying = false;
+      document.getElementById('playPauseBtn').textContent = '▶ Play';
+      document.getElementById('playPauseBtn').style.background = '#0e639c';
+      vs.postMessage({ command: 'jobline.gcode.jumpToLine', arg: 0 });
     });
+
+    document.getElementById('jumpEndBtn').addEventListener('click', () => {
+      isPlaying = false;
+      document.getElementById('playPauseBtn').textContent = '▶ Play';
+      document.getElementById('playPauseBtn').style.background = '#0e639c';
+      vs.postMessage({ command: 'jobline.gcode.jumpToLine', arg: 999999 });
+    });
+
+    // Step controls
     document.getElementById('stepBackBtn').addEventListener('click', () => {
-      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.stepBack' });
+      isPlaying = false;
+      document.getElementById('playPauseBtn').textContent = '▶ Play';
+      document.getElementById('playPauseBtn').style.background = '#0e639c';
+      vs.postMessage({ command: 'jobline.gcode.stepBack' });
     });
+
     document.getElementById('stepFwdBtn').addEventListener('click', () => {
-      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.stepForward' });
+      isPlaying = false;
+      document.getElementById('playPauseBtn').textContent = '▶ Play';
+      document.getElementById('playPauseBtn').style.background = '#0e639c';
+      vs.postMessage({ command: 'jobline.gcode.stepForward' });
+    });
+
+    // Group step controls (10 steps at a time)
+    document.getElementById('stepGroupBackBtn').addEventListener('click', () => {
+      for (let i = 0; i < 10; i++) {
+        vs.postMessage({ command: 'jobline.gcode.stepBack' });
+      }
+    });
+
+    document.getElementById('stepGroupFwdBtn').addEventListener('click', () => {
+      for (let i = 0; i < 10; i++) {
+        vs.postMessage({ command: 'jobline.gcode.stepForward' });
+      }
+    });
+
+    // Speed slider
+    document.getElementById('speedSlider').addEventListener('input', e => {
+      const speed = parseFloat(e.target.value);
+      document.getElementById('speedVal').textContent = speed.toFixed(1) + 'x';
     });
 
     document.getElementById('speedSlider').addEventListener('change', e => {
       const speed = parseFloat(e.target.value);
-      document.getElementById('speedVal').textContent = speed.toFixed(1) + 'x';
-      window.acquireVsCodeApi().postMessage({ command: 'jobline.gcode.setSpeed', speed });
+      vs.postMessage({ command: 'jobline.gcode.setSpeed', speed });
     });
 
     ['stock', 'fixture', 'jaws'].forEach(name => {
@@ -449,17 +618,93 @@ export class ToolpathVisualizerPanel {
     window.addEventListener('message', event => {
       const msg = event.data;
       if (msg.type === 'update') {
+        // Update unit if provided
+        if (msg.units) {
+          setSceneUnit(msg.units);
+        }
+
+        // Update cutter size
         document.getElementById('cutterSize').textContent = msg.cutterSize ?? '-';
+
+        // Update toolpath and visualization
         if (msg.path) {
-          drawToolpath(msg.path, msg.highlightIdx ?? -1);
-          const idx = msg.highlightIdx ?? 0;
-          document.getElementById('playbackIdx').textContent = 'Segment: ' + idx + '/' + msg.path.length;
+          window._currentPath = msg.path;
+          currentPathLength = msg.path.length;
+          currentPathIdx = msg.highlightIdx ?? 0;
+          window._currentPathIdx = currentPathIdx;
+
+          drawToolpath(msg.path, currentPathIdx);
+          drawCutTrail(msg.path, currentPathIdx);
+
+          // Update current position tool
+          if (currentPathIdx < msg.path.length) {
+            const pt = msg.path[currentPathIdx];
+            updateToolCylinder(pt, msg.cutterSize || 10);
+          }
+
+          // Update segment readout
+          document.getElementById('segmentReadout').textContent =
+            'Segment ' + (currentPathIdx + 1) + ' / ' + currentPathLength;
+
+          // Check for M-stops and auto-pause if enabled
+          if (currentPathIdx < msg.path.length) {
+            const pt = msg.path[currentPathIdx];
+            if (pt && pt.mStop && document.getElementById('mStopToggle').checked) {
+              isPlaying = false;
+              document.getElementById('playPauseBtn').textContent = '▶ Play';
+              document.getElementById('playPauseBtn').style.background = '#0e639c';
+              vs.postMessage({ command: 'jobline.gcode.pause' });
+              showMStopNotice(pt.mStop);
+            }
+          }
+        }
+      }
+
+      // Handle stock settings update
+      if (msg.type === 'stockSettings') {
+        handleStockSettings(msg);
+      }
+
+      // Handle tool data (dc → tool radius)
+      if (msg.type === 'toolData' && msg.data && msg.data.dc) {
+        window._toolRadius = msg.data.dc / 2;
+        document.getElementById('cutterSize').textContent = msg.data.dc;
+        if (window._currentPath && window._currentPathIdx > 1) {
+          drawSweptTube(window._currentPath, window._currentPathIdx, window._toolRadius);
+        }
+      }
+
+      // Handle stock origin
+      if (msg.type === 'stockOrigin') {
+        if (LAYERS.stock.mesh) {
+          LAYERS.stock.mesh.position.set(msg.xOff || 0, (LAYERS.stock.mesh.geometry.parameters.height / 2) + (msg.zOff || 0), msg.yOff || 0);
+        }
+        if (window._originGizmo) scene.remove(window._originGizmo);
+        const sphereGeom = new THREE.SphereGeometry(Math.max(1, (Math.abs(msg.xOff) + Math.abs(msg.yOff)) * 0.02), 12, 8);
+        const sphereMat = new THREE.MeshBasicMaterial({ color: 0xff2222, depthTest: false });
+        window._originGizmo = new THREE.Mesh(sphereGeom, sphereMat);
+        window._originGizmo.position.set(0, 0, 0);
+        scene.add(window._originGizmo);
+      }
+
+      // Handle layer visibility
+      if (msg.type === 'layerToggle') {
+        const layerMap = { tool: 'tool', toolHolder: 'toolHolder', stock: 'stock', path: 'path', sweptTube: 'sweptTube', origin: 'originGizmo' };
+        const layer = layerMap[msg.layer];
+        if (layer && LAYERS[layer]) {
+          if (LAYERS[layer].mesh) LAYERS[layer].mesh.visible = msg.visible;
+        } else if (msg.layer === 'sweptTube' && window._sweptTube) {
+          window._sweptTube.visible = msg.visible;
+        } else if (msg.layer === 'origin' && window._originGizmo) {
+          window._originGizmo.visible = msg.visible;
         }
       }
     });
 
     initThree();
   </script>
+  <div id="mStopNotice" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#8b3a3a; color:#fff; padding:12px 20px; border-radius:6px; font-weight:bold; z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.5);">
+  </div>
 </body>
 </html>
 `;

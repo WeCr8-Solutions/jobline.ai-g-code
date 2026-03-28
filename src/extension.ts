@@ -1,5 +1,6 @@
 import { sendToolpathUpdate, parseGCodeToPath } from './providers/toolpathMessaging';
 import { ToolpathVisualizerPanel } from './providers/toolpathVisualizer';
+import { ToolPreviewPanel } from './providers/toolPreviewPanel';
 /**
  * JobLine G-Code Intelligence — Extension Entry Point
  * Architecture v0.4.0
@@ -10,7 +11,7 @@ import { ToolpathVisualizerPanel } from './providers/toolpathVisualizer';
 import * as vscode from 'vscode';
 import { loadConfig } from './config';
 import { getHoverContent } from './providers/hoverProvider';
-import { registerSidebarTreeProviders, registerToolsCommands, registerCommandsTree } from './providers/sidebarTreeProviders';
+import { registerSidebarTreeProviders, registerToolsCommands, registerCommandsTree, registerVisualizerSettings } from './providers/sidebarTreeProviders';
 import { openExplanationPanel } from './providers/explanationProvider';
 import { ToolboxViewProvider, registerToolboxCommands } from './providers/toolboxProvider';
 import { registerDiagnosticsProvider } from './providers/diagnosticsProvider';
@@ -22,24 +23,27 @@ const LANGUAGE_ID = 'gcode';
 export function activate(context: vscode.ExtensionContext): void {
         // Playback state
         const playback = {
-          path: [] as ReturnType<typeof parseGCodeToPath>,
+          path: [] as any[],
           cutterSize: 10,
           idx: 0,
           timer: undefined as undefined | NodeJS.Timeout,
           playing: false,
-          speed: 1.0
+          speed: 1.0,
+          units: 'in' as 'in' | 'mm'
         };
 
         function updateVisualizerAt(idx: number) {
           if (!playback.path.length) return;
-          sendToolpathUpdate(playback.path, playback.cutterSize, idx);
+          sendToolpathUpdate(playback.path, playback.cutterSize, idx, playback.units);
         }
 
         function loadPathFromEditor() {
           const editor = vscode.window.activeTextEditor;
           if (!editor || editor.document.languageId !== 'gcode') return false;
           try {
-            playback.path = parseGCodeToPath(editor.document.getText());
+            const result = parseGCodeToPath(editor.document.getText());
+            playback.path = result.path;
+            playback.units = result.units;
             playback.idx = 0;
             return true;
           } catch (err) {
@@ -112,13 +116,18 @@ export function activate(context: vscode.ExtensionContext): void {
         context.subscriptions.push(stepBackCmd);
 
         // Jump to Line command
-        const jumpCmd = vscode.commands.registerCommand('jobline.gcode.jumpToLine', async () => {
+        const jumpCmd = vscode.commands.registerCommand('jobline.gcode.jumpToLine', async (arg?: number) => {
           if (!playback.path.length) loadPathFromEditor();
           if (!playback.path.length) return;
           stopPlayback();
-          const val = await vscode.window.showInputBox({ prompt: 'Enter toolpath point index (0-based)', validateInput: v => isNaN(Number(v)) ? 'Enter a number' : undefined });
-          if (val === undefined) return;
-          const idx = Math.max(0, Math.min(playback.path.length - 1, Number(val)));
+          let idx: number;
+          if (typeof arg === 'number') {
+            idx = Math.max(0, Math.min(playback.path.length - 1, arg));
+          } else {
+            const val = await vscode.window.showInputBox({ prompt: 'Enter toolpath point index (0-based)', validateInput: v => isNaN(Number(v)) ? 'Enter a number' : undefined });
+            if (val === undefined) return;
+            idx = Math.max(0, Math.min(playback.path.length - 1, Number(val)));
+          }
           playback.idx = idx;
           updateVisualizerAt(playback.idx);
         });
@@ -131,10 +140,10 @@ export function activate(context: vscode.ExtensionContext): void {
           return;
         }
         const gcode = editor.document.getText();
-        const path = parseGCodeToPath(gcode);
+        const result = parseGCodeToPath(gcode);
         // Use fixed cutter size; highlight last point if path exists
-        const highlightIdx = path.length > 0 ? path.length - 1 : 0;
-        sendToolpathUpdate(path, 10, highlightIdx);
+        const highlightIdx = result.path.length > 0 ? result.path.length - 1 : 0;
+        sendToolpathUpdate(result.path, 10, highlightIdx, result.units);
         vscode.window.showInformationMessage('Toolpath visualizer updated.');
       });
       context.subscriptions.push(updateVisualizerCmd);
@@ -148,6 +157,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Register the Commands panel tree
   registerCommandsTree(context);
+
+  // Register the Visualizer Settings sidebar panel
+  registerVisualizerSettings(context);
 
   // Register tools tree commands (Add / Go-To / Remove tool change)
   registerToolsCommands(context);
@@ -250,6 +262,50 @@ export function activate(context: vscode.ExtensionContext): void {
   );
   context.subscriptions.push(validateCmd);
 
+  // Tool Preview command
+  const toolPreviewCmd = vscode.commands.registerCommand(
+    'jobline.openToolPreview',
+    () => ToolPreviewPanel.show(context)
+  );
+  context.subscriptions.push(toolPreviewCmd);
+
+  // Simulation command
+  const simulationCmd = vscode.commands.registerCommand(
+    'jobline.openSimulation',
+    () => {
+      if (!ToolpathVisualizerPanel.currentPanel) {
+        vscode.window.showWarningMessage('Opening simulation...');
+        vscode.commands.executeCommand('jobline.gcode.showVisualizer');
+      }
+    }
+  );
+  context.subscriptions.push(simulationCmd);
+
+  // Select machine type command
+  const machineSelectCmd = vscode.commands.registerCommand(
+    'jobline.selectMachineType',
+    async () => {
+      const machineTypes = [
+        '3-Axis Vertical Mill',
+        '4-Axis Mill',
+        '5-Axis Mill (Trunnion)',
+        '5-Axis Mill (Rotary Table)',
+        'Turn Center (2-Axis)',
+        '5-Axis Mill-Turn',
+        'Multi-Spindle Transfer',
+        'Grinding Center',
+      ];
+      const selected = await vscode.window.showQuickPick(machineTypes, {
+        placeHolder: 'Select machine type',
+      });
+      if (selected) {
+        await vscode.workspace.getConfiguration().update('jobline.detectedMachineType', selected, vscode.ConfigurationTarget.WorkspaceFolder);
+        machineStatusBar.text = `$(vm) ${selected}`;
+      }
+    }
+  );
+  context.subscriptions.push(machineSelectCmd);
+
   // =========================================================================
   // Status Bar
   // =========================================================================
@@ -261,6 +317,17 @@ export function activate(context: vscode.ExtensionContext): void {
   updateStatusBar(controlStatusBar, config.controlType);
   controlStatusBar.show();
   context.subscriptions.push(controlStatusBar);
+
+  // Machine type status bar
+  const machineStatusBar = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    99
+  );
+  machineStatusBar.command = 'jobline.selectMachineType';
+  machineStatusBar.text = '$(vm) 3-Axis Vertical Mill';
+  machineStatusBar.tooltip = 'Click to change detected machine type';
+  machineStatusBar.show();
+  context.subscriptions.push(machineStatusBar);
 
   // =========================================================================
   // Watch for configuration changes
@@ -283,8 +350,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
       if (e.document.languageId === LANGUAGE_ID && ToolpathVisualizerPanel.currentPanel) {
         try {
-          const path = parseGCodeToPath(e.document.getText());
-          sendToolpathUpdate(path, playback.cutterSize, Math.max(0, playback.idx));
+          const result = parseGCodeToPath(e.document.getText());
+          sendToolpathUpdate(result.path, playback.cutterSize, Math.max(0, playback.idx), result.units);
         } catch (err) {
           // Silently ignore parse errors during auto-reload
         }

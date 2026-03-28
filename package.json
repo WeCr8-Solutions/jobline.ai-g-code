@@ -201,6 +201,11 @@
           "type": "boolean",
           "default": true,
           "description": "Uppercase G and M codes."
+        },
+        "jobline.detectedMachineType": {
+          "type": "string",
+          "default": "",
+          "description": "Auto-detected or manually selected machine type."
         }
       }
     },
@@ -231,7 +236,8 @@
       },
       {
         "command": "jobline.gcode.showVisualizer",
-        "title": "G-Code: Show Toolpath Visualizer"
+        "title": "Show Toolpath Visualizer",
+        "icon": "$(eye)"
       },
       {
         "command": "jobline.selectControl",
@@ -351,6 +357,20 @@
         "command": "jobline.tools.removeToolChange",
         "title": "Remove Tool Change",
         "icon": "$(trash)"
+      },
+      {
+        "command": "jobline.openToolPreview",
+        "title": "JobLine: Open Tool Preview",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "jobline.openSimulation",
+        "title": "JobLine: Open Simulation",
+        "icon": "$(play-circle)"
+      },
+      {
+        "command": "jobline.selectMachineType",
+        "title": "JobLine: Select Machine Type"
       }
     ],
     "menus": {
@@ -384,12 +404,27 @@
           "command": "jobline.gcode.jumpToLine",
           "when": "resourceLangId == gcode",
           "group": "navigation@5"
+        },
+        {
+          "command": "jobline.openToolPreview",
+          "when": "resourceLangId == gcode",
+          "group": "navigation@6"
+        },
+        {
+          "command": "jobline.openSimulation",
+          "when": "resourceLangId == gcode",
+          "group": "navigation@7"
         }
       ],
       "view/title": [
         {
           "command": "jobline.tools.addToolChange",
           "when": "view == jobline.toolsTree",
+          "group": "navigation"
+        },
+        {
+          "command": "jobline.gcode.showVisualizer",
+          "when": "view == jobline.visualizerSettings",
           "group": "navigation"
         }
       ],
@@ -449,6 +484,11 @@
         {
           "id": "jobline.commandsTree",
           "name": "Commands"
+        },
+        {
+          "id": "jobline.visualizerSettings",
+          "name": "Visualizer Settings",
+          "type": "webview"
         }
       ]
     }

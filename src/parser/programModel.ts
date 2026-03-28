@@ -51,6 +51,7 @@ export class ProgramModelBuilder {
       diagnostics: [],
       totalLines: blocks.length,
       dialect,
+      detectedMachineType: this.detectMachineType(blocks, dialect),
     };
 
     let state = createDefaultModalState();
@@ -320,5 +321,42 @@ export class ProgramModelBuilder {
     }
 
     return null;
+  }
+
+  /**
+   * Auto-detect machine type from G-code patterns
+   */
+  private detectMachineType(blocks: GCodeBlock[], dialect: string): string {
+    let hasA = false, hasB = false, hasC = false;
+    let hasTurningCycles = false;
+    let hasMillingCycles = false;
+
+    for (const block of blocks) {
+      if (block.addresses.has('A')) hasA = true;
+      if (block.addresses.has('B')) hasB = true;
+      if (block.addresses.has('C')) hasC = true;
+
+      for (const g of block.gCodes) {
+        const code = g.code;
+        // G70–G76: turning/threading cycles
+        if (code >= 70 && code <= 76) hasTurningCycles = true;
+        // G12.1 / G14: mill-turn
+        if (code === 12.1 || code === 14) return '5-Axis Mill-Turn';
+        // G81–G89: milling canned cycles
+        if (code >= 81 && code <= 89) hasMillingCycles = true;
+      }
+    }
+
+    // Lathe: has turning cycles
+    if (hasTurningCycles) return 'Turn Center (2-Axis)';
+
+    // 5-axis: A + B or B + C
+    if ((hasA && hasB) || (hasB && hasC)) return '5-Axis Mill (Trunnion)';
+
+    // 4-axis: has A (or B/C single)
+    if (hasA || hasB || hasC) return '4-Axis Mill';
+
+    // Default 3-axis mill
+    return '3-Axis Vertical Mill';
   }
 }

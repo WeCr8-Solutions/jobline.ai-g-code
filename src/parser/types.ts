@@ -242,6 +242,9 @@ export interface ProgramModel {
   programNumber?: string;
   totalLines: number;
   dialect: string;
+
+  /** Auto-detected machine type (mill, lathe, mill-turn, etc.) */
+  detectedMachineType: string;
 }
 
 export interface Operation {
