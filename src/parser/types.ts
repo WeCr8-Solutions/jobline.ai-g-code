@@ -274,6 +274,11 @@ export interface ToolUsage {
   maxSpindleSpeed?: number;
   feedRange?: { min: number; max: number };
   lineNumbers: number[];    // All lines where this tool is referenced
+  // Auto-extracted from comments (ISO 13399)
+  diameter?: number;        // dc (cutting diameter)
+  lengthOfCut?: number;     // lc (flute length)
+  lengthOutOfHolder?: number; // oh (stick-out / overhang)
+  holder?: string;          // Coupling type (CAT40, HSK-A63, etc.)
 }
 
 export interface CannedCycleInstance {

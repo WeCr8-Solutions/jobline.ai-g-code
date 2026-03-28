@@ -21,12 +21,23 @@ export interface ToolPreviewData {
   color: string;
 }
 
+export interface ToolPreviewInitData {
+  toolNumber?: number;
+  diameter?: number;
+  lengthOfCut?: number;
+  lengthOutOfHolder?: number;
+  holder?: string;
+}
+
 export class ToolPreviewPanel {
   static instance: vscode.WebviewPanel | null = null;
 
-  static show(context: vscode.ExtensionContext) {
+  static show(context: vscode.ExtensionContext, initData?: ToolPreviewInitData) {
     if (ToolPreviewPanel.instance) {
       ToolPreviewPanel.instance.reveal();
+      if (initData) {
+        ToolPreviewPanel.instance.webview.postMessage({ type: 'loadTool', data: initData });
+      }
       return;
     }
 
@@ -42,6 +53,10 @@ export class ToolPreviewPanel {
 
     panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'images', 'icon.png');
     panel.webview.html = ToolPreviewPanel.getHtml();
+
+    if (initData) {
+      panel.webview.postMessage({ type: 'loadTool', data: initData });
+    }
 
     panel.onDidDispose(() => {
       ToolPreviewPanel.instance = null;
@@ -551,6 +566,15 @@ export class ToolPreviewPanel {
       return group;
     }
 
+    function loadTool(data) {
+      if (data.toolNumber) document.getElementById('toolNumber').value = data.toolNumber;
+      if (data.diameter) document.getElementById('diameter').value = data.diameter;
+      if (data.lengthOfCut) document.getElementById('length').value = data.lengthOfCut;
+      if (data.lengthOutOfHolder) document.getElementById('stickOut').value = data.lengthOutOfHolder;
+      if (data.holder) document.getElementById('holder').value = data.holder;
+      refreshPreview();
+    }
+
     function applyToSimulation() {
       const data = {
         toolNumber: parseInt(document.getElementById('toolNumber').value) || 0,
@@ -565,6 +589,14 @@ export class ToolPreviewPanel {
       };
       vscode.postMessage({ type: 'applyTool', data });
     }
+
+    // Listen for init messages from extension
+    window.addEventListener('message', (event) => {
+      const msg = event.data;
+      if (msg.type === 'loadTool') {
+        loadTool(msg.data);
+      }
+    });
   </script>
 </body>
 </html>`;

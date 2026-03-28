@@ -105,11 +105,16 @@ export class ProgramModelBuilder {
 
         // Track tool usage
         if (!toolMap.has(toolNum)) {
-          toolMap.set(toolNum, {
+          const toolData = {
             toolNumber: toolNum,
             description: comment ?? undefined,
             lineNumbers: [],
-          });
+          };
+          // Extract tool specs from comment if present
+          if (comment) {
+            this.extractToolSpecs(comment, toolData);
+          }
+          toolMap.set(toolNum, toolData);
         }
         toolMap.get(toolNum)!.lineNumbers.push(i);
       }
@@ -322,6 +327,45 @@ export class ProgramModelBuilder {
     }
 
     return null;
+  }
+
+  /**
+   * Extract tool specs from comment (e.g., "0.5 dia, 1.5 lc, 3.0 loh, CAT40" or "dia=0.5 lc=1.5 oh=3.0 holder=HSK-A63")
+   */
+  private extractToolSpecs(comment: string, tool: ToolUsage): void {
+    // Pattern 1: "diameter, length_of_cut, length_out_of_holder, holder"
+    // e.g., "0.5 dia, 1.5 lc, 3.0 oh, CAT40" or "0.5dia 1.5lc 3.0oh CAT40"
+    const match = comment.match(/(\d+\.?\d*)\s*d(?:ia)?[\s,]*(\d+\.?\d*)\s*(?:lc|length.?cut)[\s,]*(\d+\.?\d*)\s*(?:oh|loh|length.?holder|stick)?[\s,]*(CAT\d+|HSK-[A-Z]\d+|BT\d+|KM\d+|ER\d+|Capto|Weldon|Shrink|Hydraulic|R8)/i);
+    if (match) {
+      tool.diameter = parseFloat(match[1]);
+      tool.lengthOfCut = parseFloat(match[2]);
+      tool.lengthOutOfHolder = parseFloat(match[3]);
+      tool.holder = match[4];
+      return;
+    }
+
+    // Pattern 2: key=value format
+    // e.g., "dia=0.5 lc=1.5 oh=3.0 holder=CAT40"
+    const diamatch = comment.match(/dia[a-z]*\s*=\s*(\d+\.?\d*)/i);
+    const lcmatch = comment.match(/lc|lengthcut\s*=\s*(\d+\.?\d*)/i);
+    const ohmatch = comment.match(/oh|loh|lengtholder|stickout\s*=\s*(\d+\.?\d*)/i);
+    const holdermatch = comment.match(/holder\s*=\s*(CAT\d+|HSK-[A-Z]\d+|BT\d+|KM\d+|ER\d+|Capto|Weldon|Shrink|Hydraulic|R8)/i);
+
+    if (diamatch) tool.diameter = parseFloat(diamatch[1]);
+    if (lcmatch) tool.lengthOfCut = parseFloat(lcmatch[1]);
+    if (ohmatch) tool.lengthOutOfHolder = parseFloat(ohmatch[1]);
+    if (holdermatch) tool.holder = holdermatch[1];
+
+    // Pattern 3: just numbers in sequence (simple heuristic for small comments)
+    if (!diamatch && !lcmatch && !ohmatch) {
+      const nums = comment.match(/\d+\.?\d*/g);
+      if (nums && nums.length >= 3) {
+        // Assume: dia, lc, oh in that order
+        tool.diameter = parseFloat(nums[0]);
+        tool.lengthOfCut = parseFloat(nums[1]);
+        tool.lengthOutOfHolder = parseFloat(nums[2]);
+      }
+    }
   }
 
   /**
