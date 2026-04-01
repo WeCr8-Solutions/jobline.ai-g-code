@@ -12,7 +12,7 @@ export class ToolpathVisualizerPanel {
   public static show(extensionUri: vscode.Uri) {
     const column = vscode.ViewColumn.Beside;
     if (ToolpathVisualizerPanel.currentPanel) {
-      ToolpathVisualizerPanel.currentPanel._panel.reveal(column);
+      ToolpathVisualizerPanel.currentPanel._panel.reveal(column, true); // preserveFocus=true
       return;
     }
     const panel = vscode.window.createWebviewPanel(

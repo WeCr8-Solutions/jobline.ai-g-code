@@ -34,7 +34,7 @@ export class ToolPreviewPanel {
 
   static show(context: vscode.ExtensionContext, initData?: ToolPreviewInitData) {
     if (ToolPreviewPanel.instance) {
-      ToolPreviewPanel.instance.reveal();
+      ToolPreviewPanel.instance.reveal(vscode.ViewColumn.Beside, true); // preserveFocus=true
       if (initData) {
         ToolPreviewPanel.instance.webview.postMessage({ type: 'loadTool', data: initData });
       }
@@ -44,7 +44,7 @@ export class ToolPreviewPanel {
     const panel = vscode.window.createWebviewPanel(
       'jobline.toolPreview',
       'Tool Preview',
-      vscode.ViewColumn.Beside,
+      { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
       {
         enableScripts: true,
         retainContextWhenHidden: true,
