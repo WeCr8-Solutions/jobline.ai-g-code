@@ -167,6 +167,11 @@ export class ToolPreviewPanel {
   <div class="form-panel">
     <h2 style="margin-bottom: 16px; font-size: 16px;">Tool Setup</h2>
 
+    <div class="unit-row" style="display: flex; gap: 4px; margin-bottom: 12px;">
+      <button class="sec active" id="unitIn" onclick="setUnit('in')" style="flex:1; text-align:center; background:transparent; border:1px solid #555; color:#ccc; padding:6px; cursor:pointer;">Inches</button>
+      <button class="sec" id="unitMm" onclick="setUnit('mm')" style="flex:1; text-align:center; background:transparent; border:1px solid #555; color:#ccc; padding:6px; cursor:pointer;">Metric (mm)</button>
+    </div>
+
     <div class="form-group">
       <label>Tool Number (T-word)</label>
       <input type="number" id="toolNumber" placeholder="e.g., 1, 5" min="0" max="9999">
@@ -278,6 +283,22 @@ export class ToolPreviewPanel {
 
       document.head.appendChild(script);
     }
+
+    // Unit tracking
+    let currentUnit = 'in';
+
+    function setUnit(unit) {
+      currentUnit = unit;
+      document.getElementById('unitIn').style.background = unit === 'in' ? '#0e639c' : 'transparent';
+      document.getElementById('unitMm').style.background = unit === 'mm' ? '#0e639c' : 'transparent';
+      document.getElementById('unitIn').style.color = unit === 'in' ? '#fff' : '#ccc';
+      document.getElementById('unitMm').style.color = unit === 'mm' ? '#fff' : '#ccc';
+      localStorage.setItem('toolPreviewUnit', unit);
+    }
+
+    // Load saved unit preference
+    const savedUnit = localStorage.getItem('toolPreviewUnit') || 'in';
+    setUnit(savedUnit);
 
     // Start loading when DOM is ready
     if (document.readyState === 'loading') {
@@ -416,16 +437,22 @@ export class ToolPreviewPanel {
         });
 
         const type = document.getElementById('toolType').value;
-        const dia = parseFloat(document.getElementById('diameter').value) || 0.5;
-        const len = parseFloat(document.getElementById('length').value) || 3;
-        const stick = parseFloat(document.getElementById('stickOut').value) || 1.5;
+        let dia = parseFloat(document.getElementById('diameter').value) || 0.5;
+        let len = parseFloat(document.getElementById('length').value) || 3;
+        let stick = parseFloat(document.getElementById('stickOut').value) || 1.5;
         const flutes = parseInt(document.getElementById('flutes').value) || 2;
         const color = document.getElementById('colorInput').value;
+
+        // Convert mm to inches for 3D rendering (all internal units are inches)
+        const mmToInchConversion = currentUnit === 'mm' ? 1 / 25.4 : 1;
+        dia *= mmToInchConversion;
+        len *= mmToInchConversion;
+        stick *= mmToInchConversion;
 
         const toolGeom = buildToolGeometry(type, dia, len, stick, flutes, color);
         toolGeom.userData.isTool = true;
         scene.add(toolGeom);
-        console.log('[ToolPreview] Tool geometry created:', type);
+        console.log('[ToolPreview] Tool geometry created:', type, 'unit:', currentUnit);
       } catch (err) {
         console.error('[ToolPreview] Error in refreshPreview:', err);
       }
