@@ -60,7 +60,8 @@ export class ToolPreviewPanel {
     const threeUri = panel.webview.asWebviewUri(
       vscode.Uri.joinPath(context.extensionUri, 'media', 'three.min.js')
     );
-    panel.webview.html = ToolPreviewPanel.getHtml(threeUri.toString());
+    const cspSource = panel.webview.cspSource;
+    panel.webview.html = ToolPreviewPanel.getHtml(threeUri.toString(), cspSource);
 
     if (initData) {
       panel.webview.postMessage({ type: 'loadTool', data: initData });
@@ -83,11 +84,12 @@ export class ToolPreviewPanel {
     ToolPreviewPanel.instance = panel;
   }
 
-  private static getHtml(threeUri: string): string {
+  private static getHtml(threeUri: string, cspSource: string): string {
     return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} data:; style-src ${cspSource} 'unsafe-inline'; script-src ${cspSource} 'unsafe-inline';">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
