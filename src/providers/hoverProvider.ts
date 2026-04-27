@@ -184,7 +184,10 @@ function getCycleParameters(code: number, raw?: string): string | null {
     86: '`Z` final depth · `R` retract plane · `F` feed rate',
     87: '`Z` final depth · `R` retract plane · `F` feed rate',
     88: '`Z` final depth · `R` retract plane · `P` dwell · `F` feed rate',
-    89: '`Z` final depth · `R` retract plane · `P` dwell · `F` feed rate',
+    89:  '`Z` final depth · `R` retract plane · `P` dwell · `F` feed rate',
+    187: '`P` mode: 0=off/exact-stop, 1=rough, 2=medium, 3=finish · `E` corner tolerance (optional, in current units)',
+    234: 'No additional parameters — activates TCPC mode. Requires G254 (DWO) to be active. Cancel with G255.',
+    254: '`D` fixture offset number — selects which base work offset (G54–G59) to tilt · A/B/C axis positions are read at time of call',
   };
 
   return params[code] ?? null;

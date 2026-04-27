@@ -55,7 +55,13 @@
     "94":  { "name": "Feed Per Minute",                "desc": "F value is in distance per minute (IPM or mm/min).", "group": "feed" },
     "95":  { "name": "Feed Per Revolution",            "desc": "F value is in distance per spindle revolution (IPR or mm/rev).", "group": "feed" },
     "96":  { "name": "Constant Surface Speed",         "desc": "Spindle speed auto-adjusts to maintain constant SFM/m-min. Lathe. Use G50 to clamp max RPM.", "group": "spindle" },
-    "97":  { "name": "Constant RPM",                   "desc": "Spindle runs at programmed RPM regardless of diameter.", "group": "spindle" }
+    "97":  { "name": "Constant RPM",                   "desc": "Spindle runs at programmed RPM regardless of diameter.", "group": "spindle" },
+    "98":  { "name": "Canned Cycle Return to Initial Plane", "desc": "After each canned cycle hole, retract to the Z height that was active when the cycle was called (safer over clamps/fixtures). Modal.", "group": "canned-cancel" },
+    "99":  { "name": "Canned Cycle Return to R Plane",  "desc": "After each canned cycle hole, retract only to the R-plane (faster between closely spaced holes). Modal. Default on most controls.", "group": "canned-cancel" },
+    "187": { "name": "HAAS Smoothing (Accuracy Control)", "desc": "Sets the motion smoothing / corner-rounding aggressiveness. P0 = off (exact stop), P1 = rough, P2 = medium, P3 = finish. E sets the corner tolerance in current units. Higher P = faster cycle time but larger corner deviation. HAAS-specific.", "group": "haas-5axis" },
+    "234": { "name": "HAAS TCPC — Tool Center Point Control", "desc": "Activates Tool Center Point Control (TCPC) for 5-axis simultaneous machining. The control automatically compensates for rotary axis pivot offsets so the programmed XYZ path describes the tool tip position in the part coordinate system. Must be active with G254 (DWO). Cancel with G255. HAAS UMC / trunnion machines.", "group": "haas-5axis" },
+    "254": { "name": "HAAS Dynamic Work Offset (DWO) — Activate", "desc": "Activates Dynamic Work Offset for 5-axis positioning. Rotates the active work coordinate system (G54–G59) to align with the current A/B/C axis angles, so XYZ moves remain relative to the tilted part. Use before any 5-axis positioning block. Parameter D selects which fixture/work offset to apply. Cancel with G255. HAAS UMC / trunnion 5-axis.", "group": "haas-5axis" },
+    "255": { "name": "HAAS Dynamic Work Offset (DWO) — Cancel", "desc": "Cancels Dynamic Work Offset (G254). Returns the coordinate system to the standard non-tilted work offset. Must be called before returning to 3-axis or re-homing. HAAS UMC / trunnion 5-axis.", "group": "haas-5axis" }
   },
   "mcodes": {
     "0":  { "name": "Program Stop",              "desc": "Unconditional program stop. Press cycle start to continue." },
@@ -71,6 +77,10 @@
     "19": { "name": "Spindle Orientation",        "desc": "Orient spindle to a specific angle (for tool change or boring)." },
     "30": { "name": "Program End & Reset",        "desc": "End program, reset to top, rewind tape." },
     "98": { "name": "Subprogram Call",            "desc": "Call subprogram: M98 Pxxxx (Fanuc/Haas/Mazak). Returns on M99." },
-    "99": { "name": "Subprogram Return",          "desc": "Return from subprogram to calling program." }
+    "99": { "name": "Subprogram Return",          "desc": "Return from subprogram to calling program." },
+    "10": { "name": "4th Axis Clamp",             "desc": "Clamp the 4th axis (A-axis rotary table or trunnion). Use before any operation that requires the axis to be locked. Always pair with M11 (unclamp). HAAS / 4-axis machines." },
+    "11": { "name": "4th Axis Unclamp",           "desc": "Unclamp the 4th axis (A-axis) to allow rotation. Always pair with M10 (clamp) after positioning. HAAS / 4-axis machines." },
+    "12": { "name": "5th Axis Clamp",             "desc": "Clamp the 5th axis (B-axis trunnion tilt). Use before machining after 5-axis positioning. Always pair with M13 (unclamp). HAAS UMC trunnion machines." },
+    "13": { "name": "5th Axis Unclamp",           "desc": "Unclamp the 5th axis (B-axis trunnion) to allow tilting. Always pair with M12 (clamp) after positioning. HAAS UMC trunnion machines." }
   }
 }

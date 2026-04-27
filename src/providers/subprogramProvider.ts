@@ -10,16 +10,14 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { isGCodeFile, gcodeGlobPattern } from '../utils/fileTypes';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const GCODE_EXTENSIONS = /\.(nc|gcode|ngc|tap|cnc|mpf|spf|prg|min)$/i;
-
 function isGCodeDocument(document: vscode.TextDocument): boolean {
-  if (document.languageId === 'gcode') return true;
-  return GCODE_EXTENSIONS.test(document.fileName);
+  return isGCodeFile(document);
 }
 
 /**
@@ -143,7 +141,7 @@ class SubprogramWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvide
 
     // Find all gcode files in the workspace
     const files = await vscode.workspace.findFiles(
-      '**/*.{nc,gcode,ngc,tap,cnc,mpf,spf,prg,min}',
+      gcodeGlobPattern(),
       '**/node_modules/**',
       500
     );
@@ -193,7 +191,7 @@ async function findSubprogramInWorkspace(
   if (!folders || folders.length === 0) return null;
 
   const files = await vscode.workspace.findFiles(
-    '**/*.{nc,gcode,ngc,tap,cnc,mpf,spf,prg,min}',
+    gcodeGlobPattern(),
     '**/node_modules/**',
     500
   );
@@ -225,7 +223,7 @@ async function findSubprogramInWorkspace(
 export function registerSubprogramProvider(context: vscode.ExtensionContext): void {
   const selector: vscode.DocumentSelector = [
     { language: 'gcode' },
-    { pattern: '**/*.{nc,gcode,ngc,tap,cnc,mpf,spf,prg,min}' },
+    { pattern: gcodeGlobPattern() },
   ];
 
   context.subscriptions.push(

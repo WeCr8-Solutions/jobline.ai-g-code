@@ -19,6 +19,7 @@ export interface ToolPreviewData {
   holder: 'CAT40' | 'CAT50' | 'BT40' | 'BT50' | 'HSK-A63' | 'R8' | 'None';
   description: string;
   color: string;
+  unit?: 'in' | 'mm';
 }
 
 export interface ToolPreviewInitData {
@@ -48,11 +49,18 @@ export class ToolPreviewPanel {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
+        localResourceRoots: [
+          context.extensionUri,
+          vscode.Uri.joinPath(context.extensionUri, 'media'),
+        ],
       }
     );
 
     panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'images', 'icon.png');
-    panel.webview.html = ToolPreviewPanel.getHtml();
+    const threeUri = panel.webview.asWebviewUri(
+      vscode.Uri.joinPath(context.extensionUri, 'media', 'three.min.js')
+    );
+    panel.webview.html = ToolPreviewPanel.getHtml(threeUri.toString());
 
     if (initData) {
       panel.webview.postMessage({ type: 'loadTool', data: initData });
@@ -65,7 +73,7 @@ export class ToolPreviewPanel {
     panel.webview.onDidReceiveMessage((msg) => {
       if (msg.type === 'applyTool') {
         // Forward to simulation panel (if open)
-        ToolpathVisualizerPanel.currentPanel?.postMessage({
+        ToolpathVisualizerPanel.queueMessage({
           type: 'toolData',
           data: msg.data
         });
@@ -75,7 +83,7 @@ export class ToolPreviewPanel {
     ToolPreviewPanel.instance = panel;
   }
 
-  private static getHtml(): string {
+  private static getHtml(threeUri: string): string {
     return `<!DOCTYPE html>
 <html>
 <head>
@@ -247,41 +255,21 @@ export class ToolPreviewPanel {
     <canvas id="canvas"></canvas>
   </div>
 
-  <script>
+  <!-- Three.js — bundled locally, no internet required -->
+  <script type="module">
+    import * as THREE from '${threeUri}';
     const vscode = acquireVsCodeApi();
     let scene, camera, renderer;
     let isDragging = false;
     let cameraRotation = { x: 0.3, y: 0.5 };
     let previousMousePosition = { x: 0, y: 0 };
     let animationId;
-    let threeReady = false;
+    let pendingToolData = null;
+    const threeReady = !!(THREE && THREE.WebGLRenderer);
 
-    // Load Three.js from CDN with fallback
-    function loadThreeJS() {
-      if (window.THREE) {
-        threeReady = true;
-        setupScene();
-        refreshPreview();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/three@r155/build/three.min.js';
-      script.timeout = 10000;
-
-      script.onload = () => {
-        console.log('[ToolPreview] Three.js loaded');
-        threeReady = true;
-        setupScene();
-        refreshPreview();
-      };
-
-      script.onerror = () => {
-        console.error('[ToolPreview] Failed to load Three.js from CDN');
-        document.body.innerHTML += '<div style="color:red;padding:20px;">Failed to load 3D library. Please check your internet connection.</div>';
-      };
-
-      document.head.appendChild(script);
+    if (!threeReady) {
+      document.querySelector('.canvas-panel').innerHTML =
+        '<div style="color:#f88;padding:20px;font-family:monospace;">Three.js failed to load — check that media/three.min.js is present in the extension.</div>';
     }
 
     // Unit tracking
@@ -300,11 +288,11 @@ export class ToolPreviewPanel {
     const savedUnit = localStorage.getItem('toolPreviewUnit') || 'in';
     setUnit(savedUnit);
 
-    // Start loading when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadThreeJS);
-    } else {
-      loadThreeJS();
+    // Init scene — Three.js loaded via module import above
+    if (threeReady) {
+      setupScene();
+      refreshPreview();
+      if (pendingToolData) { loadTool(pendingToolData); pendingToolData = null; }
     }
 
     function setupScene() {
@@ -673,15 +661,20 @@ export class ToolPreviewPanel {
         holder: document.getElementById('holder').value,
         description: document.getElementById('description').value,
         color: document.getElementById('colorInput').value,
+        unit: currentUnit,
       };
       vscode.postMessage({ type: 'applyTool', data });
     }
 
-    // Listen for init messages from extension
+    // Listen for messages from extension
     window.addEventListener('message', (event) => {
       const msg = event.data;
       if (msg.type === 'loadTool') {
-        loadTool(msg.data);
+        if (scene) {
+          loadTool(msg.data);
+        } else {
+          pendingToolData = msg.data;
+        }
       }
     });
   </script>

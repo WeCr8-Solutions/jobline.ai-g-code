@@ -164,9 +164,17 @@ export class ModalStateUpdater {
       }
     }
 
-    // Work offset (G54-G59, G54.1)
+    // Work offset (G54-G59, G54.1, G254 HAAS DWO)
     if (intCode >= 54 && intCode <= 59) {
       state.activeWorkOffset = `G${code}`;
+    }
+    // G254 = HAAS Dynamic Work Offset activate — record as active work offset
+    if (intCode === 254) {
+      state.activeWorkOffset = 'G254';
+    }
+    // G255 = HAAS DWO cancel — revert to base G54
+    if (intCode === 255) {
+      state.activeWorkOffset = 'G54';
     }
 
     // Compensation

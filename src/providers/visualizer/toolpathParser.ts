@@ -1,0 +1,179 @@
+export interface ToolpathPoint {
+  x: number;
+  y: number;
+  z?: number;
+  isRapid?: boolean;
+  mStop?: 'M0' | 'M1' | 'M2' | 'M30';
+  lineNumber?: number;
+}
+
+const ARC_SEGMENTS_PER_CIRCLE = 360;
+
+function tessellateArc(
+  x0: number,
+  y0: number,
+  z0: number,
+  x1: number,
+  y1: number,
+  z1: number,
+  iOff: number | null,
+  jOff: number | null,
+  kOff: number | null,
+  rVal: number | null,
+  cw: boolean,
+  plane: 17 | 18 | 19,
+  lineNumber: number
+): ToolpathPoint[] {
+  let a0: number;
+  let b0: number;
+  let a1: number;
+  let b1: number;
+  let hStart: number;
+  let hEnd: number;
+  let iA: number | null;
+  let iB: number | null;
+
+  if (plane === 17) {
+    a0 = x0; b0 = y0; a1 = x1; b1 = y1; hStart = z0; hEnd = z1;
+    iA = iOff; iB = jOff;
+  } else if (plane === 18) {
+    a0 = x0; b0 = z0; a1 = x1; b1 = z1; hStart = y0; hEnd = y1;
+    iA = iOff; iB = kOff;
+  } else {
+    a0 = y0; b0 = z0; a1 = y1; b1 = z1; hStart = x0; hEnd = x1;
+    iA = jOff; iB = kOff;
+  }
+
+  let cA: number;
+  let cB: number;
+
+  if (rVal !== null && rVal !== 0) {
+    const r = Math.abs(rVal);
+    const dx = a1 - a0;
+    const dy = b1 - b0;
+    const chord = Math.sqrt(dx * dx + dy * dy);
+    if (chord < 1e-9) return [];
+    const h = Math.sqrt(Math.max(r * r - (chord / 2) * (chord / 2), 0));
+    const mx = (a0 + a1) / 2;
+    const my = (b0 + b1) / 2;
+    const px = -dy / chord;
+    const py = dx / chord;
+    const side = (rVal > 0 ? 1 : -1) * (cw ? -1 : 1);
+    cA = mx + px * h * side;
+    cB = my + py * h * side;
+  } else if (iA !== null || iB !== null) {
+    cA = a0 + (iA ?? 0);
+    cB = b0 + (iB ?? 0);
+  } else {
+    return [{ x: x1, y: y1, z: z1, isRapid: false, lineNumber }];
+  }
+
+  const radius = Math.sqrt((a0 - cA) ** 2 + (b0 - cB) ** 2);
+  if (radius < 1e-9) return [];
+
+  const startAngle = Math.atan2(b0 - cB, a0 - cA);
+  const endAngle = Math.atan2(b1 - cB, a1 - cA);
+
+  let sweep: number;
+  if (cw) {
+    sweep = endAngle - startAngle;
+    if (sweep > 0) sweep -= 2 * Math.PI;
+  } else {
+    sweep = endAngle - startAngle;
+    if (sweep < 0) sweep += 2 * Math.PI;
+  }
+
+  if (Math.abs(sweep) < 1e-6) {
+    sweep = cw ? -2 * Math.PI : 2 * Math.PI;
+  }
+
+  const nSegs = Math.max(3, Math.round(Math.abs(sweep) / (2 * Math.PI) * ARC_SEGMENTS_PER_CIRCLE));
+  const dAngle = sweep / nSegs;
+  const dH = (hEnd - hStart) / nSegs;
+  const pts: ToolpathPoint[] = [];
+
+  for (let index = 1; index <= nSegs; index++) {
+    const angle = startAngle + dAngle * index;
+    const pA = cA + radius * Math.cos(angle);
+    const pB = cB + radius * Math.sin(angle);
+    const pH = hStart + dH * index;
+
+    let px: number;
+    let py: number;
+    let pz: number;
+    if (plane === 17) {
+      px = pA; py = pB; pz = pH;
+    } else if (plane === 18) {
+      px = pA; py = pH; pz = pB;
+    } else {
+      px = pH; py = pA; pz = pB;
+    }
+    pts.push({ x: px, y: py, z: pz, isRapid: false, lineNumber });
+  }
+
+  return pts;
+}
+
+export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units: 'in' | 'mm' } {
+  const lines = gcode.split(/\r?\n/);
+  let x = 0;
+  let y = 0;
+  let z = 0;
+  let units: 'in' | 'mm' = 'in';
+  let motionMode = 0;
+  let plane: 17 | 18 | 19 = 17;
+  const path: ToolpathPoint[] = [{ x, y, z }];
+
+  for (let lineNum = 0; lineNum < lines.length; lineNum++) {
+    const line = lines[lineNum];
+    const upper = line.toUpperCase();
+
+    if (/^\s*[%;(]/.test(upper) && !/[GXYZIJKRF]/i.test(upper)) continue;
+    if (/\bG20\b/i.test(upper)) units = 'in';
+    if (/\bG21\b/i.test(upper)) units = 'mm';
+    if (/\bG17\b/i.test(upper)) plane = 17;
+    if (/\bG18\b/i.test(upper)) plane = 18;
+    if (/\bG19\b/i.test(upper)) plane = 19;
+
+    let mStop: ToolpathPoint['mStop'] | undefined;
+    if (/\bM0*0\b/i.test(upper)) mStop = 'M0';
+    if (/\bM0*1\b/i.test(upper)) mStop = 'M1';
+    if (/\bM0*2\b/i.test(upper)) mStop = 'M2';
+    if (/\bM30\b/i.test(upper)) mStop = 'M30';
+
+    const gMotion = upper.match(/\bG0*([0123])\b/);
+    if (gMotion) motionMode = parseInt(gMotion[1], 10);
+
+    const addr = (letter: string): number | null => {
+      const match = upper.match(new RegExp(`\\b${letter}([+-]?\\d+\\.?\\d*)`, 'i'));
+      return match ? parseFloat(match[1]) : null;
+    };
+
+    const xVal = addr('X');
+    const yVal = addr('Y');
+    const zVal = addr('Z');
+    const iVal = addr('I');
+    const jVal = addr('J');
+    const kVal = addr('K');
+    const rVal = addr('R');
+    const hasMove = xVal !== null || yVal !== null || zVal !== null;
+
+    if (!hasMove && !mStop) continue;
+
+    const x1 = xVal !== null ? xVal : x;
+    const y1 = yVal !== null ? yVal : y;
+    const z1 = zVal !== null ? zVal : z;
+
+    if (motionMode === 2 || motionMode === 3) {
+      path.push(...tessellateArc(x, y, z, x1, y1, z1, iVal, jVal, kVal, rVal, motionMode === 2, plane, lineNum));
+    } else {
+      path.push({ x: x1, y: y1, z: z1, isRapid: motionMode === 0, mStop, lineNumber: lineNum });
+    }
+
+    x = x1;
+    y = y1;
+    z = z1;
+  }
+
+  return { path, units };
+}

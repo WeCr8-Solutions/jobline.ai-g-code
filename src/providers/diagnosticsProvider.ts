@@ -11,6 +11,7 @@ import { Tokenizer } from '../parser/tokenizer';
 import { BlockParser } from '../parser/blockParser';
 import { ProgramModelBuilder } from '../parser/programModel';
 import { runDiagnosticEngine, DiagnosticConfig } from '../diagnostics/engine';
+import { isGCodeFile } from '../utils/fileTypes';
 
 const tokenizer    = new Tokenizer();
 const blockParser  = new BlockParser();
@@ -19,8 +20,7 @@ const modelBuilder = new ProgramModelBuilder();
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
 function isGCodeDocument(document: vscode.TextDocument): boolean {
-  if (document.languageId === 'gcode') return true;
-  return /\.(nc|gcode|ngc|tap|cnc|mpf|spf|prg|min)$/i.test(document.fileName);
+  return isGCodeFile(document);
 }
 
 function runDiagnostics(

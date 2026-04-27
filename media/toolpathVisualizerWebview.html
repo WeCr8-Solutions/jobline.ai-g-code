@@ -1,0 +1,593 @@
+<!-- toolpathVisualizerWebview.html — JobLine G-Code 3D Visualizer -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src {{CSP_SOURCE}} data:; style-src {{CSP_SOURCE}} 'unsafe-inline'; script-src {{CSP_SOURCE}} 'unsafe-inline';">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>G-Code Toolpath Visualizer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1a2e; }
+    #canvas-container { position: absolute; inset: 0; }
+    canvas { display: block; }
+
+    /* HUD — top-left status readout */
+    #hud {
+      position: absolute; top: 8px; left: 10px;
+      color: #8899aa; font-family: monospace; font-size: 11px;
+      pointer-events: none; -webkit-user-select: none; user-select: none; line-height: 1.5;
+    }
+
+    /* Legend — bottom-right */
+    #legend {
+      position: absolute; bottom: 8px; right: 10px;
+      color: #556; font-family: monospace; font-size: 10px;
+      pointer-events: none; -webkit-user-select: none; user-select: none; text-align: right;
+      line-height: 1.6;
+    }
+    .legend-rapid { color: #4fc3f7; }
+    .legend-cut { color: #66bb6a; }
+    .legend-mstop { color: #ff8a65; }
+    .legend-current { color: #ffee58; }
+    .legend-controls { margin-top: 5px; }
+
+    /* Empty state — centred prompt */
+    #empty {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: #334; font-family: monospace; font-size: 13px;
+      text-align: center; pointer-events: none; line-height: 2;
+    }
+    #empty strong { color: #6688aa; }
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <div id="hud">
+    <div id="stat-lines">No toolpath loaded</div>
+    <div id="stat-pos"></div>
+    <div id="stat-units"></div>
+  </div>
+
+  <div id="legend">
+    <div class="legend-rapid">&#9472; Rapid</div>
+    <div class="legend-cut">&#9472; Cut</div>
+    <div class="legend-mstop">&#9472; M-Stop</div>
+    <div class="legend-current">&#9472; Current line</div>
+    <div class="legend-controls">Left drag &nbsp;: Orbit</div>
+    <div>Middle drag: Pan</div>
+    <div>Right drag : Pan</div>
+    <div>Shift+Left : Pan</div>
+    <div>Scroll &nbsp;&nbsp;&nbsp;&nbsp;: Zoom</div>
+    <div>Double click: Fit view</div>
+    <div>F &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Fit view</div>
+  </div>
+
+  <div id="empty">
+    Open a G-code file, then run<br>
+    <strong>JobLine: Show 3D Visualizer</strong><br>
+    from the Command Palette.
+  </div>
+
+  <!-- Three.js load-failure banner (hidden by default, shown only on error) -->
+  <div id="three-error" style="display:none;position:absolute;inset:0;z-index:99;
+      background:#1a1a2e;color:#f88;font-family:monospace;font-size:13px;
+      padding:32px;line-height:1.6;">
+    <strong style="font-size:15px;">&#9888; 3D Visualizer could not start</strong><br><br>
+    Three.js failed to load — the 3D rendering engine is missing or corrupt.<br><br>
+    <strong>Steps to fix:</strong><br>
+    1. Reload VS Code: <em>Ctrl+Shift+P → Developer: Reload Window</em><br>
+    2. If the problem persists, reinstall the JobLine extension from the Extensions panel.<br>
+    3. If you are on a restricted network, confirm that local extension files are not blocked by antivirus or group policy.<br><br>
+    <span style="color:#aaa;font-size:11px;">Error detail: <span id="three-error-detail">module import failed</span></span>
+  </div>
+
+    <!-- Three.js — bundled locally in media/, no internet required.
+      URI injected at runtime by toolpathVisualizer.ts. -->
+    <script type="module">
+    import * as THREE from '{{THREE_JS_URI}}';
+    (function () {
+    'use strict';
+
+    // Catch module-level errors (e.g. import rejected, three.min.js corrupted)
+    window.addEventListener('error', function (ev) {
+      const banner = document.getElementById('three-error');
+      const detail = document.getElementById('three-error-detail');
+      if (banner) banner.style.display = 'block';
+      if (detail) detail.textContent = ev.message || 'unknown error';
+    });
+    window.addEventListener('unhandledrejection', function (ev) {
+      const banner = document.getElementById('three-error');
+      const detail = document.getElementById('three-error-detail');
+      if (banner) banner.style.display = 'block';
+      if (detail) detail.textContent = String(ev.reason ?? 'import failed');
+    });
+
+    // -----------------------------------------------------------------------
+    // Guard — Three.js module load check
+    // -----------------------------------------------------------------------
+    if (!THREE || !THREE.WebGLRenderer) {
+      const banner = document.getElementById('three-error');
+      if (banner) banner.style.display = 'block';
+      return;
+    }
+
+    // Signal successful load — hide any stale error banner
+    const _errBanner = document.getElementById('three-error');
+    if (_errBanner) _errBanner.style.display = 'none';
+
+    // -----------------------------------------------------------------------
+    // Renderer + Scene + Camera
+    // -----------------------------------------------------------------------
+    const container = document.getElementById('canvas-container');
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setClearColor(0x1a1a2e);
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      container.clientWidth / container.clientHeight,
+      0.0001,
+      1e6
+    );
+
+    // -----------------------------------------------------------------------
+    // Coordinate mapping
+    // G-code: X = right, Y = away from operator, Z = up (tool axis)
+    // Three.js: X = right, Y = up, Z = toward viewer
+    // Mapping: gc(x, y, z) → three(x, z, -y)
+    // -----------------------------------------------------------------------
+    function gc3(x, y, z) {
+      return new THREE.Vector3(x, z === undefined ? 0 : z, -(y === undefined ? 0 : y));
+    }
+
+    // -----------------------------------------------------------------------
+    // Grid
+    // -----------------------------------------------------------------------
+    const grid = new THREE.GridHelper(500, 50, 0x303050, 0x252540);
+    scene.add(grid);
+
+    // -----------------------------------------------------------------------
+    // Layer registry
+    // -----------------------------------------------------------------------
+    const layerVis = {
+      tool: true, toolHolder: true, stock: true,
+      path: true, sweptTube: true, origin: true
+    };
+    const layerMeshes = {
+      tool: null,
+      toolHolder: null,
+      stock: null,
+      path: null,
+      sweptTube: null,
+      origin: null
+    };
+
+    function disposeObject(obj) {
+      if (!obj) return;
+      obj.traverse?.((node) => {
+        if (node.geometry) node.geometry.dispose();
+        if (Array.isArray(node.material)) {
+          node.material.forEach(mat => mat.dispose && mat.dispose());
+        } else if (node.material) {
+          node.material.dispose();
+        }
+      });
+    }
+
+    function setLayer(key, obj) {
+      if (layerMeshes[key]) {
+        scene.remove(layerMeshes[key]);
+        disposeObject(layerMeshes[key]);
+      }
+      layerMeshes[key] = obj;
+      if (obj) {
+        obj.visible = layerVis[key] !== false;
+        scene.add(obj);
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Origin marker  (R=X, G=Y, B=Z in G-code space)
+    // -----------------------------------------------------------------------
+    let originOff = { x: 0, y: 0, z: 0 };
+
+    function buildOrigin() {
+      const ox = originOff.x, oy = originOff.y, oz = originOff.z;
+      const len = Math.max(axisLen, 1.0);
+      // positions in Three.js coords
+      const pts = [
+        gc3(ox, oy, oz),     gc3(ox + len, oy, oz),   // X  red
+        gc3(ox, oy, oz),     gc3(ox, oy + len, oz),   // Y  green
+        gc3(ox, oy, oz),     gc3(ox, oy, oz + len),   // Z  blue
+      ];
+      const cols = [
+        1, 0, 0,  1, 0, 0,
+        0, 0.8, 0,  0, 0.8, 0,
+        0.2, 0.4, 1,  0.2, 0.4, 1,
+      ];
+      const pos = [];
+      for (const v of pts) pos.push(v.x, v.y, v.z);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geo.setAttribute('color',    new THREE.Float32BufferAttribute(cols, 3));
+      const mat = new THREE.LineBasicMaterial({ vertexColors: true });
+      setLayer('origin', new THREE.LineSegments(geo, mat));
+    }
+
+    // -----------------------------------------------------------------------
+    // Stock box (wireframe)
+    // -----------------------------------------------------------------------
+    let stockCfg = { w: 4, d: 4, h: 2, unit: 'in', color: '#4488ff' };
+
+    function buildStock() {
+      const { w, d, h, color } = stockCfg;
+      const ox = originOff.x, oy = originOff.y, oz = originOff.z;
+      // In Three.js coords: X=w, Y=h (G-code Z), Z=d (G-code Y depth)
+      const geo = new THREE.BoxGeometry(w, h, d);
+      const edges = new THREE.EdgesGeometry(geo);
+      geo.dispose();
+      const mat = new THREE.LineBasicMaterial({
+        color: new THREE.Color(color),
+        opacity: 0.55,
+        transparent: true
+      });
+      const box = new THREE.LineSegments(edges, mat);
+      box.position.set(ox + w / 2, oz + h / 2, -(oy + d / 2));
+      setLayer('stock', box);
+    }
+
+    // -----------------------------------------------------------------------
+    // Toolpath
+    // -----------------------------------------------------------------------
+    const C_RAPID = new THREE.Color(0x4fc3f7);   // sky blue
+    const C_CUT   = new THREE.Color(0x66bb6a);   // green
+    const C_MSTOP = new THREE.Color(0xff8a65);   // orange
+    const C_HI    = new THREE.Color(0xffee58);   // yellow
+
+    let currentPath = [];
+    let currentHighlight = -1;
+    let currentUnits = 'in';
+    let currentCutterSize = 0;
+    let currentToolData = null;
+
+    function buildPath(path, hiIdx) {
+      if (!path || path.length < 2) { setLayer('path', null); return; }
+
+      const pos = [], col = [];
+      for (let i = 1; i < path.length; i++) {
+        const a = path[i - 1], b = path[i];
+        const pa = gc3(a.x, a.y, a.z);
+        const pb = gc3(b.x, b.y, b.z);
+        let c;
+        if (i - 1 === hiIdx || i === hiIdx) c = C_HI;
+        else if (b.mStop)   c = C_MSTOP;
+        else if (b.isRapid) c = C_RAPID;
+        else                c = C_CUT;
+        pos.push(pa.x, pa.y, pa.z, pb.x, pb.y, pb.z);
+        col.push(c.r, c.g, c.b, c.r, c.g, c.b);
+      }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geo.setAttribute('color',    new THREE.Float32BufferAttribute(col, 3));
+      const mat = new THREE.LineBasicMaterial({ vertexColors: true });
+      setLayer('path', new THREE.LineSegments(geo, mat));
+    }
+
+    function buildSweptTube(path, cutterDiameter) {
+      if (!path || path.length < 2 || !(cutterDiameter > 0)) {
+        setLayer('sweptTube', null);
+        return;
+      }
+
+      const radius = Math.max(cutterDiameter / 2, 0.0005);
+      const group = new THREE.Group();
+      const material = new THREE.MeshBasicMaterial({
+        color: 0x7bd389,
+        transparent: true,
+        opacity: 0.18,
+      });
+
+      for (let i = 1; i < path.length; i++) {
+        const a = path[i - 1];
+        const b = path[i];
+        if (b.isRapid) continue;
+
+        const start = gc3(a.x, a.y, a.z);
+        const end = gc3(b.x, b.y, b.z);
+        const delta = new THREE.Vector3().subVectors(end, start);
+        const distance = delta.length();
+        if (distance < 1e-6) continue;
+
+        const center = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+        const segment = new THREE.Mesh(
+          new THREE.CylinderGeometry(radius, radius, distance, 12),
+          material.clone()
+        );
+        segment.position.copy(center);
+        segment.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), delta.normalize());
+        group.add(segment);
+      }
+
+      setLayer('sweptTube', group.children.length > 0 ? group : null);
+    }
+
+    function buildToolLayer(toolData) {
+      if (!currentPath.length) {
+        setLayer('tool', null);
+        setLayer('toolHolder', null);
+        return;
+      }
+
+      const tipIndex = currentHighlight >= 0 && currentHighlight < currentPath.length
+        ? currentHighlight
+        : currentPath.length - 1;
+      const tip = gc3(currentPath[tipIndex].x, currentPath[tipIndex].y, currentPath[tipIndex].z);
+
+      const diameter = Math.max(Number(toolData?.diameter) || currentCutterSize || 0.25, 0.01);
+      const stickOut = Math.max(Number(toolData?.stickOut) || diameter * 3, diameter * 1.2);
+      const totalLength = Math.max(Number(toolData?.length) || stickOut * 1.8, stickOut);
+      const holderType = toolData?.holder || 'CAT40';
+      const toolColor = new THREE.Color(toolData?.color || '#f6c85f');
+      const shankLength = Math.max(totalLength - stickOut, diameter * 1.5);
+
+      const toolGroup = new THREE.Group();
+      toolGroup.position.copy(tip);
+
+      const cuttingLength = Math.max(stickOut, diameter * 0.8);
+      const cuttingMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(diameter / 2, diameter / 2, cuttingLength, 20),
+        new THREE.MeshPhongMaterial({ color: toolColor, shininess: 80 })
+      );
+      cuttingMesh.position.y = cuttingLength / 2;
+      toolGroup.add(cuttingMesh);
+
+      const shankDiameter = Math.max(diameter * 0.65, diameter * 0.4);
+      const shankMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(shankDiameter / 2, shankDiameter / 2, shankLength, 18),
+        new THREE.MeshPhongMaterial({ color: 0xa0a7b4, shininess: 60 })
+      );
+      shankMesh.position.y = cuttingLength + shankLength / 2;
+      toolGroup.add(shankMesh);
+      setLayer('tool', toolGroup);
+
+      if (holderType === 'None') {
+        setLayer('toolHolder', null);
+        return;
+      }
+
+      const holderGroup = new THREE.Group();
+      holderGroup.position.copy(tip);
+      const holderLength = Math.max(diameter * 2.5, shankLength * 0.6);
+      const holderTopRadius = Math.max(diameter * 0.95, 0.45);
+      const holderBottomRadius = Math.max(diameter * 0.7, 0.3);
+      const holderMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(holderTopRadius, holderBottomRadius, holderLength, 24),
+        new THREE.MeshPhongMaterial({ color: 0xc9d1d9, shininess: 55 })
+      );
+      holderMesh.position.y = cuttingLength + shankLength + holderLength / 2;
+      holderGroup.add(holderMesh);
+      setLayer('toolHolder', holderGroup);
+    }
+
+    function rebuildSimulationLayers() {
+      buildSweptTube(currentPath, currentCutterSize);
+      buildToolLayer(currentToolData);
+    }
+
+    // -----------------------------------------------------------------------
+    // HUD update
+    // -----------------------------------------------------------------------
+    function updateHUD() {
+      const elL = document.getElementById('stat-lines');
+      const elP = document.getElementById('stat-pos');
+      const elU = document.getElementById('stat-units');
+      if (currentPath.length === 0) {
+        elL.textContent = 'No toolpath loaded';
+        elP.textContent = '';
+        elU.textContent = '';
+        return;
+      }
+      elL.textContent = `${currentPath.length} path points`;
+      elU.textContent = currentUnits === 'in' ? 'Units: inches' : 'Units: mm';
+      if (currentHighlight >= 0 && currentHighlight < currentPath.length) {
+        const p = currentPath[currentHighlight];
+        const z = p.z !== undefined ? p.z : 0;
+        elP.textContent = `X${p.x.toFixed(4)}  Y${p.y.toFixed(4)}  Z${z.toFixed(4)}`;
+      } else {
+        elP.textContent = '';
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Camera fit
+    // -----------------------------------------------------------------------
+    let axisLen = 1.0;
+
+    function fitCamera(path) {
+      if (!path || path.length === 0) return;
+      const bbox = new THREE.Box3();
+      for (const pt of path) bbox.expandByPoint(gc3(pt.x, pt.y, pt.z));
+      const center = new THREE.Vector3();
+      bbox.getCenter(center);
+      const size = new THREE.Vector3();
+      bbox.getSize(size);
+      const maxDim = Math.max(size.x, size.y, size.z, 0.01);
+      axisLen = maxDim * 0.15;
+      orbitRadius = maxDim * 2.2;
+      orbitTarget.copy(center);
+      orbitPhi = Math.PI / 3.5;
+      orbitTheta = Math.PI / 4;
+      updateCameraOrbit();
+    }
+
+    // -----------------------------------------------------------------------
+    // Orbit controls (self-contained — no OrbitControls.js dependency)
+    // -----------------------------------------------------------------------
+    let orbitTarget = new THREE.Vector3(0, 0, 0);
+    let orbitRadius = 20;
+    let orbitTheta  = Math.PI / 4;   // azimuth
+    let orbitPhi    = Math.PI / 3;   // polar (elevation)
+    let didFit = false;
+
+    function updateCameraOrbit() {
+      const sinP = Math.sin(orbitPhi), cosP = Math.cos(orbitPhi);
+      const sinT = Math.sin(orbitTheta), cosT = Math.cos(orbitTheta);
+      camera.position.set(
+        orbitTarget.x + orbitRadius * sinP * sinT,
+        orbitTarget.y + orbitRadius * cosP,
+        orbitTarget.z + orbitRadius * sinP * cosT
+      );
+      camera.lookAt(orbitTarget);
+    }
+    updateCameraOrbit();
+    buildOrigin();
+    buildStock();
+
+    const mouse = { down: false, btn: -1, lx: 0, ly: 0, shiftKey: false };
+
+    function getPointerAction(button, shiftKey) {
+      if (button === 1 || button === 2 || (button === 0 && shiftKey)) {
+        return 'pan';
+      }
+      if (button === 0) {
+        return 'orbit';
+      }
+      return 'none';
+    }
+
+    renderer.domElement.addEventListener('mousedown', e => {
+      mouse.down = true; mouse.btn = e.button;
+      mouse.shiftKey = e.shiftKey;
+      mouse.lx = e.clientX; mouse.ly = e.clientY;
+    });
+    window.addEventListener('mouseup', () => { mouse.down = false; mouse.shiftKey = false; });
+    window.addEventListener('mousemove', e => {
+      if (!mouse.down) return;
+      const dx = e.clientX - mouse.lx, dy = e.clientY - mouse.ly;
+      mouse.lx = e.clientX; mouse.ly = e.clientY;
+      mouse.shiftKey = e.shiftKey;
+      const action = getPointerAction(mouse.btn, mouse.shiftKey);
+      if (action === 'orbit') {
+        // Orbit
+        orbitTheta -= dx * 0.006;
+        orbitPhi = Math.max(0.04, Math.min(Math.PI - 0.04, orbitPhi - dy * 0.006));
+      } else if (action === 'pan') {
+        // Pan
+        const speed = orbitRadius * 0.0012;
+        const right = new THREE.Vector3();
+        camera.getWorldDirection(right);
+        right.cross(new THREE.Vector3(0, 1, 0)).normalize();
+        const up = new THREE.Vector3(0, 1, 0);
+        orbitTarget.addScaledVector(right, -dx * speed);
+        orbitTarget.addScaledVector(up, dy * speed);
+      }
+      updateCameraOrbit();
+    });
+    renderer.domElement.addEventListener('wheel', e => {
+      e.preventDefault();
+      orbitRadius = Math.max(0.001, orbitRadius * (1 + e.deltaY * 0.0012));
+      updateCameraOrbit();
+    }, { passive: false });
+    renderer.domElement.addEventListener('dblclick', () => fitCamera(currentPath));
+    renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+    window.addEventListener('keydown', e => {
+      if (e.key === 'f' || e.key === 'F') fitCamera(currentPath);
+    });
+
+    // -----------------------------------------------------------------------
+    // Resize
+    // -----------------------------------------------------------------------
+    window.addEventListener('resize', () => {
+      const w = container.clientWidth, h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+
+    // -----------------------------------------------------------------------
+    // Render loop
+    // -----------------------------------------------------------------------
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // -----------------------------------------------------------------------
+    // Message handler — receives data from toolpathVisualizer.ts
+    // -----------------------------------------------------------------------
+    const emptyEl = document.getElementById('empty');
+
+    window.addEventListener('message', e => {
+      const msg = e.data;
+      if (!msg || !msg.type) return;
+
+      switch (msg.type) {
+
+        case 'update': {
+          currentPath      = msg.path      || [];
+          currentHighlight = msg.highlightIdx != null ? msg.highlightIdx : -1;
+          currentUnits     = msg.units     || 'in';
+          currentCutterSize = Number(msg.cutterSize) || currentCutterSize;
+          buildPath(currentPath, currentHighlight);
+          rebuildSimulationLayers();
+          if (currentPath.length > 0) {
+            if (emptyEl) emptyEl.style.display = 'none';
+            if (!didFit) { fitCamera(currentPath); didFit = true; buildOrigin(); }
+          }
+          updateHUD();
+          break;
+        }
+
+        case 'stockSettings': {
+          stockCfg = {
+            w: Number(msg.w) || 4,
+            d: Number(msg.d) || 4,
+            h: Number(msg.h) || 2,
+            unit: msg.unit  || 'in',
+            color: msg.color || '#4488ff'
+          };
+          buildStock();
+          break;
+        }
+
+        case 'stockOrigin': {
+          originOff = { x: Number(msg.xOff)||0, y: Number(msg.yOff)||0, z: Number(msg.zOff)||0 };
+          buildOrigin();
+          buildStock();
+          break;
+        }
+
+        case 'toolData': {
+          currentToolData = msg.data || null;
+          buildToolLayer(currentToolData);
+          break;
+        }
+
+        case 'layerToggle': {
+          const { layer, visible } = msg;
+          if (layer in layerVis) layerVis[layer] = !!visible;
+          if (layer in layerMeshes && layerMeshes[layer])
+            layerMeshes[layer].visible = !!visible;
+          break;
+        }
+
+        case 'machineType':
+        case 'machineCapabilities':
+          // Reserved for future machine-envelope rendering
+          break;
+      }
+    });
+
+  })();
+  </script>
+</body>
+</html>

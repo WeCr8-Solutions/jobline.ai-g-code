@@ -2,7 +2,7 @@
   "name": "jobline-gcode",
   "displayName": "JobLine G-Code Intelligence",
   "description": "Deep G-code and robot-program intelligence for CNC machinists and automation engineers — syntax highlighting, hover tooltips, canned cycle & probing detection, Macro B evaluation, Fanuc/Haas/Siemens/Mazak/Okuma CNC dialects, Fanuc Robot TP, and ABB RAPID.",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "publisher": "WeCr8-Solutions",
   "license": "MIT",
   "author": {
@@ -67,10 +67,28 @@
           ".ngc",
           ".tap",
           ".cnc",
+          ".g",
+          ".min",
+          ".prg",
           ".mpf",
           ".spf",
-          ".prg",
-          ".min"
+          ".eia",
+          ".iso",
+          ".ncc",
+          ".ncp",
+          ".ncf",
+          ".nc1",
+          ".5ax",
+          ".fgc",
+          ".dnc",
+          ".apt",
+          ".cls",
+          ".cyc",
+          ".tab",
+          ".ptp",
+          ".src",
+          ".sub",
+          ".lib"
         ],
         "configuration": "./language-configuration.json"
       },
@@ -206,6 +224,12 @@
           "type": "string",
           "default": "",
           "description": "Auto-detected or manually selected machine type."
+        },
+        "jobline.additionalExtensions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Extra file extensions to treat as G-code (e.g. [\".cpp\", \".sub\", \".001\"]). Useful for shop-specific file naming conventions not covered by the built-in list."
         }
       }
     },
@@ -359,6 +383,66 @@
         "icon": "$(trash)"
       },
       {
+        "command": "jobline.sidebar.prevOperation",
+        "title": "JobLine: Previous Operation",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "jobline.sidebar.nextOperation",
+        "title": "JobLine: Next Operation",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "jobline.sidebar.prevTool",
+        "title": "JobLine: Previous Tool",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "jobline.sidebar.nextTool",
+        "title": "JobLine: Next Tool",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "jobline.sidebar.prevCycle",
+        "title": "JobLine: Previous Canned Cycle",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "jobline.sidebar.nextCycle",
+        "title": "JobLine: Next Canned Cycle",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "jobline.sidebar.prevProbe",
+        "title": "JobLine: Previous Probe",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "jobline.sidebar.nextProbe",
+        "title": "JobLine: Next Probe",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "jobline.sidebar.prevMacro",
+        "title": "JobLine: Previous Macro",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "jobline.sidebar.nextMacro",
+        "title": "JobLine: Next Macro",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "jobline.sidebar.prevAlarm",
+        "title": "JobLine: Previous Alarm",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "jobline.sidebar.nextAlarm",
+        "title": "JobLine: Next Alarm",
+        "icon": "$(arrow-right)"
+      },
+      {
         "command": "jobline.openToolPreview",
         "title": "JobLine: Open Tool Preview",
         "icon": "$(tools)"
@@ -422,9 +506,69 @@
       ],
       "view/title": [
         {
+          "command": "jobline.sidebar.prevOperation",
+          "when": "view == jobline.operationsTree",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jobline.sidebar.nextOperation",
+          "when": "view == jobline.operationsTree",
+          "group": "navigation@2"
+        },
+        {
           "command": "jobline.tools.addToolChange",
           "when": "view == jobline.toolsTree",
           "group": "navigation"
+        },
+        {
+          "command": "jobline.sidebar.prevTool",
+          "when": "view == jobline.toolsTree",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jobline.sidebar.nextTool",
+          "when": "view == jobline.toolsTree",
+          "group": "navigation@2"
+        },
+        {
+          "command": "jobline.sidebar.prevCycle",
+          "when": "view == jobline.cannedCyclesTree",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jobline.sidebar.nextCycle",
+          "when": "view == jobline.cannedCyclesTree",
+          "group": "navigation@2"
+        },
+        {
+          "command": "jobline.sidebar.prevProbe",
+          "when": "view == jobline.probingTree",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jobline.sidebar.nextProbe",
+          "when": "view == jobline.probingTree",
+          "group": "navigation@2"
+        },
+        {
+          "command": "jobline.sidebar.prevMacro",
+          "when": "view == jobline.macrosTree",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jobline.sidebar.nextMacro",
+          "when": "view == jobline.macrosTree",
+          "group": "navigation@2"
+        },
+        {
+          "command": "jobline.sidebar.prevAlarm",
+          "when": "view == jobline.alarmsTree",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jobline.sidebar.nextAlarm",
+          "when": "view == jobline.alarmsTree",
+          "group": "navigation@2"
         },
         {
           "command": "jobline.gcode.showVisualizer",
@@ -477,6 +621,10 @@
           "name": "Probing"
         },
         {
+          "id": "jobline.macrosTree",
+          "name": "Macros & Flow"
+        },
+        {
           "id": "jobline.toolboxView",
           "name": "Toolbox",
           "type": "webview"
@@ -503,8 +651,11 @@
     "lint": "eslint src --ext ts",
     "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');\"",
     "test:diagnostics": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/diagnostics.test.ts');\"",
+    "test:visualizer:harness": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/revpack-visualizer-harness.test.ts');\"",
     "test:all": "npm test && npm run test:diagnostics",
+    "test:smoke": "node ./scripts/run-extension-smoke.js",
     "test:typecheck": "tsc --noEmit -p tsconfig.json",
+    "visualizer:harness:revpack": "node -r ts-node/register ./scripts/revpack-visualizer-harness.ts",
     "qa": "npx ts-node --transpileOnly scripts/qa-runner.ts",
     "qa:docker": "docker compose -f docker-compose.qa.yml up --build --abort-on-container-exit",
     "package": "vsce package",

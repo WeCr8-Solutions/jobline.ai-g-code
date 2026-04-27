@@ -55,6 +55,13 @@ export class ProgramModelBuilder {
       stockDimensions: this.extractStockDimensions(blocks),
     };
 
+    // On lathes (Okuma OSP, Fanuc lathe, etc.) the T-word encodes both tool
+    // number AND offset register: T0101 = tool 1, offset 1.  Extract the
+    // actual tool number by dropping the last two offset digits.
+    const isLatheDialect = dialect === 'okuma' || dialect.includes('lathe');
+    const decodeToolNum = (rawNum: number): number =>
+      isLatheDialect && rawNum >= 100 ? Math.floor(rawNum / 100) : rawNum;
+
     let state = createDefaultModalState();
     let currentOperation: Partial<Operation> | null = null;
     let currentCycle: CannedCycleInstance | null = null;
@@ -88,11 +95,31 @@ export class ProgramModelBuilder {
         // Close previous operation
         if (currentOperation && currentOperation.startLine !== undefined) {
           currentOperation.endLine = Math.max(i - 1, currentOperation.startLine);
-          model.operations.push(currentOperation as Operation);
+
+          // Suppress stub ops: a T-word-only line immediately before an M06
+          // line for the same tool should not appear as a separate operation.
+          // e.g.  T01       ← this would otherwise be its own 1-line «stub» op
+          //       M06       ← the real operation starts here
+          const parentBlock = blocks[currentOperation.startLine];
+          const rawToolNum = block.toolNumber !== undefined
+            ? decodeToolNum(block.toolNumber)
+            : (state.activeTool ?? 0);
+          const isStubOp =
+            currentOperation.endLine === currentOperation.startLine &&
+            parentBlock?.toolNumber !== undefined &&
+            !parentBlock.mCodes.some(m => m.code === 6) &&
+            block.mCodes.some(m => m.code === 6) &&
+            currentOperation.toolNumber === rawToolNum;
+
+          if (!isStubOp) {
+            model.operations.push(currentOperation as Operation);
+          }
         }
 
-        // Start new operation
-        const toolNum = block.toolNumber ?? state.activeTool ?? 0;
+        // Start new operation — apply lathe T-word decode
+        const toolNum = block.toolNumber !== undefined
+          ? decodeToolNum(block.toolNumber)
+          : (state.activeTool ? decodeToolNum(state.activeTool) : 0);
         const comment = block.comment ?? this.findNearbyComment(blocks, i);
 
         currentOperation = {

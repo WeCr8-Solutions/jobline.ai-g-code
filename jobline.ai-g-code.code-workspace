@@ -22,5 +22,12 @@
 			"path": "C:/Users/Zach/Downloads/files/jobline-gcode/jobline-gcode/{syntaxes,src"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"chat.tools.terminal.autoApprove": {
+			"npm exec": true,
+			"Get-Command": true,
+			"code": true,
+			"Write-Error": true
+		}
+	}
 }

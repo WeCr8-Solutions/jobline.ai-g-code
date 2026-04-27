@@ -11,16 +11,32 @@ import { ToolPreviewPanel } from './providers/toolPreviewPanel';
 import * as vscode from 'vscode';
 import { loadConfig } from './config';
 import { getHoverContent } from './providers/hoverProvider';
-import { registerSidebarTreeProviders, registerToolsCommands, registerCommandsTree, registerVisualizerSettings } from './providers/sidebarTreeProviders';
+import { registerSidebarTreeProviders, registerToolsCommands, getLastGCodeDoc } from './providers/sidebarTreeProviders';
+import { registerCommandsTree } from './providers/commandsTreeProvider';
+import { registerVisualizerSettings } from './providers/visualizerSettingsProvider';
+import { isGCodeFile } from './utils/fileTypes';
+import { selectPreferredGCodeDocument } from './utils/gcodeDocumentTracker';
 import { openExplanationPanel } from './providers/explanationProvider';
 import { ToolboxViewProvider, registerToolboxCommands } from './providers/toolboxProvider';
 import { registerDiagnosticsProvider } from './providers/diagnosticsProvider';
 import { registerFormatter } from './providers/formatterProvider';
 import { registerSubprogramProvider } from './providers/subprogramProvider';
+import { buildVisualizerHarnessData } from './providers/visualizer/fixtureHarness';
+import { buildAutoSimulationMessages } from './providers/visualizer/simulationSetup';
 
 const LANGUAGE_ID = 'gcode';
 
 export function activate(context: vscode.ExtensionContext): void {
+        function getPreferredGCodeDoc(): vscode.TextDocument | undefined {
+          return selectPreferredGCodeDocument({
+            activeDocument: vscode.window.activeTextEditor?.document,
+            lastDocument: getLastGCodeDoc(),
+            visibleDocuments: vscode.window.visibleTextEditors.map(editor => editor.document),
+            openDocuments: vscode.workspace.textDocuments,
+            isGCodeDocument: isGCodeFile,
+          });
+        }
+
         // Playback state
         const playback = {
           path: [] as any[],
@@ -38,16 +54,32 @@ export function activate(context: vscode.ExtensionContext): void {
         }
 
         function loadPathFromEditor() {
-          const editor = vscode.window.activeTextEditor;
-          if (!editor || editor.document.languageId !== 'gcode') return false;
+          const doc = getPreferredGCodeDoc();
+          if (!doc) return false;
           try {
-            const result = parseGCodeToPath(editor.document.getText());
+            const result = parseGCodeToPath(doc.getText());
             playback.path = result.path;
             playback.units = result.units;
             playback.idx = 0;
             return true;
           } catch (err) {
             vscode.window.showErrorMessage('JobLine: Failed to parse G-code: ' + String(err));
+            return false;
+          }
+        }
+
+        function loadSimulationSetupFromEditor(): boolean {
+          const doc = getPreferredGCodeDoc();
+          if (!doc) return false;
+          try {
+            const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
+            const harness = buildVisualizerHarnessData(doc.getText(), controlType);
+            for (const message of buildAutoSimulationMessages(harness)) {
+              ToolpathVisualizerPanel.queueMessage(message);
+            }
+            return true;
+          } catch (err) {
+            vscode.window.showWarningMessage('JobLine: Unable to auto-load stock/tool setup: ' + String(err));
             return false;
           }
         }
@@ -134,12 +166,12 @@ export function activate(context: vscode.ExtensionContext): void {
         context.subscriptions.push(jumpCmd);
       // Example: Command to send current editor G-code to visualizer
       const updateVisualizerCmd = vscode.commands.registerCommand('jobline.gcode.updateVisualizer', () => {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor || editor.document.languageId !== 'gcode') {
+        const doc = getPreferredGCodeDoc();
+        if (!doc) {
           vscode.window.showWarningMessage('Open a G-code file to visualize.');
           return;
         }
-        const gcode = editor.document.getText();
+        const gcode = doc.getText();
         const result = parseGCodeToPath(gcode);
         // Use fixed cutter size; highlight last point if path exists
         const highlightIdx = result.path.length > 0 ? result.path.length - 1 : 0;
@@ -147,9 +179,16 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.window.showInformationMessage('Toolpath visualizer updated.');
       });
       context.subscriptions.push(updateVisualizerCmd);
-    // Register Toolpath Visualizer command
+    // Register Toolpath Visualizer command — open and immediately send the current path
     const showVisualizerCmd = vscode.commands.registerCommand('jobline.gcode.showVisualizer', () => {
       ToolpathVisualizerPanel.show(context.extensionUri);
+      // Delay one tick so the webview has time to register its message listener
+      setTimeout(() => {
+        if (loadPathFromEditor()) {
+          sendToolpathUpdate(playback.path, playback.cutterSize, 0, playback.units);
+        }
+        loadSimulationSetupFromEditor();
+      }, 300);
     });
     context.subscriptions.push(showVisualizerCmd);
   // Register static sidebar trees so contributed views always have data providers.
@@ -299,7 +338,13 @@ export function activate(context: vscode.ExtensionContext): void {
         placeHolder: 'Select machine type',
       });
       if (selected) {
-        await vscode.workspace.getConfiguration().update('jobline.detectedMachineType', selected, vscode.ConfigurationTarget.WorkspaceFolder);
+        const activeFolder = vscode.window.activeTextEditor
+          ? vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri)
+          : undefined;
+        const cfgTarget = activeFolder
+          ? vscode.ConfigurationTarget.WorkspaceFolder
+          : vscode.ConfigurationTarget.Global;
+        await vscode.workspace.getConfiguration('jobline', activeFolder?.uri).update('detectedMachineType', selected, cfgTarget);
         machineStatusBar.text = `$(vm) ${selected}`;
       }
     }
@@ -334,7 +379,7 @@ export function activate(context: vscode.ExtensionContext): void {
     'jobline.insertStockHeader',
     async () => {
       const editor = vscode.window.activeTextEditor;
-      if (!editor || editor.document.languageId !== 'gcode') {
+      if (!editor || !isGCodeFile(editor.document)) {
         vscode.window.showWarningMessage('Open a G-code file first.');
         return;
       }
@@ -386,7 +431,7 @@ export function activate(context: vscode.ExtensionContext): void {
   // =========================================================================
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
-      if (e.document.languageId === LANGUAGE_ID && ToolpathVisualizerPanel.currentPanel) {
+      if (isGCodeFile(e.document) && ToolpathVisualizerPanel.currentPanel) {
         try {
           const result = parseGCodeToPath(e.document.getText());
           sendToolpathUpdate(result.path, playback.cutterSize, Math.max(0, playback.idx), result.units);

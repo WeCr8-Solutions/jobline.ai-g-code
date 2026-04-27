@@ -15,6 +15,33 @@
  */
 
 import * as vscode from 'vscode';
+import { getLastGCodeDoc } from './sidebarTreeProviders';
+import { isGCodeFile } from '../utils/fileTypes';
+
+// =============================================================================
+// Helper — resolve the G-code editor even when visualizer has focus
+// =============================================================================
+
+async function resolveGCodeEditor(): Promise<vscode.TextEditor | undefined> {
+  // Prefer activeTextEditor when it is a gcode file
+  const active = vscode.window.activeTextEditor;
+  if (active && isGCodeFile(active.document)) return active;
+
+  // Fall back: find any visible gcode editor
+  const visible = vscode.window.visibleTextEditors.find(
+    e => isGCodeFile(e.document)
+  );
+  if (visible) return visible;
+
+  // Last resort: reveal the cached sidebar doc
+  const doc = getLastGCodeDoc();
+  if (!doc) return undefined;
+  try {
+    return await vscode.window.showTextDocument(doc, { preview: false, preserveFocus: false });
+  } catch {
+    return undefined;
+  }
+}
 
 // =============================================================================
 // Helper — apply a transform to the active document
@@ -23,9 +50,9 @@ import * as vscode from 'vscode';
 async function applyTransform(
   transform: (lines: string[], selection: number[] | null) => string[]
 ): Promise<void> {
-  const editor = vscode.window.activeTextEditor;
+  const editor = await resolveGCodeEditor();
   if (!editor) {
-    vscode.window.showWarningMessage('JobLine Toolbox: No active editor.');
+    vscode.window.showWarningMessage('JobLine Toolbox: Open a G-code file first.');
     return;
   }
 
@@ -325,7 +352,7 @@ async function findNextInEditor(
   pattern: RegExp,
   notFoundMsg: string
 ): Promise<void> {
-  const editor = vscode.window.activeTextEditor;
+  const editor = await resolveGCodeEditor();
   if (!editor) return;
 
   const lines = editor.document.getText().split('\n');

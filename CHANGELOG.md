@@ -6,6 +6,71 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.3.3] — 2026-04-26
+
+### Added
+
+- **Commands sidebar panel** — clickable tree with every JobLine action (validate, format, toolbox transforms, navigate) accessible from the activity bar without remembering command names
+- **ISO 13399 Tool Preview Panel** — 3D tool geometry viewer and editor; renders End Mill, Drill, Tap, Face Mill, Boring Bar, and Lathe Insert with CAT/BT/HSK holder geometry
+- **Auto-extract tool specs from comments** — diameter, length of cut, stick-out, and holder type parsed directly from NC file comment blocks and pre-populated in the Tool Preview form
+- **Stock origin control** in Visualizer Settings sidebar — set X/Y/Z stock origin without editing the NC file
+- **Layer filters** in Visualizer Settings sidebar — toggle rapids, cuts, arcs, and canned cycles independently
+- **`VisualizerSettings` sidebar panel** — stock dimensions, machine type, layer toggles, and unit selection consolidated in one always-visible panel
+- **Operator-friendly error banner** in the 3D visualizer — if Three.js fails to load, a visible banner gives actionable instructions ("Reload VS Code", "Reinstall JobLine", "Check antivirus/group policy") instead of a blank canvas
+- **JS error + unhandledrejection listeners** in visualizer webview — any runtime JS fault surfaces in the operator banner with the exact error message
+- **Shared `fileTypes.ts`** — single source of truth for all G-code extension matching; eliminates duplicated regex across 5 files
+
+### Fixed
+
+- **Tool Preview 3D rendering** — proper lights, animation loop, and visible holder geometry on first open
+- **Tool Preview Three.js loading** — loads from bundled `media/three.min.js`; added error handling and debug logging to diagnose future load failures
+- **Unit conversion in Tool Preview** — inch and metric dimensions now convert correctly when switching units
+- **Webview focus** — opening the Visualizer or Tool Preview no longer steals keyboard focus from the active editor
+
+### Technical
+
+- `vitest.config.ts` added — restricts `npx vitest run` to the 3 native vitest test files, eliminating 5 spurious failures from mocha/ts-node suites being accidentally picked up
+- 9 Three.js contract tests in `test/visualizer-controls.test.ts` — cover bundle size, module script structure, guard pattern, CSP placeholder count, and runtime placeholder injection
+- 4 smoke tests in `test/smoke/smoke.test.js` — verify `three.min.js` is bundled and valid JS, visualizer HTML template integrity, crash-scenario NC handling, and panel reopen state replay
+- `src/utils/gcodeDocumentTracker.ts` — tracks last active G-code document across panel focus changes
+
+---
+
+## [0.3.2] — 2026-04-09
+
+### Added
+
+- **3D Toolpath Visualizer** — fully functional Three.js webview (bundled offline, no CDN)
+  - Color-coded toolpath: blue = rapid, green = cut, orange = M-stop, yellow = current line
+  - Orbit (left drag), pan (right drag), zoom (scroll), fit-view (`F` key)
+  - HUD showing point count, current X/Y/Z, units
+  - Auto-loads path when visualizer opens; live-reloads on file edit
+- **Arc tessellation** — G2/G3 arcs properly rendered as smooth curves (IJK + R format, G17/18/19 plane-aware, helical interpolation)
+- **HAAS 5-axis G/M code support** — hover tooltips and parameter hints for:
+  - G187 Smoothing / corner accuracy (P mode, E tolerance)
+  - G234 TCPC — Tool Center Point Control
+  - G254 / G255 Dynamic Work Offset (DWO) activate / cancel
+  - G98 / G99 canned cycle return plane modes
+  - M10 / M11 4th axis clamp / unclamp
+  - M12 / M13 5th axis clamp / unclamp
+- **G254 tracked as work offset** in sidebar (previously showed empty)
+- **Expanded file extension support** — syntax highlighting, diagnostics, hover, and sidebar now activate on: `.5ax` `.ncc` `.ncp` `.ncf` `.nc1` `.eia` `.iso` `.fgc` `.dnc` `.apt` `.cls` `.cyc` `.sub` `.lib` `.src` `.ptp` and more
+- **`jobline.additionalExtensions` setting** — add any shop-specific extensions (e.g. `[".001", ".cpp"]`) without waiting for an update
+- **Sidebar stays active** while visualizer is open — toolbox edits, navigation, and diagnostics work with any panel focused
+
+### Fixed
+
+- **Toolbox buttons** fail when 3D visualizer has focus — all transforms and navigation now fall back to last known G-code document
+- **Tool Preview Panel** loaded Three.js from CDN — now uses bundled `media/three.min.js` (works offline / behind shop firewalls)
+- **Stock header insert** command failed when visualizer had focus
+
+### Technical
+
+- `src/utils/fileTypes.ts` — single source of truth for all G-code extension matching; eliminates duplicated regex across 5 files
+- Arc tessellation: 360 segments/circle resolution, correct sweep direction for CW/CCW, full-circle detection
+
+---
+
 ## [0.3.1] — 2026-03-27
 
 ### Added

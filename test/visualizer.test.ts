@@ -1,3 +1,5 @@
+/* eslint-env node */
+/* global __dirname */
 /**
  * Visualizer Smoke Tests — basic functionality for toolpath parsing and visual runner
  */
@@ -5,50 +7,25 @@
 import { describe, it, expect } from 'vitest';
 import * as path from 'path';
 import * as fs from 'fs';
-
-// Inline the parser to avoid vscode import issues in tests
-function parseGCodeToPath(gcode: string) {
-  interface ToolpathPoint {
-    x: number;
-    y: number;
-    z?: number;
-    isRapid?: boolean;
-  }
-
-  const lines = gcode.split(/\r?\n/);
-  let x = 0, y = 0, z = 0;
-  const pathPoints: ToolpathPoint[] = [{ x, y, z }];
-  for (const line of lines) {
-    const gMatch = line.match(/\bG(\d{2})/i);
-    const xMatch = line.match(/\bX([-+]?\d*\.?\d*)/i);
-    const yMatch = line.match(/\bY([-+]?\d*\.?\d*)/i);
-    const zMatch = line.match(/\bZ([-+]?\d*\.?\d*)/i);
-
-    if (xMatch) x = parseFloat(xMatch[1]);
-    if (yMatch) y = parseFloat(yMatch[1]);
-    if (zMatch) z = parseFloat(zMatch[1]);
-
-    if (xMatch || yMatch || zMatch) {
-      const isRapid = gMatch ? gMatch[1] === '00' : undefined;
-      pathPoints.push({ x, y, z, isRapid });
-    }
-  }
-  return pathPoints;
-}
+import { parseGCodeToPath } from '../src/providers/visualizer/toolpathParser';
+import { extractGCodeCutBounds, compareBounds } from '../src/providers/visualizer/gcodeGoalComparison';
+import { parseParasolidText } from '../src/providers/visualizer/parasolidTextParser';
+import { buildVisualizerHarnessData } from '../src/providers/visualizer/fixtureHarness';
+import { buildAutoSimulationMessages } from '../src/providers/visualizer/simulationSetup';
 
 describe('Visualizer', () => {
   describe('parseGCodeToPath — 3D parsing', () => {
     it('parses G01 X10 Y20 Z-5 to 3D point', () => {
       const gcode = 'G01 X10 Y20 Z-5 F100';
-      const path = parseGCodeToPath(gcode);
+      const { path } = parseGCodeToPath(gcode);
       expect(path).toHaveLength(2);
-      expect(path[1]).toEqual({ x: 10, y: 20, z: -5, isRapid: false });
+      expect(path[1]).toEqual({ x: 10, y: 20, z: -5, isRapid: false, lineNumber: 0 });
     });
 
     it('marks G00 rapid moves with isRapid flag', () => {
       const gcode = 'G00 X5 Y5 Z10';
-      const path = parseGCodeToPath(gcode);
-      expect(path[1]).toEqual({ x: 5, y: 5, z: 10, isRapid: true });
+      const { path } = parseGCodeToPath(gcode);
+      expect(path[1]).toEqual({ x: 5, y: 5, z: 10, isRapid: true, lineNumber: 0 });
     });
 
     it('tracks Z axis across multiple moves', () => {
@@ -57,15 +34,62 @@ describe('Visualizer', () => {
         G01 X10 Y10 Z-5
         G00 X20 Y20 Z5
       `;
-      const path = parseGCodeToPath(gcode);
+      const { path } = parseGCodeToPath(gcode);
       expect(path).toHaveLength(4); // start + 3 moves
       expect(path[3].z).toBe(5);
     });
 
     it('returns initial point at origin', () => {
       const gcode = 'G01 X10 Y10';
-      const path = parseGCodeToPath(gcode);
+      const { path } = parseGCodeToPath(gcode);
       expect(path[0]).toEqual({ x: 0, y: 0, z: 0 });
+    });
+  });
+
+  describe('Solid-model verification', () => {
+    it('compares a parsed envelope against known Parasolid bounds', () => {
+      const gcode = fs.readFileSync(
+        path.join(__dirname, 'fixtures', 'revpack', 'stem umc sample.nc'),
+        'utf8'
+      );
+      const parasolid = fs.readFileSync(
+        path.join(__dirname, 'fixtures', 'revpack', 'REVGRIPS STEM-50-35-PRO.x_t'),
+        'utf8'
+      );
+
+      const envelope = extractGCodeCutBounds(gcode);
+      const goal = parseParasolidText(parasolid);
+      const comparison = compareBounds(envelope.bounds, goal.bounds, 0.01);
+
+      expect(envelope.cutMoveCount).toBeGreaterThan(1000);
+      expect(goal.pointCount).toBeGreaterThan(1000);
+      expect(comparison.matches).toBe(false);
+      expect(comparison.deltas.maxX).toBeGreaterThan(1);
+    });
+
+    it('builds automatic simulator setup from extracted stock and tooling', () => {
+      const gcode = `
+        (STOCK: W=4 D=3 H=2)
+        (T1 - 1/2 BALL ENDMILL)
+        T1 M06
+        G00 X0 Y0 Z1.
+        G01 X1. Y1. Z-0.25 F20.
+      `;
+
+      const harness = buildVisualizerHarnessData(gcode, 'fanuc');
+      const messages = buildAutoSimulationMessages(harness);
+
+      expect(messages[0]).toEqual({ type: 'machineType', machineType: '3-Axis Vertical Mill' });
+      expect(messages).toContainEqual({
+        type: 'stockSettings',
+        w: 4,
+        d: 3,
+        h: 2,
+        unit: 'in',
+        color: '#4488ff',
+      });
+      expect(messages).toContainEqual({ type: 'stockOrigin', xOff: 0, yOff: 0, zOff: 0 });
+      expect(messages.some(message => message.type === 'toolData')).toBe(true);
     });
   });
 
@@ -73,6 +97,12 @@ describe('Visualizer', () => {
     it('visual test runner script exists', () => {
       const runnerPath = path.join(__dirname, '..', 'scripts', 'visual-test-runner.ts');
       expect(fs.existsSync(runnerPath)).toBe(true);
+    });
+
+    it('writes a solid-model verification artifact instead of an image snapshot', () => {
+      const verificationPath = path.join(__dirname, 'fixtures', 'revpack', 'revpack.visual-verification.json');
+      expect(verificationPath.endsWith('.json')).toBe(true);
+      expect(verificationPath.endsWith('.svg')).toBe(false);
     });
 
     it('fixture directory exists', () => {
