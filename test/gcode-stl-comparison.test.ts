@@ -28,6 +28,15 @@ describe('G-code to STL verification', () => {
     assert.equal(comparison.matches, true);
   });
 
+  it('uses simulation semantics for incremental moves and ignores comments', () => {
+    const envelope = extractGCodeCutBounds('(G91 X99)\nG90 G0 X1 Y1\nG91 G1 X.5 Y-.25\n; G1 X50');
+    assert.equal(envelope.cutMoveCount, 1);
+    assert.equal(envelope.bounds.minX, 1);
+    assert.equal(envelope.bounds.maxX, 1.5);
+    assert.equal(envelope.bounds.minY, 0.75);
+    assert.equal(envelope.bounds.maxY, 1);
+  });
+
   it('extracts stable bounds from the revpack Parasolid text fixture', () => {
     const parasolid = parseParasolidText(loadRevpackFixture('REVGRIPS STEM-50-35-PRO.x_t').toString('utf8'));
 

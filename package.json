@@ -259,6 +259,10 @@
         "title": "G-Code: Jump to Line"
       },
       {
+        "command": "jobline.gcode.revealLine",
+        "title": "G-Code: Reveal Review Finding"
+      },
+      {
         "command": "jobline.gcode.showVisualizer",
         "title": "Show Toolpath Visualizer",
         "icon": "$(eye)"
@@ -651,11 +655,20 @@
     "lint": "eslint src --ext ts",
     "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');\"",
     "test:diagnostics": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/diagnostics.test.ts');\"",
+    "test:review": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/program-review.test.ts');\"",
     "test:visualizer:harness": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/revpack-visualizer-harness.test.ts');\"",
-    "test:all": "npm test && npm run test:diagnostics",
+    "test:verification": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/gcode-stl-comparison.test.ts');\"",
+    "test:simulation-matrix": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/simulation-matrix.test.ts');\"",
+    "test:pipeline-gate": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/manufacturing-pipeline.test.ts');\"",
+    "test:all": "npm test && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:simulation-matrix && npm run test:pipeline-gate",
     "test:smoke": "node ./scripts/run-extension-smoke.js",
+    "test:e2e:visual": "npm run compile && node ./scripts/run-visual-e2e.js",
+    "test:ci": "npm run compile && npm run test:all && npm run review:fixtures",
     "test:typecheck": "tsc --noEmit -p tsconfig.json",
     "visualizer:harness:revpack": "node -r ts-node/register ./scripts/revpack-visualizer-harness.ts",
+    "review:gcode": "node -r ts-node/register ./scripts/review-gcode.ts",
+    "review:fixtures": "node -r ts-node/register ./scripts/review-fixtures.ts",
+    "verify:pipeline": "node -r ts-node/register ./scripts/verify-manufacturing-pipeline.ts",
     "qa": "npx ts-node --transpileOnly scripts/qa-runner.ts",
     "qa:docker": "docker compose -f docker-compose.qa.yml up --build --abort-on-container-exit",
     "package": "vsce package",

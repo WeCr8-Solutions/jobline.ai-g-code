@@ -25,6 +25,9 @@ describe('Visualizer control contract', () => {
     expect(html).toContain("renderer.domElement.addEventListener('dblclick'");
     expect(html).toContain("if (action === 'pan')");
     expect(html).toContain("if (action === 'orbit')");
+    expect(html).toContain('id="review-panel"');
+    expect(html).toContain("case 'review'");
+    expect(html).toContain("jobline.gcode.revealLine");
   });
 });
 
@@ -38,6 +41,15 @@ describe('Three.js loading integrity', () => {
     const size = fs.statSync(threeFile).size;
     // A valid Three.js bundle is always >300 KB
     expect(size).toBeGreaterThan(300_000);
+  });
+
+  it('bundles every local module imported by three.min.js', () => {
+    const entry = fs.readFileSync(path.join(MEDIA_DIR, 'three.min.js'), 'utf8');
+    const imports = Array.from(entry.matchAll(/from["']\.\/(.+?)["']/g), match => match[1]);
+    expect(imports.length).toBeGreaterThan(0);
+    for (const importedFile of imports) {
+      expect(fs.existsSync(path.join(MEDIA_DIR, importedFile)), `Missing Three.js dependency: ${importedFile}`).toBe(true);
+    }
   });
 
   it('visualizer HTML uses a single module script — no module/classic split', () => {
@@ -115,8 +127,8 @@ describe('Three.js loading integrity', () => {
       path.join(SRC_DIR, 'toolpathVisualizer.ts'),
       'utf8'
     );
-    expect(ts).toContain(".replace('{{CSP_SOURCE}}'");
-    expect(ts).toContain(".replace('{{THREE_JS_URI}}'");
+    expect(ts).toContain(".split('{{CSP_SOURCE}}').join(");
+    expect(ts).toContain(".split('{{THREE_JS_URI}}').join(");
   });
 
   it('toolpathVisualizer.ts has a fallback error page for missing HTML template', () => {

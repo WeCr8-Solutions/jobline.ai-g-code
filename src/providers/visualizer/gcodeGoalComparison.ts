@@ -46,56 +46,23 @@ function finalizeBounds(bounds: Bounds3D): Bounds3D {
   return bounds;
 }
 
-function readAxis(line: string, axis: 'X' | 'Y' | 'Z'): number | null {
-  const match = line.match(new RegExp(`\\b${axis}([-+]?\\d*\\.?\\d+)`, 'i'));
-  return match ? Number.parseFloat(match[1]) : null;
-}
-
 export function extractGCodeCutBounds(gcode: string): GCodeEnvelope {
-  const lines = gcode.split(/\r?\n/);
+  const parsed = parseGCodeToPath(gcode);
   const bounds = createEmptyBounds();
-  let units: 'in' | 'mm' = 'in';
-  let x = 0;
-  let y = 0;
-  let z = 0;
-  let motionMode = 0;
-  let cutMoveCount = 0;
-
-  for (const rawLine of lines) {
-    const line = rawLine.toUpperCase();
-    if (/\bG20\b/.test(line)) units = 'in';
-    if (/\bG21\b/.test(line)) units = 'mm';
-
-    const motionMatch = line.match(/\bG0*([0123])\b/);
-    if (motionMatch) {
-      motionMode = Number.parseInt(motionMatch[1], 10);
-    }
-
-    const xVal = readAxis(line, 'X');
-    const yVal = readAxis(line, 'Y');
-    const zVal = readAxis(line, 'Z');
-    const hasMove = xVal !== null || yVal !== null || zVal !== null;
-    if (!hasMove) continue;
-
-    const nextX = xVal ?? x;
-    const nextY = yVal ?? y;
-    const nextZ = zVal ?? z;
-
-    if (motionMode !== 0) {
-      expandBounds(bounds, x, y, z);
-      expandBounds(bounds, nextX, nextY, nextZ);
-      cutMoveCount += 1;
-    }
-
-    x = nextX;
-    y = nextY;
-    z = nextZ;
+  const cutLines = new Set<number>();
+  for (let index = 1; index < parsed.path.length; index++) {
+    const start = parsed.path[index - 1];
+    const end = parsed.path[index];
+    if (end.isRapid) continue;
+    expandBounds(bounds, start.x, start.y, start.z ?? 0);
+    expandBounds(bounds, end.x, end.y, end.z ?? 0);
+    if (end.lineNumber !== undefined) cutLines.add(end.lineNumber);
   }
 
   return {
-    units,
+    units: parsed.units,
     bounds: finalizeBounds(bounds),
-    cutMoveCount,
+    cutMoveCount: cutLines.size,
   };
 }
 
@@ -112,3 +79,4 @@ export function compareBounds(actual: Bounds3D, expected: Bounds3D, tolerance: n
   const matches = Object.values(deltas).every(delta => delta <= tolerance);
   return { matches, tolerance, deltas };
 }
+import { parseGCodeToPath } from './toolpathParser';

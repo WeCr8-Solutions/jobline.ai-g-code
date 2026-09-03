@@ -2,9 +2,33 @@ export interface ToolpathPoint {
   x: number;
   y: number;
   z?: number;
+  a?: number;
+  b?: number;
+  c?: number;
   isRapid?: boolean;
   mStop?: 'M0' | 'M1' | 'M2' | 'M30';
   lineNumber?: number;
+}
+
+function executableText(line: string): string {
+  let result = '';
+  let commentDepth = 0;
+  for (const character of line) {
+    if (character === '(') commentDepth++;
+    else if (character === ')' && commentDepth > 0) commentDepth--;
+    else if (character === ';' && commentDepth === 0) break;
+    else if (commentDepth === 0) result += character;
+  }
+  return result;
+}
+
+function addressValue(line: string, letter: string): number | null {
+  const match = line.match(new RegExp(`${letter}\\s*([+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+))`, 'i'));
+  return match ? Number.parseFloat(match[1]) : null;
+}
+
+function hasCode(line: string, letter: 'G' | 'M', code: string): boolean {
+  return new RegExp(`${letter}0*${code}(?=[A-Z+\\-\\s]|$)`, 'i').test(line);
 }
 
 const ARC_SEGMENTS_PER_CIRCLE = 360;
@@ -119,60 +143,99 @@ export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units:
   let x = 0;
   let y = 0;
   let z = 0;
+  let a = 0;
+  let b = 0;
+  let c = 0;
   let units: 'in' | 'mm' = 'in';
   let motionMode = 0;
   let plane: 17 | 18 | 19 = 17;
+  let absolute = true;
+  let activeCycle: number | null = null;
+  let cycleZ: number | null = null;
+  let cycleR: number | null = null;
+  let cycleInitialZ = 0;
+  let returnToInitial = true;
   const path: ToolpathPoint[] = [{ x, y, z }];
 
   for (let lineNum = 0; lineNum < lines.length; lineNum++) {
-    const line = lines[lineNum];
-    const upper = line.toUpperCase();
+    const upper = executableText(lines[lineNum]).toUpperCase();
 
-    if (/^\s*[%;(]/.test(upper) && !/[GXYZIJKRF]/i.test(upper)) continue;
-    if (/\bG20\b/i.test(upper)) units = 'in';
-    if (/\bG21\b/i.test(upper)) units = 'mm';
-    if (/\bG17\b/i.test(upper)) plane = 17;
-    if (/\bG18\b/i.test(upper)) plane = 18;
-    if (/\bG19\b/i.test(upper)) plane = 19;
+    if (!upper.trim() || /^\s*%/.test(upper)) continue;
+    if (hasCode(upper, 'G', '20')) units = 'in';
+    if (hasCode(upper, 'G', '21')) units = 'mm';
+    if (hasCode(upper, 'G', '17')) plane = 17;
+    if (hasCode(upper, 'G', '18')) plane = 18;
+    if (hasCode(upper, 'G', '19')) plane = 19;
+    if (hasCode(upper, 'G', '90')) absolute = true;
+    if (hasCode(upper, 'G', '91')) absolute = false;
+    if (hasCode(upper, 'G', '98')) returnToInitial = true;
+    if (hasCode(upper, 'G', '99')) returnToInitial = false;
+    if (hasCode(upper, 'G', '80')) activeCycle = null;
 
     let mStop: ToolpathPoint['mStop'] | undefined;
-    if (/\bM0*0\b/i.test(upper)) mStop = 'M0';
-    if (/\bM0*1\b/i.test(upper)) mStop = 'M1';
-    if (/\bM0*2\b/i.test(upper)) mStop = 'M2';
-    if (/\bM30\b/i.test(upper)) mStop = 'M30';
+    if (hasCode(upper, 'M', '0')) mStop = 'M0';
+    if (hasCode(upper, 'M', '1')) mStop = 'M1';
+    if (hasCode(upper, 'M', '2')) mStop = 'M2';
+    if (hasCode(upper, 'M', '30')) mStop = 'M30';
 
-    const gMotion = upper.match(/\bG0*([0123])\b/);
+    const gMotion = upper.match(/G0*([0123])(?=[A-Z+\-\s]|$)/);
     if (gMotion) motionMode = parseInt(gMotion[1], 10);
 
-    const addr = (letter: string): number | null => {
-      const match = upper.match(new RegExp(`\\b${letter}([+-]?\\d+\\.?\\d*)`, 'i'));
-      return match ? parseFloat(match[1]) : null;
-    };
-
-    const xVal = addr('X');
-    const yVal = addr('Y');
-    const zVal = addr('Z');
-    const iVal = addr('I');
-    const jVal = addr('J');
-    const kVal = addr('K');
-    const rVal = addr('R');
+    const xVal = addressValue(upper, 'X');
+    const yVal = addressValue(upper, 'Y');
+    const zVal = addressValue(upper, 'Z');
+    const iVal = addressValue(upper, 'I');
+    const jVal = addressValue(upper, 'J');
+    const kVal = addressValue(upper, 'K');
+    const rVal = addressValue(upper, 'R');
+    const aVal = addressValue(upper, 'A');
+    const bVal = addressValue(upper, 'B');
+    const cVal = addressValue(upper, 'C');
+    const cycleMatch = upper.match(/G0*(7[3489]|8[1-9])(?=[A-Z+\-\s]|$)/);
+    if (cycleMatch) {
+      activeCycle = Number.parseInt(cycleMatch[1], 10);
+      cycleInitialZ = z;
+    }
+    if (activeCycle !== null) {
+      if (zVal !== null) cycleZ = absolute ? zVal : z + zVal;
+      if (rVal !== null) cycleR = absolute ? rVal : z + rVal;
+    }
     const hasMove = xVal !== null || yVal !== null || zVal !== null;
 
-    if (!hasMove && !mStop) continue;
+    const nextA = aVal !== null ? (absolute ? aVal : a + aVal) : a;
+    const nextB = bVal !== null ? (absolute ? bVal : b + bVal) : b;
+    const nextC = cVal !== null ? (absolute ? cVal : c + cVal) : c;
+    const rotary = nextA !== 0 || nextB !== 0 || nextC !== 0 ? { a: nextA, b: nextB, c: nextC } : {};
 
-    const x1 = xVal !== null ? xVal : x;
-    const y1 = yVal !== null ? yVal : y;
-    const z1 = zVal !== null ? zVal : z;
+    if (activeCycle !== null && (xVal !== null || yVal !== null) && cycleZ !== null && cycleR !== null) {
+      const holeX = xVal !== null ? (absolute ? xVal : x + xVal) : x;
+      const holeY = yVal !== null ? (absolute ? yVal : y + yVal) : y;
+      path.push({ x: holeX, y: holeY, z: cycleR, ...rotary, isRapid: true, lineNumber: lineNum });
+      path.push({ x: holeX, y: holeY, z: cycleZ, ...rotary, isRapid: false, lineNumber: lineNum });
+      const retractZ = returnToInitial ? Math.max(cycleInitialZ, cycleR) : cycleR;
+      path.push({ x: holeX, y: holeY, z: retractZ, ...rotary, isRapid: true, lineNumber: lineNum });
+      x = holeX; y = holeY; z = retractZ; a = nextA; b = nextB; c = nextC;
+      continue;
+    }
+
+    if (!hasMove && aVal === null && bVal === null && cVal === null && !mStop) continue;
+
+    const x1 = xVal !== null ? (absolute ? xVal : x + xVal) : x;
+    const y1 = yVal !== null ? (absolute ? yVal : y + yVal) : y;
+    const z1 = zVal !== null ? (absolute ? zVal : z + zVal) : z;
 
     if (motionMode === 2 || motionMode === 3) {
       path.push(...tessellateArc(x, y, z, x1, y1, z1, iVal, jVal, kVal, rVal, motionMode === 2, plane, lineNum));
     } else {
-      path.push({ x: x1, y: y1, z: z1, isRapid: motionMode === 0, mStop, lineNumber: lineNum });
+      path.push({ x: x1, y: y1, z: z1, ...rotary, isRapid: motionMode === 0, mStop, lineNumber: lineNum });
     }
 
     x = x1;
     y = y1;
     z = z1;
+    a = nextA;
+    b = nextB;
+    c = nextC;
   }
 
   return { path, units };

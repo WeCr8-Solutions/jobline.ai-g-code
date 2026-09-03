@@ -4,6 +4,7 @@ node_modules/
 *.vsix
 .DS_Store
 *.js.map
+test-results/
 
 # Private shop programs — never publish
 test/fixtures/revpack/

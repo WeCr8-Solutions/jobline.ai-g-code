@@ -129,8 +129,10 @@ suite('JobLine extension smoke', function () {
     const extension = vscode.extensions.getExtension('WeCr8-Solutions.jobline-gcode');
     assert.ok(extension, 'Extension must be installed');
     const threeFile = path.join(extension.extensionPath, 'media', 'three.min.js');
+    const threeCoreFile = path.join(extension.extensionPath, 'media', 'three.core.min.js');
     const fs = require('node:fs');
     assert.ok(fs.existsSync(threeFile), `three.min.js must exist at ${threeFile}`);
+    assert.ok(fs.existsSync(threeCoreFile), `three.core.min.js must exist at ${threeCoreFile}`);
     const stat = fs.statSync(threeFile);
     assert.ok(stat.size > 300_000, `three.min.js must be >300 KB, got ${stat.size} bytes`);
     // Sanity-check it begins with valid JS (module or minified IIFE)

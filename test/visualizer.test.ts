@@ -44,6 +44,35 @@ describe('Visualizer', () => {
       const { path } = parseGCodeToPath(gcode);
       expect(path[0]).toEqual({ x: 0, y: 0, z: 0 });
     });
+
+    it('supports incremental G91 moves and switching back to G90', () => {
+      const { path } = parseGCodeToPath('G90 G0 X1 Y2\nG91 G1 X.5 Y-.25\nG90 G1 X0 Y0');
+      expect(path.at(-2)).toMatchObject({ x: 1.5, y: 1.75, isRapid: false });
+      expect(path.at(-1)).toMatchObject({ x: 0, y: 0, isRapid: false });
+    });
+
+    it('ignores coordinates and modal words inside comments', () => {
+      const { path } = parseGCodeToPath('(G91 X99)\nG0 X1 (Y88) ; Z77\n; G1 X44');
+      expect(path).toHaveLength(2);
+      expect(path[1]).toMatchObject({ x: 1, y: 0, z: 0, isRapid: true });
+    });
+
+    it('parses leading-decimal coordinates', () => {
+      const { path } = parseGCodeToPath('G1X.5Y-.25Z+.125');
+      expect(path[1]).toMatchObject({ x: 0.5, y: -0.25, z: 0.125 });
+    });
+
+    it('expands a canned drilling cycle into approach, feed, and retract moves', () => {
+      const { path } = parseGCodeToPath('G90 G0 Z1\nG99 G81 X1 Y2 Z-.5 R.1 F10\nX2 Y2\nG80');
+      expect(path.filter(point => point.lineNumber === 1)).toHaveLength(3);
+      expect(path.filter(point => point.lineNumber === 2)).toHaveLength(3);
+      expect(path.at(-1)).toMatchObject({ x: 2, y: 2, z: 0.1, isRapid: true });
+    });
+
+    it('preserves rotary axes for five-axis simulation consumers', () => {
+      const { path } = parseGCodeToPath('G90 G1 X1 Z-.1 A30 C45');
+      expect(path[1]).toMatchObject({ x: 1, z: -0.1, a: 30, c: 45 });
+    });
   });
 
   describe('Solid-model verification', () => {

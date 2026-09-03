@@ -23,6 +23,8 @@ import { registerFormatter } from './providers/formatterProvider';
 import { registerSubprogramProvider } from './providers/subprogramProvider';
 import { buildVisualizerHarnessData } from './providers/visualizer/fixtureHarness';
 import { buildAutoSimulationMessages } from './providers/visualizer/simulationSetup';
+import type { ToolpathPoint } from './providers/visualizer/toolpathParser';
+import { reviewGCodeProgram } from './providers/visualizer/programReview';
 
 const LANGUAGE_ID = 'gcode';
 
@@ -39,13 +41,17 @@ export function activate(context: vscode.ExtensionContext): void {
 
         // Playback state
         const playback = {
-          path: [] as any[],
-          cutterSize: 10,
+          path: [] as ToolpathPoint[],
+          // Diameter in program units. A shop-scale default avoids turning the
+          // swept-path preview into a machine-sized solid when no tool metadata exists.
+          cutterSize: 0.25,
           idx: 0,
           timer: undefined as undefined | NodeJS.Timeout,
           playing: false,
           speed: 1.0,
-          units: 'in' as 'in' | 'mm'
+          units: 'in' as 'in' | 'mm',
+          sourceUri: '',
+          sourceVersion: -1,
         };
 
         function updateVisualizerAt(idx: number) {
@@ -53,14 +59,18 @@ export function activate(context: vscode.ExtensionContext): void {
           sendToolpathUpdate(playback.path, playback.cutterSize, idx, playback.units);
         }
 
-        function loadPathFromEditor() {
+        function loadPathFromEditor(resetPosition = true) {
           const doc = getPreferredGCodeDoc();
           if (!doc) return false;
           try {
+            const sourceChanged = playback.sourceUri !== doc.uri.toString();
             const result = parseGCodeToPath(doc.getText());
             playback.path = result.path;
             playback.units = result.units;
-            playback.idx = 0;
+            playback.sourceUri = doc.uri.toString();
+            playback.sourceVersion = doc.version;
+            if (resetPosition || sourceChanged) playback.idx = 0;
+            else playback.idx = Math.min(playback.idx, Math.max(0, playback.path.length - 1));
             return true;
           } catch (err) {
             vscode.window.showErrorMessage('JobLine: Failed to parse G-code: ' + String(err));
@@ -74,9 +84,13 @@ export function activate(context: vscode.ExtensionContext): void {
           try {
             const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
             const harness = buildVisualizerHarnessData(doc.getText(), controlType);
+            playback.cutterSize = harness.tools[0]?.diameter || (harness.unit === 'mm' ? 6 : 0.25);
+            machineStatusBar.text = `$(vm) ${harness.setup.machineType}`;
+            machineStatusBar.tooltip = 'Auto-detected from the active G-code program; click to override';
             for (const message of buildAutoSimulationMessages(harness)) {
               ToolpathVisualizerPanel.queueMessage(message);
             }
+            ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(doc.getText(), controlType) });
             return true;
           } catch (err) {
             vscode.window.showWarningMessage('JobLine: Unable to auto-load stock/tool setup: ' + String(err));
@@ -97,7 +111,7 @@ export function activate(context: vscode.ExtensionContext): void {
             vscode.window.showWarningMessage('Open the visualizer first (click the 3D icon in the toolbar).');
             return;
           }
-          if (!loadPathFromEditor()) {
+          if (!loadPathFromEditor(false)) {
             vscode.window.showWarningMessage('Open a G-code file to play.');
             return;
           }
@@ -156,14 +170,26 @@ export function activate(context: vscode.ExtensionContext): void {
           if (typeof arg === 'number') {
             idx = Math.max(0, Math.min(playback.path.length - 1, arg));
           } else {
-            const val = await vscode.window.showInputBox({ prompt: 'Enter toolpath point index (0-based)', validateInput: v => isNaN(Number(v)) ? 'Enter a number' : undefined });
+            const val = await vscode.window.showInputBox({ prompt: 'Enter G-code source line number (1-based)', validateInput: v => !Number.isInteger(Number(v)) || Number(v) < 1 ? 'Enter a positive whole number' : undefined });
             if (val === undefined) return;
-            idx = Math.max(0, Math.min(playback.path.length - 1, Number(val)));
+            const sourceLine = Number(val) - 1;
+            const matchingIndex = playback.path.findIndex(point => point.lineNumber !== undefined && point.lineNumber >= sourceLine);
+            idx = matchingIndex >= 0 ? matchingIndex : playback.path.length - 1;
           }
           playback.idx = idx;
           updateVisualizerAt(playback.idx);
         });
         context.subscriptions.push(jumpCmd);
+
+        const revealLineCmd = vscode.commands.registerCommand('jobline.gcode.revealLine', async (line?: number) => {
+          const doc = getPreferredGCodeDoc();
+          if (!doc || typeof line !== 'number') return;
+          const editor = await vscode.window.showTextDocument(doc, { preview: false, preserveFocus: false });
+          const target = Math.max(0, Math.min(doc.lineCount - 1, line));
+          editor.selection = new vscode.Selection(target, 0, target, 0);
+          editor.revealRange(new vscode.Range(target, 0, target, 0), vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+        });
+        context.subscriptions.push(revealLineCmd);
       // Example: Command to send current editor G-code to visualizer
       const updateVisualizerCmd = vscode.commands.registerCommand('jobline.gcode.updateVisualizer', () => {
         const doc = getPreferredGCodeDoc();
@@ -311,11 +337,8 @@ export function activate(context: vscode.ExtensionContext): void {
   // Simulation command
   const simulationCmd = vscode.commands.registerCommand(
     'jobline.openSimulation',
-    () => {
-      if (!ToolpathVisualizerPanel.currentPanel) {
-        vscode.window.showWarningMessage('Opening simulation...');
-        vscode.commands.executeCommand('jobline.gcode.showVisualizer');
-      }
+    async () => {
+      await vscode.commands.executeCommand('jobline.gcode.showVisualizer');
     }
   );
   context.subscriptions.push(simulationCmd);
@@ -433,8 +456,20 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
       if (isGCodeFile(e.document) && ToolpathVisualizerPanel.currentPanel) {
         try {
+          const preferredDocument = getPreferredGCodeDoc();
+          if (!preferredDocument || preferredDocument.uri.toString() !== e.document.uri.toString()) return;
           const result = parseGCodeToPath(e.document.getText());
-          sendToolpathUpdate(result.path, playback.cutterSize, Math.max(0, playback.idx), result.units);
+          playback.path = result.path;
+          playback.units = result.units;
+          playback.sourceUri = e.document.uri.toString();
+          playback.sourceVersion = e.document.version;
+          playback.idx = Math.min(playback.idx, Math.max(0, result.path.length - 1));
+          sendToolpathUpdate(result.path, playback.cutterSize, playback.idx, result.units);
+          const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
+          for (const message of buildAutoSimulationMessages(buildVisualizerHarnessData(e.document.getText(), controlType))) {
+            ToolpathVisualizerPanel.queueMessage(message);
+          }
+          ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(e.document.getText(), controlType) });
         } catch (err) {
           // Silently ignore parse errors during auto-reload
         }

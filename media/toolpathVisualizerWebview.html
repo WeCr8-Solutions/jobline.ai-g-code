@@ -40,6 +40,23 @@
       text-align: center; pointer-events: none; line-height: 2;
     }
     #empty strong { color: #6688aa; }
+    #review-panel {
+      position: absolute; top: 8px; right: 10px; width: min(380px, 42vw); max-height: 48vh;
+      overflow: auto; color: #d7dde8; background: rgba(18, 22, 38, 0.94);
+      border: 1px solid #39445f; border-radius: 6px; font: 12px/1.4 sans-serif;
+      box-shadow: 0 4px 18px rgba(0,0,0,.35);
+    }
+    #review-panel summary { cursor: pointer; padding: 8px 10px; font-weight: 700; user-select: none; }
+    #review-summary.clean { color: #71d995; }
+    #review-summary.has-errors { color: #ff8a80; }
+    #review-list { border-top: 1px solid #39445f; }
+    .review-item { padding: 8px 10px; border-bottom: 1px solid #2b344a; cursor: pointer; }
+    .review-item:hover { background: #29334c; }
+    .review-item.error { border-left: 3px solid #ff5f56; }
+    .review-item.warning { border-left: 3px solid #ffbd2e; }
+    .review-item.info { border-left: 3px solid #4fc3f7; }
+    .review-meta { color: #8491a8; font: 10px monospace; text-transform: uppercase; }
+    .review-suggestion { color: #aeb8c9; margin-top: 3px; }
   </style>
 </head>
 <body>
@@ -72,6 +89,11 @@
     from the Command Palette.
   </div>
 
+  <details id="review-panel" open>
+    <summary id="review-summary">Program review pending</summary>
+    <div id="review-list"></div>
+  </details>
+
   <!-- Three.js load-failure banner (hidden by default, shown only on error) -->
   <div id="three-error" style="display:none;position:absolute;inset:0;z-index:99;
       background:#1a1a2e;color:#f88;font-family:monospace;font-size:13px;
@@ -91,6 +113,7 @@
     import * as THREE from '{{THREE_JS_URI}}';
     (function () {
     'use strict';
+    const vscode = acquireVsCodeApi();
 
     // Catch module-level errors (e.g. import rejected, three.min.js corrupted)
     window.addEventListener('error', function (ev) {
@@ -526,6 +549,38 @@
     // -----------------------------------------------------------------------
     const emptyEl = document.getElementById('empty');
 
+    function renderReview(review) {
+      const summary = document.getElementById('review-summary');
+      const list = document.getElementById('review-list');
+      const findings = Array.isArray(review?.findings) ? review.findings : [];
+      const counts = review?.summary || { errors: 0, warnings: 0, infos: 0 };
+      summary.textContent = findings.length === 0
+        ? 'Program review: no findings'
+        : `Program review: ${counts.errors} errors, ${counts.warnings} warnings, ${counts.infos} notes`;
+      summary.className = counts.errors > 0 ? 'has-errors' : findings.length === 0 ? 'clean' : '';
+      list.replaceChildren();
+      for (const finding of findings) {
+        const item = document.createElement('div');
+        item.className = `review-item ${finding.severity || 'info'}`;
+        item.title = 'Click to reveal this line in the G-code editor';
+        const meta = document.createElement('div');
+        meta.className = 'review-meta';
+        meta.textContent = `${finding.severity || 'info'} · ${finding.category || 'review'} · line ${(finding.line ?? 0) + 1}`;
+        const message = document.createElement('div');
+        message.textContent = finding.message || 'Review finding';
+        item.append(meta, message);
+        if (finding.suggestion) {
+          const suggestion = document.createElement('div');
+          suggestion.className = 'review-suggestion';
+          suggestion.textContent = finding.suggestion;
+          item.appendChild(suggestion);
+        }
+        item.addEventListener('click', () => vscode.postMessage({ command: 'jobline.gcode.revealLine', arg: finding.line ?? 0 }));
+        list.appendChild(item);
+      }
+      vscode.postMessage({ type: 'renderReady', reviewRendered: true, pathPoints: currentPath.length });
+    }
+
     window.addEventListener('message', e => {
       const msg = e.data;
       if (!msg || !msg.type) return;
@@ -544,6 +599,7 @@
             if (!didFit) { fitCamera(currentPath); didFit = true; buildOrigin(); }
           }
           updateHUD();
+          vscode.postMessage({ type: 'renderReady', reviewRendered: false, pathPoints: currentPath.length });
           break;
         }
 
@@ -584,8 +640,16 @@
         case 'machineCapabilities':
           // Reserved for future machine-envelope rendering
           break;
+
+        case 'review':
+          renderReview(msg.review);
+          break;
       }
     });
+
+    // Do not rely on extension-side delays: module loading and WebGL startup
+    // can vary significantly across workstations and CI runners.
+    vscode.postMessage({ type: 'webviewReady' });
 
   })();
   </script>

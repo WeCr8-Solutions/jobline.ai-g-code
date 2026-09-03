@@ -440,8 +440,8 @@ export class ProgramModelBuilder {
     // Lathe: has turning cycles
     if (hasTurningCycles) return 'Turn Center (2-Axis)';
 
-    // 5-axis: A + B or B + C
-    if ((hasA && hasB) || (hasB && hasC)) return '5-Axis Mill (Trunnion)';
+    // 5-axis: any two distinct rotary axes accompany XYZ motion.
+    if (Number(hasA) + Number(hasB) + Number(hasC) >= 2) return '5-Axis Mill (Trunnion)';
 
     // 4-axis: has A (or B/C single)
     if (hasA || hasB || hasC) return '4-Axis Mill';

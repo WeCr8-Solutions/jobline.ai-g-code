@@ -8,11 +8,13 @@ const VISUALIZER_STATE_MESSAGE_TYPES = new Set([
   'layerToggle',
   'machineType',
   'machineCapabilities',
+  'review',
   'update',
 ]);
 
 export class ToolpathVisualizerPanel {
   public static currentPanel: ToolpathVisualizerPanel | undefined;
+  public static renderStatus = { pathPoints: 0, reviewRendered: false };
   private static readonly _stateMessages = new Map<string, unknown>();
   private readonly _panel: vscode.WebviewPanel;
   private _disposables: vscode.Disposable[] = [];
@@ -39,6 +41,7 @@ export class ToolpathVisualizerPanel {
         ]
       }
     );
+    ToolpathVisualizerPanel.renderStatus = { pathPoints: 0, reviewRendered: false };
     ToolpathVisualizerPanel.currentPanel = new ToolpathVisualizerPanel(panel, extensionUri);
   }
 
@@ -58,19 +61,27 @@ export class ToolpathVisualizerPanel {
     this._panel.webview.postMessage(msg);
   }
 
+  private replayState(): void {
+    for (const msg of ToolpathVisualizerPanel._stateMessages.values()) {
+      this._panel.webview.postMessage(msg);
+    }
+  }
+
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
     this._panel.webview.html = this._getHtmlForWebview(extensionUri);
-    setTimeout(() => {
-      for (const msg of ToolpathVisualizerPanel._stateMessages.values()) {
-        this._panel.webview.postMessage(msg);
-      }
-    }, 150);
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
     // Handle messages from webview (playback commands)
     this._panel.webview.onDidReceiveMessage(msg => {
-      if (typeof msg?.type === 'string' && VISUALIZER_STATE_MESSAGE_TYPES.has(msg.type)) {
+      if (msg?.type === 'webviewReady') {
+        this.replayState();
+      } else if (msg?.type === 'renderReady') {
+        ToolpathVisualizerPanel.renderStatus = {
+          pathPoints: Number(msg.pathPoints) || ToolpathVisualizerPanel.renderStatus.pathPoints,
+          reviewRendered: Boolean(msg.reviewRendered) || ToolpathVisualizerPanel.renderStatus.reviewRendered,
+        };
+      } else if (typeof msg?.type === 'string' && VISUALIZER_STATE_MESSAGE_TYPES.has(msg.type)) {
         // Forward sidebar messages to visualizer webview
         this.postMessage(msg);
       } else if (msg.command) {
@@ -102,8 +113,8 @@ export class ToolpathVisualizerPanel {
     try {
       const html = fs.readFileSync(htmlPath, 'utf8');
       return html
-        .replace('{{CSP_SOURCE}}', this._panel.webview.cspSource)
-        .replace('{{THREE_JS_URI}}', threeUri.toString());
+        .split('{{CSP_SOURCE}}').join(this._panel.webview.cspSource)
+        .split('{{THREE_JS_URI}}').join(threeUri.toString());
     } catch (err) {
       return `<html><body><h2>Error loading Visualizer UI</h2><pre>${err}</pre></body></html>`;
     }
