@@ -3,7 +3,7 @@ name: Quality
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   parser-review-and-contracts:
