@@ -57,6 +57,31 @@
     .review-item.info { border-left: 3px solid #4fc3f7; }
     .review-meta { color: #8491a8; font: 10px monospace; text-transform: uppercase; }
     .review-suggestion { color: #aeb8c9; margin-top: 3px; }
+
+    /* View panel — appearance controls, kept in the viewport so the effect of a
+       slider is visible while you drag it. */
+    #view-panel {
+      position: absolute; left: 10px; bottom: 112px; width: 232px;
+      color: #d7dde8; background: rgba(18, 22, 38, 0.94);
+      border: 1px solid #39445f; border-radius: 6px; font: 11px/1.4 sans-serif;
+      box-shadow: 0 4px 18px rgba(0,0,0,.35);
+    }
+    #view-panel summary {
+      cursor: pointer; padding: 6px 10px; font-weight: 700; -webkit-user-select: none; user-select: none;
+      color: #9fb4d8; text-transform: uppercase; letter-spacing: .06em; font-size: 10px;
+    }
+    #view-body { padding: 4px 10px 9px; border-top: 1px solid #39445f; }
+    .view-row { display: flex; align-items: center; gap: 6px; margin: 5px 0; }
+    .view-row label { flex: 0 0 68px; color: #aeb8c9; }
+    .view-row input[type=range] { flex: 1 1 auto; min-width: 0; accent-color: #66bb6a; }
+    .view-val { flex: 0 0 34px; text-align: right; color: #8491a8; font-family: monospace; }
+    .view-sep {
+      margin: 9px 0 4px; color: #8491a8; font-size: 9px;
+      text-transform: uppercase; letter-spacing: .08em; border-top: 1px solid #2b344a; padding-top: 6px;
+    }
+    .view-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; }
+    .view-toggles label { display: flex; align-items: center; gap: 4px; color: #aeb8c9; cursor: pointer; }
+    .view-toggles input { accent-color: #66bb6a; }
   </style>
 </head>
 <body>
@@ -92,6 +117,28 @@
   <details id="review-panel" open>
     <summary id="review-summary">Program review pending</summary>
     <div id="review-list"></div>
+  </details>
+
+  <details id="view-panel">
+    <summary>View</summary>
+    <div id="view-body">
+      <div class="view-row"><label for="op-tube">Cut solid</label><input type="range" id="op-tube" min="0" max="100" value="55"><span class="view-val" id="op-tube-v">55%</span></div>
+      <div class="view-row"><label for="op-stock">Stock</label><input type="range" id="op-stock" min="0" max="100" value="55"><span class="view-val" id="op-stock-v">55%</span></div>
+      <div class="view-row"><label for="op-work">Workholding</label><input type="range" id="op-work" min="0" max="100" value="35"><span class="view-val" id="op-work-v">35%</span></div>
+      <div class="view-row"><label for="op-tool">Tool</label><input type="range" id="op-tool" min="0" max="100" value="100"><span class="view-val" id="op-tool-v">100%</span></div>
+      <div class="view-row"><label for="op-path">Toolpath</label><input type="range" id="op-path" min="0" max="100" value="100"><span class="view-val" id="op-path-v">100%</span></div>
+      <div class="view-sep">Show</div>
+      <div class="view-toggles">
+        <label><input type="checkbox" data-layer="path" checked> Toolpath</label>
+        <label><input type="checkbox" data-layer="sweptTube" checked> Cut solid</label>
+        <label><input type="checkbox" data-layer="tool" checked> Tool</label>
+        <label><input type="checkbox" data-layer="toolHolder" checked> Holder</label>
+        <label><input type="checkbox" data-layer="stock" checked> Stock</label>
+        <label><input type="checkbox" data-layer="workholding" checked> Jaws</label>
+        <label><input type="checkbox" data-layer="origin" checked> Origin</label>
+        <label><input type="checkbox" id="tg-gnomon" checked> Gnomon</label>
+      </div>
+    </div>
   </details>
 
   <!-- Three.js load-failure banner (hidden by default, shown only on error) -->
@@ -161,6 +208,25 @@
     );
 
     // -----------------------------------------------------------------------
+    // Lighting
+    // -----------------------------------------------------------------------
+    // The scene had NO lights. The tool and holder are MeshPhongMaterial, which
+    // is shaded by lights, so with none they rendered pure black - the tool
+    // showed as a featureless dark cylinder and read as a bug rather than a
+    // cutter. Everything else in the scene is line work or MeshBasicMaterial,
+    // which ignores lighting, which is why only the solids looked wrong.
+    //
+    // A hemisphere light gives the body its base colour, and a headlight keyed
+    // to the camera keeps a highlight on the side you are actually looking at
+    // as you orbit.
+    scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x30364a, 1.15));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    keyLight.position.set(1, 2, 1);
+    scene.add(keyLight);
+    const camLight = new THREE.DirectionalLight(0xffffff, 0.55);
+    scene.add(camLight);
+
+    // -----------------------------------------------------------------------
     // Coordinate mapping
     // G-code: X = right, Y = away from operator, Z = up (tool axis)
     // Three.js: X = right, Y = up, Z = toward viewer
@@ -184,6 +250,14 @@
       workholding: true,
       path: true, sweptTube: true, origin: true
     };
+    // Declared here, beside the layer registry, because setLayer() re-applies
+    // these during the first buildStock()/buildOrigin() - which runs long
+    // before the View panel is wired. Declared next to the panel instead, it
+    // sat in the temporal dead zone and the first setLayer threw
+    // "Cannot access 'viewOpacity' before initialization", killing the whole
+    // script: no toolpath, no renderReady, a silent blank viewport.
+    const viewOpacity = { sweptTube: 0.55, stock: 0.55, workholding: 0.35, tool: 1, path: 1 };
+
     const layerMeshes = {
       tool: null,
       toolHolder: null,
@@ -215,6 +289,10 @@
       if (obj) {
         obj.visible = layerVis[key] !== false;
         scene.add(obj);
+        // A rebuilt mesh arrives at its constructor opacity, so without this the
+        // View sliders would stop describing the scene the moment anything
+        // regenerated - a new program, a stock change, a jaw change.
+        if (typeof reapplyViewOpacity === 'function') reapplyViewOpacity();
       }
     }
 
@@ -295,7 +373,10 @@
     }
     buildGnomon();
 
+    let gnomonVisible = true;
+
     function renderGnomon() {
+      if (!gnomonVisible) return;
       const size = GNOMON_PX;
       // Match the main camera's orientation only - never its position, or the
       // gnomon would zoom and translate with the model.
@@ -448,10 +529,13 @@
 
       const radius = Math.max(cutterDiameter / 2, 0.0005);
       const group = new THREE.Group();
+      // 0.18 was close to invisible - the cut solid read as a faint smear
+      // rather than material removed. This is the View panel's default; the
+      // slider moves it live.
       const material = new THREE.MeshBasicMaterial({
         color: 0x7bd389,
         transparent: true,
-        opacity: 0.18,
+        opacity: 0.55,
       });
 
       for (let i = 1; i < path.length; i++) {
@@ -741,6 +825,72 @@
       }
     }
     animate();
+
+    // -----------------------------------------------------------------------
+    // View panel — live appearance controls
+    // -----------------------------------------------------------------------
+    // Opacity is applied to the materials already in the scene rather than by
+    // rebuilding geometry, so a drag updates on the next frame and you can
+    // judge the setting against the model you are looking at.
+    //
+    // Defaults are remembered per layer because setting opacity to 1 must also
+    // clear `transparent`, or Three keeps sorting the object as translucent and
+    // it can still draw behind things it should occlude.
+
+    function applyOpacity(layer, value) {
+      viewOpacity[layer] = value;
+      const targets = layer === 'tool'
+        ? ['tool', 'toolHolder']
+        : [layer];
+      for (const name of targets) {
+        const root = layerMeshes[name];
+        if (!root) continue;
+        root.traverse?.((node) => {
+          const mats = Array.isArray(node.material) ? node.material : (node.material ? [node.material] : []);
+          for (const m of mats) {
+            m.opacity = value;
+            m.transparent = value < 0.999;
+            m.depthWrite = value >= 0.999;
+            m.needsUpdate = true;
+          }
+        });
+      }
+    }
+
+    function bindSlider(id, layer) {
+      const input = document.getElementById(id);
+      const out = document.getElementById(id + '-v');
+      if (!input) return;
+      const apply = () => {
+        const pct = Number(input.value);
+        if (out) out.textContent = pct + '%';
+        applyOpacity(layer, pct / 100);
+      };
+      input.addEventListener('input', apply);
+      apply();
+    }
+
+    bindSlider('op-tube', 'sweptTube');
+    bindSlider('op-stock', 'stock');
+    bindSlider('op-work', 'workholding');
+    bindSlider('op-tool', 'tool');
+    bindSlider('op-path', 'path');
+
+    for (const box of document.querySelectorAll('.view-toggles input[data-layer]')) {
+      box.addEventListener('change', () => {
+        const layer = box.getAttribute('data-layer');
+        layerVis[layer] = box.checked;
+        if (layerMeshes[layer]) layerMeshes[layer].visible = box.checked;
+      });
+    }
+    const gnomonBox = document.getElementById('tg-gnomon');
+    if (gnomonBox) gnomonBox.addEventListener('change', () => { gnomonVisible = gnomonBox.checked; });
+
+    // Re-apply after anything rebuilds geometry, or a fresh mesh comes back at
+    // its constructor opacity and the panel silently stops describing the view.
+    function reapplyViewOpacity() {
+      for (const layer of Object.keys(viewOpacity)) applyOpacity(layer, viewOpacity[layer]);
+    }
 
     // -----------------------------------------------------------------------
     // Message handler — receives data from toolpathVisualizer.ts

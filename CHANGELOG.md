@@ -51,7 +51,25 @@ for every user.
 - Formatter unit tests. The formatter previously had none, which is how the
   trailing-decimal bug shipped.
 
+### Fixed — visual
+
+- **The scene had no lights.** The tool and holder are `MeshPhongMaterial`,
+  which is shaded by lighting, so with none in the scene they rendered pure
+  black - the cutter showed as a featureless dark cylinder. Everything else is
+  line work or `MeshBasicMaterial`, which ignores lighting, which is why only
+  the solids looked wrong. Added a hemisphere light plus a key light and a
+  camera-follow light.
+- **The cut solid was nearly invisible** at 0.18 opacity - it read as a faint
+  smear rather than material removed. Now 0.55 by default and on a slider.
+
 ### Added — visual
+
+- **View panel.** In-viewport sliders for cut-solid, stock, workholding, tool
+  and toolpath opacity, plus per-layer visibility including the gnomon. Kept in
+  the viewport rather than the settings pane so the effect of a slider is
+  visible while you drag it, and re-applied whenever geometry rebuilds so the
+  panel never stops describing what is on screen.
+
 
 - **Workholding view.** Vise jaws for a mill, three chuck jaws for a turn
   center, drawn from the stock so you can see how much of the part is gripped
