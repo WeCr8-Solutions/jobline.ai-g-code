@@ -138,8 +138,39 @@ function tessellateArc(
   return pts;
 }
 
+/**
+ * Does this program run on a turning machine?
+ *
+ * It changes how three things are read, so guessing wrong is worse than not
+ * asking. G96/G97 (constant surface speed) and G70-G76 (turning and threading
+ * cycles) only exist on a lathe; both are checked on the executable text so a
+ * comment cannot trigger them.
+ */
+function looksLikeTurning(lines: string[]): boolean {
+  for (const line of lines) {
+    const upper = executableText(line).toUpperCase();
+    if (/G0*9[67](?=[A-Z+\-\s]|$)/.test(upper)) return true;
+    if (/G0*7[0-6](?=[A-Z+\-\s]|$)/.test(upper)) return true;
+  }
+  return false;
+}
+
 export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units: 'in' | 'mm' } {
   const lines = gcode.split(/\r?\n/);
+
+  // Turning changes the meaning of the words below, and reading them as mill
+  // codes drew every turned part wrong:
+  //
+  //   X is DIAMETRAL. X2.1 puts the tool at 1.05 from centreline, not 2.1, so
+  //     plotting it raw drew every turned profile at twice its true size and the
+  //     path fell outside its own stock.
+  //   G90 on a Fanuc lathe is a turning CYCLE, not absolute mode.
+  //   G99 on a lathe is feed-per-revolution, not a canned-cycle return mode.
+  //
+  // Diameter mode is the default on essentially every turning control; radius
+  // mode exists but is rare and control-specific, so it is not assumed here.
+  const turning = looksLikeTurning(lines);
+  const xScale = turning ? 0.5 : 1;
   let x = 0;
   let y = 0;
   let z = 0;
@@ -166,10 +197,14 @@ export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units:
     if (hasCode(upper, 'G', '17')) plane = 17;
     if (hasCode(upper, 'G', '18')) plane = 18;
     if (hasCode(upper, 'G', '19')) plane = 19;
-    if (hasCode(upper, 'G', '90')) absolute = true;
-    if (hasCode(upper, 'G', '91')) absolute = false;
-    if (hasCode(upper, 'G', '98')) returnToInitial = true;
-    if (hasCode(upper, 'G', '99')) returnToInitial = false;
+    if (!turning) {
+      // See the note above parseGCodeToPath: on a turning control these four
+      // mean something else entirely.
+      if (hasCode(upper, 'G', '90')) absolute = true;
+      if (hasCode(upper, 'G', '91')) absolute = false;
+      if (hasCode(upper, 'G', '98')) returnToInitial = true;
+      if (hasCode(upper, 'G', '99')) returnToInitial = false;
+    }
     if (hasCode(upper, 'G', '80')) activeCycle = null;
 
     let mStop: ToolpathPoint['mStop'] | undefined;
@@ -181,7 +216,8 @@ export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units:
     const gMotion = upper.match(/G0*([0123])(?=[A-Z+\-\s]|$)/);
     if (gMotion) motionMode = parseInt(gMotion[1], 10);
 
-    const xVal = addressValue(upper, 'X');
+    const xRaw = addressValue(upper, 'X');
+    const xVal = xRaw === null ? null : xRaw * xScale;
     const yVal = addressValue(upper, 'Y');
     const zVal = addressValue(upper, 'Z');
     const iVal = addressValue(upper, 'I');

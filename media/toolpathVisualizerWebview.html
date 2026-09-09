@@ -404,10 +404,37 @@
     // True once a program or the user actually states a stock size, as opposed
     // to the placeholder above. Camera framing depends on the difference.
     let stockIsDeclared = false;
+    // Set from the machineType message. Turning changes the stock form and the
+    // jaw form, so both are rebuilt when it arrives.
+    let isTurning = false;
 
     function buildStock() {
       const { w, d, h, color } = stockCfg;
       const ox = originOff.x, oy = originOff.y, oz = originOff.z;
+
+      if (isTurning) {
+        // A turned blank is a BAR on the spindle axis, not a block. G-code Z is
+        // that axis and maps to Three Y, the bar runs back INTO the chuck in
+        // -Z, and X is diametral so the stock diameter is w with the centreline
+        // at X0 - drawing it as a box from Z0 upward put the stock and the
+        // toolpath in different places entirely.
+        const radius = Math.max(w, 0.0001) / 2;
+        const length = Math.max(h, 0.0001);
+        const geo = new THREE.CylinderGeometry(radius, radius, length, 48, 1, true);
+        const mat = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(color),
+          opacity: 0.28,
+          transparent: true,
+          wireframe: false,
+          side: THREE.DoubleSide,
+        });
+        const bar = new THREE.Mesh(geo, mat);
+        // Centre on the spindle axis, extending in -Z from the face at Z0.
+        bar.position.set(ox, oz - length / 2, -oy);
+        setLayer('stock', bar);
+        return;
+      }
+
       // In Three.js coords: X=w, Y=h (G-code Z), Z=d (G-code Y depth)
       const geo = new THREE.BoxGeometry(w, h, d);
       const edges = new THREE.EdgesGeometry(geo);
@@ -459,12 +486,14 @@
         // So the jaws are arranged around Y, in the Three XZ plane. Arranging
         // them around Three Z instead left three squares floating across the
         // view in a triangle, gripping nothing.
-        const dia = Math.min(w, d);
+        // The bar is centred on the spindle axis at X0 and runs back in -Z, so
+        // the jaws grip its OD there. w is the diameter, not a box width.
+        const dia = Math.max(w, 0.0001);
         const jawLen = Math.max(dia * 0.35, workCfg.jawThickness);
         const jawW = Math.max(dia * 0.28, 0.25);
-        const axisX = ox + w / 2;
-        const axisZ = -(oy + d / 2);
-        const cy = oz + Math.min(jawW * 0.9, h * 0.25);   // at the chuck end
+        const axisX = ox;
+        const axisZ = -oy;
+        const cy = oz - Math.min(h * 0.8, Math.max(h - jawW, jawW));  // at the chuck end
         const r = dia / 2 + jawLen / 2;
         for (let i = 0; i < 3; i++) {
           const ang = (i * 2 * Math.PI) / 3;
@@ -1099,6 +1128,13 @@
         }
 
         case 'machineType':
+          // Turning stock is a bar on the spindle axis, not a block, and the
+          // jaw form follows from it. Rebuild both when the class is known.
+          isTurning = /lathe|turn/i.test(String(msg.machineType || ''));
+          buildStock();
+          buildWorkholding();
+          break;
+
         case 'machineCapabilities':
           // Reserved for future machine-envelope rendering
           break;

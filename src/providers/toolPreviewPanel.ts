@@ -723,6 +723,106 @@ export class ToolPreviewPanel {
         shankMesh.receiveShadow = true;
         shankMesh.position.z = -toolOffsetZ + stick + shankLen / 2;
         group.add(shankMesh);
+      } else if (type === 'Tap') {
+        // A tap reads by its chamfered lead and its thread body. Drawn as an
+        // end mill it taught the wrong shape - and a tap is the one tool where
+        // mistaking the working end for a flat bottom matters, because the lead
+        // is what enters the hole.
+        const leadLen = Math.min(dia * 1.5, stick * 0.35);
+        const bodyLen = stick - leadLen;
+
+        const lead = new THREE.Mesh(
+          new THREE.CylinderGeometry(dia / 2, dia * 0.30, leadLen, 20),
+          new THREE.MeshPhongMaterial({ color: colorNum, shininess: 70, side: THREE.DoubleSide })
+        );
+        lead.position.z = -toolOffsetZ + leadLen / 2;
+        group.add(lead);
+
+        const body = new THREE.Mesh(
+          new THREE.CylinderGeometry(dia / 2, dia / 2, bodyLen, 20),
+          new THREE.MeshPhongMaterial({ color: colorNum, shininess: 70, side: THREE.DoubleSide })
+        );
+        body.position.z = -toolOffsetZ + leadLen + bodyLen / 2;
+        group.add(body);
+
+        // Thread crests, suggested rather than modelled: a real helix would add
+        // thousands of triangles for a preview nobody measures from.
+        const pitch = Math.max(dia / 12, 0.012);
+        const threadMat = new THREE.MeshPhongMaterial({ color: 0xd8d8d8, shininess: 90 });
+        for (let zPos = leadLen * 0.5; zPos < stick; zPos += pitch * 3) {
+          const ring = new THREE.Mesh(new THREE.TorusGeometry(dia / 2, pitch * 0.42, 6, 20), threadMat);
+          ring.position.z = -toolOffsetZ + zPos;
+          ring.rotation.x = Math.PI / 2;
+          group.add(ring);
+        }
+
+        // Square drive on the shank, which is how a tap is recognised on sight.
+        const drive = new THREE.Mesh(
+          new THREE.BoxGeometry(dia * 0.55, dia * 0.55, Math.max(len - stick, dia)),
+          new THREE.MeshPhongMaterial({ color: 0x9aa1ad, shininess: 40 })
+        );
+        drive.position.z = -toolOffsetZ + stick + Math.max(len - stick, dia) / 2;
+        group.add(drive);
+
+      } else if (type === 'Boring Bar') {
+        // A boring bar is a long shank with a single insert set at its end,
+        // cutting sideways. The L-shape is the whole point: it reaches INTO a
+        // bore, and a cylinder said nothing about that.
+        const shankDia = Math.max(dia * 0.8, 0.05);
+        const shank = new THREE.Mesh(
+          new THREE.CylinderGeometry(shankDia / 2, shankDia / 2, len * 0.9, 20),
+          new THREE.MeshPhongMaterial({ color: 0x8b8f98, shininess: 60, side: THREE.DoubleSide })
+        );
+        shank.position.z = -toolOffsetZ + len * 0.45;
+        group.add(shank);
+
+        // Head, offset off the shank axis, carrying the insert.
+        const headLen = Math.max(dia * 0.9, 0.08);
+        const head = new THREE.Mesh(
+          new THREE.BoxGeometry(shankDia * 0.9, shankDia * 1.4, headLen),
+          new THREE.MeshPhongMaterial({ color: 0x8b8f98, shininess: 60 })
+        );
+        head.position.set(0, shankDia * 0.35, -toolOffsetZ + headLen / 2);
+        group.add(head);
+
+        const insert = new THREE.Mesh(
+          new THREE.CylinderGeometry(dia * 0.28, dia * 0.28, dia * 0.16, 3),
+          new THREE.MeshPhongMaterial({ color: colorNum, shininess: 95 })
+        );
+        insert.position.set(0, shankDia * 0.75, -toolOffsetZ + headLen * 0.35);
+        insert.rotation.x = Math.PI / 2;
+        group.add(insert);
+
+      } else if (type === 'Lathe Insert') {
+        // The insert alone, on its shim and holder nose - what a turner picks
+        // out of a box. An 80 degree rhombic form is the common general-purpose
+        // shape and is instantly distinguishable from a round cutter.
+        const t = Math.max(dia * 0.18, 0.03);
+        const insert = new THREE.Mesh(
+          new THREE.CylinderGeometry(dia / 2, dia / 2, t, 4),
+          new THREE.MeshPhongMaterial({ color: colorNum, shininess: 100, side: THREE.DoubleSide })
+        );
+        insert.position.z = -toolOffsetZ + t / 2;
+        insert.rotation.z = Math.PI / 4;
+        insert.scale.set(1, 0.62, 1);   // rhombic, not square
+        group.add(insert);
+
+        const shim = new THREE.Mesh(
+          new THREE.CylinderGeometry(dia * 0.52, dia * 0.52, t * 0.5, 4),
+          new THREE.MeshPhongMaterial({ color: 0x5c6470, shininess: 30 })
+        );
+        shim.position.z = -toolOffsetZ + t + t * 0.25;
+        shim.rotation.z = Math.PI / 4;
+        shim.scale.set(1, 0.62, 1);
+        group.add(shim);
+
+        const holder = new THREE.Mesh(
+          new THREE.BoxGeometry(dia * 1.1, dia * 0.8, Math.max(len - t, dia * 2)),
+          new THREE.MeshPhongMaterial({ color: 0x8b8f98, shininess: 45 })
+        );
+        holder.position.z = -toolOffsetZ + t + Math.max(len - t, dia * 2) / 2;
+        group.add(holder);
+
       } else {
         // Generic cylinder (default/custom tool type)
         const geom = new THREE.CylinderGeometry(dia / 2, dia / 2, stick, 16);

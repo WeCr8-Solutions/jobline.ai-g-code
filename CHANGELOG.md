@@ -53,6 +53,30 @@ for every user.
 
 ### Fixed — lathe
 
+- **Turned parts were drawn at twice their true size.** The toolpath parser had
+  no lathe awareness, and X on a turning control is DIAMETRAL: `X2.1` puts the
+  tool 1.05 from the centreline, not 2.1. Every turned profile was plotted at
+  double scale, so the path fell outside its own stock - and a student comparing
+  the two would conclude the program was wrong when it was the drawing that was
+  wrong. Turning is detected from G96/G97 or a G70-G76 cycle, checked against
+  executable text so a comment cannot trigger it.
+- **`G90` and `G99` were read as mill modes on a lathe.** On a Fanuc lathe G90 is
+  a turning *cycle*, not absolute mode, and G99 is feed-per-revolution, not a
+  canned-cycle return.
+- **Turning stock was drawn as a block from Z0 upward.** A turned blank is a bar
+  on the spindle axis running back into the chuck in -Z, so stock and toolpath
+  occupied different places entirely. It is now a cylinder of the programmed
+  diameter, and the chuck jaws grip its OD at the chuck end.
+
+### Added — tools
+
+- **Tap, Boring Bar and Lathe Insert have their own geometry.** All three drew as
+  a generic cylinder, so the dropdown offered seven tools and delivered three
+  distinct shapes. A tap now shows its chamfered lead, thread crests and square
+  drive; a boring bar its offset head and insert; a lathe insert its rhombic
+  form on a shim and holder. Verified distinct: all seven silhouettes differ.
+
+
 - **Mill setup rules were raised against turning programs.** A correct Okuma
   program collected all three - distance mode, working plane, work offset -
   telling the operator a good lathe program was deficient three times over. On a
