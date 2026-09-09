@@ -63,6 +63,33 @@ suite('Tool Preview', function () {
     );
   });
 
+  test('draws the real ISO insert shape from a designation', async () => {
+    await vscode.commands.executeCommand('jobline.openToolPreview');
+    const ToolPreviewPanel = getPanelClass();
+    const deadline = Date.now() + 20000;
+    while (Date.now() < deadline && !ToolPreviewPanel.instance) await delay(100);
+    assert.ok(ToolPreviewPanel.instance, 'Tool Preview panel should open');
+    ToolPreviewPanel.instance.reveal(undefined, false);
+    await delay(2000);
+
+    // A turner tells a C from a V by shape, so the two must not draw the same.
+    const shapes = {};
+    for (const code of ['CNMG432', 'VNGP331', 'TCMT32.51', 'RCMT1204', 'SNMG432']) {
+      await ToolPreviewPanel.instance.webview.postMessage({ type: 'setInsertCode', code });
+      await delay(900);
+      const probe = await ToolPreviewPanel.requestVisualProbe(10000);
+      assert.ok(probe, `no probe answer for ${code}`);
+      assert.ok(probe.litRatio > 0.005, `${code} drew nothing`);
+      shapes[code] = probe.litPixels;
+      // eslint-disable-next-line no-console
+      console.log(`      ${code.padEnd(11)} ${probe.litPixels}/${probe.sampledPixels}`);
+    }
+    assert.notEqual(shapes['CNMG432'], shapes['VNGP331'],
+      'an 80 degree C and a 35 degree V must not draw the same silhouette');
+    assert.notEqual(shapes['CNMG432'], shapes['RCMT1204'],
+      'a rhombic and a round insert must not draw the same silhouette');
+  });
+
   test('renders every tool type the dropdown offers', async () => {
     await vscode.commands.executeCommand('jobline.openToolPreview');
     const ToolPreviewPanel = getPanelClass();

@@ -68,6 +68,25 @@ for every user.
   occupied different places entirely. It is now a cylinder of the programmed
   diameter, and the chuck jaws grip its OD at the chuck end.
 
+### Added — inserts
+
+- **ISO 1832 insert designations.** CNMG, CNGG, VNGP, VNGG, TCMT, DNMG, WNMG,
+  SNMG, RCMT and the rest are parsed for shape, clearance angle, tolerance,
+  inscribed circle, thickness and corner radius, in both inch (eighths,
+  sixteenths, sixty-fourths) and metric forms. Sixteen shape letters are
+  covered, including the round, trigon, hexagon and pentagon forms.
+- **Designations are pulled out of the program.** A tool comment such as
+  `(T3 - CNMG432 ROUGH OD)` now records the insert against that tool, and its
+  inscribed circle is used when no diameter was stated. Scanning requires a size
+  code, because without it ordinary words parse as inserts - SECOND is a valid
+  looking S/E/C designation and ROUGHER an R/O/U one.
+- **Inserts are viewable and editable.** Tool Preview has an insert field that
+  draws the real ISO outline extruded to its own thickness. Verified distinct:
+  an 80 degree C, a 35 degree V, a 60 degree T, a round R and a square S all
+  draw different silhouettes, which is how a turner tells them apart.
+- Parsing lives in one place, so the shape drawn in the preview cannot drift
+  from what the program parser reads out of a comment.
+
 ### Added — tools
 
 - **Tap, Boring Bar and Lathe Insert have their own geometry.** All three drew as

@@ -8,6 +8,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { ToolpathVisualizerPanel } from './toolpathVisualizer';
+import { parseInsertCode, insertOutline } from '../parser/insertCode';
 
 export interface ToolPreviewData {
   toolNumber?: number;
@@ -122,6 +123,28 @@ export class ToolPreviewPanel {
           error: typeof msg.error === 'string' ? msg.error : undefined,
           at: Date.now(),
         };
+      } else if (msg.type === 'parseInsert') {
+        // Parsing lives here, not in the webview, so ISO 1832 has exactly one
+        // implementation and the drawn shape cannot drift from what the program
+        // parser reads out of a tool comment.
+        const code = String(msg.code ?? '').trim();
+        const parsed = code ? parseInsertCode(code) : null;
+        if (parsed && parsed.icSize !== undefined) {
+          panel.webview.postMessage({
+            type: 'insertShape',
+            ok: true,
+            code,
+            shapeCode: parsed.shape.code,
+            name: parsed.shape.name,
+            icSize: Number(parsed.icSize.toFixed(4)),
+            thickness: parsed.thickness ?? parsed.icSize / 4,
+            cornerRadius: parsed.cornerRadius ?? 0,
+            unitLabel: parsed.units === 'mm' ? ' mm' : ' in',
+            outline: insertOutline(parsed.shape.code, parsed.icSize, parsed.cornerRadius ?? 0),
+          });
+        } else {
+          panel.webview.postMessage({ type: 'insertShape', ok: false, code });
+        }
       } else if (msg.type === 'applyTool') {
         // Forward to simulation panel (if open)
         ToolpathVisualizerPanel.queueMessage({
@@ -287,6 +310,12 @@ export class ToolPreviewPanel {
     <div class="heading">Holder</div>
 
     <div class="form-group">
+      <label>Insert (ISO 1832)</label>
+      <input type="text" id="insertCode" placeholder="CNMG432, VNGP331, TCMT32.51 ..." autocomplete="off">
+      <div id="insertInfo" style="font-size:11px;color:#8491a8;min-height:15px;"></div>
+    </div>
+
+    <div class="form-group">
       <label>Holder Type</label>
       <select id="holder">
         <option>CAT40</option>
@@ -332,6 +361,8 @@ export class ToolPreviewPanel {
     // lit here. Opacity is the signal instead: a drawn tool writes alpha, an
     // empty scene does not.
     let probeRequested = false;
+    // Outline points for the designation currently typed, or null.
+    let currentInsert = null;
 
     function readToolProbe() {
       if (!renderer) return { type: 'visualProbe', error: 'no renderer' };
@@ -793,6 +824,30 @@ export class ToolPreviewPanel {
         insert.rotation.x = Math.PI / 2;
         group.add(insert);
 
+      } else if (type === 'Lathe Insert' && currentInsert && currentInsert.outline) {
+        // The actual ISO shape, extruded to its own thickness. A CNMG and a
+        // VNGP are different tools and a turner picks between them by shape, so
+        // drawing both as the same rhombus defeats the point of the panel.
+        const pts = currentInsert.outline.map(function (p) {
+          return new THREE.Vector2(p[0], p[1]);
+        });
+        const shape2d = new THREE.Shape(pts);
+        const thick = Math.max(currentInsert.thickness || dia / 4, 0.01);
+        const geom = new THREE.ExtrudeGeometry(shape2d, { depth: thick, bevelEnabled: false });
+        const insert = new THREE.Mesh(
+          geom,
+          new THREE.MeshPhongMaterial({ color: colorNum, shininess: 100, side: THREE.DoubleSide })
+        );
+        insert.position.z = -toolOffsetZ;
+        group.add(insert);
+
+        const holder = new THREE.Mesh(
+          new THREE.BoxGeometry(dia * 1.1, dia * 0.8, Math.max(len - thick, dia * 2)),
+          new THREE.MeshPhongMaterial({ color: 0x8b8f98, shininess: 45 })
+        );
+        holder.position.z = -toolOffsetZ + thick + Math.max(len - thick, dia * 2) / 2;
+        group.add(holder);
+
       } else if (type === 'Lathe Insert') {
         // The insert alone, on its shim and holder nose - what a turner picks
         // out of a box. An 80 degree rhombic form is the common general-purpose
@@ -897,6 +952,19 @@ export class ToolPreviewPanel {
     }
 
     // Listen for messages from extension
+    const insertInput = document.getElementById('insertCode');
+    if (insertInput) {
+      let insertTimer = null;
+      insertInput.addEventListener('input', () => {
+        // Debounced: the field is parsed on every keystroke and half-typed
+        // designations are the normal state while someone types one.
+        if (insertTimer) clearTimeout(insertTimer);
+        insertTimer = setTimeout(() => {
+          vscode.postMessage({ type: 'parseInsert', code: insertInput.value });
+        }, 220);
+      });
+    }
+
     window.addEventListener('message', (event) => {
       const msg = event.data;
       if (msg.type === 'loadTool') {
@@ -914,6 +982,32 @@ export class ToolPreviewPanel {
           sel.dispatchEvent(new Event('change'));
         }
         if (typeof refreshPreview === 'function') refreshPreview();
+      } else if (msg.type === 'setInsertCode') {
+        // Drives the field the way a person does, so the test exercises the
+        // real round trip: webview -> extension parses -> webview draws.
+        const field = document.getElementById('insertCode');
+        if (field) {
+          field.value = msg.code;
+          vscode.postMessage({ type: 'parseInsert', code: msg.code });
+        }
+      } else if (msg.type === 'insertShape') {
+        // Parsed by the extension so there is one implementation of ISO 1832
+        // rather than a second copy in here that can drift from it.
+        currentInsert = msg.ok ? msg : null;
+        const info = document.getElementById('insertInfo');
+        if (info) {
+          info.textContent = msg.ok
+            ? msg.name + '  IC ' + msg.icSize + msg.unitLabel + '  nose ' + msg.cornerRadius + msg.unitLabel
+            : (msg.code ? 'Not a recognised designation' : '');
+          info.style.color = msg.ok ? '#8491a8' : '#c88';
+        }
+        if (msg.ok && msg.icSize) {
+          const d = document.getElementById('diameter');
+          if (d) d.value = String(msg.icSize);
+          const sel = document.getElementById('toolType');
+          if (sel && sel.value !== 'Lathe Insert') { sel.value = 'Lathe Insert'; }
+        }
+        refreshPreview();
       } else if (msg.type === 'requestVisualProbe') {
         probeRequested = true;
       }

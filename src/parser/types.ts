@@ -279,6 +279,8 @@ export interface ToolUsage {
   lengthOfCut?: number;     // lc (flute length)
   lengthOutOfHolder?: number; // oh (stick-out / overhang)
   holder?: string;          // Coupling type (CAT40, HSK-A63, etc.)
+  /** ISO 1832 insert designation found beside the tool call, e.g. CNMG432. */
+  insertCode?: string;
 }
 
 export interface CannedCycleInstance {

@@ -10,6 +10,7 @@
  * Output: ProgramModel
  */
 
+import { findInsertCodes } from './insertCode';
 import {
   GCodeBlock,
   ModalState,
@@ -409,6 +410,18 @@ export class ProgramModelBuilder {
    * simulation and the wrong tool on screen.
    */
   private extractToolSpecs(comment: string, tool: ToolUsage): void {
+    // An ISO insert designation beside the tool call is usually the only record
+    // of what is actually cutting, and it carries the real corner radius - which
+    // matters more to a turned profile than the nominal diameter does.
+    const inserts = findInsertCodes(comment);
+    if (inserts.length > 0) {
+      const insert = inserts[0];
+      tool.insertCode = insert.designation;
+      if (insert.icSize !== undefined && tool.diameter === undefined) {
+        tool.diameter = insert.icSize;
+      }
+    }
+
     const N = ProgramModelBuilder.NUM;
     const H = ProgramModelBuilder.HOLDER;
 
