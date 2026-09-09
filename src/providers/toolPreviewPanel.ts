@@ -33,6 +33,45 @@ export interface ToolPreviewInitData {
 export class ToolPreviewPanel {
   static instance: vscode.WebviewPanel | null = null;
 
+  /** Last answer to requestVisualProbe(). See the visualizer panel for why. */
+  static lastVisualProbe: {
+    litPixels: number;
+    sampledPixels: number;
+    litRatio: number;
+    width: number;
+    height: number;
+    toolType: string;
+    error?: string;
+    at: number;
+  } | undefined;
+
+  /** Switch the previewed tool type and wait for the panel to redraw. */
+  static async setToolType(toolType: string): Promise<void> {
+    if (!ToolPreviewPanel.instance) return;
+    await ToolPreviewPanel.instance.webview.postMessage({ type: 'setToolType', toolType });
+  }
+
+  /**
+   * Ask the preview to measure what it drew.
+   *
+   * The renderer asks for alpha:true but the scene sets an opaque background,
+   * so every pixel ends up with alpha 1 and coverage cannot distinguish a drawn
+   * tool from an empty view. Difference from that background colour can.
+   */
+  static async requestVisualProbe(timeoutMs = 5000): Promise<typeof ToolPreviewPanel.lastVisualProbe> {
+    const panel = ToolPreviewPanel.instance;
+    if (!panel) return undefined;
+    const before = ToolPreviewPanel.lastVisualProbe?.at ?? 0;
+    await panel.webview.postMessage({ type: 'requestVisualProbe' });
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const probe = ToolPreviewPanel.lastVisualProbe;
+      if (probe && probe.at > before) return probe;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    return undefined;
+  }
+
   static show(context: vscode.ExtensionContext, initData?: ToolPreviewInitData) {
     if (ToolPreviewPanel.instance) {
       ToolPreviewPanel.instance.reveal(vscode.ViewColumn.Beside, true); // preserveFocus=true
@@ -72,7 +111,18 @@ export class ToolPreviewPanel {
     });
 
     panel.webview.onDidReceiveMessage((msg) => {
-      if (msg.type === 'applyTool') {
+      if (msg.type === 'visualProbe') {
+        ToolPreviewPanel.lastVisualProbe = {
+          litPixels: Number(msg.litPixels) || 0,
+          sampledPixels: Number(msg.sampledPixels) || 0,
+          litRatio: Number(msg.litRatio) || 0,
+          width: Number(msg.width) || 0,
+          height: Number(msg.height) || 0,
+          toolType: typeof msg.toolType === 'string' ? msg.toolType : '',
+          error: typeof msg.error === 'string' ? msg.error : undefined,
+          at: Date.now(),
+        };
+      } else if (msg.type === 'applyTool') {
         // Forward to simulation panel (if open)
         ToolpathVisualizerPanel.queueMessage({
           type: 'toolData',
@@ -92,15 +142,29 @@ export class ToolPreviewPanel {
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} data:; style-src ${cspSource} 'unsafe-inline'; script-src ${cspSource} 'unsafe-inline';">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* The form column was a fixed 350px against a 1fr canvas. Opened with
+       ViewColumn.Beside the panel is only ~360px wide, so the canvas column
+       collapsed to zero and the 3D view vanished completely - form only, no
+       tool, at every ordinary side-panel width.
+
+       minmax(0, …) lets the form shrink instead of starving the canvas, and
+       below 620px the two stack so the tool is always visible. */
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #1e1e1e;
       color: #e0e0e0;
       display: grid;
-      grid-template-columns: 350px 1fr;
+      grid-template-columns: minmax(180px, 350px) minmax(0, 1fr);
       height: 100vh;
       gap: 1px;
       background-color: #333;
+    }
+    @media (max-width: 620px) {
+      body {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) minmax(220px, 45vh);
+      }
+      .form-panel { border-right: none; border-bottom: 1px solid #3e3e42; }
     }
     .form-panel {
       background: #252526;
@@ -261,6 +325,44 @@ export class ToolPreviewPanel {
   <script type="module">
     import * as THREE from '${threeUri}';
     const vscode = acquireVsCodeApi();
+
+    // Visual probe. This renderer is created with alpha:true, so the cleared
+    // buffer is TRANSPARENT rather than a known colour - the toolpath
+    // visualizer's "differs from the clear colour" test would call every pixel
+    // lit here. Opacity is the signal instead: a drawn tool writes alpha, an
+    // empty scene does not.
+    let probeRequested = false;
+
+    function readToolProbe() {
+      if (!renderer) return { type: 'visualProbe', error: 'no renderer' };
+      const gl = renderer.getContext();
+      const w = renderer.domElement.width;
+      const h = renderer.domElement.height;
+      if (!w || !h) return { type: 'visualProbe', litPixels: 0, sampledPixels: 0, litRatio: 0, width: w, height: h };
+      const buf = new Uint8Array(w * h * 4);
+      gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+      // scene.background is an opaque 0x1a1a1a, so every pixel has alpha 1 and
+      // alpha coverage cannot tell a drawn tool from an empty scene. Difference
+      // from that background colour is the usable signal, as in the visualizer.
+      let lit = 0;
+      let total = 0;
+      for (let i = 0; i < buf.length; i += 16 * 4) {
+        total++;
+        const dr = Math.abs(buf[i] - 0x1a);
+        const dg = Math.abs(buf[i + 1] - 0x1a);
+        const db = Math.abs(buf[i + 2] - 0x1a);
+        if (dr + dg + db > 12) lit++;
+      }
+      return {
+        type: 'visualProbe',
+        litPixels: lit,
+        sampledPixels: total,
+        litRatio: total ? lit / total : 0,
+        width: w,
+        height: h,
+        toolType: document.getElementById('toolType') ? document.getElementById('toolType').value : ''
+      };
+    }
     let scene, camera, renderer;
     let isDragging = false;
     let cameraRotation = { x: 0.3, y: 0.5 };
@@ -383,13 +485,31 @@ export class ToolPreviewPanel {
         camera.position.multiplyScalar(scale);
       }, { passive: false });
 
-      window.addEventListener('resize', () => {
+      // Resize handling.
+      //
+      // A webview panel opened beside the editor is often not laid out when the
+      // scene is built, so canvas.clientWidth/Height are 0: camera.aspect
+      // becomes NaN and the renderer is sized 0x0. Recovery depended on a
+      // window 'resize' event, which does not necessarily arrive when a hidden
+      // panel is later revealed - so the preview could stay blank for good,
+      // which reads exactly like "the 3D view is broken".
+      //
+      // A ResizeObserver on the canvas fires when the element actually gets a
+      // size, including the first layout, so the view repairs itself.
+      function applyCanvasSize() {
         const w = canvas.clientWidth;
         const h = canvas.clientHeight;
+        if (!w || !h) return;            // never divide by zero into camera.aspect
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
-      });
+      }
+
+      window.addEventListener('resize', applyCanvasSize);
+      if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(applyCanvasSize).observe(canvas);
+      }
+      applyCanvasSize();
 
       // Animation loop
       try {
@@ -397,6 +517,14 @@ export class ToolPreviewPanel {
           animationId = requestAnimationFrame(animate);
           if (renderer && scene && camera) {
             renderer.render(scene, camera);
+            if (probeRequested) {
+              probeRequested = false;
+              try {
+                vscode.postMessage(readToolProbe());
+              } catch (perr) {
+                vscode.postMessage({ type: 'visualProbe', error: String(perr && perr.message || perr) });
+              }
+            }
           }
         }
         animate();
@@ -677,6 +805,17 @@ export class ToolPreviewPanel {
         } else {
           pendingToolData = msg.data;
         }
+      } else if (msg.type === 'setToolType') {
+        // Drives the dropdown from outside so the visual bed can walk every
+        // type the panel offers, rather than only the default one.
+        const sel = document.getElementById('toolType');
+        if (sel) {
+          sel.value = msg.toolType;
+          sel.dispatchEvent(new Event('change'));
+        }
+        if (typeof refreshPreview === 'function') refreshPreview();
+      } else if (msg.type === 'requestVisualProbe') {
+        probeRequested = true;
       }
     });
   </script>

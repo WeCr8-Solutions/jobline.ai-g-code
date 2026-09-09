@@ -12,6 +12,7 @@ async function run() {
   });
 
   mocha.addFile(path.resolve(__dirname, 'smoke.test.js'));
+  mocha.addFile(path.resolve(__dirname, 'tool-preview.test.js'));
 
   await new Promise((resolve, reject) => {
     mocha.run(failures => {
