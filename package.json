@@ -685,7 +685,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
-    "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');require('./test/formatter.test.ts');require('./test/tool-extraction.test.ts');require('./test/workholding.test.ts');\"",
+    "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');require('./test/formatter.test.ts');require('./test/tool-extraction.test.ts');require('./test/workholding.test.ts');require('./test/lathe-review.test.ts');\"",
     "test:diagnostics": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/diagnostics.test.ts');\"",
     "test:review": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/program-review.test.ts');\"",
     "test:visualizer:harness": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/revpack-visualizer-harness.test.ts');\"",

@@ -25,6 +25,10 @@ export class ToolpathVisualizerPanel {
     width: number;
     height: number;
     pathPoints: number;
+    gnomonLit: number;
+    gnomonTotal: number;
+    opacity: Record<string, number>;
+    orbit: { theta: number; phi: number };
     error?: string;
     at: number;
   } | undefined;
@@ -38,6 +42,11 @@ export class ToolpathVisualizerPanel {
    * own drawing buffer instead, which is the only signal that separates a drawn
    * scene from a blank one.
    */
+  /** Send a transient (non-replayed) control message to the open panel. */
+  public static sendControl(msg: unknown): void {
+    ToolpathVisualizerPanel.currentPanel?._panel.webview.postMessage(msg);
+  }
+
   public static async requestVisualProbe(timeoutMs = 5000): Promise<typeof ToolpathVisualizerPanel.lastVisualProbe> {
     const panel = ToolpathVisualizerPanel.currentPanel;
     if (!panel) return undefined;
@@ -131,6 +140,10 @@ export class ToolpathVisualizerPanel {
           width: Number(msg.width) || 0,
           height: Number(msg.height) || 0,
           pathPoints: Number(msg.pathPoints) || 0,
+          gnomonLit: Number(msg.gnomonLit) || 0,
+          gnomonTotal: Number(msg.gnomonTotal) || 0,
+          opacity: (msg.opacity ?? {}) as Record<string, number>,
+          orbit: (msg.orbit ?? { theta: 0, phi: 0 }) as { theta: number; phi: number },
           error: typeof msg.error === 'string' ? msg.error : undefined,
           at: Date.now(),
         };

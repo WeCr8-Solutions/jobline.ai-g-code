@@ -827,20 +827,32 @@
 
       let lit = 0;
       let total = 0;
+      // Counted separately so a test can prove the gnomon TRACKS the camera:
+      // its lit signature changes as the view orbits, while a static or dead
+      // indicator would not move at all.
+      let gnomonLit = 0;
+      let gnomonTotal = 0;
       // Step across the buffer rather than every pixel; a real toolpath covers
       // far more than one sample in 16.
       for (let i = 0; i < buf.length; i += 16 * 4) {
         const p = i / 4;
         const x = p % w;
         const y = Math.floor(p / w);   // readPixels origin is bottom-left
-        if (x < gx && y < gy) continue;
+        if (x < gx && y < gy) {
+          gnomonTotal++;
+          const gr = Math.abs(buf[i] - CLEAR_RGB[0]);
+          const gg = Math.abs(buf[i + 1] - CLEAR_RGB[1]);
+          const gb = Math.abs(buf[i + 2] - CLEAR_RGB[2]);
+          if (gr + gg + gb > 12) gnomonLit++;
+          continue;
+        }
         total++;
         const dr = Math.abs(buf[i] - CLEAR_RGB[0]);
         const dg = Math.abs(buf[i + 1] - CLEAR_RGB[1]);
         const db = Math.abs(buf[i + 2] - CLEAR_RGB[2]);
         if (dr + dg + db > 12) lit++;
       }
-      return { lit, total, width: w, height: h };
+      return { lit, total, gnomonLit, gnomonTotal, width: w, height: h };
     }
 
     function animate() {
@@ -856,9 +868,13 @@
             litPixels: probe.lit,
             sampledPixels: probe.total,
             litRatio: probe.total ? probe.lit / probe.total : 0,
+            gnomonLit: probe.gnomonLit,
+            gnomonTotal: probe.gnomonTotal,
             width: probe.width,
             height: probe.height,
             pathPoints: currentPath.length,
+            opacity: Object.assign({}, viewOpacity),
+            orbit: { theta: orbitTheta, phi: orbitPhi },
           });
         } catch (err) {
           vscode.postMessage({ type: 'visualProbe', error: String(err && err.message || err) });
@@ -1024,6 +1040,40 @@
             color: typeof msg.color === 'string' ? msg.color : workCfg.color,
           };
           buildWorkholding();
+          break;
+        }
+        case 'setViewOpacity': {
+          // Same path the slider uses, including the panel readout, so a test
+          // exercises the real control rather than a parallel code path.
+          const input = document.getElementById(msg.sliderId);
+          if (input) {
+            input.value = String(Math.round(Number(msg.value) * 100));
+            input.dispatchEvent(new Event('input'));
+          } else if (msg.layer) {
+            applyOpacity(msg.layer, Number(msg.value));
+          }
+          break;
+        }
+        case 'setLayerVisible': {
+          const box = document.querySelector('.view-toggles input[data-layer="' + msg.layer + '"]');
+          if (box) {
+            box.checked = !!msg.visible;
+            box.dispatchEvent(new Event('change'));
+          }
+          break;
+        }
+        case 'gnomonVisible': {
+          const box = document.getElementById('tg-gnomon');
+          if (box) { box.checked = !!msg.visible; box.dispatchEvent(new Event('change')); }
+          else { gnomonVisible = !!msg.visible; }
+          break;
+        }
+        case 'orbitBy': {
+          // Drives the same orbit state the mouse does, so a test can prove the
+          // gnomon follows the camera.
+          orbitTheta += Number(msg.dTheta) || 0;
+          orbitPhi = Math.max(0.05, Math.min(Math.PI - 0.05, orbitPhi + (Number(msg.dPhi) || 0)));
+          updateCameraOrbit();
           break;
         }
         case 'requestVisualProbe': {

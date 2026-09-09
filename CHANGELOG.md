@@ -51,6 +51,19 @@ for every user.
 - Formatter unit tests. The formatter previously had none, which is how the
   trailing-decimal bug shipped.
 
+### Fixed — lathe
+
+- **Mill setup rules were raised against turning programs.** A correct Okuma
+  program collected all three - distance mode, working plane, work offset -
+  telling the operator a good lathe program was deficient three times over. On a
+  Fanuc lathe G90 is a turning *cycle*, not absolute mode; a 2-axis turn center
+  works in ZX by definition; and lathes carry the offset on the T word (T0101 is
+  tool 1, offset 1) or set the datum with G50. Turning programs are now asked for
+  a turning datum instead.
+- **A lathe was only recognised by its canned cycles.** Detection keyed on
+  G70-G76, so a plain face-and-turn in G0/G1 reported as a 3-axis mill - which
+  also put vise jaws on a chucked part. G96/G97 and the Okuma dialect now count.
+
 ### Fixed — visual
 
 - **The scene had no lights.** The tool and holder are `MeshPhongMaterial`,
