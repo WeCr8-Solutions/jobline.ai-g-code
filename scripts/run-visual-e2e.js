@@ -8,10 +8,15 @@ const { runTests } = require('@vscode/test-electron');
 const root = path.resolve(__dirname, '..');
 const artifactDir = path.join(root, 'test-results', 'visual');
 const debugPort = 9333;
+// expectedPoints pins each case to its OWN program. The panel is reused across
+// cases, and the probe used to read whatever was still on screen: case 2
+// reported case 1's 195 points and case 3 reported case 2's 17, so only the
+// first case was ever really tested. Waiting for the expected count is what
+// makes each case measure its own render.
 const visualCases = [
-  { id: 'clean-mill', fixture: 'test/fixtures/diagnostics/clean-mill.nc' },
-  { id: 'unsafe-review', fixture: 'test/fixtures/crash-scenarios/multiple-violations.nc' },
-  { id: 'lathe', fixture: 'test/fixtures/okuma/facing-od-rough.nc' },
+  { id: 'clean-mill', fixture: 'test/fixtures/diagnostics/clean-mill.nc', expectedPoints: 195 },
+  { id: 'unsafe-review', fixture: 'test/fixtures/crash-scenarios/multiple-violations.nc', expectedPoints: 17 },
+  { id: 'lathe', fixture: 'test/fixtures/okuma/facing-od-rough.nc', expectedPoints: 13 },
 ];
 
 function delay(ms) {

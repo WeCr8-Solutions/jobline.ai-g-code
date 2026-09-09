@@ -538,9 +538,56 @@
     // -----------------------------------------------------------------------
     // Render loop
     // -----------------------------------------------------------------------
+    // Visual probe — counts pixels that differ from the clear colour, read back
+    // from the GL drawing buffer in the same frame as the render.
+    //
+    // A screenshot cannot tell you the scene drew. A dead GL context still
+    // yields a canvas, and a capture of the whole workbench is a large valid
+    // PNG whatever the 3D view is doing, so the visual gate passed on an empty
+    // viewport. This is the only check that distinguishes "rendered" from
+    // "rendered nothing".
+    let probeRequested = false;
+    const CLEAR_RGB = [0x1a, 0x1a, 0x2e];
+
+    function readLitPixels() {
+      const gl = renderer.getContext();
+      const w = renderer.domElement.width;
+      const h = renderer.domElement.height;
+      if (!w || !h) return { lit: 0, total: 0, width: w, height: h };
+      const buf = new Uint8Array(w * h * 4);
+      gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+      let lit = 0;
+      // Step across the buffer rather than every pixel; a real toolpath covers
+      // far more than one sample in 16.
+      for (let i = 0; i < buf.length; i += 16 * 4) {
+        const dr = Math.abs(buf[i] - CLEAR_RGB[0]);
+        const dg = Math.abs(buf[i + 1] - CLEAR_RGB[1]);
+        const db = Math.abs(buf[i + 2] - CLEAR_RGB[2]);
+        if (dr + dg + db > 12) lit++;
+      }
+      return { lit, total: Math.ceil(buf.length / (16 * 4)), width: w, height: h };
+    }
+
     function animate() {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
+      if (probeRequested) {
+        probeRequested = false;
+        try {
+          const probe = readLitPixels();
+          vscode.postMessage({
+            type: 'visualProbe',
+            litPixels: probe.lit,
+            sampledPixels: probe.total,
+            litRatio: probe.total ? probe.lit / probe.total : 0,
+            width: probe.width,
+            height: probe.height,
+            pathPoints: currentPath.length,
+          });
+        } catch (err) {
+          vscode.postMessage({ type: 'visualProbe', error: String(err && err.message || err) });
+        }
+      }
     }
     animate();
 
@@ -619,6 +666,13 @@
           originOff = { x: Number(msg.xOff)||0, y: Number(msg.yOff)||0, z: Number(msg.zOff)||0 };
           buildOrigin();
           buildStock();
+          break;
+        }
+        case 'requestVisualProbe': {
+          // Answered from inside the render loop, so the pixels read are the
+          // ones just drawn. Used by the visual test bed to prove the scene
+          // actually rendered rather than that a screenshot was taken.
+          probeRequested = true;
           break;
         }
 
