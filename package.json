@@ -2,7 +2,7 @@
   "name": "jobline-gcode",
   "displayName": "JobLine G-Code Intelligence",
   "description": "Deep G-code and robot-program intelligence for CNC machinists and automation engineers — syntax highlighting, hover tooltips, canned cycle & probing detection, Macro B evaluation, Fanuc/Haas/Siemens/Mazak/Okuma CNC dialects, Fanuc Robot TP, and ABB RAPID.",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "publisher": "WeCr8-Solutions",
   "license": "MIT",
   "author": {
@@ -88,9 +88,39 @@
           ".ptp",
           ".src",
           ".sub",
-          ".lib"
+          ".lib",
+          ".cmx",
+          ".NC",
+          ".GCODE",
+          ".NGC",
+          ".TAP",
+          ".CNC",
+          ".G",
+          ".MIN",
+          ".PRG",
+          ".MPF",
+          ".SPF",
+          ".EIA",
+          ".ISO",
+          ".NCC",
+          ".NCP",
+          ".NCF",
+          ".NC1",
+          ".5AX",
+          ".FGC",
+          ".DNC",
+          ".APT",
+          ".CLS",
+          ".CYC",
+          ".TAB",
+          ".PTP",
+          ".SRC",
+          ".SUB",
+          ".LIB",
+          ".CMX"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "firstLine": "^\\s*(%|[Oo]\\d{3,5}\\b|:\\d{3,5}\\b|[Nn]\\d+\\s*[GgMmTt]\\d|[Gg]\\d{1,3}(\\.\\d)?\\b)"
       },
       {
         "id": "fanuc-tp",
@@ -227,7 +257,9 @@
         },
         "jobline.additionalExtensions": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Extra file extensions to treat as G-code (e.g. [\".cpp\", \".sub\", \".001\"]). Useful for shop-specific file naming conventions not covered by the built-in list."
         }
@@ -653,7 +685,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
-    "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');\"",
+    "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');require('./test/formatter.test.ts');\"",
     "test:diagnostics": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/diagnostics.test.ts');\"",
     "test:review": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/program-review.test.ts');\"",
     "test:visualizer:harness": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/revpack-visualizer-harness.test.ts');\"",

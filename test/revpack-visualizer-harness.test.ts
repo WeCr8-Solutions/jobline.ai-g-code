@@ -7,8 +7,19 @@ import { parseParasolidText } from '../src/providers/visualizer/parasolidTextPar
 
 const fixtureRoot = path.join(__dirname, 'fixtures', 'revpack');
 
+/**
+ * test/fixtures/revpack/ holds private shop programs and customer CAD. It is
+ * gitignored and must stay that way, so it exists only on machines that were
+ * given the files directly. These tests skip when it is absent rather than
+ * fail, so a clean clone still yields a trustworthy run.
+ */
+const revpackAvailable = fs.existsSync(path.join(fixtureRoot, 'revpack.visualizer-harness.json'));
+const skipReason = revpackAvailable
+  ? false
+  : 'private revpack fixture not present on this machine (test/fixtures/revpack/ is gitignored)';
+
 describe('Revpack visualizer harness', () => {
-  it('loads revpack manifest and extracts setup plus tools from gcode', () => {
+  it('loads revpack manifest and extracts setup plus tools from gcode', { skip: skipReason }, () => {
     const manifest = JSON.parse(
       fs.readFileSync(path.join(fixtureRoot, 'revpack.visualizer-harness.json'), 'utf8')
     ) as VisualizerHarnessManifest;
@@ -30,7 +41,7 @@ describe('Revpack visualizer harness', () => {
     assert.equal(drill53?.type, 'Drill');
   });
 
-  it('accepts the revpack parasolid text goal model as a harness asset', () => {
+  it('accepts the revpack parasolid text goal model as a harness asset', { skip: skipReason }, () => {
     const xT = fs.readFileSync(path.join(fixtureRoot, 'REVGRIPS STEM-50-35-PRO.x_t'), 'utf8');
     const parsed = parseParasolidText(xT);
 

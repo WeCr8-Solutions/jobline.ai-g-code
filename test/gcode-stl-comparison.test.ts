@@ -10,9 +10,26 @@ function loadFixture(relativePath: string): Buffer {
   return fs.readFileSync(path.join(__dirname, 'fixtures', 'verification', relativePath));
 }
 
-function loadRevpackFixture(relativePath: string): Buffer {
-  return fs.readFileSync(path.join(__dirname, 'fixtures', 'revpack', relativePath));
+function revpackPath(relativePath: string): string {
+  return path.join(__dirname, 'fixtures', 'revpack', relativePath);
 }
+
+function loadRevpackFixture(relativePath: string): Buffer {
+  return fs.readFileSync(revpackPath(relativePath));
+}
+
+/**
+ * test/fixtures/revpack/ holds private shop programs and customer CAD. It is
+ * gitignored and must stay that way, so it exists only on machines that were
+ * given the files directly.
+ *
+ * This test therefore has to SKIP when the fixture is absent, not fail. Reading
+ * it unconditionally made the suite pass on the one machine that happens to
+ * hold the file and fail on every clean clone - the shape of green that hides
+ * real breakage, because a fresh checkout could never get a trustworthy run.
+ */
+const REVPACK_PARASOLID = 'REVGRIPS STEM-50-35-PRO.x_t';
+const revpackAvailable = fs.existsSync(revpackPath(REVPACK_PARASOLID));
 
 describe('G-code to STL verification', () => {
   it('matches the rectangle profile NC fixture to its goal STL', () => {
@@ -37,8 +54,12 @@ describe('G-code to STL verification', () => {
     assert.equal(envelope.bounds.maxY, 1);
   });
 
-  it('extracts stable bounds from the revpack Parasolid text fixture', () => {
-    const parasolid = parseParasolidText(loadRevpackFixture('REVGRIPS STEM-50-35-PRO.x_t').toString('utf8'));
+  it('extracts stable bounds from the revpack Parasolid text fixture', {
+    skip: revpackAvailable
+      ? false
+      : 'private revpack fixture not present on this machine (test/fixtures/revpack/ is gitignored)',
+  }, () => {
+    const parasolid = parseParasolidText(loadRevpackFixture(REVPACK_PARASOLID).toString('utf8'));
 
     assert.equal(parasolid.format, 'parasolid-text');
     assert.ok(parasolid.pointCount > 1000);

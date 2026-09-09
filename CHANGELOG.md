@@ -6,6 +6,51 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.3.4] - 2026-09-09
+
+First published build to carry the 0.3.3 fixes. 0.3.3 was tagged but never
+released, so the Marketplace still served 0.3.1 and both open issues stayed live
+for every user.
+
+### Fixed
+
+- **Visualizer and Tool Preview failed to open** with "Three.js failed to load"
+  and `Uncaught SyntaxError: Unexpected token 'export'`. The shipped 0.3.1 loaded
+  an ES module build of Three.js r183 through a classic `<script src>` tag. Both
+  panels now load it as a module. (#1)
+- **Coordinates written without a leading zero were silently dropped.** The
+  visualizer's address regex required a digit before the decimal point, so
+  `X.75`, `Z-.25`, `Z-.0625` and `R.5` never matched, the axis was treated as
+  unchanged, and the toolpath came out wrong with no warning. This form is
+  near-universal in Fanuc and Haas output. (#2)
+- **The formatter corrupted trailing-decimal words.** With
+  `jobline.formatter.decimalPlaces` set, `X5.` became `X5.000.` - a word with two
+  decimal points, which a control rejects or misreads. `X5.` is ordinary Fanuc
+  output. Word spacing also failed to split `X5.Y2.`, because the character
+  before `Y` is a decimal point rather than a digit.
+
+### Added
+
+- `.cmx` recognised as G-code, and every registered extension now also matches
+  its uppercase form (`PROGRAM.MIN`, `PART.CMX`) - CNC controls routinely write
+  uppercase filenames.
+- Content-based detection for unregistered extensions: a file opening with `%`,
+  an O-number or colon program header, or a numbered G/M/T block is treated as
+  G-code whatever it is called.
+- Formatter unit tests. The formatter previously had none, which is how the
+  trailing-decimal bug shipped.
+
+### Changed
+
+- Formatter rules moved to `src/formatter/formatterRules.ts`, which imports no
+  VS Code API so it can be tested directly.
+- Tests that depend on the private `test/fixtures/revpack/` directory now skip
+  when it is absent instead of failing. That directory is gitignored, so the
+  suite previously passed only on the one machine holding those files and failed
+  on every clean clone.
+
+---
+
 ## [0.3.3] — 2026-04-26
 
 ### Added
