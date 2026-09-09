@@ -181,12 +181,14 @@
     // -----------------------------------------------------------------------
     const layerVis = {
       tool: true, toolHolder: true, stock: true,
+      workholding: true,
       path: true, sweptTube: true, origin: true
     };
     const layerMeshes = {
       tool: null,
       toolHolder: null,
       stock: null,
+      workholding: null,
       path: null,
       sweptTube: null,
       origin: null
@@ -245,6 +247,76 @@
     }
 
     // -----------------------------------------------------------------------
+    // Gnomon — fixed orientation indicator, bottom-left of the viewport
+    // -----------------------------------------------------------------------
+    // The origin triad above sits at part zero, so it pans and zooms away with
+    // the model - it is gone exactly when you have orbited far enough to lose
+    // track of which way X runs. The gnomon is drawn in its own scene over a
+    // fixed corner, takes only the main camera's ROTATION, and so always
+    // answers "which way is +X" no matter where the view has been dragged.
+    const GNOMON_PX = 92;           // square, device-independent pixels
+    const GNOMON_MARGIN = 10;
+    const gnomonScene = new THREE.Scene();
+    const gnomonCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    gnomonCamera.position.set(0, 0, 3.2);
+
+    function axisLabelSprite(text, color) {
+      const cv = document.createElement('canvas');
+      cv.width = 64; cv.height = 64;
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = color;
+      ctx.font = 'bold 44px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 32, 34);
+      const tex = new THREE.CanvasTexture(cv);
+      tex.needsUpdate = true;
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+      sprite.scale.set(0.62, 0.62, 0.62);
+      return sprite;
+    }
+
+    function buildGnomon() {
+      // G-code axes expressed in Three.js space via the same gc3 mapping the
+      // rest of the scene uses, so the gnomon cannot drift from the model.
+      const L = 1.0;
+      const axes = [
+        { v: gc3(L, 0, 0), hex: 0xff4444, css: '#ff6b6b', label: 'X' },
+        { v: gc3(0, L, 0), hex: 0x44cc44, css: '#6bd96b', label: 'Y' },
+        { v: gc3(0, 0, L), hex: 0x5588ff, css: '#7fa6ff', label: 'Z' },
+      ];
+      for (const ax of axes) {
+        const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), ax.v]);
+        gnomonScene.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ color: ax.hex })));
+        const label = axisLabelSprite(ax.label, ax.css);
+        label.position.copy(ax.v).multiplyScalar(1.28);
+        gnomonScene.add(label);
+      }
+    }
+    buildGnomon();
+
+    function renderGnomon() {
+      const size = GNOMON_PX;
+      // Match the main camera's orientation only - never its position, or the
+      // gnomon would zoom and translate with the model.
+      gnomonCamera.position.copy(camera.position).sub(orbitTarget).normalize().multiplyScalar(3.2);
+      gnomonCamera.up.copy(camera.up);
+      gnomonCamera.lookAt(0, 0, 0);
+      const prevAutoClear = renderer.autoClear;
+      renderer.autoClear = false;
+      renderer.clearDepth();
+      renderer.setScissorTest(true);
+      renderer.setViewport(GNOMON_MARGIN, GNOMON_MARGIN, size, size);
+      renderer.setScissor(GNOMON_MARGIN, GNOMON_MARGIN, size, size);
+      renderer.render(gnomonScene, gnomonCamera);
+      renderer.setScissorTest(false);
+      const w = renderer.domElement.width / renderer.getPixelRatio();
+      const h = renderer.domElement.height / renderer.getPixelRatio();
+      renderer.setViewport(0, 0, w, h);
+      renderer.autoClear = prevAutoClear;
+    }
+
+    // -----------------------------------------------------------------------
     // Stock box (wireframe)
     // -----------------------------------------------------------------------
     let stockCfg = { w: 4, d: 4, h: 2, unit: 'in', color: '#4488ff' };
@@ -264,6 +336,70 @@
       const box = new THREE.LineSegments(edges, mat);
       box.position.set(ox + w / 2, oz + h / 2, -(oy + d / 2));
       setLayer('stock', box);
+    }
+
+    // -----------------------------------------------------------------------
+    // Workholding — vise jaws (mill) or chuck jaws (turn center)
+    // -----------------------------------------------------------------------
+    // Drawn from the stock, because what a machinist needs to see is where the
+    // jaws sit relative to the part: how much is gripped, how much stands
+    // proud, and whether the toolpath is about to reach the jaw faces. Off by
+    // default - 'none' - so nothing appears until a setup is actually declared.
+    let workCfg = { mode: 'none', jawHeight: 1.0, jawThickness: 0.75, gripDepth: 0.5, color: '#c0704f' };
+
+    function buildWorkholding() {
+      if (workCfg.mode === 'none') { setLayer('workholding', null); return; }
+
+      const { w, d, h } = stockCfg;
+      const ox = originOff.x, oy = originOff.y, oz = originOff.z;
+      const col = new THREE.Color(workCfg.color);
+      const mat = new THREE.MeshBasicMaterial({ color: col, opacity: 0.35, transparent: true });
+      const edgeMat = new THREE.LineBasicMaterial({ color: col, opacity: 0.8, transparent: true });
+      const group = new THREE.Group();
+
+      const addSolid = (geo, x, y, z) => {
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, y, z);
+        group.add(mesh);
+        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat);
+        edges.position.set(x, y, z);
+        group.add(edges);
+      };
+
+      if (workCfg.mode === 'chuck') {
+        // Turn center: three jaws at 120 degrees, gripping the OD behind the
+        // part. The stock's smaller cross-section dimension is the diameter.
+        const dia = Math.min(w, d);
+        const jawLen = Math.max(dia * 0.35, workCfg.jawThickness);
+        const jawW = Math.max(dia * 0.28, 0.25);
+        const cz = -(oy + d / 2);
+        for (let i = 0; i < 3; i++) {
+          const ang = (i * 2 * Math.PI) / 3;
+          const r = dia / 2 + jawLen / 2;
+          const geo = new THREE.BoxGeometry(jawLen, jawW, jawW);
+          const jaw = new THREE.Mesh(geo, mat);
+          jaw.position.set(ox + w / 2 + Math.cos(ang) * r, oz + h / 2 + Math.sin(ang) * r, cz);
+          jaw.rotation.z = ang;
+          group.add(jaw);
+          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat);
+          edges.position.copy(jaw.position);
+          edges.rotation.z = ang;
+          group.add(edges);
+        }
+      } else {
+        // Mill vise: two jaws clamping across X, their tops at gripDepth below
+        // the top of the stock so the exposed height is visible.
+        const jt = workCfg.jawThickness;
+        const jh = workCfg.jawHeight;
+        const grip = Math.min(workCfg.gripDepth, h);
+        const jawTopY = oz + h - grip;
+        const cy = jawTopY - jh / 2;
+        const cz = -(oy + d / 2);
+        addSolid(new THREE.BoxGeometry(jt, jh, d), ox - jt / 2, cy, cz);
+        addSolid(new THREE.BoxGeometry(jt, jh, d), ox + w + jt / 2, cy, cz);
+      }
+
+      setLayer('workholding', group);
     }
 
     // -----------------------------------------------------------------------
@@ -556,21 +692,36 @@
       if (!w || !h) return { lit: 0, total: 0, width: w, height: h };
       const buf = new Uint8Array(w * h * 4);
       gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+
+      // Exclude the gnomon corner. It draws on every frame regardless of what
+      // the program contains, so counting it would put a floor under litRatio
+      // and the blank-scene assertion could never fire again.
+      const px = renderer.getPixelRatio ? renderer.getPixelRatio() : 1;
+      const gx = (GNOMON_MARGIN + GNOMON_PX) * px;
+      const gy = (GNOMON_MARGIN + GNOMON_PX) * px;
+
       let lit = 0;
+      let total = 0;
       // Step across the buffer rather than every pixel; a real toolpath covers
       // far more than one sample in 16.
       for (let i = 0; i < buf.length; i += 16 * 4) {
+        const p = i / 4;
+        const x = p % w;
+        const y = Math.floor(p / w);   // readPixels origin is bottom-left
+        if (x < gx && y < gy) continue;
+        total++;
         const dr = Math.abs(buf[i] - CLEAR_RGB[0]);
         const dg = Math.abs(buf[i + 1] - CLEAR_RGB[1]);
         const db = Math.abs(buf[i + 2] - CLEAR_RGB[2]);
         if (dr + dg + db > 12) lit++;
       }
-      return { lit, total: Math.ceil(buf.length / (16 * 4)), width: w, height: h };
+      return { lit, total, width: w, height: h };
     }
 
     function animate() {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
+      renderGnomon();
       if (probeRequested) {
         probeRequested = false;
         try {
@@ -659,6 +810,8 @@
             color: msg.color || '#4488ff'
           };
           buildStock();
+          // Jaw geometry is derived from the stock, so it has to follow it.
+          buildWorkholding();
           break;
         }
 
@@ -666,6 +819,19 @@
           originOff = { x: Number(msg.xOff)||0, y: Number(msg.yOff)||0, z: Number(msg.zOff)||0 };
           buildOrigin();
           buildStock();
+          buildWorkholding();
+          break;
+        }
+        case 'workholdingSettings': {
+          // mode: 'none' | 'vise' | 'chuck'
+          workCfg = {
+            mode: (msg.mode === 'vise' || msg.mode === 'chuck') ? msg.mode : 'none',
+            jawHeight: Number(msg.jawHeight) > 0 ? Number(msg.jawHeight) : workCfg.jawHeight,
+            jawThickness: Number(msg.jawThickness) > 0 ? Number(msg.jawThickness) : workCfg.jawThickness,
+            gripDepth: Number(msg.gripDepth) >= 0 ? Number(msg.gripDepth) : workCfg.gripDepth,
+            color: typeof msg.color === 'string' ? msg.color : workCfg.color,
+          };
+          buildWorkholding();
           break;
         }
         case 'requestVisualProbe': {

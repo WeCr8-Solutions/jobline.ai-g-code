@@ -5,6 +5,7 @@ const VISUALIZER_STATE_MESSAGE_TYPES = new Set([
   'toolData',
   'stockSettings',
   'stockOrigin',
+  'workholdingSettings',
   'layerToggle',
   'machineType',
   'machineCapabilities',

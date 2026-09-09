@@ -51,7 +51,20 @@ for every user.
 - Formatter unit tests. The formatter previously had none, which is how the
   trailing-decimal bug shipped.
 
+### Added — visual
+
+- **Workholding view.** Vise jaws for a mill, three chuck jaws for a turn
+  center, drawn from the stock so you can see how much of the part is gripped
+  and how much stands proud. Chosen from the detected machine type and
+  overridable; nothing is drawn until a stock size is known, because without one
+  the jaw position would be invented rather than shown.
+- **Gnomon.** A fixed XYZ triad in the corner of the viewport that follows the
+  camera's rotation only. The existing origin triad sits at part zero and pans
+  away with the model - gone exactly when you have orbited far enough to need
+  it.
+
 ### Security
+
 
 - `.claude/settings.local.json` is no longer published in the extension package
   or tracked in git. It carried developer usernames, absolute `D:\MajorProjects`
