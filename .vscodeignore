@@ -1,6 +1,8 @@
 .vscode/**
 .claude/**
 .vscode-test/**
+test-results/**
+**/*.vsix
 .codacy/**
 .github/**
 .eslintrc.js
