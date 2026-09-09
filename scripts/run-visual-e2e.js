@@ -17,6 +17,11 @@ const visualCases = [
   { id: 'clean-mill', fixture: 'test/fixtures/diagnostics/clean-mill.nc', expectedPoints: 195 },
   { id: 'unsafe-review', fixture: 'test/fixtures/crash-scenarios/multiple-violations.nc', expectedPoints: 17 },
   { id: 'lathe', fixture: 'test/fixtures/okuma/facing-od-rough.nc', expectedPoints: 13 },
+  // These two declare STOCK, which is what makes the stock box and the jaws
+  // appear at all. Without a case that declares it, both features render only
+  // in theory - no fixture in the repo triggered them.
+  { id: 'vise-jaws', fixture: 'test/fixtures/setup/vise-mill-stock.nc', expectedPoints: 16 },
+  { id: 'chuck-jaws', fixture: 'test/fixtures/setup/chuck-lathe-stock.nc', expectedPoints: 13 },
 ];
 
 function delay(ms) {

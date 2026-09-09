@@ -401,6 +401,9 @@
     // Stock box (wireframe)
     // -----------------------------------------------------------------------
     let stockCfg = { w: 4, d: 4, h: 2, unit: 'in', color: '#4488ff' };
+    // True once a program or the user actually states a stock size, as opposed
+    // to the placeholder above. Camera framing depends on the difference.
+    let stockIsDeclared = false;
 
     function buildStock() {
       const { w, d, h, color } = stockCfg;
@@ -448,23 +451,31 @@
       };
 
       if (workCfg.mode === 'chuck') {
-        // Turn center: three jaws at 120 degrees, gripping the OD behind the
-        // part. The stock's smaller cross-section dimension is the diameter.
+        // Turn center: three jaws at 120 degrees gripping the OD at the chuck
+        // end of the bar.
+        //
+        // The spindle axis is G-code Z, and gc3 maps G-code Z onto Three's Y -
+        // buildStock already relies on that, giving the bar its height in Y.
+        // So the jaws are arranged around Y, in the Three XZ plane. Arranging
+        // them around Three Z instead left three squares floating across the
+        // view in a triangle, gripping nothing.
         const dia = Math.min(w, d);
         const jawLen = Math.max(dia * 0.35, workCfg.jawThickness);
         const jawW = Math.max(dia * 0.28, 0.25);
-        const cz = -(oy + d / 2);
+        const axisX = ox + w / 2;
+        const axisZ = -(oy + d / 2);
+        const cy = oz + Math.min(jawW * 0.9, h * 0.25);   // at the chuck end
+        const r = dia / 2 + jawLen / 2;
         for (let i = 0; i < 3; i++) {
           const ang = (i * 2 * Math.PI) / 3;
-          const r = dia / 2 + jawLen / 2;
           const geo = new THREE.BoxGeometry(jawLen, jawW, jawW);
           const jaw = new THREE.Mesh(geo, mat);
-          jaw.position.set(ox + w / 2 + Math.cos(ang) * r, oz + h / 2 + Math.sin(ang) * r, cz);
-          jaw.rotation.z = ang;
+          jaw.position.set(axisX + Math.cos(ang) * r, cy, axisZ + Math.sin(ang) * r);
+          jaw.rotation.y = -ang;
           group.add(jaw);
           const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat);
           edges.position.copy(jaw.position);
-          edges.rotation.z = ang;
+          edges.rotation.y = -ang;
           group.add(edges);
         }
       } else {
@@ -481,6 +492,14 @@
       }
 
       setLayer('workholding', group);
+
+      // Jaws usually arrive after the toolpath has already been framed, and
+      // they sit outside the path envelope, so the existing fit no longer
+      // contains the scene. Re-fit once, and only while the user has not taken
+      // the camera themselves - after that the view is theirs.
+      if (didFit && !userMovedCamera && currentPath && currentPath.length) {
+        fitCamera(currentPath);
+      }
     }
 
     // -----------------------------------------------------------------------
@@ -658,6 +677,23 @@
       if (!path || path.length === 0) return;
       const bbox = new THREE.Box3();
       for (const pt of path) bbox.expandByPoint(gc3(pt.x, pt.y, pt.z));
+
+      // Include the setup, not just the cut. Framing on the toolpath alone put
+      // the camera INSIDE a vise jaw the moment workholding was drawn - the jaw
+      // sits outside the path envelope by definition, since it grips the stock
+      // the path is cutting. Stock has the same problem whenever the program
+      // does not machine the full extent of the material.
+      // Only DECLARED stock. The webview carries a 4x4x2 default so there is
+      // always a reference box, but that size is invented - fitting to it framed
+      // a small part as a speck inside a fictional block. Jaws only exist when
+      // stock was declared, so they follow the same flag.
+      if (stockIsDeclared) {
+        for (const name of ['stock', 'workholding']) {
+          const obj = layerMeshes[name];
+          if (obj && obj.visible) bbox.expandByObject(obj);
+        }
+      }
+
       const center = new THREE.Vector3();
       bbox.getCenter(center);
       const size = new THREE.Vector3();
@@ -679,6 +715,9 @@
     let orbitTheta  = Math.PI / 4;   // azimuth
     let orbitPhi    = Math.PI / 3;   // polar (elevation)
     let didFit = false;
+    // Set as soon as the user orbits, pans or zooms. An automatic re-fit is
+    // welcome before they have touched the view and an ambush afterwards.
+    let userMovedCamera = false;
 
     function updateCameraOrbit() {
       const sinP = Math.sin(orbitPhi), cosP = Math.cos(orbitPhi);
@@ -707,6 +746,7 @@
     }
 
     renderer.domElement.addEventListener('mousedown', e => {
+      userMovedCamera = true;
       mouse.down = true; mouse.btn = e.button;
       mouse.shiftKey = e.shiftKey;
       mouse.lx = e.clientX; mouse.ly = e.clientY;
@@ -735,6 +775,7 @@
       updateCameraOrbit();
     });
     renderer.domElement.addEventListener('wheel', e => {
+      userMovedCamera = true;
       e.preventDefault();
       orbitRadius = Math.max(0.001, orbitRadius * (1 + e.deltaY * 0.0012));
       updateCameraOrbit();
@@ -959,6 +1000,7 @@
             unit: msg.unit  || 'in',
             color: msg.color || '#4488ff'
           };
+          stockIsDeclared = true;
           buildStock();
           // Jaw geometry is derived from the stock, so it has to follow it.
           buildWorkholding();

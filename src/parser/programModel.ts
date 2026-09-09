@@ -472,7 +472,14 @@ export class ProgramModelBuilder {
   private extractStockDimensions(blocks: GCodeBlock[]): { width: number; depth: number; height: number } | undefined {
     for (const block of blocks) {
       if (!block.comment) continue;
-      const match = block.comment.match(/STOCK:\s*W[=\s]*(\d+\.?\d*)\s*D[=\s]*(\d+\.?\d*)\s*H[=\s]*(\d+\.?\d*)/i);
+      // Same number forms as everywhere else: 4, 4.0, 4. and .75. The previous
+      // `\d+\.?\d*` needed a digit before the point, so a stock declared as
+      // W=.75 was not seen at all - and with no stock there is no stock box and
+      // no jaws, silently.
+      const N = ProgramModelBuilder.NUM;
+      const match = block.comment.match(
+        new RegExp(String.raw`STOCK:\s*W[=\s]*(${N})\s*D[=\s]*(${N})\s*H[=\s]*(${N})`, 'i')
+      );
       if (match) {
         return {
           width: parseFloat(match[1]),
@@ -491,6 +498,7 @@ export class ProgramModelBuilder {
     let hasA = false, hasB = false, hasC = false;
     let hasTurningCycles = false;
     let hasMillingCycles = false;
+    let hasSurfaceSpeed = false;
 
     for (const block of blocks) {
       if (block.addresses.has('A')) hasA = true;
@@ -501,6 +509,9 @@ export class ProgramModelBuilder {
         const code = g.code;
         // G70–G76: turning/threading cycles
         if (code >= 70 && code <= 76) hasTurningCycles = true;
+        // G96/G97: constant surface speed and its cancel. These are spindle
+        // modes that only exist on a turning machine.
+        if (code === 96 || code === 97) hasSurfaceSpeed = true;
         // G12.1 / G14: mill-turn
         if (code === 12.1 || code === 14) return '5-Axis Mill-Turn';
         // G81–G89: milling canned cycles
@@ -508,8 +519,14 @@ export class ProgramModelBuilder {
       }
     }
 
-    // Lathe: has turning cycles
-    if (hasTurningCycles) return 'Turn Center (2-Axis)';
+    // Lathe. Turning cycles are the clearest signal, but plenty of real lathe
+    // work is a plain face-and-turn in G0/G1 with no canned cycle at all, and
+    // that was being reported as a 3-axis mill - which then put vise jaws on a
+    // chucked part. G96/G97 and the Okuma dialect close that gap without
+    // guessing: both only occur on a turning machine.
+    if (hasTurningCycles || hasSurfaceSpeed || dialect === 'okuma' || dialect.includes('lathe')) {
+      return 'Turn Center (2-Axis)';
+    }
 
     // 5-axis: any two distinct rotary axes accompany XYZ motion.
     if (Number(hasA) + Number(hasB) + Number(hasC) >= 2) return '5-Axis Mill (Trunnion)';
