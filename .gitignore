@@ -8,3 +8,6 @@ test-results/
 
 # Private shop programs — never publish
 test/fixtures/revpack/
+
+# Local agent/editor config - developer paths and tool settings, not shippable
+.claude/

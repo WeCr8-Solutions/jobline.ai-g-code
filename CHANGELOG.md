@@ -23,6 +23,17 @@ for every user.
   `X.75`, `Z-.25`, `Z-.0625` and `R.5` never matched, the axis was treated as
   unchanged, and the toolpath came out wrong with no warning. This form is
   near-universal in Fanuc and Haas output. (#2)
+- **Every tool came out with its diameter equal to its tool number.** The spec
+  reader fell back to "first three numbers in the comment", and the tool number
+  is itself the first number. `T5 - .201 DIA DRILL - 118 DEG` produced diameter
+  5, length-of-cut 201 and stick-out 118 - the last of those being the drill
+  point angle. The wrong cutter width was then simulated and the wrong tool
+  drawn. Diameters are now read from fractions (`1/2`, `1/4-20`), leading
+  decimals (`.201`), and labelled values in either order (`DIA 0.5`, `0.5 DIA`,
+  `dia=0.5`), with the tool number and any point angle removed first.
+- **Tool spec labels could set NaN.** `/lc|lengthcut\s*=\s*(\d+)/` alternates on
+  a bare `lc`, so any comment containing those two letters - CALC, BLOCK -
+  matched with no capture group and stored NaN.
 - **The formatter corrupted trailing-decimal words.** With
   `jobline.formatter.decimalPlaces` set, `X5.` became `X5.000.` - a word with two
   decimal points, which a control rejects or misreads. `X5.` is ordinary Fanuc
@@ -39,6 +50,14 @@ for every user.
   G-code whatever it is called.
 - Formatter unit tests. The formatter previously had none, which is how the
   trailing-decimal bug shipped.
+
+### Security
+
+- `.claude/settings.local.json` is no longer published in the extension package
+  or tracked in git. It carried developer usernames, absolute `D:\MajorProjects`
+  paths and local tooling details, and this is a public repository. It contained
+  no credentials. Note that it remains in git history; rewriting that is a
+  separate decision.
 
 ### Changed
 

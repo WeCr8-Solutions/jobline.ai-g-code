@@ -357,37 +357,108 @@ export class ProgramModelBuilder {
   }
 
   /**
-   * Extract tool specs from comment (e.g., "0.5 dia, 1.5 lc, 3.0 loh, CAT40" or "dia=0.5 lc=1.5 oh=3.0 holder=HSK-A63")
+   * A number in any form a shop writes one: 5, 5.0, 5. and .201
+   *
+   * `\d+\.?\d*` cannot read `.201` - it needs a digit before the point - so a
+   * leading-decimal diameter was previously read as 201.
+   */
+  private static readonly NUM = String.raw`[-+]?(?:\d+\.?\d*|\.\d+)`;
+
+  private static readonly HOLDER =
+    String.raw`CAT\d+|HSK-[A-Z]\d+|BT\d+|KM\d+|ER\d+|Capto|Weldon|Shrink|Hydraulic|R8`;
+
+  /** Read a labelled value written either way round: "DIA 0.5", "0.5 DIA", "DIA=0.5". */
+  private static readLabelled(text: string, label: string): number | undefined {
+    const N = ProgramModelBuilder.NUM;
+    for (const re of [
+      new RegExp(String.raw`\b(?:${label})\b\s*[:=]?\s*(${N})`, 'i'),
+      new RegExp(String.raw`(${N})\s*(?:${label})\b`, 'i'),
+    ]) {
+      const m = text.match(re);
+      if (m) {
+        const v = Number.parseFloat(m[1]);
+        if (Number.isFinite(v) && v > 0) return v;
+      }
+    }
+    return undefined;
+  }
+
+  /** "1/2" -> 0.5, "3/8" -> 0.375. Also handles the "1/4-20" tap form. */
+  private static readFraction(text: string): number | undefined {
+    const m = text.match(/(?:^|[\s(-])(\d{1,2})\s*\/\s*(\d{1,2})(?![\d/])/);
+    if (!m) return undefined;
+    const n = Number.parseInt(m[1], 10);
+    const d = Number.parseInt(m[2], 10);
+    if (!d || !Number.isFinite(n)) return undefined;
+    const v = n / d;
+    return v > 0 ? v : undefined;
+  }
+
+  /**
+   * Extract tool specs from a comment near the T-call.
+   *
+   * The comment is shop prose, not a schema, so the order of attempts matters:
+   * an explicit label beats a fraction, a fraction beats a bare number, and the
+   * positional guess is a last resort.
+   *
+   * The tool number is stripped first. It used to be the FIRST number in the
+   * comment, so the positional fallback assigned it as the diameter - "T5 - .201
+   * DIA DRILL - 118 DEG" produced diameter 5, length-of-cut 201 and stick-out
+   * 118 (the drill point angle). Every tool in a program came out with its
+   * diameter equal to its tool number, which is the wrong cutter width in the
+   * simulation and the wrong tool on screen.
    */
   private extractToolSpecs(comment: string, tool: ToolUsage): void {
-    // Pattern 1: "diameter, length_of_cut, length_out_of_holder, holder"
-    // e.g., "0.5 dia, 1.5 lc, 3.0 oh, CAT40" or "0.5dia 1.5lc 3.0oh CAT40"
-    const match = comment.match(/(\d+\.?\d*)\s*d(?:ia)?[\s,]*(\d+\.?\d*)\s*(?:lc|length.?cut)[\s,]*(\d+\.?\d*)\s*(?:oh|loh|length.?holder|stick)?[\s,]*(CAT\d+|HSK-[A-Z]\d+|BT\d+|KM\d+|ER\d+|Capto|Weldon|Shrink|Hydraulic|R8)/i);
-    if (match) {
-      tool.diameter = parseFloat(match[1]);
-      tool.lengthOfCut = parseFloat(match[2]);
-      tool.lengthOutOfHolder = parseFloat(match[3]);
-      tool.holder = match[4];
+    const N = ProgramModelBuilder.NUM;
+    const H = ProgramModelBuilder.HOLDER;
+
+    // Drop the tool number, and the drill point angle, before reading numbers.
+    const text = comment
+      .replace(/\bT\s*0*\d+\b/gi, ' ')
+      .replace(/\b\d{2,3}\s*(?:DEG|DEGREE|°)\b/gi, ' ');
+
+    // Pattern 1: the fully specified form, "0.5 dia, 1.5 lc, 3.0 oh, CAT40"
+    const full = text.match(new RegExp(
+      String.raw`(${N})\s*d(?:ia)?[\s,]*(${N})\s*(?:lc|length.?cut)[\s,]*(${N})\s*(?:oh|loh|length.?holder|stick)?[\s,]*(${H})`,
+      'i'
+    ));
+    if (full) {
+      tool.diameter = parseFloat(full[1]);
+      tool.lengthOfCut = parseFloat(full[2]);
+      tool.lengthOutOfHolder = parseFloat(full[3]);
+      tool.holder = full[4];
       return;
     }
 
-    // Pattern 2: key=value format
-    // e.g., "dia=0.5 lc=1.5 oh=3.0 holder=CAT40"
-    const diamatch = comment.match(/dia[a-z]*\s*=\s*(\d+\.?\d*)/i);
-    const lcmatch = comment.match(/lc|lengthcut\s*=\s*(\d+\.?\d*)/i);
-    const ohmatch = comment.match(/oh|loh|lengtholder|stickout\s*=\s*(\d+\.?\d*)/i);
-    const holdermatch = comment.match(/holder\s*=\s*(CAT\d+|HSK-[A-Z]\d+|BT\d+|KM\d+|ER\d+|Capto|Weldon|Shrink|Hydraulic|R8)/i);
+    // Pattern 2: labelled values, in either order and with or without '='.
+    // The old regexes were mis-grouped - /lc|lengthcut\s*=\s*(\d+)/ alternates
+    // on a BARE "lc", so any comment containing those two letters (CALC, BLOCK)
+    // matched with no capture group and set the spec to NaN.
+    const dia =
+      ProgramModelBuilder.readLabelled(text, String.raw`dia(?:meter)?|dc|[oø]d`) ??
+      ProgramModelBuilder.readFraction(text) ??
+      ProgramModelBuilder.readLabelled(
+        text,
+        String.raw`ball|bull|flat|face\s*mill|end\s*?mill|endmill|drill|tap|reamer|spot\s*drill|chamfer`
+      );
+    const lc = ProgramModelBuilder.readLabelled(text, String.raw`lc|loc|length\s*of\s*cut|flute\s*length`);
+    const oh = ProgramModelBuilder.readLabelled(
+      text,
+      String.raw`oh|loh|stick\s*-?\s*out|stickout|length\s*out\s*of\s*holder|gauge\s*length`
+    );
+    const holder = text.match(new RegExp(String.raw`(?:holder\s*[:=]?\s*)?(${H})`, 'i'));
 
-    if (diamatch) tool.diameter = parseFloat(diamatch[1]);
-    if (lcmatch) tool.lengthOfCut = parseFloat(lcmatch[1]);
-    if (ohmatch) tool.lengthOutOfHolder = parseFloat(ohmatch[1]);
-    if (holdermatch) tool.holder = holdermatch[1];
+    if (dia !== undefined) tool.diameter = dia;
+    if (lc !== undefined) tool.lengthOfCut = lc;
+    if (oh !== undefined) tool.lengthOutOfHolder = oh;
+    if (holder) tool.holder = holder[1];
 
-    // Pattern 3: just numbers in sequence (simple heuristic for small comments)
-    if (!diamatch && !lcmatch && !ohmatch) {
-      const nums = comment.match(/\d+\.?\d*/g);
-      if (nums && nums.length >= 3) {
-        // Assume: dia, lc, oh in that order
+    // Pattern 3: positional guess, only when nothing was labelled at all and the
+    // comment is a bare spec list like "0.5 1.5 3.0". Requires exactly three
+    // numbers so that prose such as "1/2 FLAT ENDMILL - 4FL" cannot reach here.
+    if (dia === undefined && lc === undefined && oh === undefined) {
+      const nums = text.match(new RegExp(N, 'g'));
+      if (nums && nums.length === 3 && !/[a-z]/i.test(text.replace(new RegExp(N, 'g'), ''))) {
         tool.diameter = parseFloat(nums[0]);
         tool.lengthOfCut = parseFloat(nums[1]);
         tool.lengthOutOfHolder = parseFloat(nums[2]);
