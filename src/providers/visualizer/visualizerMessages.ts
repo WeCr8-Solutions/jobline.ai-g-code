@@ -5,6 +5,6 @@ export type VisualizerMessage =
   | { type: 'importFixture', name: string, data: ArrayBuffer }
   | { type: 'manualStock' }
   | { type: 'manualFixture' }
-  | { type: 'update', path: any[], cutterSize: number, highlightIdx: number };
+  | { type: 'update', path: string[], cutterSize: number, highlightIdx: number };
 
 // Add more message types as needed
