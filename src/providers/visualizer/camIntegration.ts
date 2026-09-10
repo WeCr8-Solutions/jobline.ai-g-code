@@ -8,7 +8,7 @@ export interface CamTool {
   size?: number;
   noseRadius?: number;
   description?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface CamConnection {
@@ -30,13 +30,13 @@ export class GenericCamConnection implements CamConnection {
 }
 
 // Import tool info from a tool library file (JSON, CSV, etc.)
-export async function importToolLibrary(file: File): Promise<CamTool[]> {
+export async function importToolLibrary(_: File): Promise<CamTool[]> {
   // TODO: Implement file parsing logic
   return [];
 }
 
 // Parse tool info from CNC code (G-code)
-export function extractToolsFromGCode(gcode: string): CamTool[] {
+export function extractToolsFromGCode(_: string): CamTool[] {
   // TODO: Implement G-code parsing for tool calls (e.g., T0101, etc.)
   return [];
 }
