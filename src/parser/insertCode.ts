@@ -168,7 +168,7 @@ export function findInsertCodes(text: string): ParsedInsertCode[] {
  * Returned as plain numbers so the same geometry serves the extension, the
  * webview and any test, without any of them needing a 3D library.
  */
-export function insertOutline(shapeCode: string, icSize: number, cornerRadius = 0): Array<[number, number]> {
+export function insertOutline(shapeCode: string, icSize: number, _cornerRadius = 0): Array<[number, number]> {
   const shape = INSERT_SHAPES[shapeCode] ?? INSERT_SHAPES.S;
   const r = Math.max(icSize, 0.0001) / 2;
 
