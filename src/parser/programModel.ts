@@ -510,7 +510,6 @@ export class ProgramModelBuilder {
   private detectMachineType(blocks: GCodeBlock[], dialect: string): string {
     let hasA = false, hasB = false, hasC = false;
     let hasTurningCycles = false;
-    let hasMillingCycles = false;
     let hasSurfaceSpeed = false;
 
     for (const block of blocks) {
@@ -527,8 +526,6 @@ export class ProgramModelBuilder {
         if (code === 96 || code === 97) hasSurfaceSpeed = true;
         // G12.1 / G14: mill-turn
         if (code === 12.1 || code === 14) return '5-Axis Mill-Turn';
-        // G81–G89: milling canned cycles
-        if (code >= 81 && code <= 89) hasMillingCycles = true;
       }
     }
 
