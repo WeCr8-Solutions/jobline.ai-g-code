@@ -30,13 +30,13 @@ export class GenericCamConnection implements CamConnection {
 }
 
 // Import tool info from a tool library file (JSON, CSV, etc.)
-export async function importToolLibrary(_: File): Promise<CamTool[]> {
+export async function importToolLibrary(_file: File): Promise<CamTool[]> {
   // TODO: Implement file parsing logic
   return [];
 }
 
 // Parse tool info from CNC code (G-code)
-export function extractToolsFromGCode(_: string): CamTool[] {
+export function extractToolsFromGCode(_gcode: string): CamTool[] {
   // TODO: Implement G-code parsing for tool calls (e.g., T0101, etc.)
   return [];
 }
