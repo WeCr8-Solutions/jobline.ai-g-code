@@ -6,6 +6,48 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.3.5] - 2026-09-09
+
+Type-safety hardening on top of 0.3.4. No user-facing behaviour changes: this
+build makes the visualizer and parser modules compile with zero TypeScript
+errors, where 0.3.4 shipped with 24. Cut so students and users get one clean,
+current package instead of a stale Marketplace build.
+
+### Changed
+
+- **Visualizer geometry helpers are now typed.** `manualGeometry.ts`,
+  `fixtureVisualizer.ts`, `stockVisualizer.ts`, `toolpathVisualizerCore.ts`,
+  `threeSetup.ts`, `stepParser.ts`, `camIntegration.ts` and `visualizerMessages.ts`
+  used `any` and `{}` placeholders throughout. They now carry real `three` types
+  (`BufferGeometry` and friends). These modules are internal scaffolding - the
+  live 3D rendering runs in `media/toolpathVisualizerWebview.html` and is
+  unchanged - but the loose types were hiding a class of `undefined` and
+  type-confusion bugs from the compiler.
+- **CAM import stubs keep their parameter names.** `importToolLibrary(_file)` and
+  `extractToolsFromGCode(_gcode)` rather than a bare `_`, so the public signature
+  still documents what each argument is.
+
+### Fixed
+
+- **Unit-test runner is now tracked.** `scripts/run-unit-tests.js` - the
+  shell-free entry point the CI gate runs - existed only on disk. It is committed,
+  so a fresh clone or CI checkout can run the suite.
+
+### Security
+
+- Regenerated `package-lock.json` to clear the fixable transitive advisories
+  (10 high, 7 moderate down to 3 and 2). The three that remain - `markdown-it`,
+  `serialize-javascript`, `linkify-it` - are **build-time only**: they come in
+  through `@vscode/vsce` and `mocha`, are not in the extension's runtime
+  dependencies, and are excluded from the `.vsix`. Their fixes are major version
+  bumps of the tooling and are left for a deliberate upgrade.
+
+### Verified
+
+- `tsc --noEmit`: clean. 113 unit tests passing. 0 lint problems.
+
+---
+
 ## [0.3.4] - 2026-09-09
 
 First published build to carry the 0.3.3 fixes. 0.3.3 was tagged but never

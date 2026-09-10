@@ -2,7 +2,7 @@
   "name": "jobline-gcode",
   "displayName": "JobLine G-Code Intelligence",
   "description": "Deep G-code and robot-program intelligence for CNC machinists and automation engineers — syntax highlighting, hover tooltips, canned cycle & probing detection, Macro B evaluation, Fanuc/Haas/Siemens/Mazak/Okuma CNC dialects, Fanuc Robot TP, and ABB RAPID.",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "publisher": "WeCr8-Solutions",
   "license": "MIT",
   "author": {
@@ -704,7 +704,8 @@
     "qa": "npx ts-node --transpileOnly scripts/qa-runner.ts",
     "qa:docker": "docker compose -f docker-compose.qa.yml up --build --abort-on-container-exit",
     "package": "vsce package",
-    "precompile": "npm run lint"
+    "precompile": "npm run lint",
+    "vscode:prepublish": "npm run compile"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
