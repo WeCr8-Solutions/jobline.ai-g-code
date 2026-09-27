@@ -19,11 +19,45 @@ import {
 // Regex patterns
 // =============================================================================
 
-/** Matches parenthesized comments: (anything) */
-const PAREN_COMMENT = /\(([^)]*)\)/g;
-
 /** Matches semicolon comments: ; to end of line */
 const SEMI_COMMENT = /;(.*)$/;
+
+/**
+ * Finds parenthesized comments by depth, left to right.
+ *
+ * The single-level regex this replaced (/\(([^)]*)\)/g) matched up to the FIRST `)`,
+ * so a real shop comment with a nested paren — `(T02 - 0.201 DRILL (13/64) S4500 F12.0)`,
+ * word for word from this extension's own bundled samples/mill-comprehensive.nc — closed
+ * the "comment" after `(13/64)` and left `S4500 F12.0)` as unstripped text. That trailing
+ * text then tokenized as if the programmer had written real S and F addresses on that line,
+ * and the line's plain-language explanation silently went blank because S/F alone match no
+ * G-code or M-code case. A comment containing an address letter after its own nested paren
+ * (e.g. `(SEE (NOTE) X.5 FOR DETAIL)`) would have been worse: a phantom X move, reported as
+ * real to the reader.
+ *
+ * This walks the string tracking paren depth, so nesting to any depth closes on the
+ * matching `)`, not the first one. An unbalanced `(` with no closing `)` is left open to
+ * the end of line, same as the regex's own behavior when a comment never closes.
+ */
+function findParenComments(text: string): Array<{ start: number; end: number; text: string }> {
+  const found: Array<{ start: number; end: number; text: string }> = [];
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] !== '(') { i++; continue; }
+    const start = i;
+    let depth = 1;
+    let j = i + 1;
+    while (j < text.length && depth > 0) {
+      if (text[j] === '(') depth++;
+      else if (text[j] === ')') depth--;
+      j++;
+    }
+    const end = j; // one past the matching ')', or end-of-string if never closed
+    found.push({ start, end, text: text.slice(start + 1, depth === 0 ? end - 1 : end) });
+    i = end;
+  }
+  return found;
+}
 
 /** Matches O-number program headers: O0001, O1234 */
 const PROGRAM_NUM_O = /^[Oo](\d{1,8})/;
@@ -126,16 +160,13 @@ export class Tokenizer {
     }
 
     // Parenthesized comments
-    let parenMatch: RegExpExecArray | null;
-    const parenRegex = new RegExp(PAREN_COMMENT.source, 'g');
-    while ((parenMatch = parenRegex.exec(working)) !== null) {
-      const start = parenMatch.index;
-      const end = start + parenMatch[0].length;
-      comments.push({ text: parenMatch[1], start, end });
+    for (const paren of findParenComments(working)) {
+      const { start, end } = paren;
+      comments.push({ text: paren.text, start, end });
       tokens.push({
         type: 'comment',
         value: { kind: 'literal', value: 0 },
-        raw: parenMatch[0],
+        raw: working.slice(start, end),
         startCol: start,
         endCol: end,
       });

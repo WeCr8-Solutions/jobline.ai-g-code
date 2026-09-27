@@ -6,6 +6,93 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.3.11] - 2026-09-27
+
+### Added
+
+- Fusion 360 setup import with bounded ZIP/Zstandard decoding, model and stock
+  dimensions, G54 setup metadata, and shaded model reference.
+- Multi-model scene roles for target parts, fixtures, jaws, holders, and tools.
+- ISO insert-aware mill and lathe tool visuals plus active-tool playback updates.
+- Packaged VSIX rendering checks at desktop and narrow viewport sizes, including
+  Justin's Fusion/G-code stock, target, WCS, and 6 mm tool registration.
+
+### Fixed
+
+- Correct G18/G19 arc validation and visualization for Fusion-posted programs.
+- Register Fusion model and stock in millimeters at program X0/Y0 with Z0 on the
+  part top instead of centering them on lead-in and lead-out tool-center moves.
+- Keep playback controls reachable in small windows and correlate playback with
+  the highlighted source row.
+- Collapse target controls by default so setup UI does not obscure the scene.
+- Include the Fusion Zstandard runtime in the VSIX so clean installations can
+  open compressed F3D setup metadata.
+
+## [0.3.8] - 2026-09-11
+
+### Fixed
+
+- **A program's real insert selection was silently discarded.** `ProgramModelBuilder`
+  already parses a genuine ISO 1832 insert designation (CNMG432 and similar) out of
+  the tool-call comment - `ToolUsage.insertCode` - but that field was write-only:
+  computed, stored, and read by nothing anywhere in the extension. Wired it into the
+  Plain Language panel, so a tool line now reads "T1 — CNMG432 (Rhombic 80 deg, 0.5"
+  IC)" instead of silently dropping what the program actually said was loaded.
+- **`samples/lathe-turning.nc` never exercised insert detection at all.** Its tool
+  comments said "TNMG INSERT" / "VNMG INSERT" - shape and clearance letters with no
+  size code - and the parser correctly requires a full designation (`CNMG432`, not
+  "CNMG 432" or "CNMG") to reject ordinary prose. Updated the sample to real,
+  correctly-sized designations (CNMG432 rough, VNMG331 finish) so the feature the
+  sample is meant to demonstrate actually fires.
+## [0.3.7] - 2026-09-11
+
+### Fixed
+
+Found by testing the Plain Language explainer against this extension's own bundled
+sample programs, read line by line as a beginner would. Every item below reproduced
+on a real bundled sample before the fix, and was re-verified after:
+
+- **Nested parentheses in a comment corrupted parsing.** The comment regex closed on
+  the FIRST `)`, so `(T02 - 0.201 DRILL (13/64) S4500 F12.0)` (word for word from
+  `samples/mill-comprehensive.nc`) left `S4500 F12.0)` unstripped, which then
+  tokenized as real S/F addresses on that line. Replaced with a depth-counting
+  matcher in the tokenizer.
+- **G98/G99 (the lathe feed-mode pair) were not tracked at all.** Every feed rate on
+  a G99 (feed-per-revolution) lathe program was mislabeled IPM instead of IPR - about
+  two orders of magnitude off from the real cutting speed. `samples/lathe-turning.nc`
+  is G99 throughout; every one of its feed lines was wrong. Now tracked as its own
+  modal state alongside G94/G95.
+- **Lathe T-words showed a station number that doesn't exist.** T0101 (tool 1,
+  offset 1 - standard Fanuc/Haas lathe T-word format) narrated as "T101". The correct
+  decode already existed for the internal Operations list; it never reached the text
+  a reader actually sees. Also corrected the phrasing: a lathe T-word indexes the
+  turret immediately, it does not wait on a separate M6 the way a mill does.
+  Detected from the program's own G96/G97/G70-G76 content, not the dialect setting -
+  so this now works for Fanuc and Haas lathes, not only a dialect literally named
+  "lathe" or "okuma".
+- **M29 (rigid tap mode)** and **G75 (peck grooving cycle)** produced no explanation
+  at all. Both are used in this extension's own bundled samples.
+- **O-number program headers were never shown.** A bare `O8000` line explained as
+  nothing; `O00200 (TITLE)` explained as only "Comment: TITLE" with the program
+  number itself silently dropped.
+
+5 new tests (`test/step-parser.test.ts`, `test/cross-format-import.test.ts`) plus
+manual verification against every bundled sample cover the STEP/STL/Parasolid and
+explainer fixes; the existing 113-test suite stays green throughout.
+## [0.3.6] - 2026-09-11
+
+### Fixed
+
+- **STEP (.stp/.step) files now actually parse.** `stepParser.ts` was a 5-line placeholder
+  that returned nothing (`TODO: Implement STEP parsing logic`) - calling it did not error,
+  it just silently produced no geometry, no bounds, nothing. It now reads real
+  `CARTESIAN_POINT` entities out of the ISO-10303-21 file (every vertex and B-spline/NURBS
+  control point in a STEP file is written as one) and reports an exact bounding box, the same
+  approach already used for Parasolid text import. This is not a full B-rep import - no
+  geometric kernel is vendored - so surfaces between points are still not reconstructed, but a
+  STEP file dropped into the visualizer now measures correctly instead of silently doing
+  nothing. 5 new tests in `test/step-parser.test.ts` against a synthetic fixture.
+
 ## [0.3.5] - 2026-09-09
 
 Type-safety hardening on top of 0.3.4. No user-facing behaviour changes: this

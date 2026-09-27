@@ -157,8 +157,13 @@ export interface ModalState {
   // Group 4: Arc center mode
   arcCenterMode: 90.1 | 91.1;
 
-  // Group 5: Feed mode
-  activeFeedMode: 94 | 95;
+  // Group 5: Feed mode. 94/95 are the mill pair (feed/min, feed/rev); 98/99 are the
+  // same modal group's LATHE codes for the identical meaning (Fanuc lathe convention -
+  // this extension's own samples/lathe-turning.nc uses G99 and its own comment on that
+  // line reads "G99=FEED/REV", confirming the mapping against the codebase's own fixture).
+  // Kept as four distinct literals rather than aliasing 98->94/99->95 so the state always
+  // names the code the program actually issued.
+  activeFeedMode: 94 | 95 | 98 | 99;
 
   // Group 6: Units
   activeUnits: 20 | 21;

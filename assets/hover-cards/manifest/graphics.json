@@ -1,0 +1,431 @@
+{
+  "motion.rapid": {
+    "path": "assets/svg/motion/rapid.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "motion.linear": {
+    "path": "assets/svg/motion/linear.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "motion.linear-compact": {
+    "path": "assets/svg/motion/linear-compact.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "motion.arc-cw": {
+    "path": "assets/svg/motion/arc-cw.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "motion.arc-ccw": {
+    "path": "assets/svg/motion/arc-ccw.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "motion.arc-compact": {
+    "path": "assets/svg/motion/arc-compact.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "drilling.simple": {
+    "path": "assets/svg/drilling/simple.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "drilling.peck": {
+    "path": "assets/svg/drilling/peck.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "drilling.dwell": {
+    "path": "assets/svg/drilling/dwell.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "drilling.tap": {
+    "path": "assets/svg/drilling/tap.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.thread-single": {
+    "path": "assets/svg/lathe/thread-single.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.thread-multipass": {
+    "path": "assets/svg/lathe/thread-multipass.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.thread-simple": {
+    "path": "assets/svg/lathe/thread-simple.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.rough-od": {
+    "path": "assets/svg/lathe/rough-od.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.rough-face": {
+    "path": "assets/svg/lathe/rough-face.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.finish": {
+    "path": "assets/svg/lathe/finish.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.groove": {
+    "path": "assets/svg/lathe/groove.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.face-peck": {
+    "path": "assets/svg/lathe/face-peck.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.css": {
+    "path": "assets/svg/lathe/css.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.rpm": {
+    "path": "assets/svg/lathe/rpm.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "lathe.feed-per-rev": {
+    "path": "assets/svg/lathe/feed-per-rev.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "millturn.polar": {
+    "path": "assets/svg/millturn/polar.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "millturn.polar-off": {
+    "path": "assets/svg/millturn/polar-off.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "fiveaxis.tcpc": {
+    "path": "assets/svg/fiveaxis/tcpc.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "fiveaxis.tilted-plane": {
+    "path": "assets/svg/fiveaxis/tilted-plane.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "fiveaxis.transform-off": {
+    "path": "assets/svg/fiveaxis/transform-off.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "fiveaxis.inverse-time": {
+    "path": "assets/svg/fiveaxis/inverse-time.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "probing.contact": {
+    "path": "assets/svg/probing/contact.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "probing.macro": {
+    "path": "assets/svg/probing/macro.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "state.work-offset": {
+    "path": "assets/svg/state/work-offset.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "state.tool-change": {
+    "path": "assets/svg/state/tool-change.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "state.spindle-cw": {
+    "path": "assets/svg/state/spindle-cw.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  },
+  "state.coolant": {
+    "path": "assets/svg/state/coolant.svg",
+    "viewBox": "0 0 240 140",
+    "recommendedWidths": [
+      160,
+      200,
+      240,
+      320
+    ],
+    "format": "svg",
+    "theme": "dark-card",
+    "scalable": true
+  }
+}

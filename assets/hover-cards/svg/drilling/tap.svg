@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 140" width="240" height="140" role="img" aria-label="Tapping cycle">
+  <title>Tapping cycle</title>
+  <defs>
+    <style>
+      .bg{fill:#0f172a} .panel{fill:#111827;stroke:#334155;stroke-width:1.5}
+      .metal{fill:#94a3b8} .metal2{fill:#cbd5e1} .line{fill:none;stroke:#22d3ee;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+      .accent{fill:none;stroke:#14b8a6;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+      .warn{fill:none;stroke:#f59e0b;stroke-width:2.5;stroke-dasharray:5 4}
+      .dim{fill:none;stroke:#60a5fa;stroke-width:2} .thin{fill:none;stroke:#64748b;stroke-width:1.5}
+      .txt{font: 11px ui-sans-serif,system-ui;fill:#e5e7eb} .small{font:9px ui-sans-serif,system-ui;fill:#cbd5e1}
+      .chip{fill:#1d4ed8} .green{stroke:#22c55e} .red{stroke:#ef4444}
+    </style>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#22d3ee"/></marker>
+    <marker id="b" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#14b8a6"/></marker>
+  </defs>
+  <rect class="bg" width="240" height="140" rx="12"/>
+  
+<rect class="metal2" x="52" y="104" width="136" height="14"/><rect class="metal" x="111" y="24" width="18" height="34"/>
+<path class="accent" d="M111 60 C129 64 111 70 129 74 C111 78 129 84 111 88 C129 92 111 98 129 102"/>
+<path class="line" d="M120 50 L120 102" marker-end="url(#a)"/>
+<path class="accent" d="M92 40 C82 30 84 20 96 16" marker-end="url(#b)"/>
+<text class="txt" x="18" y="20">G84 • TAPPING</text>
+
+</svg>

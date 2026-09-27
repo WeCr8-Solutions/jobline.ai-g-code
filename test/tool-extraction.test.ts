@@ -16,6 +16,7 @@ import * as assert from 'node:assert/strict';
 import { Tokenizer } from '../src/parser/tokenizer';
 import { BlockParser } from '../src/parser/blockParser';
 import { ProgramModelBuilder } from '../src/parser/programModel';
+import { buildVisualizerHarnessData } from '../src/providers/visualizer/fixtureHarness';
 
 const tokenizer = new Tokenizer();
 const blockParser = new BlockParser();
@@ -107,5 +108,49 @@ describe('Tool extraction — length of cut and stick-out', () => {
     assert.equal(tool.diameter, 0.5);
     assert.equal(tool.lengthOfCut, 1.5);
     assert.equal(tool.lengthOutOfHolder, 3.0);
+  });
+});
+
+describe('Visualizer tool families', () => {
+  it('keeps common mill and lathe geometries distinct', () => {
+    const descriptions = [
+      '1/2 FLAT END MILL',
+      '3/8 BALL END MILL',
+      '1/2 BULL NOSE END MILL',
+      '.201 DIA DRILL',
+      '1/4 SPOT DRILL',
+      '1/4-20 TAP',
+      '3/8 REAMER',
+      '1/2 CHAMFER MILL',
+      '2.0 FACE MILL',
+      '1.0 SLITTING SAW',
+      'CNMG120408 ROUGH OD',
+    ];
+    const expected = [
+      'End Mill', 'Ball End Mill', 'Bull Nose End Mill', 'Drill', 'Spot Drill',
+      'Tap', 'Reamer', 'Chamfer Mill', 'Face Mill', 'Slitting Saw', 'Lathe Insert',
+    ];
+    const lines: string[] = ['%', 'O9001'];
+    descriptions.forEach((description, index) => {
+      const toolNumber = index + 1;
+      lines.push(`(T${toolNumber} - ${description})`, `T${toolNumber} M06`);
+    });
+    lines.push('M30', '%');
+
+    const tools = buildVisualizerHarnessData(lines.join('\n')).tools;
+    assert.deepEqual(tools.map(tool => tool.type), expected);
+    const insert = tools.at(-1)!;
+    assert.equal(insert.insertCode, 'CNMG120408');
+    assert.ok(Math.abs(insert.diameter - 0.5) < 1e-9, 'metric ISO insert is normalized into the G20 program unit');
+    assert.ok(Math.abs(insert.insertThickness! - 4.76 / 25.4) < 1e-9);
+    assert.ok(Math.abs(insert.cornerRadius! - 0.8 / 25.4) < 1e-9);
+    assert.ok(insert.insertOutline && insert.insertOutline.length === 4);
+  });
+
+  it('keeps metric insert dimensions in millimetres for a G21 program', () => {
+    const data = buildVisualizerHarnessData('%\nO9002\nG21\n(T1 - CNMG120408 ROUGH OD)\nT0101\nM30\n%');
+    assert.equal(data.tools[0].diameter, 12.7);
+    assert.equal(data.tools[0].insertThickness, 4.76);
+    assert.equal(data.tools[0].cornerRadius, 0.8);
   });
 });

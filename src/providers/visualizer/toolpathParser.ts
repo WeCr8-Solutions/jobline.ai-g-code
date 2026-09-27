@@ -8,6 +8,7 @@ export interface ToolpathPoint {
   isRapid?: boolean;
   mStop?: 'M0' | 'M1' | 'M2' | 'M30';
   lineNumber?: number;
+  toolNumber?: number;
 }
 
 function executableText(line: string): string {
@@ -46,7 +47,8 @@ function tessellateArc(
   rVal: number | null,
   cw: boolean,
   plane: 17 | 18 | 19,
-  lineNumber: number
+  lineNumber: number,
+  toolNumber?: number,
 ): ToolpathPoint[] {
   let a0: number;
   let b0: number;
@@ -89,7 +91,7 @@ function tessellateArc(
     cA = a0 + (iA ?? 0);
     cB = b0 + (iB ?? 0);
   } else {
-    return [{ x: x1, y: y1, z: z1, isRapid: false, lineNumber }];
+    return [{ x: x1, y: y1, z: z1, isRapid: false, lineNumber, toolNumber }];
   }
 
   const radius = Math.sqrt((a0 - cA) ** 2 + (b0 - cB) ** 2);
@@ -132,7 +134,7 @@ function tessellateArc(
     } else {
       px = pH; py = pA; pz = pB;
     }
-    pts.push({ x: px, y: py, z: pz, isRapid: false, lineNumber });
+    pts.push({ x: px, y: py, z: pz, isRapid: false, lineNumber, toolNumber });
   }
 
   return pts;
@@ -186,12 +188,18 @@ export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units:
   let cycleR: number | null = null;
   let cycleInitialZ = 0;
   let returnToInitial = true;
+  let activeTool: number | undefined;
   const path: ToolpathPoint[] = [{ x, y, z }];
 
   for (let lineNum = 0; lineNum < lines.length; lineNum++) {
     const upper = executableText(lines[lineNum]).toUpperCase();
 
     if (!upper.trim() || /^\s*%/.test(upper)) continue;
+    const toolMatch = upper.match(/\bT\s*(\d+)(?=[A-Z+\-\s]|$)/);
+    if (toolMatch) {
+      const rawTool = Number.parseInt(toolMatch[1], 10);
+      activeTool = turning && rawTool >= 100 ? Math.floor(rawTool / 100) : rawTool;
+    }
     if (hasCode(upper, 'G', '20')) units = 'in';
     if (hasCode(upper, 'G', '21')) units = 'mm';
     if (hasCode(upper, 'G', '17')) plane = 17;
@@ -246,10 +254,10 @@ export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units:
     if (activeCycle !== null && (xVal !== null || yVal !== null) && cycleZ !== null && cycleR !== null) {
       const holeX = xVal !== null ? (absolute ? xVal : x + xVal) : x;
       const holeY = yVal !== null ? (absolute ? yVal : y + yVal) : y;
-      path.push({ x: holeX, y: holeY, z: cycleR, ...rotary, isRapid: true, lineNumber: lineNum });
-      path.push({ x: holeX, y: holeY, z: cycleZ, ...rotary, isRapid: false, lineNumber: lineNum });
+      path.push({ x: holeX, y: holeY, z: cycleR, ...rotary, isRapid: true, lineNumber: lineNum, toolNumber: activeTool });
+      path.push({ x: holeX, y: holeY, z: cycleZ, ...rotary, isRapid: false, lineNumber: lineNum, toolNumber: activeTool });
       const retractZ = returnToInitial ? Math.max(cycleInitialZ, cycleR) : cycleR;
-      path.push({ x: holeX, y: holeY, z: retractZ, ...rotary, isRapid: true, lineNumber: lineNum });
+      path.push({ x: holeX, y: holeY, z: retractZ, ...rotary, isRapid: true, lineNumber: lineNum, toolNumber: activeTool });
       x = holeX; y = holeY; z = retractZ; a = nextA; b = nextB; c = nextC;
       continue;
     }
@@ -261,9 +269,9 @@ export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units:
     const z1 = zVal !== null ? (absolute ? zVal : z + zVal) : z;
 
     if (motionMode === 2 || motionMode === 3) {
-      path.push(...tessellateArc(x, y, z, x1, y1, z1, iVal, jVal, kVal, rVal, motionMode === 2, plane, lineNum));
+      path.push(...tessellateArc(x, y, z, x1, y1, z1, iVal, jVal, kVal, rVal, motionMode === 2, plane, lineNum, activeTool));
     } else {
-      path.push({ x: x1, y: y1, z: z1, ...rotary, isRapid: motionMode === 0, mStop, lineNumber: lineNum });
+      path.push({ x: x1, y: y1, z: z1, ...rotary, isRapid: motionMode === 0, mStop, lineNumber: lineNum, toolNumber: activeTool });
     }
 
     x = x1;

@@ -9,8 +9,8 @@ O00300 (JOBLINE SAMPLE - LATHE TURNING)
 
 (=========================================================)
 (  TOOLS USED                                             )
-(  T01 - FACE / ROUGH TURN OD    TNMG INSERT             )
-(  T02 - FINISH TURN OD          VNMG INSERT             )
+(  T01 - FACE / ROUGH TURN OD    CNMG432 INSERT         )
+(  T02 - FINISH TURN OD          VNMG331 INSERT         )
 (  T03 - 60-DEG THREADING TOOL   60 DEG INSERT           )
 (  T04 - GROOVING TOOL           0.125 WIDE              )
 (  T05 - CENTER DRILL / DRILL    NO.3 CENTER DRILL        )
@@ -23,7 +23,7 @@ N10 G18 G20 G40 G80 G99
 (=========================================================)
 (  OPERATION 1: FACE AND ROUGH TURN OD                   )
 (=========================================================)
-N20 T0101                         (ROUGH TURN INSERT, OFFSET 01)
+N20 T0101                         (CNMG432 ROUGH INSERT, OFFSET 01)
 N30 G96 S350 M03                  (CSS - 350 SFM)
 N40 G50 S3000                     (CLAMP MAX RPM)
 N50 G00 X2.6 Z0.05               (RAPID TO FACE START)
@@ -60,7 +60,7 @@ N250 M05
 (=========================================================)
 (  OPERATION 2: FINISH TURN OD                           )
 (=========================================================)
-N260 T0202                        (FINISH TURN INSERT, OFFSET 02)
+N260 T0202                        (VNMG331 FINISH INSERT, OFFSET 02)
 N270 G96 S500 M03                 (CSS - 500 SFM)
 N280 G50 S4000
 N290 G00 X2.6 Z0.05

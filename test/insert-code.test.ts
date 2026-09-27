@@ -52,8 +52,14 @@ describe('Insert designations — size', () => {
   it('reads metric sizing, with the corner radius in tenths of a millimetre', () => {
     const c = parseInsertCode('CNMG120408')!;
     assert.equal(c.units, 'mm');
-    assert.equal(c.icSize, 12, 'IC 12 mm');
+    assert.equal(c.icSize, 12.7, 'ISO size 12 is a 12.7 mm IC');
+    assert.equal(c.thickness, 4.76, 'ISO thickness 04 is 4.76 mm');
     assert.equal(c.cornerRadius, 0.8, 'nose 0.8 mm');
+
+    const larger = parseInsertCode('CNMG160612')!;
+    assert.equal(larger.icSize, 15.875, 'ISO size 16 is a 15.875 mm IC');
+    assert.equal(larger.thickness, 6.35, 'ISO thickness 06 is 6.35 mm');
+    assert.equal(larger.cornerRadius, 1.2, 'nose 1.2 mm');
   });
 
   it('handles the decimal inch form', () => {
@@ -119,6 +125,16 @@ describe('Insert outlines', () => {
       return Math.max(...pts.map(p => p[0])) - Math.min(...pts.map(p => p[0]));
     };
     assert.ok(widthOf('V') < widthOf('C'), 'a V insert is the pointed one');
+  });
+
+  it('draws W as an 80 degree trigon rather than a regular hexagon', () => {
+    const pts = insertOutline('W', 12.7);
+    assert.equal(pts.length, 6);
+    const [before, corner, after] = [pts[5], pts[0], pts[1]];
+    const a = [before[0] - corner[0], before[1] - corner[1]];
+    const b = [after[0] - corner[0], after[1] - corner[1]];
+    const angle = Math.acos((a[0] * b[0] + a[1] * b[1]) / (Math.hypot(...a) * Math.hypot(...b))) * 180 / Math.PI;
+    assert.ok(angle > 75 && angle < 85, `W cutting corner should be about 80 degrees, got ${angle}`);
   });
 
   it('covers every shape letter it advertises', () => {

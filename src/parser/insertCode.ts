@@ -75,6 +75,34 @@ const CLEARANCE: Record<string, number> = {
 
 const TOLERANCE_CODES = new Set(['A', 'C', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'U']);
 
+// ISO metric size fields are catalogue codes, not literal millimetres. Keep
+// the common preferred sizes explicit so a CNMG 120408 is not misread as a
+// 12.00 x 1.59 mm insert. Values are nominal catalogue dimensions in mm.
+const METRIC_IC_MM: Record<string, number> = {
+  '03': 3.97,
+  '04': 4.76,
+  '05': 5.56,
+  '06': 6.35,
+  '08': 7.94,
+  '09': 9.525,
+  '11': 11.0,
+  '12': 12.7,
+  '16': 15.875,
+  '19': 19.05,
+  '25': 25.4,
+};
+
+const METRIC_THICKNESS_MM: Record<string, number> = {
+  '01': 1.59,
+  '02': 2.38,
+  '03': 3.18,
+  '04': 4.76,
+  '05': 5.56,
+  '06': 6.35,
+  '07': 7.94,
+  '09': 9.525,
+};
+
 /**
  * Position 4 is deliberately NOT checked against a closed list.
  *
@@ -117,10 +145,13 @@ export function parseInsertCode(raw: string): ParsedInsertCode | null {
 
   const digits = digitsRaw.replace(/\./g, '');
   if (digits.length >= 6) {
-    // Metric: IC in mm, thickness in mm, corner radius in tenths of a mm.
+    // Metric: IC and thickness use ISO catalogue size codes; corner radius is
+    // expressed directly in tenths of a millimetre.
     parsed.units = 'mm';
-    parsed.icSize = Number.parseInt(digits.slice(0, 2), 10);
-    parsed.thickness = Number.parseInt(digits.slice(2, 4), 10) * 1.5875 / 4;
+    const icCode = digits.slice(0, 2);
+    const thicknessCode = digits.slice(2, 4);
+    parsed.icSize = METRIC_IC_MM[icCode] ?? Number.parseInt(icCode, 10);
+    parsed.thickness = METRIC_THICKNESS_MM[thicknessCode] ?? Number.parseInt(thicknessCode, 10);
     parsed.cornerRadius = Number.parseInt(digits.slice(4, 6), 10) / 10;
   } else if (digits.length >= 2) {
     // Inch: eighths, sixteenths, sixty-fourths.
@@ -177,6 +208,21 @@ export function insertOutline(shapeCode: string, icSize: number, _cornerRadius =
     for (let i = 0; i < 48; i++) {
       const a = (i / 48) * Math.PI * 2;
       pts.push([Math.cos(a) * r, Math.sin(a) * r]);
+    }
+    return pts;
+  }
+
+  // A W trigon has three 80-degree cutting corners joined by relieved sides.
+  // A regular hexagon would make every corner 120 degrees, which is visibly
+  // and functionally the wrong insert. Alternating outer and inner radii at
+  // 60-degree intervals approximates the standard trigon profile while
+  // preserving all six usable vertices.
+  if (shape.code === 'W') {
+    const pts: Array<[number, number]> = [];
+    for (let i = 0; i < 6; i++) {
+      const radius = i % 2 === 0 ? r / Math.cos(Math.PI / 6) : r * 0.75;
+      const angle = Math.PI / 2 + i * Math.PI / 3;
+      pts.push([Math.cos(angle) * radius, Math.sin(angle) * radius]);
     }
     return pts;
   }

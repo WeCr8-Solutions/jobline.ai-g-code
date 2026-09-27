@@ -53,14 +53,21 @@ const VISUALIZER_SETTINGS_STYLES = `
     --fs: var(--vscode-font-size, 13px);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: var(--fs); }
-  .sec-hdr {
+  html, body { width: 100%; min-width: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--font); font-size: var(--fs);
+    overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable;
+  }
+  .settings-group { min-width: 0; border: 0; }
+  .settings-group > summary {
     background: var(--sec-bg); color: var(--sec-fg);
     font-size: 0.78em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
-    padding: 5px 8px; border-top: 1px solid var(--border); user-select: none;
+    padding: 6px 8px; border-top: 1px solid var(--border); user-select: none;
+    cursor: pointer; position: sticky; top: 0; z-index: 1;
   }
-  .sec { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-  .row { display: flex; gap: 6px; align-items: center; }
+  .settings-group > summary:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+  .sec { padding: 8px; display: flex; min-width: 0; flex-direction: column; gap: 6px; }
+  .row { display: flex; min-width: 0; gap: 6px; align-items: center; }
   .row label { font-size: 0.82em; min-width: 5.5em; color: var(--hint-fg); }
   .caps { font-size: 0.75em; color: var(--hint-fg); margin-top: 4px; }
   .caps label,
@@ -70,11 +77,11 @@ const VISUALIZER_SETTINGS_STYLES = `
     flex: 1; background: var(--input-bg); color: var(--input-fg);
     border: 1px solid var(--input-border); border-radius: 3px; padding: 3px 5px; font-size: var(--fs);
   }
-  .origin-custom { display: none; }
+  .origin-custom { display: block; }
   input[type=number] {
     background: var(--input-bg); color: var(--input-fg);
     border: 1px solid var(--input-border); border-radius: 3px;
-    padding: 3px 5px; flex: 1;
+    padding: 3px 5px; flex: 1; min-width: 0;
     font-size: var(--fs); font-family: var(--font);
   }
   input[type=color] {
@@ -95,6 +102,11 @@ const VISUALIZER_SETTINGS_STYLES = `
   }
   .unit-row { display: flex; gap: 4px; }
   .unit-row button { flex: 1; text-align: center; }
+  @media (max-width: 210px) {
+    .row { align-items: stretch; flex-direction: column; }
+    .row label { min-width: 0; }
+    .unit-row { flex-direction: column; }
+  }
 `;
 
 const VISUALIZER_SETTINGS_SCRIPT = `
@@ -131,26 +143,32 @@ const VISUALIZER_SETTINGS_SCRIPT = `
   }
   function onOriginPresetChange() {
     const preset = document.getElementById('originPreset').value;
-    document.getElementById('originCustom').style.display = preset === 'custom' ? 'block' : 'none';
-  }
-  function applyOrigin() {
-    const preset = document.getElementById('originPreset').value;
     const w = parseFloat(document.getElementById('stockW').value) || 4;
     const d = parseFloat(document.getElementById('stockD').value) || 4;
     const h = parseFloat(document.getElementById('stockH').value) || 2;
-    let xOff = 0, yOff = 0, zOff = 0;
     if (preset === 'cornerFL') {
-      xOff = w / 2; yOff = d / 2; zOff = 0;
+      document.getElementById('originX').value = String(w / 2);
+      document.getElementById('originY').value = String(d / 2);
+      document.getElementById('originZ').value = '0';
     } else if (preset === 'centerTop') {
-      xOff = 0; yOff = 0; zOff = 0;
+      document.getElementById('originX').value = '0';
+      document.getElementById('originY').value = '0';
+      document.getElementById('originZ').value = '0';
     } else if (preset === 'centerBottom') {
-      xOff = 0; yOff = 0; zOff = -h;
-    } else {
-      xOff = parseFloat(document.getElementById('originX').value) || 0;
-      yOff = parseFloat(document.getElementById('originY').value) || 0;
-      zOff = parseFloat(document.getElementById('originZ').value) || 0;
+      document.getElementById('originX').value = '0';
+      document.getElementById('originY').value = '0';
+      document.getElementById('originZ').value = String(-h);
     }
-    vs.postMessage({ type: 'stockOrigin', preset, xOff, yOff, zOff });
+  }
+  function applyOrigin() {
+    const preset = document.getElementById('originPreset').value;
+    const xOff = parseFloat(document.getElementById('originX').value) || 0;
+    const yOff = parseFloat(document.getElementById('originY').value) || 0;
+    const zOff = parseFloat(document.getElementById('originZ').value) || 0;
+    const rotX = parseFloat(document.getElementById('originRotX').value) || 0;
+    const rotY = parseFloat(document.getElementById('originRotY').value) || 0;
+    const rotZ = parseFloat(document.getElementById('originRotZ').value) || 0;
+    vs.postMessage({ type: 'stockOrigin', preset, xOff, yOff, zOff, rotX, rotY, rotZ });
   }
   function toggleLayer(layer) {
     const checked = document.getElementById('cb' + layer.charAt(0).toUpperCase() + layer.slice(1)).checked;
@@ -159,14 +177,14 @@ const VISUALIZER_SETTINGS_SCRIPT = `
 `;
 
 const VISUALIZER_LAUNCH_SECTION = `
-<div class="sec-hdr">Launch</div>
+<details class="settings-group" open><summary>Launch</summary>
 <div class="sec">
   <button onclick="launchToolPreview()">🔧 Tools Preview</button>
   <button onclick="launchSimulation()">▶ Open Simulation</button>
-</div>`;
+</div></details>`;
 
 const VISUALIZER_MACHINE_SECTION = `
-<div class="sec-hdr">Machine</div>
+<details class="settings-group"><summary>Machine</summary>
 <div class="sec">
   <select id="machineType" onchange="changeMachine()">
     <option>3-Axis Vertical Mill</option>
@@ -184,16 +202,16 @@ const VISUALIZER_MACHINE_SECTION = `
     <label><input type="checkbox" id="cap4thAxis" onchange="updateCaps()"> 4th Axis</label>
     <label><input type="checkbox" id="cap5thAxis" onchange="updateCaps()"> 5th Axis</label>
   </div>
-</div>`;
+</div></details>`;
 
 const VISUALIZER_OPEN_SECTION = `
-<div class="sec-hdr">Visualizer</div>
+<details class="settings-group" open><summary>Visualizer</summary>
 <div class="sec">
   <button onclick="openViz()">👁️ Open 3D Visualizer</button>
-</div>`;
+</div></details>`;
 
 const VISUALIZER_STOCK_SECTION = `
-<div class="sec-hdr">Stock Dimensions</div>
+<details class="settings-group" open><summary>Stock Dimensions</summary>
 <div class="sec">
   <div class="unit-row">
     <button class="sec active" id="unitIn" onclick="setUnit('in')">Inches (in)</button>
@@ -207,10 +225,10 @@ const VISUALIZER_STOCK_SECTION = `
     <input type="color" id="stockColor" value="#4488ff">
   </div>
   <button onclick="applyStock()">Apply to Visualizer</button>
-</div>`;
+</div></details>`;
 
 const VISUALIZER_ORIGIN_SECTION = `
-<div class="sec-hdr">Stock Origin (WCS Zero)</div>
+<details class="settings-group" open><summary>Stock Origin (WCS Zero)</summary>
 <div class="sec">
   <div class="row">
     <label>Preset</label>
@@ -222,15 +240,18 @@ const VISUALIZER_ORIGIN_SECTION = `
     </select>
   </div>
   <div id="originCustom" class="origin-custom">
-    <div class="row"><label>X offset</label><input type="number" id="originX" value="0" step="0.001"></div>
-    <div class="row"><label>Y offset</label><input type="number" id="originY" value="0" step="0.001"></div>
-    <div class="row"><label>Z offset</label><input type="number" id="originZ" value="0" step="0.001"></div>
+    <div class="row"><label>X home</label><input type="number" id="originX" value="2" step="0.001"></div>
+    <div class="row"><label>Y home</label><input type="number" id="originY" value="2" step="0.001"></div>
+    <div class="row"><label>Z home</label><input type="number" id="originZ" value="0" step="0.001"></div>
+    <div class="row"><label>Rotate X</label><input type="number" id="originRotX" value="0" step="1"></div>
+    <div class="row"><label>Rotate Y</label><input type="number" id="originRotY" value="0" step="1"></div>
+    <div class="row"><label>Rotate Z</label><input type="number" id="originRotZ" value="0" step="1"></div>
   </div>
   <button class="origin-apply" onclick="applyOrigin()">Apply Origin</button>
-</div>`;
+</div></details>`;
 
 const VISUALIZER_LAYER_SECTION = `
-<div class="sec-hdr">Layer Filters</div>
+<details class="settings-group"><summary>Layer Filters</summary>
 <div class="sec">
   <label class="layer-toggle"><input type="checkbox" id="cbTool" checked onchange="toggleLayer('tool')"> Tool</label>
   <label class="layer-toggle"><input type="checkbox" id="cbToolHolder" checked onchange="toggleLayer('toolHolder')"> Tool Holder</label>
@@ -238,7 +259,7 @@ const VISUALIZER_LAYER_SECTION = `
   <label class="layer-toggle"><input type="checkbox" id="cbPath" checked onchange="toggleLayer('path')"> Toolpath</label>
   <label class="layer-toggle"><input type="checkbox" id="cbSweptTube" checked onchange="toggleLayer('sweptTube')"> Swept Tube</label>
   <label class="layer-toggle"><input type="checkbox" id="cbOrigin" checked onchange="toggleLayer('origin')"> Origin Marker</label>
-</div>`;
+</div></details>`;
 
 function getVisualizerSettingsHtml(): string {
   return [

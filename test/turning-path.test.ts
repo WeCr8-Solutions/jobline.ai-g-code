@@ -48,6 +48,12 @@ function xs(gcode: string): number[] {
 }
 
 describe('Turning programs are read as turning', () => {
+  it('carries decoded turret tools through each path segment', () => {
+    const program = TURNING.replace('G01 X3.0', 'T0202\nG01 X3.0');
+    const path = parseGCodeToPath(program).path;
+    assert.ok(path.some(point => point.toolNumber === 1), 'T0101 should resolve to station 1');
+    assert.ok(path.some(point => point.toolNumber === 2), 'T0202 should resolve to station 2');
+  });
   it('halves X, because a lathe programs diameter', () => {
     const values = xs(TURNING);
     assert.ok(values.includes(1.0), `X2.0 should plot at radius 1.0 (got: ${[...new Set(values)].join(', ')})`);

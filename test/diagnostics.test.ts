@@ -34,6 +34,12 @@ function diagnose(filename: string): EngineDiagnostic[] {
   return runDiagnosticEngine(blocks, model.stateAtBlock, DEFAULT_CONFIG);
 }
 
+function diagnoseText(text: string): EngineDiagnostic[] {
+  const blocks = blockParser.parseDocument(tokenizer.tokenizeDocument(text));
+  const model = modelBuilder.build(blocks, 'fanuc');
+  return runDiagnosticEngine(blocks, model.stateAtBlock, DEFAULT_CONFIG);
+}
+
 function errorsOnly(diags: EngineDiagnostic[]): EngineDiagnostic[] {
   return diags.filter(d => d.severity === 'error');
 }
@@ -217,6 +223,32 @@ describe('Diagnostics: arc geometry — center-offset radius mismatch', () => {
 });
 
 // ── Fixture files against known production programs ──────────────────────────
+
+describe('Diagnostics: plane-aware G18/G19 arc geometry', () => {
+  it('accepts Justin issue #3 Fusion program without false radius errors', () => {
+    const radiusErrors = errorsOnly(diagnose('issue-3-fusion-g18.nc'))
+      .filter(diag => diag.message.includes('radius error'));
+    assert.strictEqual(radiusErrors.length, 0,
+      `Expected valid G18 arcs to pass, got:\n${JSON.stringify(radiusErrors, null, 2)}`);
+  });
+
+  it('uses a G18 declared on the same block as the arc', () => {
+    const diags = errorsOnly(diagnoseText('G90 G17\nG0 X0 Y0 Z0\nG18 G2 X1 Z1 I1 K0'));
+    assert.strictEqual(diags.length, 0, `Valid same-block G18 arc failed: ${JSON.stringify(diags)}`);
+  });
+
+  it('accepts a valid G19 arc', () => {
+    const diags = errorsOnly(diagnoseText('G90 G19\nG0 X0 Y0 Z0\nG3 Y1 Z1 J1 K0'));
+    assert.strictEqual(diags.length, 0, `Valid G19 arc failed: ${JSON.stringify(diags)}`);
+  });
+
+  it('still rejects malformed G18 and G19 arcs', () => {
+    const g18 = errorsOnly(diagnoseText('G90 G18\nG0 X0 Y0 Z0\nG2 X1 Z2 I1 K0'));
+    const g19 = errorsOnly(diagnoseText('G90 G19\nG0 X0 Y0 Z0\nG3 Y1 Z2 J1 K0'));
+    assert.ok(hasMsg(g18, 'radius error'), 'Malformed G18 arc was not detected');
+    assert.ok(hasMsg(g19, 'radius error'), 'Malformed G19 arc was not detected');
+  });
+});
 
 describe('Diagnostics: production fixture regression (existing fixtures)', () => {
   it('fanuc/drill-pattern.nc → 0 errors (well-formed program)', () => {

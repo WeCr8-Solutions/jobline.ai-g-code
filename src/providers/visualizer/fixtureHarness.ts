@@ -2,8 +2,12 @@ import { BlockParser } from '../../parser/blockParser';
 import { ProgramModelBuilder } from '../../parser/programModel';
 import type { ProgramModel, ToolUsage } from '../../parser/types';
 import { Tokenizer } from '../../parser/tokenizer';
+import { insertOutline, parseInsertCode } from '../../parser/insertCode';
 
-export type VisualizerToolType = 'End Mill' | 'Drill' | 'Tap' | 'Face Mill' | 'Boring Bar' | 'Lathe Insert' | 'Custom';
+export type VisualizerToolType =
+  | 'End Mill' | 'Ball End Mill' | 'Bull Nose End Mill'
+  | 'Drill' | 'Spot Drill' | 'Tap' | 'Reamer' | 'Chamfer Mill'
+  | 'Face Mill' | 'Boring Bar' | 'Slitting Saw' | 'Lathe Insert' | 'Custom';
 export type VisualizerHolderType = 'CAT40' | 'CAT50' | 'BT40' | 'BT50' | 'HSK-A63' | 'R8' | 'None';
 
 export interface VisualizerHarnessManifest {
@@ -29,6 +33,10 @@ export interface VisualizerToolDefinition {
   description: string;
   color: string;
   unit: 'in' | 'mm';
+  insertCode?: string;
+  insertOutline?: Array<[number, number]>;
+  insertThickness?: number;
+  cornerRadius?: number;
 }
 
 export interface VisualizerSetupSummary {
@@ -107,7 +115,7 @@ function parseDiameter(description: string): number | undefined {
   const fraction = parseFraction(description);
   if (fraction !== null) return fraction;
 
-  const decimalDiameter = description.match(/(?:^|[\s(])(\d+(?:\.\d+)?)\s*(?:BALL|BULL|FLAT|FACE|DRILL|TAP|ENDMILL|END MILL|SPOTDRILL|SLOTTING)/i);
+  const decimalDiameter = description.match(/(?:^|[\s(])(\d+(?:\.\d+)?)\s*(?:BALL|BULL|FLAT|FACE|DRILL|TAP|REAM(?:ER)?|CHAMFER|ENDMILL|END MILL|SPOT\s*DRILL|SPOTDRILL|SLOTTING|SAW)/i);
   if (decimalDiameter) {
     const value = Number.parseFloat(decimalDiameter[1]);
     if (Number.isFinite(value) && value > 0) return value;
@@ -136,14 +144,21 @@ function parseHolder(description: string, holder?: string): VisualizerHolderType
   }
 }
 
-function inferToolType(description: string): VisualizerToolType {
+function inferToolType(description: string, insertCode?: string): VisualizerToolType {
   const upper = description.toUpperCase();
+  if (insertCode) return 'Lathe Insert';
   if (upper.includes('TAP')) return 'Tap';
-  if (upper.includes('DRILL') || upper.includes('SPOTDRILL')) return 'Drill';
-  if (upper.includes('FACE MILL')) return 'Face Mill';
+  if (/SPOT\s*DRILL|CENTER\s*DRILL/.test(upper)) return 'Spot Drill';
+  if (upper.includes('DRILL')) return 'Drill';
+  if (upper.includes('REAM')) return 'Reamer';
+  if (/CHAMFER|COUNTERSINK/.test(upper)) return 'Chamfer Mill';
+  if (/FACE\s*MILL|SHELL\s*MILL/.test(upper)) return 'Face Mill';
   if (upper.includes('BORING')) return 'Boring Bar';
-  if (upper.includes('LATHE')) return 'Lathe Insert';
-  if (upper.includes('SAW') || upper.includes('SLOTTING')) return 'Custom';
+  if (upper.includes('LATHE') || upper.includes('TURNING INSERT')) return 'Lathe Insert';
+  if (upper.includes('BALL')) return 'Ball End Mill';
+  if (/BULL|CORNER\s*RADIUS/.test(upper)) return 'Bull Nose End Mill';
+  if (upper.includes('SAW') || upper.includes('SLOTTING')) return 'Slitting Saw';
+  if (!/END\s*MILL|ENDMILL|FLAT/.test(upper) && /^T\d+$/i.test(description.trim())) return 'Custom';
   return 'End Mill';
 }
 
@@ -154,7 +169,8 @@ function inferFlutes(description: string, type: VisualizerToolType): number {
     if (Number.isFinite(value) && value > 0) return value;
   }
 
-  if (type === 'Drill' || type === 'Tap') return 2;
+  if (type === 'Drill' || type === 'Spot Drill' || type === 'Tap') return 2;
+  if (type === 'Reamer') return 6;
   if (type === 'Face Mill') return 5;
   return 4;
 }
@@ -162,10 +178,12 @@ function inferFlutes(description: string, type: VisualizerToolType): number {
 function toolColor(type: VisualizerToolType): string {
   switch (type) {
     case 'Drill':
+    case 'Spot Drill':
       return '#4da3ff';
     case 'Tap':
       return '#40c463';
     case 'Face Mill':
+    case 'Slitting Saw':
       return '#ff8c42';
     case 'Boring Bar':
       return '#c792ea';
@@ -180,8 +198,14 @@ function toolColor(type: VisualizerToolType): string {
 
 function convertTool(tool: ToolUsage, unit: 'in' | 'mm', headerDescription?: string): VisualizerToolDefinition {
   const description = headerDescription ?? tool.description ?? `T${tool.toolNumber}`;
-  const type = inferToolType(description);
-  const diameter = tool.diameter ?? parseDiameter(description) ?? 0.25;
+  const type = inferToolType(description, tool.insertCode);
+  const parsedInsert = tool.insertCode ? parseInsertCode(tool.insertCode) : null;
+  const insertScale = parsedInsert?.units === unit
+    ? 1
+    : parsedInsert?.units === 'mm' ? 1 / 25.4
+      : parsedInsert?.units === 'in' ? 25.4 : 1;
+  const insertIc = parsedInsert?.icSize !== undefined ? parsedInsert.icSize * insertScale : undefined;
+  const diameter = insertIc ?? tool.diameter ?? parseDiameter(description) ?? (unit === 'in' ? 0.25 : 6.35);
   const stickOut = tool.lengthOutOfHolder ?? Math.max(diameter * 4, unit === 'in' ? 1 : 25);
   const lengthOfCut = tool.lengthOfCut ?? Math.max(diameter * 1.5, stickOut * 0.4);
   const length = Math.max(stickOut + diameter * 2, lengthOfCut + stickOut);
@@ -197,6 +221,16 @@ function convertTool(tool: ToolUsage, unit: 'in' | 'mm', headerDescription?: str
     description,
     color: toolColor(type),
     unit,
+    insertCode: tool.insertCode,
+    insertOutline: parsedInsert?.icSize !== undefined
+      ? insertOutline(
+        parsedInsert.shape.code,
+        parsedInsert.icSize * insertScale,
+        (parsedInsert.cornerRadius ?? 0) * insertScale,
+      )
+      : undefined,
+    insertThickness: parsedInsert?.thickness !== undefined ? parsedInsert.thickness * insertScale : undefined,
+    cornerRadius: parsedInsert?.cornerRadius !== undefined ? parsedInsert.cornerRadius * insertScale : undefined,
   };
 }
 

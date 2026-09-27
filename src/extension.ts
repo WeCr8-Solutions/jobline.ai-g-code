@@ -10,7 +10,7 @@ import { ToolPreviewPanel } from './providers/toolPreviewPanel';
 
 import * as vscode from 'vscode';
 import { loadConfig } from './config';
-import { getHoverContent } from './providers/hoverProvider';
+import { getHoverMarkdown } from './providers/hoverProvider';
 import { registerSidebarTreeProviders, registerToolsCommands, getLastGCodeDoc } from './providers/sidebarTreeProviders';
 import { registerCommandsTree } from './providers/commandsTreeProvider';
 import { registerVisualizerSettings } from './providers/visualizerSettingsProvider';
@@ -25,6 +25,11 @@ import { buildVisualizerHarnessData } from './providers/visualizer/fixtureHarnes
 import { buildAutoSimulationMessages } from './providers/visualizer/simulationSetup';
 import type { ToolpathPoint } from './providers/visualizer/toolpathParser';
 import { reviewGCodeProgram } from './providers/visualizer/programReview';
+import { loadStlMesh } from './providers/visualizer/stlMeshLoader';
+import { parseSTEP } from './providers/visualizer/stepParser';
+import { parseParasolidText } from './providers/visualizer/parasolidTextParser';
+import { extractFusionPreview, parseFusionSetupArchive } from './providers/visualizer/fusionArchiveParser';
+import type { Bounds3D } from './providers/visualizer/gcodeGoalComparison';
 
 const LANGUAGE_ID = 'gcode';
 
@@ -54,9 +59,68 @@ export function activate(context: vscode.ExtensionContext): void {
           sourceVersion: -1,
         };
 
+        const playbackLineDecoration = vscode.window.createTextEditorDecorationType({
+          isWholeLine: true,
+          backgroundColor: new vscode.ThemeColor('editor.rangeHighlightBackground'),
+          borderColor: new vscode.ThemeColor('editorOverviewRuler.currentContentForeground'),
+          borderStyle: 'solid',
+          borderWidth: '0 0 0 2px',
+          overviewRulerColor: new vscode.ThemeColor('editorOverviewRuler.currentContentForeground'),
+          overviewRulerLane: vscode.OverviewRulerLane.Full,
+        });
+        context.subscriptions.push(playbackLineDecoration);
+        let revealingPlaybackSource = false;
+
+        function highlightPlaybackSourceLine(idx: number): void {
+          const doc = vscode.workspace.textDocuments.find(candidate => candidate.uri.toString() === playback.sourceUri);
+          if (!doc) return;
+          const point = playback.path[Math.max(0, Math.min(idx, playback.path.length - 1))];
+          const followingPoint = playback.path.slice(Math.max(0, idx)).find(candidate => candidate.lineNumber !== undefined);
+          const sourceLine = Math.max(0, Math.min(doc.lineCount - 1, point?.lineNumber ?? followingPoint?.lineNumber ?? 0));
+          const range = doc.lineAt(sourceLine).range;
+          const decorate = (editor: vscode.TextEditor) => {
+            for (const visibleEditor of vscode.window.visibleTextEditors) {
+              if (visibleEditor !== editor) visibleEditor.setDecorations(playbackLineDecoration, []);
+            }
+            editor.setDecorations(playbackLineDecoration, [range]);
+            editor.revealRange(range, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+          };
+          const visibleEditor = vscode.window.visibleTextEditors.find(editor => editor.document.uri.toString() === playback.sourceUri);
+          if (visibleEditor) {
+            decorate(visibleEditor);
+            return;
+          }
+          if (revealingPlaybackSource) return;
+          revealingPlaybackSource = true;
+          void vscode.window.showTextDocument(doc, {
+            viewColumn: vscode.ViewColumn.One,
+            preview: false,
+            preserveFocus: true,
+          }).then(editor => {
+            revealingPlaybackSource = false;
+            if (editor.document.uri.toString() === playback.sourceUri) decorate(editor);
+          }, () => {
+            revealingPlaybackSource = false;
+          });
+        }
+
         function updateVisualizerAt(idx: number) {
           if (!playback.path.length) return;
           sendToolpathUpdate(playback.path, playback.cutterSize, idx, playback.units);
+          highlightPlaybackSourceLine(idx);
+        }
+
+        function updateProgramList(): void {
+          const docs = vscode.workspace.textDocuments.filter(isGCodeFile);
+          ToolpathVisualizerPanel.queueMessage({
+            type: 'programList',
+            activeUri: playback.sourceUri || vscode.window.activeTextEditor?.document.uri.toString() || '',
+            programs: docs.map(document => ({
+              uri: document.uri.toString(),
+              name: document.uri.path.split(/[\\/]/).pop() || document.fileName,
+              path: document.fileName,
+            })),
+          });
         }
 
         function loadPathFromEditor(resetPosition = true) {
@@ -80,6 +144,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
         function loadSimulationSetupFromEditor(): boolean {
           const doc = getPreferredGCodeDoc();
+          return doc ? loadSimulationSetupFromDocument(doc) : false;
+        }
+
+        function loadSimulationSetupFromDocument(doc: vscode.TextDocument): boolean {
           if (!doc) return false;
           try {
             const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
@@ -98,6 +166,26 @@ export function activate(context: vscode.ExtensionContext): void {
           }
         }
 
+        function refreshVisualizerForDocument(doc: vscode.TextDocument, resetPosition = true): boolean {
+          if (!isGCodeFile(doc) || !ToolpathVisualizerPanel.currentPanel) return false;
+          try {
+            const sourceChanged = playback.sourceUri !== doc.uri.toString();
+            const result = parseGCodeToPath(doc.getText());
+            playback.path = result.path;
+            playback.units = result.units;
+            playback.sourceUri = doc.uri.toString();
+            playback.sourceVersion = doc.version;
+            if (resetPosition || sourceChanged) playback.idx = 0;
+            else playback.idx = Math.min(playback.idx, Math.max(0, playback.path.length - 1));
+            sendToolpathUpdate(playback.path, playback.cutterSize, playback.idx, playback.units);
+            loadSimulationSetupFromDocument(doc);
+            updateProgramList();
+            return true;
+          } catch {
+            return false;
+          }
+        }
+
         function stopPlayback() {
           playback.playing = false;
           if (playback.timer) clearTimeout(playback.timer);
@@ -106,7 +194,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
         // Play command
         const playCmd = vscode.commands.registerCommand('jobline.gcode.play', (speed?: number) => {
-          if (speed !== undefined) playback.speed = speed;
+          if (speed !== undefined) playback.speed = Math.max(0.25, Math.min(4, Number(speed) || 1));
           if (!ToolpathVisualizerPanel.currentPanel) {
             vscode.window.showWarningMessage('Open the visualizer first (click the 3D icon in the toolbar).');
             return;
@@ -123,9 +211,11 @@ export function activate(context: vscode.ExtensionContext): void {
               return;
             }
             updateVisualizerAt(playback.idx);
+            const point = playback.path[playback.idx];
             playback.idx++;
             if (playback.idx < playback.path.length) {
-              const stepMs = Math.max(50, 350 / playback.speed); // Speed-adjusted step time
+              const baseMs = point?.isRapid ? 500 : 350;
+              const stepMs = Math.max(50, baseMs / playback.speed);
               playback.timer = setTimeout(step, stepMs);
             } else {
               stopPlayback();
@@ -140,6 +230,16 @@ export function activate(context: vscode.ExtensionContext): void {
           stopPlayback();
         });
         context.subscriptions.push(pauseCmd);
+
+        // Stop is distinct from pause: it cancels playback and returns the
+        // viewer to the beginning so the next Play starts a fresh run.
+        const stopCmd = vscode.commands.registerCommand('jobline.gcode.stop', () => {
+          stopPlayback();
+          if (!playback.path.length) loadPathFromEditor();
+          playback.idx = 0;
+          updateVisualizerAt(playback.idx);
+        });
+        context.subscriptions.push(stopCmd);
 
         // Step Forward command
         const stepFwdCmd = vscode.commands.registerCommand('jobline.gcode.stepForward', () => {
@@ -181,6 +281,172 @@ export function activate(context: vscode.ExtensionContext): void {
         });
         context.subscriptions.push(jumpCmd);
 
+        const importTargetModelCmd = vscode.commands.registerCommand('jobline.gcode.importTargetModel', async (uriText?: string | vscode.Uri | vscode.Uri[] | { uri?: string | vscode.Uri; role?: string; targetId?: string }) => {
+          if (!ToolpathVisualizerPanel.currentPanel) {
+            ToolpathVisualizerPanel.show(context.extensionUri);
+          }
+          let uris: vscode.Uri[] = [];
+          const role = typeof uriText === 'object' && !(uriText instanceof vscode.Uri) && !Array.isArray(uriText)
+            ? uriText.role || 'target-part'
+            : 'target-part';
+          const targetId = typeof uriText === 'object' && !(uriText instanceof vscode.Uri) && !Array.isArray(uriText)
+            ? uriText.targetId || role
+            : role;
+          const suppliedUri = typeof uriText === 'object' && !(uriText instanceof vscode.Uri) && !Array.isArray(uriText)
+            ? uriText.uri
+            : uriText;
+          if (Array.isArray(suppliedUri)) {
+            uris = suppliedUri;
+          } else if (suppliedUri instanceof vscode.Uri) {
+            uris = [suppliedUri];
+          } else if (typeof suppliedUri === 'string' && suppliedUri.trim()) {
+            uris = [vscode.Uri.parse(suppliedUri)];
+          } else {
+            const picked = await vscode.window.showOpenDialog({
+              title: 'Import scene models for JobLine visualizer',
+              canSelectMany: true,
+              filters: {
+                'Scene model or Fusion setup': ['stl', 'stp', 'step', 'x_t', 'x_b', 'xmt_txt', 'xmt', 'f3d'],
+                'Fusion 360 setup': ['f3d'],
+                'STL': ['stl'],
+                'STEP': ['stp', 'step'],
+                'Parasolid text': ['x_t', 'xmt_txt', 'xmt'],
+                'All files': ['*'],
+              },
+            });
+            uris = picked || [];
+          }
+          if (!uris.length) return;
+          let loaded = 0;
+          for (const [index, uri] of uris.entries()) {
+            try {
+              const bytes = await vscode.workspace.fs.readFile(uri);
+              const ext = uri.fsPath.toLowerCase().split('.').pop() || '';
+              const supportedExtensions = new Set(['stl', 'stp', 'step', 'x_t', 'x_b', 'xmt_txt', 'xmt', 'f3d']);
+              if (!supportedExtensions.has(ext)) {
+                vscode.window.showErrorMessage(
+                  `JobLine: ${ext ? `.${ext}` : 'This file'} is not a supported scene model. Export STL, STEP, or Parasolid text from the CAD system first.`
+                );
+                continue;
+              }
+              const buffer = bytes.slice().buffer;
+              if (ext === 'f3d') {
+                const setup = parseFusionSetupArchive(bytes);
+                const preview = extractFusionPreview(bytes);
+                const cuttingPoints = playback.path.filter(point => !point.isRapid && Number.isFinite(point.x) && Number.isFinite(point.y));
+                // Fusion's default relative stock is the model envelope plus
+                // the declared allowances. This setup posts from the model's
+                // top/min-X/min-Y datum, so preserve that WCS instead of
+                // centering stock on lead-in and lead-out tool-center moves.
+                const stockMinX = -setup.stock.sideAllowance;
+                const stockMinY = -setup.stock.sideAllowance;
+                const stockMinZ = setup.stock.topAllowance - setup.stock.height;
+                ToolpathVisualizerPanel.queueMessage({
+                  type: 'stockSettings',
+                  w: setup.stock.width,
+                  d: setup.stock.depth,
+                  h: setup.stock.height,
+                  unit: setup.units,
+                  color: '#4488ff',
+                });
+                ToolpathVisualizerPanel.queueMessage({
+                  type: 'stockOrigin',
+                  xOff: stockMinX,
+                  yOff: stockMinY,
+                  zOff: stockMinZ,
+                  preset: 'custom',
+                });
+                ToolpathVisualizerPanel.queueMessage({
+                  type: 'workholdingSettings',
+                  mode: 'none',
+                  jawHeight: 25.4,
+                  jawThickness: 19.05,
+                  gripDepth: 0,
+                  color: '#c0704f',
+                });
+                ToolpathVisualizerPanel.queueMessage({
+                  type: 'fusionSetup',
+                  name: uri.path.split(/[\\/]/).pop() || uri.fsPath,
+                  setup,
+                  previewDataUrl: `data:image/png;base64,${Buffer.from(preview).toString('base64')}`,
+                });
+                ToolpathVisualizerPanel.queueMessage({
+                  type: 'targetModel',
+                  id: 'fusion-model-envelope',
+                  targetId: 'target-part',
+                  role: 'target-part',
+                  displayMode: 'transparent',
+                  opacity: 0.22,
+                  name: 'Fusion model dimensional envelope',
+                  format: 'Fusion CAM model bounds (mm); shaded preview is reference-only',
+                  pointCount: cuttingPoints.length,
+                  bounds: {
+                    minX: 0, maxX: setup.model.width,
+                    minY: 0, maxY: setup.model.depth,
+                    minZ: -setup.model.height, maxZ: 0,
+                  },
+                  offset: { x: 0, y: 0, z: 0 },
+                });
+                loaded += 1;
+                continue;
+              }
+              let bounds: Bounds3D;
+              let format = ext.toUpperCase();
+              let pointCount: number | undefined;
+              let meshVertices: number[] | undefined;
+              if (ext === 'stl') {
+                const parsed = loadStlMesh(buffer);
+                bounds = parsed.bounds;
+                format = `STL ${parsed.format}`;
+                pointCount = parsed.triangleCount * 3;
+                meshVertices = Array.from(parsed.positions);
+              } else if (ext === 'stp' || ext === 'step') {
+                const parsed = parseSTEP(buffer);
+                bounds = parsed.bounds;
+                format = parsed.schema ? `STEP ${parsed.schema}` : 'STEP';
+                pointCount = parsed.pointCount;
+              } else {
+                const text = Buffer.from(bytes).toString('utf8');
+                const parsed = parseParasolidText(text);
+                bounds = parsed.bounds;
+                format = 'Parasolid text';
+                pointCount = parsed.pointCount;
+              }
+              ToolpathVisualizerPanel.queueMessage({
+                type: 'targetModel',
+                id: uris.length === 1 ? targetId : `${targetId}-${index + 1}`,
+                targetId: uris.length === 1 ? targetId : `${targetId}-${index + 1}`,
+                role,
+                displayMode: role === 'fixture' || role === 'jaws' || role === 'holder' ? 'wireframe' : 'transparent',
+                opacity: role === 'target-part' ? 0.35 : 0.55,
+                name: uri.path.split(/[\\/]/).pop() || uri.fsPath,
+                format,
+                pointCount,
+                meshVertices,
+                bounds,
+                offset: { x: 0, y: 0, z: 0 },
+              });
+              loaded += 1;
+            } catch (err) {
+              vscode.window.showErrorMessage('JobLine: Could not import scene model: ' + String(err));
+            }
+          }
+          if (loaded > 0) {
+            vscode.window.showInformationMessage(`JobLine: Loaded ${loaded} scene model(s). Select each item in the visualizer to set role, transparency, wireframe, hidden/solid, and XYZ offset.`);
+          }
+        });
+        context.subscriptions.push(importTargetModelCmd);
+
+        const openProgramCmd = vscode.commands.registerCommand('jobline.gcode.openProgramInVisualizer', async (uriText?: string) => {
+          if (!uriText) return;
+          const doc = vscode.workspace.textDocuments.find(candidate => candidate.uri.toString() === uriText);
+          if (!doc || !isGCodeFile(doc)) return;
+          stopPlayback();
+          await vscode.window.showTextDocument(doc, { preview: false, preserveFocus: true });
+          refreshVisualizerForDocument(doc, true);
+        });
+        context.subscriptions.push(openProgramCmd);
+
         const revealLineCmd = vscode.commands.registerCommand('jobline.gcode.revealLine', async (line?: number) => {
           const doc = getPreferredGCodeDoc();
           if (!doc || typeof line !== 'number') return;
@@ -207,13 +473,14 @@ export function activate(context: vscode.ExtensionContext): void {
       context.subscriptions.push(updateVisualizerCmd);
     // Register Toolpath Visualizer command — open and immediately send the current path
     const showVisualizerCmd = vscode.commands.registerCommand('jobline.gcode.showVisualizer', () => {
-      ToolpathVisualizerPanel.show(context.extensionUri);
+      ToolpathVisualizerPanel.show(context.extensionUri, vscode.ViewColumn.Beside);
       // Delay one tick so the webview has time to register its message listener
       setTimeout(() => {
         if (loadPathFromEditor()) {
           sendToolpathUpdate(playback.path, playback.cutterSize, 0, playback.units);
         }
         loadSimulationSetupFromEditor();
+        updateProgramList();
       }, 300);
     });
     context.subscriptions.push(showVisualizerCmd);
@@ -260,11 +527,9 @@ export function activate(context: vscode.ExtensionContext): void {
   const hoverProvider = vscode.languages.registerHoverProvider(LANGUAGE_ID, {
     provideHover(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken) {
       const line = document.lineAt(position.line);
-      const content = getHoverContent(line.text, position.line, position.character);
+      const markdown = getHoverMarkdown(line.text, position.line, position.character, context.extensionUri);
 
-      if (content) {
-        const markdown = new vscode.MarkdownString(content);
-        markdown.isTrusted = true;
+      if (markdown) {
         return new vscode.Hover(markdown);
       }
       return null;
@@ -342,6 +607,14 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   );
   context.subscriptions.push(simulationCmd);
+
+  const simulationFullWindowCmd = vscode.commands.registerCommand(
+    'jobline.openSimulationFullWindow',
+    async () => {
+      ToolpathVisualizerPanel.show(context.extensionUri, vscode.ViewColumn.One);
+    }
+  );
+  context.subscriptions.push(simulationFullWindowCmd);
 
   // Select machine type command
   const machineSelectCmd = vscode.commands.registerCommand(
@@ -474,6 +747,25 @@ export function activate(context: vscode.ExtensionContext): void {
           // Silently ignore parse errors during auto-reload
         }
       }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor((editor: vscode.TextEditor | undefined) => {
+      if (!ToolpathVisualizerPanel.currentPanel) return;
+      updateProgramList();
+      if (!editor || !isGCodeFile(editor.document)) return;
+      stopPlayback();
+      refreshVisualizerForDocument(editor.document, true);
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.workspace.onDidOpenTextDocument((document: vscode.TextDocument) => {
+      if (ToolpathVisualizerPanel.currentPanel && isGCodeFile(document)) updateProgramList();
+    }),
+    vscode.workspace.onDidCloseTextDocument((document: vscode.TextDocument) => {
+      if (ToolpathVisualizerPanel.currentPanel && isGCodeFile(document)) updateProgramList();
     })
   );
 

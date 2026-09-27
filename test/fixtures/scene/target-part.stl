@@ -1,0 +1,30 @@
+solid target_part_plate
+  facet normal 0 0 1
+    outer loop
+      vertex -2 -1 0
+      vertex 7 -1 0
+      vertex 7 4 0.45
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex -2 -1 0
+      vertex 7 4 0.45
+      vertex -2 4 0.45
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex -2 -1 0
+      vertex 7 4 0
+      vertex 7 -1 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex -2 -1 0
+      vertex -2 4 0
+      vertex 7 4 0
+    endloop
+  endfacet
+endsolid target_part_plate
