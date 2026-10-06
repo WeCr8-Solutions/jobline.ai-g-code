@@ -8,6 +8,7 @@ export interface ToolpathPoint {
   isRapid?: boolean;
   mStop?: 'M0' | 'M1' | 'M2' | 'M30';
   lineNumber?: number;
+  toolNumber?: number;
 }
 
 function executableText(line: string): string {
@@ -46,7 +47,8 @@ function tessellateArc(
   rVal: number | null,
   cw: boolean,
   plane: 17 | 18 | 19,
-  lineNumber: number
+  lineNumber: number,
+  toolNumber?: number,
 ): ToolpathPoint[] {
   let a0: number;
   let b0: number;
@@ -89,7 +91,7 @@ function tessellateArc(
     cA = a0 + (iA ?? 0);
     cB = b0 + (iB ?? 0);
   } else {
-    return [{ x: x1, y: y1, z: z1, isRapid: false, lineNumber }];
+    return [{ x: x1, y: y1, z: z1, isRapid: false, lineNumber, toolNumber }];
   }
 
   const radius = Math.sqrt((a0 - cA) ** 2 + (b0 - cB) ** 2);
@@ -132,7 +134,7 @@ function tessellateArc(
     } else {
       px = pH; py = pA; pz = pB;
     }
-    pts.push({ x: px, y: py, z: pz, isRapid: false, lineNumber });
+    pts.push({ x: px, y: py, z: pz, isRapid: false, lineNumber, toolNumber });
   }
 
   return pts;
@@ -142,15 +144,16 @@ function tessellateArc(
  * Does this program run on a turning machine?
  *
  * It changes how three things are read, so guessing wrong is worse than not
- * asking. G96/G97 (constant surface speed) and G70-G76 (turning and threading
- * cycles) only exist on a lathe; both are checked on the executable text so a
- * comment cannot trigger them.
+ * asking. Check executable text so comments cannot select diameter mode.
+ * G73 alone is ambiguous: mills use it for peck drilling. Only its P/Q
+ * contour-block form supplies turning evidence here.
  */
 function looksLikeTurning(lines: string[]): boolean {
   for (const line of lines) {
     const upper = executableText(line).toUpperCase();
     if (/G0*9[67](?=[A-Z+\-\s]|$)/.test(upper)) return true;
-    if (/G0*7[0-6](?=[A-Z+\-\s]|$)/.test(upper)) return true;
+    if (/G0*7[0-24-6](?=[A-Z+\-\s]|$)/.test(upper)) return true;
+    if (hasCode(upper, 'G', '73') && addressValue(upper, 'P') !== null && addressValue(upper, 'Q') !== null) return true;
   }
   return false;
 }
@@ -186,12 +189,18 @@ export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units:
   let cycleR: number | null = null;
   let cycleInitialZ = 0;
   let returnToInitial = true;
+  let activeTool: number | undefined;
   const path: ToolpathPoint[] = [{ x, y, z }];
 
   for (let lineNum = 0; lineNum < lines.length; lineNum++) {
     const upper = executableText(lines[lineNum]).toUpperCase();
 
     if (!upper.trim() || /^\s*%/.test(upper)) continue;
+    const toolMatch = upper.match(/\bT\s*(\d+)(?=[A-Z+\-\s]|$)/);
+    if (toolMatch) {
+      const rawTool = Number.parseInt(toolMatch[1], 10);
+      activeTool = turning && rawTool >= 100 ? Math.floor(rawTool / 100) : rawTool;
+    }
     if (hasCode(upper, 'G', '20')) units = 'in';
     if (hasCode(upper, 'G', '21')) units = 'mm';
     if (hasCode(upper, 'G', '17')) plane = 17;
@@ -246,24 +255,29 @@ export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units:
     if (activeCycle !== null && (xVal !== null || yVal !== null) && cycleZ !== null && cycleR !== null) {
       const holeX = xVal !== null ? (absolute ? xVal : x + xVal) : x;
       const holeY = yVal !== null ? (absolute ? yVal : y + yVal) : y;
-      path.push({ x: holeX, y: holeY, z: cycleR, ...rotary, isRapid: true, lineNumber: lineNum });
-      path.push({ x: holeX, y: holeY, z: cycleZ, ...rotary, isRapid: false, lineNumber: lineNum });
+      path.push({ x: holeX, y: holeY, z: cycleR, ...rotary, isRapid: true, lineNumber: lineNum, toolNumber: activeTool });
+      path.push({ x: holeX, y: holeY, z: cycleZ, ...rotary, isRapid: false, lineNumber: lineNum, toolNumber: activeTool });
       const retractZ = returnToInitial ? Math.max(cycleInitialZ, cycleR) : cycleR;
-      path.push({ x: holeX, y: holeY, z: retractZ, ...rotary, isRapid: true, lineNumber: lineNum });
+      path.push({ x: holeX, y: holeY, z: retractZ, ...rotary, isRapid: true, lineNumber: lineNum, toolNumber: activeTool });
       x = holeX; y = holeY; z = retractZ; a = nextA; b = nextB; c = nextC;
       continue;
     }
 
-    if (!hasMove && aVal === null && bVal === null && cVal === null && !mStop) continue;
+    // An IJK full circle has motion even when its endpoint is omitted.
+    // Only center offsets in the selected plane can define that circle.
+    const centerOffsets = plane === 17 ? [iVal, jVal] : plane === 18 ? [iVal, kVal] : [jVal, kVal];
+    const hasCenterArc = (motionMode === 2 || motionMode === 3)
+      && centerOffsets.some(offset => offset !== null && offset !== 0);
+    if (!hasMove && !hasCenterArc && aVal === null && bVal === null && cVal === null && !mStop) continue;
 
     const x1 = xVal !== null ? (absolute ? xVal : x + xVal) : x;
     const y1 = yVal !== null ? (absolute ? yVal : y + yVal) : y;
     const z1 = zVal !== null ? (absolute ? zVal : z + zVal) : z;
 
     if (motionMode === 2 || motionMode === 3) {
-      path.push(...tessellateArc(x, y, z, x1, y1, z1, iVal, jVal, kVal, rVal, motionMode === 2, plane, lineNum));
+      path.push(...tessellateArc(x, y, z, x1, y1, z1, iVal, jVal, kVal, rVal, motionMode === 2, plane, lineNum, activeTool));
     } else {
-      path.push({ x: x1, y: y1, z: z1, ...rotary, isRapid: motionMode === 0, mStop, lineNumber: lineNum });
+      path.push({ x: x1, y: y1, z: z1, ...rotary, isRapid: motionMode === 0, mStop, lineNumber: lineNum, toolNumber: activeTool });
     }
 
     x = x1;

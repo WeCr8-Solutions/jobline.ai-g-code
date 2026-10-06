@@ -3,7 +3,7 @@ import type { VisualizerHarnessData } from './fixtureHarness';
 export type SimulationSetupMessage =
   | { type: 'machineType'; machineType: string }
   | { type: 'stockSettings'; w: number; d: number; h: number; unit: 'in' | 'mm'; color: string }
-  | { type: 'stockOrigin'; xOff: number; yOff: number; zOff: number }
+  | { type: 'stockOrigin'; xOff: number; yOff: number; zOff: number; rotX?: number; rotY?: number; rotZ?: number }
   | {
       type: 'workholdingSettings';
       mode: 'none' | 'vise' | 'chuck';
@@ -12,7 +12,8 @@ export type SimulationSetupMessage =
       gripDepth: number;
       color: string;
     }
-  | { type: 'toolData'; data: VisualizerHarnessData['tools'][number] };
+  | { type: 'toolData'; data: VisualizerHarnessData['tools'][number] }
+  | { type: 'toolLibrary'; tools: VisualizerHarnessData['tools'] };
 
 /**
  * Which workholding a program implies.
@@ -61,6 +62,10 @@ export function buildAutoSimulationMessages(
   }
 
   if (harness.tools.length > 0) {
+    messages.push({
+      type: 'toolLibrary',
+      tools: harness.tools,
+    });
     messages.push({
       type: 'toolData',
       data: harness.tools[0],

@@ -104,6 +104,9 @@ export function runDiagnosticEngine(
         const hasZ = block.addresses.has('Z') || state.cannedCycleParams.has('Z');
         const hasR = block.addresses.has('R') || state.cannedCycleParams.has('R');
         const hasQ = block.addresses.has('Q') || state.cannedCycleParams.has('Q');
+        const hasVariablePeck = ['I', 'J', 'K'].every(
+          address => block.addresses.has(address) || state.cannedCycleParams.has(address)
+        );
         const hasF = block.addresses.has('F') || state.activeF !== null;
 
         if (!hasZ) {
@@ -112,8 +115,8 @@ export function runDiagnosticEngine(
         if (!hasR) {
           diags.push(err(block.line, 'Canned cycle requires R (R-plane)'));
         }
-        if ((intCode === 83 || intCode === 73) && !hasQ) {
-          diags.push(err(block.line, `G${intCode} peck cycle requires Q (peck depth)`));
+        if ((intCode === 83 || intCode === 73) && !hasQ && !hasVariablePeck) {
+          diags.push(err(block.line, `G${intCode} peck cycle requires Q or I/J/K peck parameters`));
         }
         if ((intCode === 84 || intCode === 74) && !hasF) {
           diags.push(err(block.line, `Tapping cycle G${intCode} requires F (feed = pitch × RPM)`));
@@ -203,17 +206,38 @@ function checkArcGeometry(
   // Only validate center-offset arcs (I,J,K present)
   if (I === null && J === null && K === null) return null;
 
-  const startX = state.currentPosition.X ?? 0;
-  const startY = state.currentPosition.Y ?? 0;
+  // The engine supplies the entering state so the start position is correct.
+  // A plane selected on this same block must therefore take precedence over
+  // the entering state's modal plane.
+  const planeInBlock = block.gCodes
+    .map(g => Math.floor(g.code))
+    .find((code): code is 17 | 18 | 19 => code === 17 || code === 18 || code === 19);
+  const plane = planeInBlock ?? state.activePlane;
+  const start = {
+    X: state.currentPosition.X ?? 0,
+    Y: state.currentPosition.Y ?? 0,
+    Z: state.currentPosition.Z ?? 0,
+  };
+  const end = {
+    X: block.addresses.get('X')?.resolvedValue ?? start.X,
+    Y: block.addresses.get('Y')?.resolvedValue ?? start.Y,
+    Z: block.addresses.get('Z')?.resolvedValue ?? start.Z,
+  };
 
-  const endX = block.addresses.get('X')?.resolvedValue ?? startX;
-  const endY = block.addresses.get('Y')?.resolvedValue ?? startY;
+  let startA: number, startB: number, endA: number, endB: number;
+  let offsetA: number | null, offsetB: number | null;
+  if (plane === 18) {
+    [startA, startB, endA, endB, offsetA, offsetB] = [start.X, start.Z, end.X, end.Z, I, K];
+  } else if (plane === 19) {
+    [startA, startB, endA, endB, offsetA, offsetB] = [start.Y, start.Z, end.Y, end.Z, J, K];
+  } else {
+    [startA, startB, endA, endB, offsetA, offsetB] = [start.X, start.Y, end.X, end.Y, I, J];
+  }
 
-  const cx = startX + (I ?? 0);
-  const cy = startY + (J ?? 0);
-
-  const r1 = Math.sqrt((startX - cx) ** 2 + (startY - cy) ** 2);
-  const r2 = Math.sqrt((endX   - cx) ** 2 + (endY   - cy) ** 2);
+  const centerA = startA + (offsetA ?? 0);
+  const centerB = startB + (offsetB ?? 0);
+  const r1 = Math.hypot(startA - centerA, startB - centerB);
+  const r2 = Math.hypot(endA - centerA, endB - centerB);
   const delta = Math.abs(r1 - r2);
 
   if (delta > tolerance) {

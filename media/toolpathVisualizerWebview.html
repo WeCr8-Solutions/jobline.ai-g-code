@@ -18,6 +18,49 @@
       color: #8899aa; font-family: monospace; font-size: 11px;
       pointer-events: none; -webkit-user-select: none; user-select: none; line-height: 1.5;
     }
+    #stat-pos .axis-x { color: #ff6b6b; }
+    #stat-pos .axis-y { color: #6bd96b; }
+    #stat-pos .axis-z { color: #7fa6ff; }
+    #playback-panel {
+      position: absolute; left: 10px; bottom: 8px; width: 232px;
+      max-width: calc(100vw - 20px); max-height: calc(100vh - 16px); overflow-y: auto;
+      color: #d7dde8; background: rgba(18, 22, 38, 0.94);
+      border: 1px solid #39445f; border-radius: 6px; font: 11px/1.4 sans-serif;
+      box-shadow: 0 4px 18px rgba(0,0,0,.35); padding: 8px 10px; z-index: 30;
+    }
+    #playback-panel .title {
+      color: #9fb4d8; text-transform: uppercase; letter-spacing: .06em;
+      font-size: 10px; font-weight: 700; margin-bottom: 6px;
+    }
+    #program-select {
+      width: 100%; min-width: 0; background: #111827; color: #d7dde8;
+      border: 1px solid #39445f; border-radius: 4px; padding: 3px 5px;
+      font: 11px/1.2 sans-serif;
+    }
+    .play-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .play-row + .play-row { margin-top: 6px; }
+    .play-btn {
+      border: 1px solid #39445f; background: #1f2940; color: #d7dde8;
+      border-radius: 4px; padding: 3px 7px; font: inherit; cursor: pointer;
+    }
+    .play-btn:hover { background: #2a3654; border-color: #5c6f9b; }
+    .play-btn.primary { color: #101a10; background: #71d995; border-color: #71d995; }
+    #speed-readout { color: #ffee58; font-family: monospace; margin-left: auto; }
+    #view-cube {
+      position: absolute; right: 10px; bottom: 96px; width: 198px;
+      color: #d7dde8; background: rgba(18, 22, 38, 0.22);
+      border: 1px solid rgba(57, 68, 95, 0.45); border-radius: 6px; font: 10px/1.3 sans-serif;
+      box-shadow: 0 4px 18px rgba(0,0,0,.18); padding: 7px;
+      display: grid; gap: 6px;
+    }
+    .cube-stage { position: relative; height: 132px; overflow: visible; }
+    .cube-row { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
+    .viewcube-caption { position:absolute; right:8px; top:6px; color:#9fb4d8; font-size:9px; letter-spacing:.08em; text-transform:uppercase; }
+    .cube-btn {
+      border: 1px solid #39445f; background: #1f2940; color: #d7dde8;
+      border-radius: 4px; padding: 4px 7px; font: inherit; cursor: pointer;
+    }
+    .cube-btn:hover { background: #2a3654; border-color: #5c6f9b; }
 
     /* Legend — bottom-right */
     #legend {
@@ -82,6 +125,97 @@
     .view-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; }
     .view-toggles label { display: flex; align-items: center; gap: 4px; color: #aeb8c9; cursor: pointer; }
     .view-toggles input { accent-color: #66bb6a; }
+    .stock-transform-grid {
+      display: grid; grid-template-columns: 62px repeat(3, minmax(0, 1fr));
+      gap: 5px; align-items: center; margin-top: 5px;
+    }
+    .stock-transform-grid label { color: #aeb8c9; }
+    .stock-transform-grid input, #stock-origin-preset {
+      width: 100%; min-width: 0; background: #111827; color: #d7dde8;
+      border: 1px solid #39445f; border-radius: 4px; padding: 2px 4px;
+      font: 11px/1.2 monospace;
+    }
+    #target-panel {
+      position: absolute; left: 252px; bottom: 8px; width: min(360px, calc(100vw - 520px));
+      max-height: calc(100vh - 16px); overflow-y: auto;
+      color: #d7dde8; background: rgba(18, 22, 38, 0.94);
+      border: 1px solid #39445f; border-radius: 6px; font: 11px/1.4 sans-serif;
+      box-shadow: 0 4px 18px rgba(0,0,0,.35); padding: 8px 10px;
+    }
+    #target-panel:not([open]) { width: auto; max-width: min(300px, calc(100vw - 520px)); overflow: hidden; }
+    #target-panel summary {
+      color: #9fb4d8; cursor: pointer; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; font-size: 10px; user-select: none;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    #target-panel[open] summary { margin-bottom: 7px; }
+    #target-panel summary::marker { color: #b084ff; }
+    #target-panel .hint { color: #8491a8; margin-top: 4px; }
+    #target-name { color: #ffee58; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .target-grid { display: grid; grid-template-columns: 52px 1fr 46px; gap: 5px; align-items: center; margin-top: 5px; }
+    .target-grid input[type=range] { accent-color: #b084ff; }
+    .target-grid input[type=number] {
+      width: 100%; background: #111827; color: #d7dde8; border: 1px solid #39445f;
+      border-radius: 4px; padding: 2px 4px; font: 11px/1.2 monospace;
+    }
+    #target-display, #target-list, #target-role {
+      width: 100%; background: #111827; color: #d7dde8; border: 1px solid #39445f;
+      border-radius: 4px; padding: 2px 4px; font: 11px/1.2 sans-serif;
+    }
+    .target-btn {
+      border: 1px solid #b084ff; background: #281f40; color: #eee8ff;
+      border-radius: 4px; padding: 4px 7px; font: inherit; cursor: pointer;
+    }
+    .target-btn:hover { background: #382b58; }
+
+    /* JobLine polish pass: small, low-risk visual overrides. */
+    #hud, #playback-panel, #review-panel, #view-panel, #target-panel, #view-cube {
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 34px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    #playback-panel, #review-panel, #view-panel, #target-panel {
+      border-radius: 10px;
+      border-color: rgba(88, 166, 255, .38);
+    }
+    #review-panel summary, #view-panel summary, #playback-panel .title, #target-panel summary {
+      letter-spacing: .08em;
+    }
+    .play-btn, .target-btn, .cube-btn {
+      border-radius: 999px;
+      transition: background .14s ease, border-color .14s ease, transform .14s ease;
+    }
+    .play-btn:hover, .target-btn:hover, .cube-btn:hover {
+      transform: translateY(-1px);
+    }
+    .play-btn.primary {
+      font-weight: 700;
+      box-shadow: 0 0 0 1px rgba(113,217,149,.18), 0 8px 18px rgba(113,217,149,.16);
+    }
+    #program-select, #target-display, #target-list, #target-role, .target-grid input[type=number] {
+      border-radius: 7px;
+      background: rgba(8, 13, 25, .88);
+    }
+    @media (max-width: 760px) {
+      #target-panel { display: none; }
+      #playback-panel { width: min(360px, calc(100vw - 20px)); }
+      #view-cube { right: 8px; transform: scale(.82); transform-origin: right bottom; }
+      #review-panel { width: min(300px, calc(100vw - 20px)); }
+    }
+    @media (max-height: 520px) {
+      #playback-panel { left: 8px; bottom: 8px; width: min(460px, calc(100vw - 16px)); padding: 6px 8px; }
+      #playback-panel .title { display: inline-block; margin: 2px 8px 2px 0; }
+      #playback-panel .play-row { display: inline-flex; vertical-align: middle; margin: 2px 6px 2px 0; }
+      #playback-panel .play-row + .play-row { margin-top: 2px; }
+      #program-select { width: min(180px, calc(100vw - 36px)); }
+      #view-panel, #target-panel, #view-cube, #legend { display: none; }
+      #review-panel { max-height: 38vh; }
+    }
+    @media (max-width: 420px) {
+      #playback-panel { left: 6px; bottom: 6px; max-width: calc(100vw - 12px); }
+      #review-panel { left: 6px; right: auto; width: calc(100vw - 12px); max-height: 32vh; }
+      #view-cube, #legend { display: none; }
+      .play-btn { padding: 4px 6px; }
+    }
   </style>
 </head>
 <body>
@@ -92,6 +226,94 @@
     <div id="stat-lines">No toolpath loaded</div>
     <div id="stat-pos"></div>
     <div id="stat-units"></div>
+  </div>
+
+  <div id="playback-panel" aria-label="Simulation playback controls">
+    <div class="title">Program</div>
+    <div class="play-row">
+      <select id="program-select" title="Switch between open G-code programs">
+        <option value="">Open a G-code tab...</option>
+      </select>
+    </div>
+    <div class="title">Simulation speed <span id="speed-readout">1x</span></div>
+    <div class="play-row">
+      <button class="play-btn primary" id="play">Play / Resume</button>
+      <button class="play-btn" id="pause">Pause</button>
+      <button class="play-btn" id="stop">Stop / Reset</button>
+      <button class="play-btn" id="step-back">Step -</button>
+      <button class="play-btn" id="step-forward">Step +</button>
+    </div>
+    <div class="play-row">
+      <button class="play-btn" data-speed="0.25">0.25x</button>
+      <button class="play-btn" data-speed="0.5">0.5x</button>
+      <button class="play-btn" data-speed="1">1x</button>
+      <button class="play-btn" data-speed="2">2x</button>
+      <button class="play-btn" data-speed="4">4x</button>
+    </div>
+  </div>
+
+  <details id="target-panel" aria-label="Target model controls">
+    <summary>Target model · <span id="target-summary-name">None</span></summary>
+    <div class="play-row">
+      <button class="target-btn" id="import-target">Import CAD / Fusion setup</button>
+      <span id="target-name">No target loaded</span>
+    </div>
+    <div id="fusion-setup-info" style="font-size:11px;color:#aeb8c8;margin:4px 0 8px;display:none;"></div>
+    <img id="fusion-preview" alt="Fusion model preview" style="display:none;width:100%;max-height:180px;object-fit:contain;background:#fff;border:1px solid #485268;margin:0 0 8px;">
+    <div class="target-grid">
+      <label for="target-list">Scene</label>
+      <select id="target-list">
+        <option value="">No scene item</option>
+      </select>
+      <span>Item</span>
+      <label for="target-role">Target ID</label>
+      <select id="target-role">
+        <option value="target-part" selected>Intended part</option>
+        <option value="fixture">Fixture</option>
+        <option value="stock">Stock</option>
+        <option value="jaws">Jaws</option>
+        <option value="tooling">Tool</option>
+        <option value="holder">Holder</option>
+        <option value="other">Other</option>
+      </select>
+      <span>Slot</span>
+      <label for="target-opacity">Opacity</label>
+      <input type="range" id="target-opacity" min="5" max="100" value="35">
+      <span class="view-val" id="target-opacity-v">35%</span>
+      <label for="target-display">Display</label>
+      <select id="target-display">
+        <option value="transparent" selected>Transparent</option>
+        <option value="solid">Solid</option>
+        <option value="wireframe">Wireframe</option>
+        <option value="hidden">Hidden</option>
+      </select>
+      <span>Mode</span>
+      <label for="target-x">X offset</label>
+      <input type="number" id="target-x" step="0.001" value="0">
+      <span class="axis-x">X</span>
+      <label for="target-y">Y offset</label>
+      <input type="number" id="target-y" step="0.001" value="0">
+      <span class="axis-y">Y</span>
+      <label for="target-z">Z offset</label>
+      <input type="number" id="target-z" step="0.001" value="0">
+      <span class="axis-z">Z</span>
+    </div>
+    <div class="hint">STL loads as a transparent mesh. STEP/Parasolid load as a bounds envelope for alignment until full CAD-kernel rendering is added.</div>
+  </details>
+
+  <div id="view-cube" aria-label="Preset camera views">
+    <div class="cube-stage" aria-label="View cube and XYZ gnomon">
+      <div class="viewcube-caption">ViewCube</div>
+    </div>
+    <div class="cube-row" aria-label="Axis order views">
+      <button class="cube-btn" data-view="top">TOP</button>
+      <button class="cube-btn" data-view="front">FRONT</button>
+      <button class="cube-btn" data-view="right">RIGHT</button>
+      <button class="cube-btn" data-view="iso">ISO</button>
+      <button class="cube-btn" data-view="xyz">XYZ</button>
+      <button class="cube-btn" data-view="zyx">ZYX</button>
+      <button class="cube-btn" data-view="yzx">YZX</button>
+    </div>
   </div>
 
   <div id="legend">
@@ -134,9 +356,28 @@
         <label><input type="checkbox" data-layer="tool" checked> Tool</label>
         <label><input type="checkbox" data-layer="toolHolder" checked> Holder</label>
         <label><input type="checkbox" data-layer="stock" checked> Stock</label>
+        <label><input type="checkbox" data-layer="targetModel" checked> Target</label>
+        <label><input type="checkbox" data-layer="fusionReference" checked> Fusion ref</label>
         <label><input type="checkbox" data-layer="workholding" checked> Jaws</label>
         <label><input type="checkbox" data-layer="origin" checked> Origin</label>
         <label><input type="checkbox" id="tg-gnomon" checked> Gnomon</label>
+      </div>
+      <div class="view-sep">Stock home and rotation</div>
+      <select id="stock-origin-preset" aria-label="Stock home preset">
+        <option value="cornerFL">Front-left corner</option>
+        <option value="centerTop">Center top</option>
+        <option value="centerBottom">Center bottom</option>
+        <option value="custom">Custom</option>
+      </select>
+      <div class="stock-transform-grid">
+        <label>Home</label>
+        <input type="number" id="stock-home-x" aria-label="Stock X home" step="0.001" value="0">
+        <input type="number" id="stock-home-y" aria-label="Stock Y home" step="0.001" value="0">
+        <input type="number" id="stock-home-z" aria-label="Stock Z home" step="0.001" value="0">
+        <label>Rotate</label>
+        <input type="number" id="stock-rot-x" aria-label="Stock X rotation in degrees" step="1" value="0">
+        <input type="number" id="stock-rot-y" aria-label="Stock Y rotation in degrees" step="1" value="0">
+        <input type="number" id="stock-rot-z" aria-label="Stock Z rotation in degrees" step="1" value="0">
       </div>
     </div>
   </details>
@@ -157,7 +398,15 @@
     <!-- Three.js — bundled locally in media/, no internet required.
       URI injected at runtime by toolpathVisualizer.ts. -->
     <script type="module">
-    import * as THREE from '{{THREE_JS_URI}}';
+    let THREE;
+    try {
+      THREE = await import('{{THREE_JS_URI}}');
+    } catch (error) {
+      // A static import fails before the error handlers below can register.
+      document.getElementById('three-error').style.display = 'block';
+      document.getElementById('three-error-detail').textContent = 'Bundled Three.js could not load: ' + String(error);
+      throw error;
+    }
     (function () {
     'use strict';
     const vscode = acquireVsCodeApi();
@@ -247,7 +496,7 @@
     // -----------------------------------------------------------------------
     const layerVis = {
       tool: true, toolHolder: true, stock: true,
-      workholding: true,
+      workholding: true, targetModel: true, fusionReference: true,
       path: true, sweptTube: true, origin: true
     };
     // Declared here, beside the layer registry, because setLayer() re-applies
@@ -256,13 +505,15 @@
     // sat in the temporal dead zone and the first setLayer threw
     // "Cannot access 'viewOpacity' before initialization", killing the whole
     // script: no toolpath, no renderReady, a silent blank viewport.
-    const viewOpacity = { sweptTube: 0.55, stock: 0.55, workholding: 0.35, tool: 1, path: 1 };
+    const viewOpacity = { sweptTube: 0.55, stock: 0.55, workholding: 0.35, targetModel: 0.35, tool: 1, path: 1 };
 
     const layerMeshes = {
       tool: null,
       toolHolder: null,
       stock: null,
       workholding: null,
+      targetModel: null,
+      fusionReference: null,
       path: null,
       sweptTube: null,
       origin: null
@@ -296,10 +547,55 @@
       }
     }
 
+    function setLayerVisible(layer, visible) {
+      if (!(layer in layerVis)) return;
+      const isVisible = !!visible;
+      layerVis[layer] = isVisible;
+      if (layerMeshes[layer]) layerMeshes[layer].visible = isVisible;
+      const checkbox = document.querySelector('.view-toggles input[data-layer="' + layer + '"]');
+      if (checkbox) checkbox.checked = isVisible;
+    }
+
     // -----------------------------------------------------------------------
     // Origin marker  (R=X, G=Y, B=Z in G-code space)
     // -----------------------------------------------------------------------
     let originOff = { x: 0, y: 0, z: 0 };
+    let stockRotation = { x: 0, y: 0, z: 0 };
+    let targetModels = [];
+    let activeTargetId = '';
+    let targetOffset = { x: 0, y: 0, z: 0 };
+    let targetDisplayMode = 'transparent';
+    let fusionSetup = null;
+
+    function makeTargetId(item) {
+      return item.id || item.targetId || `${Date.now()}-${Math.random().toString(36).slice(2)}-${String(item.name || 'model').replace(/[^a-z0-9_-]/gi, '-')}`;
+    }
+
+    function normalizeTargetItem(item) {
+      const displayMode = ['solid', 'transparent', 'wireframe', 'hidden'].includes(item.displayMode)
+        ? item.displayMode
+        : (item.role === 'fixture' || item.role === 'jaws' ? 'wireframe' : 'transparent');
+      return {
+        ...item,
+        id: makeTargetId(item),
+        targetId: item.targetId || item.role || 'target-part',
+        role: item.role || 'target-part',
+        displayMode,
+        // Preserve explicit zero so opacity controls can fully hide a target.
+        opacity: Number.isFinite(Number(item.opacity))
+          ? Math.max(0, Math.min(1, Number(item.opacity)))
+          : (displayMode === 'wireframe' ? 0.55 : 0.35),
+        offset: {
+          x: Number(item.offset?.x) || 0,
+          y: Number(item.offset?.y) || 0,
+          z: Number(item.offset?.z) || 0,
+        },
+      };
+    }
+
+    function getActiveTarget() {
+      return targetModels.find(item => item.id === activeTargetId) || targetModels[0] || null;
+    }
 
     function buildOrigin() {
       const ox = originOff.x, oy = originOff.y, oz = originOff.z;
@@ -324,6 +620,18 @@
       setLayer('origin', new THREE.LineSegments(geo, mat));
     }
 
+    function applyStockTransform(group) {
+      const position = gc3(originOff.x, originOff.y, originOff.z);
+      group.position.copy(position);
+      group.rotation.order = 'XYZ';
+      group.rotation.set(
+        THREE.MathUtils.degToRad(stockRotation.x),
+        THREE.MathUtils.degToRad(stockRotation.z),
+        THREE.MathUtils.degToRad(-stockRotation.y)
+      );
+      return group;
+    }
+
     // -----------------------------------------------------------------------
     // Gnomon — fixed orientation indicator, bottom-left of the viewport
     // -----------------------------------------------------------------------
@@ -332,7 +640,7 @@
     // track of which way X runs. The gnomon is drawn in its own scene over a
     // fixed corner, takes only the main camera's ROTATION, and so always
     // answers "which way is +X" no matter where the view has been dragged.
-    const GNOMON_PX = 92;           // square, device-independent pixels
+    const GNOMON_PX = 150;          // square, device-independent pixels
     const GNOMON_MARGIN = 10;
     const gnomonScene = new THREE.Scene();
     const gnomonCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
@@ -354,10 +662,51 @@
       return sprite;
     }
 
+    function faceLabelTexture(text) {
+      const cv = document.createElement('canvas');
+      cv.width = 128; cv.height = 128;
+      const ctx = cv.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 128, 128);
+      grad.addColorStop(0, '#f2edbc');
+      grad.addColorStop(1, '#a7a16e');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 128, 128);
+      ctx.strokeStyle = '#5e5a40';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(3, 3, 122, 122);
+      ctx.fillStyle = '#1f2430';
+      ctx.font = '900 26px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 64, 64);
+      const tex = new THREE.CanvasTexture(cv);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    function addCubeFace(label, position, rotation) {
+      const mat = new THREE.MeshBasicMaterial({ map: faceLabelTexture(label), side: THREE.DoubleSide });
+      const face = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.82), mat);
+      face.position.set(position.x, position.y, position.z);
+      face.rotation.set(rotation.x, rotation.y, rotation.z);
+      gnomonScene.add(face);
+    }
+
     function buildGnomon() {
+      const cubeCore = new THREE.Mesh(
+        new THREE.BoxGeometry(0.82, 0.82, 0.82),
+        new THREE.MeshPhongMaterial({ color: 0xc9c386, transparent: true, opacity: 0.92, shininess: 60 })
+      );
+      gnomonScene.add(cubeCore);
+      addCubeFace('TOP',   { x: 0, y: 0.416, z: 0 }, { x: -Math.PI / 2, y: 0, z: 0 });
+      addCubeFace('FRONT', { x: 0, y: 0, z: 0.416 }, { x: 0, y: 0, z: 0 });
+      addCubeFace('RIGHT', { x: 0.416, y: 0, z: 0 }, { x: 0, y: Math.PI / 2, z: 0 });
+      addCubeFace('LEFT',  { x: -0.416, y: 0, z: 0 }, { x: 0, y: -Math.PI / 2, z: 0 });
+      addCubeFace('BACK',  { x: 0, y: 0, z: -0.416 }, { x: 0, y: Math.PI, z: 0 });
+      addCubeFace('BOT',   { x: 0, y: -0.416, z: 0 }, { x: Math.PI / 2, y: 0, z: 0 });
       // G-code axes expressed in Three.js space via the same gc3 mapping the
       // rest of the scene uses, so the gnomon cannot drift from the model.
-      const L = 1.0;
+      const L = 1.18;
       const axes = [
         { v: gc3(L, 0, 0), hex: 0xff4444, css: '#ff6b6b', label: 'X' },
         { v: gc3(0, L, 0), hex: 0x44cc44, css: '#6bd96b', label: 'Y' },
@@ -375,9 +724,16 @@
 
     let gnomonVisible = true;
 
+    function gnomonViewportCss(widthCss, _heightCss) {
+      return {
+        x: Math.max(GNOMON_MARGIN, widthCss - 198 + 18),
+        y: 112,
+        size: GNOMON_PX,
+      };
+    }
+
     function renderGnomon() {
       if (!gnomonVisible) return;
-      const size = GNOMON_PX;
       // Match the main camera's orientation only - never its position, or the
       // gnomon would zoom and translate with the model.
       gnomonCamera.position.copy(camera.position).sub(orbitTarget).normalize().multiplyScalar(3.2);
@@ -387,12 +743,13 @@
       renderer.autoClear = false;
       renderer.clearDepth();
       renderer.setScissorTest(true);
-      renderer.setViewport(GNOMON_MARGIN, GNOMON_MARGIN, size, size);
-      renderer.setScissor(GNOMON_MARGIN, GNOMON_MARGIN, size, size);
-      renderer.render(gnomonScene, gnomonCamera);
-      renderer.setScissorTest(false);
       const w = renderer.domElement.width / renderer.getPixelRatio();
       const h = renderer.domElement.height / renderer.getPixelRatio();
+      const vp = gnomonViewportCss(w, h);
+      renderer.setViewport(vp.x, vp.y, vp.size, vp.size);
+      renderer.setScissor(vp.x, vp.y, vp.size, vp.size);
+      renderer.render(gnomonScene, gnomonCamera);
+      renderer.setScissorTest(false);
       renderer.setViewport(0, 0, w, h);
       renderer.autoClear = prevAutoClear;
     }
@@ -410,7 +767,7 @@
 
     function buildStock() {
       const { w, d, h, color } = stockCfg;
-      const ox = originOff.x, oy = originOff.y, oz = originOff.z;
+      const group = new THREE.Group();
 
       if (isTurning) {
         // A turned blank is a BAR on the spindle axis, not a block. G-code Z is
@@ -430,8 +787,9 @@
         });
         const bar = new THREE.Mesh(geo, mat);
         // Centre on the spindle axis, extending in -Z from the face at Z0.
-        bar.position.set(ox, oz - length / 2, -oy);
-        setLayer('stock', bar);
+        bar.position.set(0, -length / 2, 0);
+        group.add(bar);
+        setLayer('stock', applyStockTransform(group));
         return;
       }
 
@@ -445,8 +803,9 @@
         transparent: true
       });
       const box = new THREE.LineSegments(edges, mat);
-      box.position.set(ox + w / 2, oz + h / 2, -(oy + d / 2));
-      setLayer('stock', box);
+      box.position.set(w / 2, h / 2, -d / 2);
+      group.add(box);
+      setLayer('stock', applyStockTransform(group));
     }
 
     // -----------------------------------------------------------------------
@@ -462,7 +821,6 @@
       if (workCfg.mode === 'none') { setLayer('workholding', null); return; }
 
       const { w, d, h } = stockCfg;
-      const ox = originOff.x, oy = originOff.y, oz = originOff.z;
       const col = new THREE.Color(workCfg.color);
       const mat = new THREE.MeshBasicMaterial({ color: col, opacity: 0.35, transparent: true });
       const edgeMat = new THREE.LineBasicMaterial({ color: col, opacity: 0.8, transparent: true });
@@ -491,9 +849,9 @@
         const dia = Math.max(w, 0.0001);
         const jawLen = Math.max(dia * 0.35, workCfg.jawThickness);
         const jawW = Math.max(dia * 0.28, 0.25);
-        const axisX = ox;
-        const axisZ = -oy;
-        const cy = oz - Math.min(h * 0.8, Math.max(h - jawW, jawW));  // at the chuck end
+        const axisX = 0;
+        const axisZ = 0;
+        const cy = -Math.min(h * 0.8, Math.max(h - jawW, jawW));  // at the chuck end
         const r = dia / 2 + jawLen / 2;
         for (let i = 0; i < 3; i++) {
           const ang = (i * 2 * Math.PI) / 3;
@@ -513,14 +871,14 @@
         const jt = workCfg.jawThickness;
         const jh = workCfg.jawHeight;
         const grip = Math.min(workCfg.gripDepth, h);
-        const jawTopY = oz + h - grip;
+        const jawTopY = h - grip;
         const cy = jawTopY - jh / 2;
-        const cz = -(oy + d / 2);
-        addSolid(new THREE.BoxGeometry(jt, jh, d), ox - jt / 2, cy, cz);
-        addSolid(new THREE.BoxGeometry(jt, jh, d), ox + w + jt / 2, cy, cz);
+        const cz = -d / 2;
+        addSolid(new THREE.BoxGeometry(jt, jh, d), -jt / 2, cy, cz);
+        addSolid(new THREE.BoxGeometry(jt, jh, d), w + jt / 2, cy, cz);
       }
 
-      setLayer('workholding', group);
+      setLayer('workholding', applyStockTransform(group));
 
       // Jaws usually arrive after the toolpath has already been framed, and
       // they sit outside the path envelope, so the existing fit no longer
@@ -544,6 +902,7 @@
     let currentUnits = 'in';
     let currentCutterSize = 0;
     let currentToolData = null;
+    const currentToolLibrary = new Map();
 
     function buildPath(path, hiIdx) {
       if (!path || path.length < 2) { setLayer('path', null); return; }
@@ -575,7 +934,6 @@
         return;
       }
 
-      const radius = Math.max(cutterDiameter / 2, 0.0005);
       const group = new THREE.Group();
       // 0.18 was close to invisible - the cut solid read as a faint smear
       // rather than material removed. This is the View panel's default; the
@@ -597,6 +955,10 @@
         const distance = delta.length();
         if (distance < 1e-6) continue;
 
+        const segmentTool = currentToolLibrary.get(Number(b.toolNumber));
+        const segmentDiameter = Number(segmentTool && segmentTool.diameter) || cutterDiameter;
+        const radius = Math.max(segmentDiameter / 2, 0.0005);
+
         const center = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
         const segment = new THREE.Mesh(
           new THREE.CylinderGeometry(radius, radius, distance, 12),
@@ -610,6 +972,176 @@
       setLayer('sweptTube', group.children.length > 0 ? group : null);
     }
 
+    function insertOutlinePoints(insertCode, icSize) {
+      const shapeCode = String(insertCode || 'C').trim().charAt(0).toUpperCase();
+      const r = Math.max(Number(icSize) || 0.5, 0.0001) / 2;
+      const diamond = (degrees) => {
+        const half = (degrees * Math.PI) / 180 / 2;
+        const long = r / Math.sin(half);
+        const short = r / Math.cos(half);
+        return [[0, long], [short, 0], [0, -long], [-short, 0]];
+      };
+      if (shapeCode === 'V') return diamond(35);
+      if (shapeCode === 'D') return diamond(55);
+      if (shapeCode === 'C') return diamond(80);
+      if (shapeCode === 'T') {
+        return [[0, r * 1.35], [r * 1.18, -r * 0.68], [-r * 1.18, -r * 0.68]];
+      }
+      if (shapeCode === 'R') {
+        return Array.from({ length: 48 }, (_, index) => {
+          const angle = index / 48 * Math.PI * 2;
+          return [Math.cos(angle) * r, Math.sin(angle) * r];
+        });
+      }
+      if (shapeCode === 'W') {
+        return Array.from({ length: 6 }, (_, index) => {
+          const radius = index % 2 === 0 ? r / Math.cos(Math.PI / 6) : r * 0.75;
+          const angle = Math.PI / 2 + index * Math.PI / 3;
+          return [Math.cos(angle) * radius, Math.sin(angle) * radius];
+        });
+      }
+      const regularSides = { H: 6, O: 8, P: 5 }[shapeCode];
+      if (regularSides) {
+        const radius = r / Math.cos(Math.PI / regularSides);
+        return Array.from({ length: regularSides }, (_, index) => {
+          const angle = index / regularSides * Math.PI * 2 + Math.PI / 2;
+          return [Math.cos(angle) * radius, Math.sin(angle) * radius];
+        });
+      }
+      const otherDiamond = { E: 75, M: 86, A: 85, B: 82, K: 55 }[shapeCode];
+      if (otherDiamond) return diamond(otherDiamond);
+      return [[-r, -r], [r, -r], [r, r], [-r, r]];
+    }
+
+    function buildTurningInsertTool(toolData, tip, diameter, stickOut, totalLength) {
+      const insertCode = String(toolData?.insertCode || '').toUpperCase();
+      const group = new THREE.Group();
+      group.position.copy(tip);
+
+      const holderLength = Math.max(totalLength, diameter * 4);
+      const holderHeight = Math.max(diameter * 0.55, 0.18);
+      const holderWidth = Math.max(diameter * 0.45, 0.14);
+      const holder = new THREE.Mesh(
+        new THREE.BoxGeometry(holderLength, holderHeight, holderWidth),
+        new THREE.MeshPhongMaterial({ color: 0x7d8798, shininess: 55 })
+      );
+      holder.position.set(-holderLength / 2 - diameter * 0.35, holderHeight * 0.2, 0);
+      group.add(holder);
+
+      const shim = new THREE.Mesh(
+        new THREE.BoxGeometry(diameter * 0.95, holderHeight * 0.22, holderWidth * 1.18),
+        new THREE.MeshPhongMaterial({ color: 0x303846, shininess: 35 })
+      );
+      shim.position.set(-diameter * 0.35, holderHeight * 0.47, 0);
+      group.add(shim);
+
+      const pts = Array.isArray(toolData?.insertOutline) && toolData.insertOutline.length >= 3
+        ? toolData.insertOutline
+        : insertOutlinePoints(insertCode, diameter);
+      const shape = new THREE.Shape();
+      pts.forEach(([x, y], idx) => idx === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y));
+      shape.closePath();
+      const insert = new THREE.Mesh(
+        new THREE.ExtrudeGeometry(shape, { depth: Math.max(Number(toolData?.insertThickness) || diameter * 0.16, 0.04), bevelEnabled: true, bevelSize: Math.max(diameter * 0.015, 0.004), bevelThickness: Math.max(diameter * 0.015, 0.004), bevelSegments: 1 }),
+        new THREE.MeshPhongMaterial({ color: toolData?.color || '#f6c85f', shininess: 90 })
+      );
+      insert.position.set(0, holderHeight * 0.62, -Math.max(diameter * 0.08, 0.02));
+      insert.rotation.x = -Math.PI / 2;
+      insert.rotation.z = insertCode.startsWith('V') ? Math.PI / 7 : Math.PI / 4;
+      group.add(insert);
+
+      const edge = new THREE.LineSegments(
+        new THREE.EdgesGeometry(insert.geometry),
+        new THREE.LineBasicMaterial({ color: 0x171717, linewidth: 1 })
+      );
+      edge.position.copy(insert.position);
+      edge.rotation.copy(insert.rotation);
+      group.add(edge);
+      const nose = new THREE.Mesh(
+        new THREE.SphereGeometry(Math.max(diameter * 0.055, 0.018), 12, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffee58 })
+      );
+      nose.position.set(0, holderHeight * 0.62, 0);
+      group.add(nose);
+      return group;
+    }
+
+    function buildMillingTool(toolData, tip, diameter, stickOut, totalLength, toolColor) {
+      const type = String(toolData?.type || 'End Mill');
+      const group = new THREE.Group();
+      group.position.copy(tip);
+      const radius = diameter / 2;
+      const material = () => new THREE.MeshPhongMaterial({ color: toolColor, shininess: 80 });
+      const addCylinder = (topRadius, bottomRadius, length, y, segments = 24, mat = material()) => {
+        const mesh = new THREE.Mesh(new THREE.CylinderGeometry(topRadius, bottomRadius, Math.max(length, 0.001), segments), mat);
+        mesh.position.y = y;
+        group.add(mesh);
+        return mesh;
+      };
+
+      if (type === 'Ball End Mill') {
+        const ball = new THREE.Mesh(new THREE.SphereGeometry(radius, 24, 16), material());
+        ball.position.y = radius;
+        group.add(ball);
+        const bodyLength = Math.max(stickOut - radius, radius);
+        addCylinder(radius, radius, bodyLength, radius + bodyLength / 2);
+      } else if (type === 'Bull Nose End Mill') {
+        addCylinder(radius, radius, stickOut, stickOut / 2);
+        const edge = new THREE.Mesh(new THREE.TorusGeometry(radius * 0.82, radius * 0.18, 8, 28), material());
+        edge.rotation.x = Math.PI / 2;
+        edge.position.y = radius * 0.18;
+        group.add(edge);
+      } else if (type === 'Drill' || type === 'Spot Drill') {
+        const tipLength = Math.min(stickOut * (type === 'Spot Drill' ? 0.38 : 0.20), diameter * (type === 'Spot Drill' ? 0.9 : 0.65));
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(radius, tipLength, 24), material());
+        cone.rotation.z = Math.PI;
+        cone.position.y = tipLength / 2;
+        group.add(cone);
+        addCylinder(radius, radius, Math.max(stickOut - tipLength, radius), tipLength + Math.max(stickOut - tipLength, radius) / 2);
+      } else if (type === 'Tap') {
+        const leadLength = Math.min(stickOut * 0.3, diameter * 1.5);
+        addCylinder(radius, radius * 0.28, leadLength, leadLength / 2);
+        addCylinder(radius, radius, Math.max(stickOut - leadLength, radius), leadLength + Math.max(stickOut - leadLength, radius) / 2);
+        const pitch = Math.max(diameter / 10, 0.01);
+        for (let y = leadLength * 0.6; y < stickOut; y += pitch * 3) {
+          const crest = new THREE.Mesh(new THREE.TorusGeometry(radius, pitch * 0.34, 5, 20), material());
+          crest.rotation.x = Math.PI / 2;
+          crest.position.y = y;
+          group.add(crest);
+        }
+      } else if (type === 'Chamfer Mill') {
+        const headLength = Math.min(stickOut, diameter * 1.2);
+        addCylinder(radius, Math.max(radius * 0.08, 0.005), headLength, headLength / 2);
+      } else if (type === 'Face Mill') {
+        const headThickness = Math.max(diameter * 0.22, stickOut * 0.12);
+        addCylinder(radius, radius, headThickness, headThickness / 2, 32);
+        const pilotRadius = Math.max(radius * 0.28, diameter * 0.08);
+        addCylinder(pilotRadius, pilotRadius, Math.max(stickOut - headThickness, diameter * 0.25), headThickness + Math.max(stickOut - headThickness, diameter * 0.25) / 2);
+      } else if (type === 'Boring Bar') {
+        const barRadius = Math.max(radius * 0.45, 0.01);
+        addCylinder(barRadius, barRadius, stickOut, stickOut / 2, 20, new THREE.MeshPhongMaterial({ color: 0x8b8f98, shininess: 60 }));
+        const insert = new THREE.Mesh(new THREE.BoxGeometry(radius * 0.9, radius * 0.22, radius * 0.7), material());
+        insert.position.set(radius * 0.55, radius * 0.18, 0);
+        insert.rotation.y = Math.PI / 4;
+        group.add(insert);
+      } else if (type === 'Slitting Saw') {
+        const bladeThickness = Math.max(diameter * 0.06, stickOut * 0.08);
+        addCylinder(radius, radius, bladeThickness, bladeThickness / 2, 48);
+        const arborRadius = Math.max(radius * 0.18, 0.02);
+        addCylinder(arborRadius, arborRadius, Math.max(stickOut - bladeThickness, diameter * 0.25), bladeThickness + Math.max(stickOut - bladeThickness, diameter * 0.25) / 2);
+      } else {
+        addCylinder(radius, radius, stickOut, stickOut / 2);
+      }
+
+      const shankLength = Math.max(totalLength - stickOut, diameter * 0.5);
+      const shankRadius = type === 'Face Mill' || type === 'Slitting Saw'
+        ? Math.max(radius * 0.28, diameter * 0.08)
+        : Math.max(radius * 0.72, diameter * 0.2);
+      addCylinder(shankRadius, shankRadius, shankLength, stickOut + shankLength / 2, 20,
+        new THREE.MeshPhongMaterial({ color: 0xa0a7b4, shininess: 60 }));
+      return { group, cuttingLength: stickOut, shankLength };
+    }
+
     function buildToolLayer(toolData) {
       if (!currentPath.length) {
         setLayer('tool', null);
@@ -620,34 +1152,26 @@
       const tipIndex = currentHighlight >= 0 && currentHighlight < currentPath.length
         ? currentHighlight
         : currentPath.length - 1;
-      const tip = gc3(currentPath[tipIndex].x, currentPath[tipIndex].y, currentPath[tipIndex].z);
+      const tipPoint = currentPath[tipIndex];
+      const tip = gc3(tipPoint.x, tipPoint.y, tipPoint.z);
+      const activeToolData = currentToolLibrary.get(Number(tipPoint.toolNumber)) || toolData;
 
-      const diameter = Math.max(Number(toolData?.diameter) || currentCutterSize || 0.25, 0.01);
-      const stickOut = Math.max(Number(toolData?.stickOut) || diameter * 3, diameter * 1.2);
-      const totalLength = Math.max(Number(toolData?.length) || stickOut * 1.8, stickOut);
-      const holderType = toolData?.holder || 'CAT40';
-      const toolColor = new THREE.Color(toolData?.color || '#f6c85f');
-      const shankLength = Math.max(totalLength - stickOut, diameter * 1.5);
+      const diameter = Math.max(Number(activeToolData?.diameter) || currentCutterSize || 0.25, 0.01);
+      const stickOut = Math.max(Number(activeToolData?.stickOut) || diameter * 3, diameter * 1.2);
+      const totalLength = Math.max(Number(activeToolData?.length) || stickOut * 1.8, stickOut);
+      const holderType = activeToolData?.holder || 'CAT40';
+      const toolColor = new THREE.Color(activeToolData?.color || '#f6c85f');
 
-      const toolGroup = new THREE.Group();
-      toolGroup.position.copy(tip);
+      if (isTurning || activeToolData?.insertCode) {
+        setLayer('tool', buildTurningInsertTool(activeToolData, tip, diameter, stickOut, totalLength));
+        setLayer('toolHolder', null);
+        return;
+      }
 
-      const cuttingLength = Math.max(stickOut, diameter * 0.8);
-      const cuttingMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(diameter / 2, diameter / 2, cuttingLength, 20),
-        new THREE.MeshPhongMaterial({ color: toolColor, shininess: 80 })
-      );
-      cuttingMesh.position.y = cuttingLength / 2;
-      toolGroup.add(cuttingMesh);
-
-      const shankDiameter = Math.max(diameter * 0.65, diameter * 0.4);
-      const shankMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(shankDiameter / 2, shankDiameter / 2, shankLength, 18),
-        new THREE.MeshPhongMaterial({ color: 0xa0a7b4, shininess: 60 })
-      );
-      shankMesh.position.y = cuttingLength + shankLength / 2;
-      toolGroup.add(shankMesh);
-      setLayer('tool', toolGroup);
+      const millingTool = buildMillingTool(activeToolData, tip, diameter, stickOut, totalLength, toolColor);
+      const cuttingLength = millingTool.cuttingLength;
+      const shankLength = millingTool.shankLength;
+      setLayer('tool', millingTool.group);
 
       if (holderType === 'None') {
         setLayer('toolHolder', null);
@@ -668,9 +1192,138 @@
       setLayer('toolHolder', holderGroup);
     }
 
+    function targetColor(role) {
+      return {
+        'target-part': 0xb084ff,
+        fixture: 0x9aa7b8,
+        stock: 0x58a6ff,
+        jaws: 0xffb454,
+        tooling: 0x72f1b8,
+        holder: 0xc9d1d9,
+        other: 0xe8d7ff,
+      }[role] || 0xb084ff;
+    }
+
+    function buildTargetObject(item) {
+      if (!item || !item.bounds) return null;
+      const itemOffset = item.offset || { x: 0, y: 0, z: 0 };
+      const itemDisplayMode = item.displayMode || 'transparent';
+      const itemOpacity = Math.max(0.05, Math.min(1, Number(item.opacity) || viewOpacity.targetModel));
+      const b = item.bounds;
+      const w = Math.max(0.0001, Number(b.maxX) - Number(b.minX));
+      const d = Math.max(0.0001, Number(b.maxY) - Number(b.minY));
+      const h = Math.max(0.0001, Number(b.maxZ) - Number(b.minZ));
+      const cx = (Number(b.minX) + Number(b.maxX)) / 2 + itemOffset.x;
+      const cy = (Number(b.minY) + Number(b.maxY)) / 2 + itemOffset.y;
+      const cz = (Number(b.minZ) + Number(b.maxZ)) / 2 + itemOffset.z;
+      const group = new THREE.Group();
+      group.name = `${item.role || 'scene'}: ${item.name || 'model'}`;
+      const isHidden = itemDisplayMode === 'hidden';
+      const isWireframe = itemDisplayMode === 'wireframe';
+      const isSolid = itemDisplayMode === 'solid';
+      const color = targetColor(item.role);
+      if (Array.isArray(item.meshVertices) && item.meshVertices.length >= 9) {
+        const pos = [];
+        for (let i = 0; i + 2 < item.meshVertices.length; i += 3) {
+          const p = gc3(
+            Number(item.meshVertices[i]) + itemOffset.x,
+            Number(item.meshVertices[i + 1]) + itemOffset.y,
+            Number(item.meshVertices[i + 2]) + itemOffset.z
+          );
+          pos.push(p.x, p.y, p.z);
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        geo.computeVertexNormals();
+        const material = new THREE.MeshPhongMaterial({
+          color,
+          emissive: 0x12051f,
+          specular: 0xffffff,
+          shininess: 35,
+          transparent: !isSolid,
+          opacity: isSolid ? 1 : itemOpacity,
+          depthWrite: isSolid,
+          side: THREE.DoubleSide,
+          wireframe: isWireframe,
+        });
+        const mesh = new THREE.Mesh(geo, material);
+        mesh.visible = !isHidden;
+        const edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(geo),
+          new THREE.LineBasicMaterial({ color: 0xe8d7ff, transparent: true, opacity: isWireframe ? 0.95 : 0.35 })
+        );
+        edges.visible = !isHidden && !isSolid;
+        group.add(mesh, edges);
+      } else {
+        const material = new THREE.MeshPhongMaterial({
+          color,
+          emissive: 0x070b12,
+          specular: 0xf4f7ff,
+          shininess: 48,
+          transparent: !isSolid,
+          opacity: isSolid ? 1 : itemOpacity,
+          depthWrite: isSolid,
+          side: THREE.DoubleSide,
+          wireframe: isWireframe,
+        });
+        const fill = new THREE.Mesh(new THREE.BoxGeometry(w, h, d, 2, 2, 2), material);
+        fill.position.copy(gc3(cx, cy, cz));
+        fill.visible = !isHidden;
+        const edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(fill.geometry),
+          new THREE.LineBasicMaterial({ color: 0xf2f6ff, transparent: true, opacity: isWireframe ? 0.95 : 0.42 })
+        );
+        edges.position.copy(fill.position);
+        edges.visible = !isHidden && !isSolid;
+        const cornerDots = new THREE.Group();
+        const dotMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 });
+        for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) {
+          const dot = new THREE.Mesh(new THREE.SphereGeometry(Math.max(Math.min(w, d, h) * 0.018, 0.012), 8, 6), dotMaterial);
+          dot.position.copy(gc3(cx + sx * w / 2, cy + sz * d / 2, cz + sy * h / 2));
+          cornerDots.add(dot);
+        }
+        cornerDots.visible = !isHidden && !isSolid;
+        group.add(fill, edges, cornerDots);
+      }
+      return group;
+    }
+
+    function buildFusionReference(dataUrl) {
+      if (!dataUrl) { setLayer('fusionReference', null); return; }
+      new THREE.TextureLoader().load(dataUrl, texture => {
+        if ('colorSpace' in texture && THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+        const source = texture.image || {};
+        const aspect = Math.max(0.2, Math.min(5, Number(source.width) / Math.max(Number(source.height), 1)));
+        const width = Math.max(stockCfg.w * 0.42, 10);
+        const height = width / aspect;
+        const material = new THREE.SpriteMaterial({ map: texture, color: 0xffffff, depthTest: false, depthWrite: false });
+        const sprite = new THREE.Sprite(material);
+        sprite.name = 'Fusion shaded 2D reference';
+        sprite.scale.set(width, height, 1);
+        const x = originOff.x + stockCfg.w + width * 0.62;
+        const y = originOff.y + stockCfg.d / 2;
+        const z = originOff.z + stockCfg.h * 1.35;
+        sprite.position.copy(gc3(x, y, z));
+        sprite.renderOrder = 20;
+        setLayer('fusionReference', sprite);
+        if (!userMovedCamera && currentPath?.length) fitCamera(currentPath);
+      }, undefined, () => setLayer('fusionReference', null));
+    }
+
+    function buildTargetModel() {
+      const root = new THREE.Group();
+      root.name = 'Imported scene models';
+      for (const item of targetModels) {
+        const obj = buildTargetObject(item);
+        if (obj) root.add(obj);
+      }
+      setLayer('targetModel', root.children.length ? root : null);
+    }
+
     function rebuildSimulationLayers() {
       buildSweptTube(currentPath, currentCutterSize);
       buildToolLayer(currentToolData);
+      buildTargetModel();
     }
 
     // -----------------------------------------------------------------------
@@ -691,9 +1344,9 @@
       if (currentHighlight >= 0 && currentHighlight < currentPath.length) {
         const p = currentPath[currentHighlight];
         const z = p.z !== undefined ? p.z : 0;
-        elP.textContent = `X${p.x.toFixed(4)}  Y${p.y.toFixed(4)}  Z${z.toFixed(4)}`;
+        elP.innerHTML = `<span class="axis-x">X${p.x.toFixed(4)}</span>  <span class="axis-y">Y${p.y.toFixed(4)}</span>  <span class="axis-z">Z${z.toFixed(4)}</span>`;
       } else {
-        elP.textContent = '';
+        elP.replaceChildren();
       }
     }
 
@@ -716,8 +1369,10 @@
       // always a reference box, but that size is invented - fitting to it framed
       // a small part as a speck inside a fictional block. Jaws only exist when
       // stock was declared, so they follow the same flag.
-      if (stockIsDeclared) {
-        for (const name of ['stock', 'workholding']) {
+      if (stockIsDeclared || targetModels.length > 0) {
+        // The Fusion preview is a reference billboard, not physical geometry.
+        // Including it in fit bounds made correctly-sized programs look tiny.
+        for (const name of ['stock', 'workholding', 'targetModel']) {
           const obj = layerMeshes[name];
           if (obj && obj.visible) bbox.expandByObject(obj);
         }
@@ -757,6 +1412,32 @@
         orbitTarget.z + orbitRadius * sinP * cosT
       );
       camera.lookAt(orbitTarget);
+    }
+    function setPresetView(name) {
+      const n = String(name || 'iso');
+      if (n === 'top') {
+        orbitTheta = 0; orbitPhi = 0.0001;
+      } else if (n === 'front') {
+        orbitTheta = 0; orbitPhi = Math.PI / 2;
+      } else if (n === 'back') {
+        orbitTheta = Math.PI; orbitPhi = Math.PI / 2;
+      } else if (n === 'right') {
+        orbitTheta = Math.PI / 2; orbitPhi = Math.PI / 2;
+      } else if (n === 'left') {
+        orbitTheta = -Math.PI / 2; orbitPhi = Math.PI / 2;
+      } else if (n === 'bottom') {
+        orbitTheta = 0; orbitPhi = Math.PI - 0.0001;
+      } else if (n === 'xyz') {
+        orbitTheta = Math.PI / 4; orbitPhi = Math.PI / 3.5;
+      } else if (n === 'zyx') {
+        orbitTheta = -Math.PI * 0.72; orbitPhi = Math.PI / 2.8;
+      } else if (n === 'yzx') {
+        orbitTheta = Math.PI * 0.78; orbitPhi = Math.PI / 2.35;
+      } else {
+        orbitTheta = Math.PI / 4; orbitPhi = Math.PI / 3.5;
+      }
+      userMovedCamera = true;
+      updateCameraOrbit();
     }
     updateCameraOrbit();
     buildOrigin();
@@ -839,7 +1520,7 @@
     let probeRequested = false;
     const CLEAR_RGB = [0x1a, 0x1a, 0x2e];
 
-    function readLitPixels() {
+    function readLitPixels(beforeOverlay) {
       const gl = renderer.getContext();
       const w = renderer.domElement.width;
       const h = renderer.domElement.height;
@@ -851,8 +1532,11 @@
       // the program contains, so counting it would put a floor under litRatio
       // and the blank-scene assertion could never fire again.
       const px = renderer.getPixelRatio ? renderer.getPixelRatio() : 1;
-      const gx = (GNOMON_MARGIN + GNOMON_PX) * px;
-      const gy = (GNOMON_MARGIN + GNOMON_PX) * px;
+      const gvp = gnomonViewportCss(w / px, h / px);
+      const gx0 = gvp.x * px;
+      const gy0 = gvp.y * px;
+      const gx1 = (gvp.x + gvp.size) * px;
+      const gy1 = (gvp.y + gvp.size) * px;
 
       let lit = 0;
       let total = 0;
@@ -867,11 +1551,13 @@
         const p = i / 4;
         const x = p % w;
         const y = Math.floor(p / w);   // readPixels origin is bottom-left
-        if (x < gx && y < gy) {
+        if (x >= gx0 && x <= gx1 && y >= gy0 && y <= gy1) {
           gnomonTotal++;
-          const gr = Math.abs(buf[i] - CLEAR_RGB[0]);
-          const gg = Math.abs(buf[i + 1] - CLEAR_RGB[1]);
-          const gb = Math.abs(buf[i + 2] - CLEAR_RGB[2]);
+          // Measure pixels actually changed by the overlay, not scene geometry
+          // that happens to be visible behind this corner when it is disabled.
+          const gr = Math.abs(buf[i] - (beforeOverlay ? beforeOverlay[i] : CLEAR_RGB[0]));
+          const gg = Math.abs(buf[i + 1] - (beforeOverlay ? beforeOverlay[i + 1] : CLEAR_RGB[1]));
+          const gb = Math.abs(buf[i + 2] - (beforeOverlay ? beforeOverlay[i + 2] : CLEAR_RGB[2]));
           if (gr + gg + gb > 12) gnomonLit++;
           continue;
         }
@@ -887,11 +1573,19 @@
     function animate() {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
+      let beforeOverlay;
+      if (probeRequested) {
+        const gl = renderer.getContext();
+        const w = renderer.domElement.width;
+        const h = renderer.domElement.height;
+        beforeOverlay = new Uint8Array(w * h * 4);
+        gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, beforeOverlay);
+      }
       renderGnomon();
       if (probeRequested) {
         probeRequested = false;
         try {
-          const probe = readLitPixels();
+          const probe = readLitPixels(beforeOverlay);
           vscode.postMessage({
             type: 'visualProbe',
             litPixels: probe.lit,
@@ -902,6 +1596,24 @@
             width: probe.width,
             height: probe.height,
             pathPoints: currentPath.length,
+            targetLoaded: targetModels.length > 0,
+            targetCount: targetModels.length,
+            fusionSetup: fusionSetup,
+            stock: stockIsDeclared ? Object.assign({}, stockCfg) : null,
+            stockOrigin: Object.assign({}, originOff),
+            fusionPreviewVisible: !!(document.getElementById('fusion-preview')?.naturalWidth),
+            fusionReferenceVisible: !!layerMeshes.fusionReference,
+            activeTargetRole: getActiveTarget()?.role || '',
+            activeTargetName: getActiveTarget()?.name || '',
+            activeTargetBounds: getActiveTarget()?.bounds ? Object.assign({}, getActiveTarget().bounds) : null,
+            targetDisplayMode: getActiveTarget()?.displayMode || targetDisplayMode,
+            insertCode: currentToolData?.insertCode || '',
+            activeToolNumber: Number(currentToolData?.toolNumber) || null,
+            toolDiameter: Number(currentToolData?.diameter) || currentCutterSize || null,
+            toolVisible: !!layerMeshes.tool,
+            turningToolVisible: !!(currentToolData?.insertCode || isTurning),
+            programOptions: document.getElementById('program-select')?.options?.length || 0,
+            playbackSpeed,
             opacity: Object.assign({}, viewOpacity),
             orbit: { theta: orbitTheta, phi: orbitPhi },
           });
@@ -934,9 +1646,12 @@
         root.traverse?.((node) => {
           const mats = Array.isArray(node.material) ? node.material : (node.material ? [node.material] : []);
           for (const m of mats) {
-            m.opacity = value;
-            m.transparent = value < 0.999;
-            m.depthWrite = value >= 0.999;
+            const forceSolid = layer === 'targetModel' && getActiveTarget()?.displayMode === 'solid';
+            const forceWire = layer === 'targetModel' && getActiveTarget()?.displayMode === 'wireframe';
+            m.opacity = forceSolid ? 1 : value;
+            m.transparent = !forceSolid && value < 0.999;
+            m.depthWrite = forceSolid || value >= 0.999;
+            if (typeof m.wireframe === 'boolean') m.wireframe = forceWire;
             m.needsUpdate = true;
           }
         });
@@ -965,17 +1680,173 @@
     for (const box of document.querySelectorAll('.view-toggles input[data-layer]')) {
       box.addEventListener('change', () => {
         const layer = box.getAttribute('data-layer');
-        layerVis[layer] = box.checked;
-        if (layerMeshes[layer]) layerMeshes[layer].visible = box.checked;
+        setLayerVisible(layer, box.checked);
       });
     }
     const gnomonBox = document.getElementById('tg-gnomon');
     if (gnomonBox) gnomonBox.addEventListener('change', () => { gnomonVisible = gnomonBox.checked; });
 
+    const stockPreset = document.getElementById('stock-origin-preset');
+    function syncStockTransformControls() {
+      const values = {
+        'stock-home-x': originOff.x, 'stock-home-y': originOff.y, 'stock-home-z': originOff.z,
+        'stock-rot-x': stockRotation.x, 'stock-rot-y': stockRotation.y, 'stock-rot-z': stockRotation.z,
+      };
+      for (const [id, value] of Object.entries(values)) {
+        const input = document.getElementById(id);
+        if (input) input.value = String(value);
+      }
+    }
+    function applyStockTransformControls() {
+      originOff = {
+        x: Number(document.getElementById('stock-home-x')?.value) || 0,
+        y: Number(document.getElementById('stock-home-y')?.value) || 0,
+        z: Number(document.getElementById('stock-home-z')?.value) || 0,
+      };
+      stockRotation = {
+        x: Number(document.getElementById('stock-rot-x')?.value) || 0,
+        y: Number(document.getElementById('stock-rot-y')?.value) || 0,
+        z: Number(document.getElementById('stock-rot-z')?.value) || 0,
+      };
+      buildOrigin(); buildStock(); buildWorkholding();
+      vscode.postMessage({ type: 'stockOrigin', xOff: originOff.x, yOff: originOff.y, zOff: originOff.z, rotX: stockRotation.x, rotY: stockRotation.y, rotZ: stockRotation.z });
+    }
+    stockPreset?.addEventListener('change', () => {
+      const preset = stockPreset.value;
+      if (preset === 'cornerFL') originOff = { x: stockCfg.w / 2, y: stockCfg.d / 2, z: 0 };
+      else if (preset === 'centerTop') originOff = { x: 0, y: 0, z: 0 };
+      else if (preset === 'centerBottom') originOff = { x: 0, y: 0, z: -stockCfg.h };
+      syncStockTransformControls();
+      applyStockTransformControls();
+    });
+    for (const id of ['stock-home-x', 'stock-home-y', 'stock-home-z', 'stock-rot-x', 'stock-rot-y', 'stock-rot-z']) {
+      document.getElementById(id)?.addEventListener('change', () => {
+        if (stockPreset) stockPreset.value = 'custom';
+        applyStockTransformControls();
+      });
+    }
+    syncStockTransformControls();
+
+    let playbackSpeed = 1;
+    function setPlaybackSpeed(value) {
+      playbackSpeed = Math.max(0.25, Math.min(4, Number(value) || 1));
+      const out = document.getElementById('speed-readout');
+      if (out) out.textContent = playbackSpeed + 'x';
+    }
+    document.getElementById('play')?.addEventListener('click', () =>
+      vscode.postMessage({ command: 'jobline.gcode.play', speed: playbackSpeed }));
+    document.getElementById('pause')?.addEventListener('click', () =>
+      vscode.postMessage({ command: 'jobline.gcode.pause' }));
+    document.getElementById('stop')?.addEventListener('click', () =>
+      vscode.postMessage({ command: 'jobline.gcode.stop' }));
+    document.getElementById('step-back')?.addEventListener('click', () =>
+      vscode.postMessage({ command: 'jobline.gcode.stepBack' }));
+    document.getElementById('step-forward')?.addEventListener('click', () =>
+      vscode.postMessage({ command: 'jobline.gcode.stepForward' }));
+    for (const btn of document.querySelectorAll('[data-speed]')) {
+      btn.addEventListener('click', () => {
+        setPlaybackSpeed(btn.getAttribute('data-speed'));
+        vscode.postMessage({ command: 'jobline.gcode.play', speed: playbackSpeed });
+      });
+    }
+    setPlaybackSpeed(1);
+
+    document.getElementById('program-select')?.addEventListener('change', (event) => {
+      const uri = event.target?.value || '';
+      if (uri) vscode.postMessage({ command: 'jobline.gcode.openProgramInVisualizer', arg: uri });
+    });
+
+    document.getElementById('import-target')?.addEventListener('click', () =>
+      vscode.postMessage({
+        command: 'jobline.gcode.importTargetModel',
+        arg: { role: targetRole?.value || 'target-part', targetId: targetRole?.value || 'target-part' }
+      }));
+    const targetList = document.getElementById('target-list');
+    const targetRole = document.getElementById('target-role');
+    const targetOpacity = document.getElementById('target-opacity');
+    const targetOpacityOut = document.getElementById('target-opacity-v');
+    const targetDisplay = document.getElementById('target-display');
+
+    function syncTargetControls() {
+      const active = getActiveTarget();
+      if (targetList) {
+        targetList.replaceChildren();
+        if (!targetModels.length) {
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No scene item';
+          targetList.appendChild(option);
+        }
+        for (const item of targetModels) {
+          const option = document.createElement('option');
+          option.value = item.id;
+          option.textContent = `${item.targetId || item.role || 'scene'} - ${item.name || 'model'}`;
+          option.selected = item.id === active?.id;
+          targetList.appendChild(option);
+        }
+      }
+      const name = document.getElementById('target-name');
+      if (name) name.textContent = active ? `${targetModels.length} item(s): ${active.name || 'model'} (${active.format || active.role || 'model'})` : 'No target loaded';
+      const summaryName = document.getElementById('target-summary-name');
+      if (summaryName) summaryName.textContent = active ? (active.name || active.role || 'Loaded') : 'None';
+      if (targetRole) targetRole.value = active?.role || 'target-part';
+      if (targetOpacity) targetOpacity.value = String(Math.round((Number(active?.opacity) || viewOpacity.targetModel) * 100));
+      if (targetOpacityOut) targetOpacityOut.textContent = (targetOpacity?.value || '35') + '%';
+      if (targetDisplay) targetDisplay.value = active?.displayMode || 'transparent';
+      for (const axis of ['x', 'y', 'z']) {
+        const input = document.getElementById('target-' + axis);
+        if (input) input.value = String(Number(active?.offset?.[axis]) || 0);
+      }
+    }
+
+    function updateActiveTarget(mutator) {
+      const active = getActiveTarget();
+      if (!active) return;
+      mutator(active);
+      targetOffset = active.offset || { x: 0, y: 0, z: 0 };
+      targetDisplayMode = active.displayMode || 'transparent';
+      syncTargetControls();
+      buildTargetModel();
+    }
+
+    targetList?.addEventListener('change', () => {
+      activeTargetId = targetList.value || '';
+      const active = getActiveTarget();
+      targetOffset = active?.offset || { x: 0, y: 0, z: 0 };
+      targetDisplayMode = active?.displayMode || 'transparent';
+      syncTargetControls();
+    });
+    targetRole?.addEventListener('change', () => updateActiveTarget((active) => { active.role = targetRole.value || 'target-part'; }));
+    targetOpacity?.addEventListener('input', () => {
+      const pct = Number(targetOpacity.value) || 35;
+      updateActiveTarget((active) => { active.opacity = pct / 100; });
+    });
+    targetDisplay?.addEventListener('change', () => {
+      updateActiveTarget((active) => { active.displayMode = targetDisplay.value || 'transparent'; });
+    });
+    function bindTargetOffset(axis) {
+      const input = document.getElementById('target-' + axis);
+      input?.addEventListener('input', () => {
+        updateActiveTarget((active) => {
+          active.offset = active.offset || { x: 0, y: 0, z: 0 };
+          active.offset[axis] = Number(input.value) || 0;
+        });
+      });
+    }
+    bindTargetOffset('x');
+    bindTargetOffset('y');
+    bindTargetOffset('z');
+    for (const btn of document.querySelectorAll('[data-view]')) {
+      btn.addEventListener('click', () => setPresetView(btn.getAttribute('data-view')));
+    }
+
     // Re-apply after anything rebuilds geometry, or a fresh mesh comes back at
     // its constructor opacity and the panel silently stops describing the view.
     function reapplyViewOpacity() {
-      for (const layer of Object.keys(viewOpacity)) applyOpacity(layer, viewOpacity[layer]);
+      for (const layer of Object.keys(viewOpacity)) {
+        if (layer === 'targetModel') continue;
+        applyOpacity(layer, viewOpacity[layer]);
+      }
     }
 
     // -----------------------------------------------------------------------
@@ -1013,6 +1884,27 @@
         list.appendChild(item);
       }
       vscode.postMessage({ type: 'renderReady', reviewRendered: true, pathPoints: currentPath.length });
+    }
+
+    function renderProgramList(msg) {
+      const select = document.getElementById('program-select');
+      if (!select) return;
+      const programs = Array.isArray(msg.programs) ? msg.programs : [];
+      const activeUri = msg.activeUri || '';
+      select.replaceChildren();
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = programs.length ? 'Switch G-code program...' : 'Open a G-code tab...';
+      select.appendChild(placeholder);
+      for (const program of programs) {
+        const option = document.createElement('option');
+        option.value = program.uri || '';
+        option.textContent = program.name || program.path || 'G-code program';
+        option.title = program.path || '';
+        option.selected = !!activeUri && option.value === activeUri;
+        select.appendChild(option);
+      }
+      if (!programs.some(program => program.uri === activeUri)) select.value = '';
     }
 
     window.addEventListener('message', e => {
@@ -1054,6 +1946,9 @@
 
         case 'stockOrigin': {
           originOff = { x: Number(msg.xOff)||0, y: Number(msg.yOff)||0, z: Number(msg.zOff)||0 };
+          stockRotation = { x: Number(msg.rotX)||0, y: Number(msg.rotY)||0, z: Number(msg.rotZ)||0 };
+          if (stockPreset && msg.preset) stockPreset.value = msg.preset;
+          syncStockTransformControls();
           buildOrigin();
           buildStock();
           buildWorkholding();
@@ -1084,11 +1979,7 @@
           break;
         }
         case 'setLayerVisible': {
-          const box = document.querySelector('.view-toggles input[data-layer="' + msg.layer + '"]');
-          if (box) {
-            box.checked = !!msg.visible;
-            box.dispatchEvent(new Event('change'));
-          }
+          setLayerVisible(msg.layer, msg.visible);
           break;
         }
         case 'gnomonVisible': {
@@ -1105,6 +1996,32 @@
           updateCameraOrbit();
           break;
         }
+        case 'setPresetView': {
+          // Drives the same function as the view-cube buttons so the screenshot
+          // matrix can prove Top/Right/Left/Iso are not dead labels.
+          setPresetView(msg.view);
+          break;
+        }
+        case 'setPlaybackSpeed': {
+          setPlaybackSpeed(msg.speed);
+          break;
+        }
+        case 'setTargetOffset': {
+          updateActiveTarget((active) => {
+            active.offset = active.offset || { x: 0, y: 0, z: 0 };
+            for (const axis of ['x', 'y', 'z']) {
+              if (msg[axis] == null) continue;
+              active.offset[axis] = Number(msg[axis]) || 0;
+            }
+          });
+          break;
+        }
+        case 'setTargetDisplayMode': {
+          updateActiveTarget((active) => {
+            active.displayMode = ['solid', 'transparent', 'wireframe', 'hidden'].includes(msg.mode) ? msg.mode : 'transparent';
+          });
+          break;
+        }
         case 'requestVisualProbe': {
           // Answered from inside the render loop, so the pixels read are the
           // ones just drawn. Used by the visual test bed to prove the scene
@@ -1118,12 +2035,23 @@
           buildToolLayer(currentToolData);
           break;
         }
+        case 'toolLibrary': {
+          currentToolLibrary.clear();
+          for (const tool of Array.isArray(msg.tools) ? msg.tools : []) {
+            if (Number.isFinite(Number(tool?.toolNumber))) currentToolLibrary.set(Number(tool.toolNumber), tool);
+          }
+          buildToolLayer(currentToolData);
+          break;
+        }
+        case 'setActiveToolData': {
+          currentToolData = msg.data || null;
+          buildToolLayer(currentToolData);
+          break;
+        }
 
         case 'layerToggle': {
           const { layer, visible } = msg;
-          if (layer in layerVis) layerVis[layer] = !!visible;
-          if (layer in layerMeshes && layerMeshes[layer])
-            layerMeshes[layer].visible = !!visible;
+          setLayerVisible(layer, visible);
           break;
         }
 
@@ -1138,6 +2066,61 @@
         case 'machineCapabilities':
           // Reserved for future machine-envelope rendering
           break;
+
+        case 'programList':
+          renderProgramList(msg);
+          break;
+
+        case 'targetModel': {
+          const item = normalizeTargetItem(msg);
+          const idx = targetModels.findIndex(existing => existing.id === item.id);
+          if (idx >= 0) targetModels[idx] = item;
+          else targetModels.push(item);
+          activeTargetId = item.id;
+          targetOffset = item.offset;
+          targetDisplayMode = item.displayMode;
+          syncTargetControls();
+          buildTargetModel();
+          if (!userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
+          break;
+        }
+
+        case 'clearTargetModels':
+          targetModels = [];
+          activeTargetId = '';
+          syncTargetControls();
+          buildTargetModel();
+          break;
+
+        case 'resetVisualScene':
+          targetModels = [];
+          activeTargetId = '';
+          currentToolData = null;
+          stockIsDeclared = false;
+          fusionSetup = null;
+          for (const layer of ['targetModel', 'stock', 'workholding', 'tool', 'fusionReference']) {
+            setLayer(layer, null);
+          }
+          syncTargetControls();
+          break;
+
+        case 'fusionSetup': {
+          fusionSetup = msg.setup || null;
+          const info = document.getElementById('fusion-setup-info');
+          if (info && fusionSetup) {
+            const offset = fusionSetup.workOffset || {};
+            const fixture = fusionSetup.fixture || {};
+            info.textContent = `${msg.name || 'Fusion setup'}: ${fusionSetup.setupName || 'Setup'} · ${offset.code || 'WCS unknown'}${offset.inferred ? ' (Fusion default)' : ''} · ${fixture.assigned ? 'fixture supplied' : 'no fixture supplied'}`;
+            info.style.display = 'block';
+          }
+          const preview = document.getElementById('fusion-preview');
+          if (preview) {
+            preview.src = typeof msg.previewDataUrl === 'string' ? msg.previewDataUrl : '';
+            preview.style.display = preview.src ? 'block' : 'none';
+          }
+          buildFusionReference(msg.previewDataUrl);
+          break;
+        }
 
         case 'review':
           renderReview(msg.review);

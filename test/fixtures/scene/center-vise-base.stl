@@ -1,0 +1,16 @@
+solid center_vise_base
+  facet normal 0 0 1
+    outer loop
+      vertex -3 -2 -0.7
+      vertex 8 -2 -0.7
+      vertex 8 5 -0.2
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex -3 -2 -0.7
+      vertex 8 5 -0.2
+      vertex -3 5 -0.2
+    endloop
+  endfacet
+endsolid center_vise_base

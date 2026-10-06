@@ -1,0 +1,16 @@
+solid cutter_stub
+  facet normal 0 0 1
+    outer loop
+      vertex 2.3 1.8 0.4
+      vertex 2.7 1.8 0.4
+      vertex 2.7 2.2 3.2
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex 2.3 1.8 0.4
+      vertex 2.7 2.2 3.2
+      vertex 2.3 2.2 3.2
+    endloop
+  endfacet
+endsolid cutter_stub

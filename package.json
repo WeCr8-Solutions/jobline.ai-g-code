@@ -2,7 +2,7 @@
   "name": "jobline-gcode",
   "displayName": "JobLine G-Code Intelligence",
   "description": "Deep G-code and robot-program intelligence for CNC machinists and automation engineers — syntax highlighting, hover tooltips, canned cycle & probing detection, Macro B evaluation, Fanuc/Haas/Siemens/Mazak/Okuma CNC dialects, Fanuc Robot TP, and ABB RAPID.",
-  "version": "0.3.4",
+  "version": "0.3.12",
   "publisher": "WeCr8-Solutions",
   "license": "MIT",
   "author": {
@@ -279,6 +279,10 @@
         "title": "G-Code: Pause"
       },
       {
+        "command": "jobline.gcode.stop",
+        "title": "G-Code: Stop"
+      },
+      {
         "command": "jobline.gcode.stepForward",
         "title": "G-Code: Step Forward"
       },
@@ -291,6 +295,14 @@
         "title": "G-Code: Jump to Line"
       },
       {
+        "command": "jobline.gcode.importTargetModel",
+        "title": "G-Code: Import Target Model"
+      },
+      {
+        "command": "jobline.gcode.openProgramInVisualizer",
+        "title": "G-Code: Open Program in Visualizer"
+      },
+      {
         "command": "jobline.gcode.revealLine",
         "title": "G-Code: Reveal Review Finding"
       },
@@ -298,6 +310,11 @@
         "command": "jobline.gcode.showVisualizer",
         "title": "Show Toolpath Visualizer",
         "icon": "$(eye)"
+      },
+      {
+        "command": "jobline.openSimulationFullWindow",
+        "title": "JobLine: Open Simulation Full Window",
+        "icon": "$(screen-full)"
       },
       {
         "command": "jobline.selectControl",
@@ -538,6 +555,11 @@
           "command": "jobline.openSimulation",
           "when": "resourceLangId == gcode",
           "group": "navigation@7"
+        },
+        {
+          "command": "jobline.openSimulationFullWindow",
+          "when": "resourceLangId == gcode",
+          "group": "navigation@8"
         }
       ],
       "view/title": [
@@ -689,12 +711,16 @@
     "test:diagnostics": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/diagnostics.test.ts');\"",
     "test:review": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/program-review.test.ts');\"",
     "test:visualizer:harness": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/revpack-visualizer-harness.test.ts');\"",
-    "test:verification": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/gcode-stl-comparison.test.ts');\"",
+    "test:verification": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/gcode-stl-comparison.test.ts');require('./test/step-tessellator.test.ts');\"",
     "test:simulation-matrix": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/simulation-matrix.test.ts');\"",
     "test:pipeline-gate": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/manufacturing-pipeline.test.ts');\"",
-    "test:all": "npm test && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:simulation-matrix && npm run test:pipeline-gate",
+    "test:visualizer-ui": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/visualizer-ui-controls.test.ts');require('./test/stl-mesh-loader.test.ts');require('./test/fusion-archive.test.ts');\"",
+    "test:hover-cards": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/hover-cards.test.ts');\"",
+    "test:feedback-matrix": "node --test test/user-feedback-motion-matrix.test.cjs",
+    "test:all": "npm test && npm run test:feedback-matrix && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:simulation-matrix && npm run test:pipeline-gate && npm run test:visualizer-ui && npm run test:hover-cards",
     "test:smoke": "node ./scripts/run-extension-smoke.js",
     "test:e2e:visual": "npm run compile && node ./scripts/run-visual-e2e.js",
+    "test:e2e:hover": "npm run compile && node ./scripts/run-hover-e2e.js",
     "test:ci": "npm run compile && npm run test:all && npm run review:fixtures",
     "test:typecheck": "tsc --noEmit -p tsconfig.json",
     "visualizer:harness:revpack": "node -r ts-node/register ./scripts/revpack-visualizer-harness.ts",
@@ -704,9 +730,12 @@
     "qa": "npx ts-node --transpileOnly scripts/qa-runner.ts",
     "qa:docker": "docker compose -f docker-compose.qa.yml up --build --abort-on-container-exit",
     "package": "vsce package",
-    "precompile": "npm run lint"
+    "check:package": "node ./scripts/check-packaged-visualizer.cjs",
+    "precompile": "npm run lint",
+    "vscode:prepublish": "npm run compile"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
@@ -714,14 +743,18 @@
     "@typescript-eslint/parser": "^7.0.0",
     "@vscode/test-electron": "^2.3.8",
     "@vscode/vsce": "^2.22.0",
+    "adm-zip": "^0.6.1",
     "eslint": "^8.56.0",
     "mocha": "^10.2.0",
+    "playwright": "^1.63.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.0"
   },
   "dependencies": {
     "@types/three": "^0.183.1",
     "@vscode/l10n": "^0.0.18",
+    "fzstd": "^0.1.1",
+    "occt-import-js": "^0.0.23",
     "three": "^0.183.2"
   }
 }

@@ -28,8 +28,16 @@ const PLANE_CODES = new Map<number, 17 | 18 | 19>([[17, 17], [18, 18], [19, 19]]
 /** Group 3: Absolute/incremental */
 const POSITIONING_CODES = new Map<number, 90 | 91>([[90, 90], [91, 91]]);
 
-/** Group 5: Feed mode */
-const FEED_MODE_CODES = new Map<number, 94 | 95>([[94, 94], [95, 95]]);
+/**
+ * Group 5: Feed mode. G98/G99 are the lathe codes for the identical modal group as
+ * G94/G95 on a mill (feed/min, feed/rev) - see the comment on ModalState.activeFeedMode.
+ * Previously only 94/95 were here, so a program that set G99 (feed/rev) kept reading as
+ * the default G94 (feed/min) for every line that followed - every feed rate on this
+ * extension's own bundled lathe sample (samples/lathe-turning.nc, G99 F0.015) was
+ * mislabeled "0.015 IPM" instead of the actual "0.015 IPR", off by roughly two orders
+ * of magnitude in real cutting speed.
+ */
+const FEED_MODE_CODES = new Map<number, 94 | 95 | 98 | 99>([[94, 94], [95, 95], [98, 98], [99, 99]]);
 
 /** Group 6: Units */
 const UNIT_CODES = new Map<number, 20 | 21>([[20, 20], [21, 21]]);

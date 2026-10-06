@@ -35,13 +35,22 @@ function buildExplanations(text: string, dialect: string): LineExplanation[] {
     const tokenized = tokenizer.tokenizeDocument(text);
     const blocks = blockParser.parseDocument(tokenized);
     const model = modelBuilder.build(blocks, dialect);
+    // Content-detected, not just the dialect string - a Fanuc or Haas LATHE (most of a
+    // real fleet) never said "lathe" in its dialect setting, but G96/G97/G70-G76 in the
+    // program itself do. See narrateBlock's isLathe param doc for why this matters.
+    const isLathe = model.detectedMachineType.includes('Turn Center');
+    // ToolUsage.insertCode was write-only: ProgramModelBuilder already parses a real ISO
+    // insert designation (CNMG432 and similar) out of the tool-call comment, but nothing
+    // in the extension ever displayed it - not this panel, not the Tools sidebar, not
+    // the Tool Preview panel (which only accepts one typed in by hand). This is the fix.
+    const insertByTool = new Map(model.tools.map(t => [t.toolNumber, t.insertCode]));
 
     return blocks.map((block: GCodeBlock, i: number) => {
       const state: ModalState = model.stateAtBlock[i] ?? model.stateAtBlock[model.stateAtBlock.length - 1];
       return {
         lineNum: i + 1,
         raw: block.raw,
-        explanation: narrateBlock(block, state),
+        explanation: narrateBlock(block, state, isLathe, insertByTool),
       };
     });
   } catch {

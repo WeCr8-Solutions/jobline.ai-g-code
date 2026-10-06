@@ -1,5 +1,7 @@
 # JobLine QA Report
 
+> Historical run from March 2026. Results below are preserved as evidence for that run, not the status of 0.3.12. See [current verification coverage](docs/testing/USER_FEEDBACK_MATRIX.md).
+
 **Date:** 2026-03-27T19:47:55.619Z
 **Model:** qwen2.5-coder:7b  **Ollama:** http://localhost:11434
 **Duration:** 70.8s

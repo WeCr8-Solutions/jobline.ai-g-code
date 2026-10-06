@@ -59,7 +59,17 @@ export class ProgramModelBuilder {
     // On lathes (Okuma OSP, Fanuc lathe, etc.) the T-word encodes both tool
     // number AND offset register: T0101 = tool 1, offset 1.  Extract the
     // actual tool number by dropping the last two offset digits.
-    const isLatheDialect = dialect === 'okuma' || dialect.includes('lathe');
+    //
+    // This used to ask only the DIALECT string ("okuma", or literally containing
+    // "lathe") — so a Fanuc or Haas lathe, which is most of the real fleet, never
+    // qualified, and every T-word on it was misread: T0101 (tool 1) narrated as
+    // "Select T101", a station number that doesn't exist on a real turret. Content
+    // detection two lines above (detectMachineType) already finds a lathe correctly
+    // from G96/G97 or G70-G76 with no dialect string needed at all - this program's
+    // own sample lathe file has both and runs dialect 'fanuc'. Trust that result too,
+    // instead of re-deriving a weaker answer from the dialect string alone.
+    const isLatheDialect = dialect === 'okuma' || dialect.includes('lathe')
+      || model.detectedMachineType.includes('Turn Center');
     const decodeToolNum = (rawNum: number): number =>
       isLatheDialect && rawNum >= 100 ? Math.floor(rawNum / 100) : rawNum;
 

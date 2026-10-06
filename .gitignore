@@ -5,6 +5,15 @@ node_modules/
 .DS_Store
 *.js.map
 test-results/
+reports/
+TASKS.md
+
+# Local-only vendor/customer CAD downloaded for manual realism tests.
+# Do not commit Titans/MachiningCloud/5th Axis/Kurt/etc. assets unless their
+# license has been reviewed for redistribution inside this extension.
+test/fixtures/external-local/
+AR4 CAD Files/
+AR4 CAD Files.zip
 
 # Private shop programs — never publish
 test/fixtures/revpack/

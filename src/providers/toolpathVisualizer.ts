@@ -3,12 +3,16 @@ import * as fs from 'fs';
 
 const VISUALIZER_STATE_MESSAGE_TYPES = new Set([
   'toolData',
+  'toolLibrary',
   'stockSettings',
   'stockOrigin',
   'workholdingSettings',
   'layerToggle',
   'machineType',
   'machineCapabilities',
+  'programList',
+  'targetModel',
+  'fusionSetup',
   'review',
   'update',
 ]);
@@ -27,6 +31,14 @@ export class ToolpathVisualizerPanel {
     pathPoints: number;
     gnomonLit: number;
     gnomonTotal: number;
+    targetLoaded?: boolean;
+    targetCount?: number;
+    activeTargetRole?: string;
+    targetDisplayMode?: string;
+    insertCode?: string;
+    turningToolVisible?: boolean;
+    programOptions?: number;
+    playbackSpeed?: number;
     opacity: Record<string, number>;
     orbit: { theta: number; phi: number };
     error?: string;
@@ -68,8 +80,7 @@ export class ToolpathVisualizerPanel {
 
   public static readonly viewType = 'jobline.toolpathVisualizer';
 
-  public static show(extensionUri: vscode.Uri) {
-    const column = vscode.ViewColumn.Beside;
+  public static show(extensionUri: vscode.Uri, column: vscode.ViewColumn = vscode.ViewColumn.Beside) {
     if (ToolpathVisualizerPanel.currentPanel) {
       ToolpathVisualizerPanel.currentPanel._panel.reveal(column, true); // preserveFocus=true
       return;
@@ -95,7 +106,10 @@ export class ToolpathVisualizerPanel {
   public static queueMessage(msg: unknown) {
     const typed = msg as { type?: string } | undefined;
     if (typed?.type) {
-      ToolpathVisualizerPanel._stateMessages.set(typed.type, msg);
+      const replayKey = typed.type === 'targetModel' && typeof (typed as { id?: unknown }).id === 'string'
+        ? `${typed.type}:${(typed as { id: string }).id}`
+        : typed.type;
+      ToolpathVisualizerPanel._stateMessages.set(replayKey, msg);
     }
     ToolpathVisualizerPanel.currentPanel?.postMessage(msg);
   }
@@ -103,7 +117,10 @@ export class ToolpathVisualizerPanel {
   public postMessage(msg: unknown) {
     const typed = msg as { type?: string } | undefined;
     if (typed?.type) {
-      ToolpathVisualizerPanel._stateMessages.set(typed.type, msg);
+      const replayKey = typed.type === 'targetModel' && typeof (typed as { id?: unknown }).id === 'string'
+        ? `${typed.type}:${(typed as { id: string }).id}`
+        : typed.type;
+      ToolpathVisualizerPanel._stateMessages.set(replayKey, msg);
     }
     this._panel.webview.postMessage(msg);
   }
@@ -142,6 +159,14 @@ export class ToolpathVisualizerPanel {
           pathPoints: Number(msg.pathPoints) || 0,
           gnomonLit: Number(msg.gnomonLit) || 0,
           gnomonTotal: Number(msg.gnomonTotal) || 0,
+          targetLoaded: Boolean(msg.targetLoaded),
+          targetCount: Number(msg.targetCount) || 0,
+          activeTargetRole: typeof msg.activeTargetRole === 'string' ? msg.activeTargetRole : '',
+          targetDisplayMode: typeof msg.targetDisplayMode === 'string' ? msg.targetDisplayMode : '',
+          insertCode: typeof msg.insertCode === 'string' ? msg.insertCode : '',
+          turningToolVisible: Boolean(msg.turningToolVisible),
+          programOptions: Number(msg.programOptions) || 0,
+          playbackSpeed: Number(msg.playbackSpeed) || 0,
           opacity: (msg.opacity ?? {}) as Record<string, number>,
           orbit: (msg.orbit ?? { theta: 0, phi: 0 }) as { theta: number; phi: number },
           error: typeof msg.error === 'string' ? msg.error : undefined,
@@ -151,8 +176,9 @@ export class ToolpathVisualizerPanel {
         // Forward sidebar messages to visualizer webview
         this.postMessage(msg);
       } else if (msg.command) {
-        // Pass speed along with command if present
-        vscode.commands.executeCommand(msg.command, msg.speed);
+        // Pass the webview command payload through. Playback buttons send
+        // `speed`; review/finding clicks send `arg` (usually a source line).
+        vscode.commands.executeCommand(msg.command, msg.arg ?? msg.speed);
       }
     });
   }

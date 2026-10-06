@@ -139,6 +139,7 @@ export class ToolPreviewPanel {
             icSize: Number(parsed.icSize.toFixed(4)),
             thickness: parsed.thickness ?? parsed.icSize / 4,
             cornerRadius: parsed.cornerRadius ?? 0,
+            units: parsed.units,
             unitLabel: parsed.units === 'mm' ? ' mm' : ' in',
             outline: insertOutline(parsed.shape.code, parsed.icSize, parsed.cornerRadius ?? 0),
           });
@@ -278,10 +279,16 @@ export class ToolPreviewPanel {
       <label>Tool Type</label>
       <select id="toolType">
         <option>End Mill</option>
+        <option>Ball End Mill</option>
+        <option>Bull Nose End Mill</option>
         <option>Drill</option>
+        <option>Spot Drill</option>
         <option>Tap</option>
+        <option>Reamer</option>
+        <option>Chamfer Mill</option>
         <option>Face Mill</option>
         <option>Boring Bar</option>
+        <option>Slitting Saw</option>
         <option>Lathe Insert</option>
         <option>Custom</option>
       </select>
@@ -411,12 +418,30 @@ export class ToolPreviewPanel {
     let currentUnit = 'in';
 
     function setUnit(unit) {
+      if (unit !== currentUnit) {
+        const factor = unit === 'mm' ? 25.4 : 1 / 25.4;
+        for (const id of ['diameter', 'length', 'stickOut']) {
+          const field = document.getElementById(id);
+          const value = field ? Number(field.value) : NaN;
+          if (field && Number.isFinite(value)) field.value = String(Number((value * factor).toFixed(4)));
+        }
+        if (currentInsert) {
+          currentInsert.icSize *= factor;
+          currentInsert.thickness *= factor;
+          currentInsert.cornerRadius *= factor;
+          currentInsert.outline = currentInsert.outline.map(p => [p[0] * factor, p[1] * factor]);
+        }
+      }
       currentUnit = unit;
       document.getElementById('unitIn').style.background = unit === 'in' ? '#0e639c' : 'transparent';
       document.getElementById('unitMm').style.background = unit === 'mm' ? '#0e639c' : 'transparent';
       document.getElementById('unitIn').style.color = unit === 'in' ? '#fff' : '#ccc';
       document.getElementById('unitMm').style.color = unit === 'mm' ? '#fff' : '#ccc';
+      for (const label of document.querySelectorAll('label')) {
+        label.textContent = label.textContent.replace(/\\((?:in|mm)\\)$/, '(' + unit + ')');
+      }
       localStorage.setItem('toolPreviewUnit', unit);
+      if (scene) refreshPreview();
     }
 
     // Load saved unit preference
@@ -616,9 +641,66 @@ export class ToolPreviewPanel {
       // This way we can see it centered and properly scaled
       const toolOffsetZ = len / 2; // Center of tool at origin Z
 
+      // Three.js axial primitives are built along Y. The preview's documented
+      // tool axis is Z, so rotate every cutter/shank primitive at construction.
+      const alongZ = (geometry) => {
+        geometry.rotateX(Math.PI / 2);
+        return geometry;
+      };
+
       // Cutting portion (stick-out) — the working end of the tool
-      if (type === 'End Mill') {
-        const cuttingGeom = new THREE.CylinderGeometry(dia / 2, dia / 2, stick, 16);
+      if (type === 'Ball End Mill' || type === 'Bull Nose End Mill') {
+        const radius = dia / 2;
+        const tipLength = type === 'Ball End Mill' ? radius : Math.min(radius * 0.35, stick * 0.2);
+        const bodyLength = Math.max(stick - tipLength, 0.001);
+        const body = new THREE.Mesh(
+          alongZ(new THREE.CylinderGeometry(radius, radius, bodyLength, 24)),
+          new THREE.MeshPhongMaterial({ color: colorNum, shininess: 80, side: THREE.DoubleSide })
+        );
+        body.position.z = -toolOffsetZ + tipLength + bodyLength / 2;
+        group.add(body);
+
+        if (type === 'Ball End Mill') {
+          const ball = new THREE.Mesh(
+            new THREE.SphereGeometry(radius, 24, 14),
+            new THREE.MeshPhongMaterial({ color: colorNum, shininess: 90 })
+          );
+          ball.scale.z = 0.5;
+          ball.position.z = -toolOffsetZ + radius * 0.5;
+          group.add(ball);
+        } else {
+          const edge = new THREE.Mesh(
+            new THREE.TorusGeometry(Math.max(radius - tipLength, radius * 0.3), tipLength, 8, 28),
+            new THREE.MeshPhongMaterial({ color: colorNum, shininess: 90 })
+          );
+          edge.position.z = -toolOffsetZ + tipLength;
+          group.add(edge);
+        }
+      } else if (type === 'Chamfer Mill') {
+        const headLength = Math.min(stick * 0.45, dia);
+        const head = new THREE.Mesh(
+          alongZ(new THREE.CylinderGeometry(dia / 2, Math.max(dia * 0.08, 0.002), headLength, 24)),
+          new THREE.MeshPhongMaterial({ color: colorNum, shininess: 85 })
+        );
+        head.position.z = -toolOffsetZ + headLength / 2;
+        group.add(head);
+      } else if (type === 'Slitting Saw') {
+        const bladeThickness = Math.max(dia * 0.06, 0.01);
+        const blade = new THREE.Mesh(
+          alongZ(new THREE.CylinderGeometry(dia / 2, dia / 2, bladeThickness, 48)),
+          new THREE.MeshPhongMaterial({ color: colorNum, shininess: 80 })
+        );
+        blade.position.z = -toolOffsetZ + bladeThickness / 2;
+        group.add(blade);
+        const arborLength = Math.max(stick - bladeThickness, dia * 0.25);
+        const arbor = new THREE.Mesh(
+          alongZ(new THREE.CylinderGeometry(dia * 0.12, dia * 0.12, arborLength, 20)),
+          new THREE.MeshPhongMaterial({ color: 0x888888, shininess: 60 })
+        );
+        arbor.position.z = -toolOffsetZ + bladeThickness + arborLength / 2;
+        group.add(arbor);
+      } else if (type === 'End Mill' || type === 'Reamer') {
+        const cuttingGeom = alongZ(new THREE.CylinderGeometry(dia / 2, dia / 2, stick, 16));
         const cuttingMat = new THREE.MeshPhongMaterial({
           color: colorNum,
           shininess: 80,
@@ -653,7 +735,7 @@ export class ToolPreviewPanel {
         // Shank (the part that fits in the holder)
         const shankRad = dia / 2.5;
         const shankLen = len - stick;
-        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16);
+        const shankGeom = alongZ(new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16));
         const shankMat = new THREE.MeshPhongMaterial({
           color: 0x888888,
           shininess: 60,
@@ -665,10 +747,11 @@ export class ToolPreviewPanel {
         // Position shank above cutting portion
         shankMesh.position.z = -toolOffsetZ + stick + shankLen / 2;
         group.add(shankMesh);
-      } else if (type === 'Drill') {
+      } else if (type === 'Drill' || type === 'Spot Drill') {
         // Drill body (cylindrical)
-        const bodyLen = stick * 0.85;
-        const bodyGeom = new THREE.CylinderGeometry(dia / 2, dia / 2, bodyLen, 16);
+        const tipShare = type === 'Spot Drill' ? 0.35 : 0.15;
+        const bodyLen = stick * (1 - tipShare);
+        const bodyGeom = alongZ(new THREE.CylinderGeometry(dia / 2, dia / 2, bodyLen, 16));
         const bodyMat = new THREE.MeshPhongMaterial({
           color: colorNum,
           shininess: 80,
@@ -681,8 +764,8 @@ export class ToolPreviewPanel {
         group.add(bodyMesh);
 
         // Drill tip (cone with sharp point)
-        const tipLen = stick * 0.15;
-        const tipGeom = new THREE.ConeGeometry(dia / 2, tipLen, 16);
+        const tipLen = stick * tipShare;
+        const tipGeom = alongZ(new THREE.ConeGeometry(dia / 2, tipLen, 16));
         const tipMat = new THREE.MeshPhongMaterial({
           color: colorNum,
           shininess: 100,
@@ -713,7 +796,7 @@ export class ToolPreviewPanel {
         // Shank
         const shankRad = dia / 3;
         const shankLen = len - stick;
-        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16);
+        const shankGeom = alongZ(new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16));
         const shankMat = new THREE.MeshPhongMaterial({
           color: 0x888888,
           shininess: 60,
@@ -728,7 +811,7 @@ export class ToolPreviewPanel {
         // Cutting head (flat disc with inserts)
         const headRad = dia / 2;
         const headThick = dia * 0.25;
-        const discGeom = new THREE.CylinderGeometry(headRad, headRad, headThick, 32);
+        const discGeom = alongZ(new THREE.CylinderGeometry(headRad, headRad, headThick, 32));
         const discMat = new THREE.MeshPhongMaterial({
           color: colorNum,
           shininess: 70,
@@ -743,7 +826,7 @@ export class ToolPreviewPanel {
         // Shank
         const shankRad = dia / 4;
         const shankLen = len - stick;
-        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16);
+        const shankGeom = alongZ(new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16));
         const shankMat = new THREE.MeshPhongMaterial({
           color: 0x888888,
           shininess: 60,
@@ -763,14 +846,14 @@ export class ToolPreviewPanel {
         const bodyLen = stick - leadLen;
 
         const lead = new THREE.Mesh(
-          new THREE.CylinderGeometry(dia / 2, dia * 0.30, leadLen, 20),
+          alongZ(new THREE.CylinderGeometry(dia / 2, dia * 0.30, leadLen, 20)),
           new THREE.MeshPhongMaterial({ color: colorNum, shininess: 70, side: THREE.DoubleSide })
         );
         lead.position.z = -toolOffsetZ + leadLen / 2;
         group.add(lead);
 
         const body = new THREE.Mesh(
-          new THREE.CylinderGeometry(dia / 2, dia / 2, bodyLen, 20),
+          alongZ(new THREE.CylinderGeometry(dia / 2, dia / 2, bodyLen, 20)),
           new THREE.MeshPhongMaterial({ color: colorNum, shininess: 70, side: THREE.DoubleSide })
         );
         body.position.z = -toolOffsetZ + leadLen + bodyLen / 2;
@@ -783,7 +866,6 @@ export class ToolPreviewPanel {
         for (let zPos = leadLen * 0.5; zPos < stick; zPos += pitch * 3) {
           const ring = new THREE.Mesh(new THREE.TorusGeometry(dia / 2, pitch * 0.42, 6, 20), threadMat);
           ring.position.z = -toolOffsetZ + zPos;
-          ring.rotation.x = Math.PI / 2;
           group.add(ring);
         }
 
@@ -801,7 +883,7 @@ export class ToolPreviewPanel {
         // bore, and a cylinder said nothing about that.
         const shankDia = Math.max(dia * 0.8, 0.05);
         const shank = new THREE.Mesh(
-          new THREE.CylinderGeometry(shankDia / 2, shankDia / 2, len * 0.9, 20),
+          alongZ(new THREE.CylinderGeometry(shankDia / 2, shankDia / 2, len * 0.9, 20)),
           new THREE.MeshPhongMaterial({ color: 0x8b8f98, shininess: 60, side: THREE.DoubleSide })
         );
         shank.position.z = -toolOffsetZ + len * 0.45;
@@ -817,7 +899,7 @@ export class ToolPreviewPanel {
         group.add(head);
 
         const insert = new THREE.Mesh(
-          new THREE.CylinderGeometry(dia * 0.28, dia * 0.28, dia * 0.16, 3),
+          alongZ(new THREE.CylinderGeometry(dia * 0.28, dia * 0.28, dia * 0.16, 3)),
           new THREE.MeshPhongMaterial({ color: colorNum, shininess: 95 })
         );
         insert.position.set(0, shankDia * 0.75, -toolOffsetZ + headLen * 0.35);
@@ -854,7 +936,7 @@ export class ToolPreviewPanel {
         // shape and is instantly distinguishable from a round cutter.
         const t = Math.max(dia * 0.18, 0.03);
         const insert = new THREE.Mesh(
-          new THREE.CylinderGeometry(dia / 2, dia / 2, t, 4),
+          alongZ(new THREE.CylinderGeometry(dia / 2, dia / 2, t, 4)),
           new THREE.MeshPhongMaterial({ color: colorNum, shininess: 100, side: THREE.DoubleSide })
         );
         insert.position.z = -toolOffsetZ + t / 2;
@@ -863,7 +945,7 @@ export class ToolPreviewPanel {
         group.add(insert);
 
         const shim = new THREE.Mesh(
-          new THREE.CylinderGeometry(dia * 0.52, dia * 0.52, t * 0.5, 4),
+          alongZ(new THREE.CylinderGeometry(dia * 0.52, dia * 0.52, t * 0.5, 4)),
           new THREE.MeshPhongMaterial({ color: 0x5c6470, shininess: 30 })
         );
         shim.position.z = -toolOffsetZ + t + t * 0.25;
@@ -880,7 +962,7 @@ export class ToolPreviewPanel {
 
       } else {
         // Generic cylinder (default/custom tool type)
-        const geom = new THREE.CylinderGeometry(dia / 2, dia / 2, stick, 16);
+        const geom = alongZ(new THREE.CylinderGeometry(dia / 2, dia / 2, stick, 16));
         const mat = new THREE.MeshPhongMaterial({
           color: colorNum,
           shininess: 70,
@@ -895,7 +977,7 @@ export class ToolPreviewPanel {
         // Shank
         const shankRad = dia / 2.5;
         const shankLen = len - stick;
-        const shankGeom = new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16);
+        const shankGeom = alongZ(new THREE.CylinderGeometry(shankRad, shankRad, shankLen, 16));
         const shankMat = new THREE.MeshPhongMaterial({
           color: 0x888888,
           shininess: 60,
@@ -911,7 +993,7 @@ export class ToolPreviewPanel {
       // Holder/Coupling body (visible at top of shank)
       const holderRad = Math.max(dia / 1.2, 0.4);
       const holderLen = (len - (len - stick)) * 0.4; // Proportional to overall size
-      const holderGeom = new THREE.CylinderGeometry(holderRad * 1.2, holderRad, holderLen, 24);
+      const holderGeom = alongZ(new THREE.CylinderGeometry(holderRad * 1.2, holderRad, holderLen, 24));
       const holderMat = new THREE.MeshPhongMaterial({
         color: 0xbbbbbb,
         shininess: 50,
@@ -928,6 +1010,7 @@ export class ToolPreviewPanel {
 
     function loadTool(data) {
       if (data.toolNumber) document.getElementById('toolNumber').value = data.toolNumber;
+      if (data.type) document.getElementById('toolType').value = data.type;
       if (data.diameter) document.getElementById('diameter').value = data.diameter;
       if (data.lengthOfCut) document.getElementById('length').value = data.lengthOfCut;
       if (data.lengthOutOfHolder) document.getElementById('stickOut').value = data.lengthOutOfHolder;
@@ -947,6 +1030,10 @@ export class ToolPreviewPanel {
         description: document.getElementById('description').value,
         color: document.getElementById('colorInput').value,
         unit: currentUnit,
+        insertCode: currentInsert ? currentInsert.code : undefined,
+        insertOutline: currentInsert ? currentInsert.outline : undefined,
+        insertThickness: currentInsert ? currentInsert.thickness : undefined,
+        cornerRadius: currentInsert ? currentInsert.cornerRadius : undefined,
       };
       vscode.postMessage({ type: 'applyTool', data });
     }
@@ -993,7 +1080,18 @@ export class ToolPreviewPanel {
       } else if (msg.type === 'insertShape') {
         // Parsed by the extension so there is one implementation of ISO 1832
         // rather than a second copy in here that can drift from it.
-        currentInsert = msg.ok ? msg : null;
+        if (msg.ok) {
+          const factor = msg.units === currentUnit ? 1 : (msg.units === 'mm' ? 1 / 25.4 : 25.4);
+          currentInsert = {
+            ...msg,
+            icSize: msg.icSize * factor,
+            thickness: msg.thickness * factor,
+            cornerRadius: msg.cornerRadius * factor,
+            outline: msg.outline.map(p => [p[0] * factor, p[1] * factor]),
+          };
+        } else {
+          currentInsert = null;
+        }
         const info = document.getElementById('insertInfo');
         if (info) {
           info.textContent = msg.ok
@@ -1003,7 +1101,7 @@ export class ToolPreviewPanel {
         }
         if (msg.ok && msg.icSize) {
           const d = document.getElementById('diameter');
-          if (d) d.value = String(msg.icSize);
+          if (d) d.value = String(currentInsert.icSize);
           const sel = document.getElementById('toolType');
           if (sel && sel.value !== 'Lathe Insert') { sel.value = 'Lathe Insert'; }
         }

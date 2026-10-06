@@ -11,6 +11,7 @@
  */
 
 import { GCodeBlock, ModalState } from '../parser/types';
+import { parseInsertCode } from '../parser/insertCode';
 
 // ---------------------------------------------------------------------------
 // Formatting helpers
@@ -37,7 +38,12 @@ function fmtPosition(block: GCodeBlock, axes: string[] = ['X', 'Y', 'Z']): strin
 function feedStr(block: GCodeBlock, state: ModalState): string {
   const f = addrVal(block, 'F') ?? state.activeF;
   if (f === null) return '';
-  const unit = state.activeFeedMode === 95
+  // 95 (mill) and 99 (lathe) are the same modal group's feed-per-revolution code -
+  // see ModalState.activeFeedMode. Missing 99 here meant every feed on a G99 lathe
+  // program read as feed-per-minute, off by roughly two orders of magnitude from the
+  // real cutting speed.
+  const isPerRev = state.activeFeedMode === 95 || state.activeFeedMode === 99;
+  const unit = isPerRev
     ? (state.activeUnits === 20 ? 'IPR' : 'mm/rev')
     : (state.activeUnits === 20 ? 'IPM' : 'mm/min');
   return ` at ${fmtNum(f)} ${unit}`;
@@ -52,15 +58,57 @@ function feedStr(block: GCodeBlock, state: ModalState): string {
  *
  * @param block   The parsed block (output of BlockParser)
  * @param state   The modal state AFTER this block is applied (stateAtBlock[i])
+ * @param insertByTool Decoded tool number -> ISO insert designation (e.g. "CNMG432"),
+ *                as ProgramModelBuilder already extracts from the tool-call comment into
+ *                ToolUsage.insertCode. That field was write-only until this: computed,
+ *                stored, and read by nothing anywhere in the extension. Passing it in
+ *                here is what actually shows a program's real insert selection to a
+ *                reader instead of silently discarding it.
+ * @param isLathe True when ProgramModelBuilder.build()'s own detectedMachineType says
+ *                'Turn Center' (content-detected from G96/G97/G70-G76 - reliable even
+ *                when the control dialect string alone says nothing about the machine).
+ *                On a lathe the T-word encodes BOTH tool and offset: T0101 = tool 1,
+ *                offset 1. Undecoded, this extension's own bundled lathe sample narrated
+ *                every T-word as a 100+ station number that doesn't exist on a real
+ *                turret ("Select T101" for T0101), and phrased it with mill wording
+ *                ("M6 executes change") when a lathe's T-word indexes the turret by
+ *                itself - no M6 involved. ProgramModelBuilder already computed this
+ *                exact decode for its own internal Operations list; it just never
+ *                reached the text a reader actually sees, which is this function.
  */
-export function narrateBlock(block: GCodeBlock, state: ModalState): string {
+export function narrateBlock(
+  block: GCodeBlock,
+  state: ModalState,
+  isLathe = false,
+  insertByTool?: Map<number, string | undefined>,
+): string {
+  // Same rule as ProgramModelBuilder's own internal decode: on a lathe, a T-word of
+  // 100+ packs offset digits into the low two places (T0101 -> tool 1, offset 1).
+  const decodeTool = (n: number): number => (isLathe && n >= 100 ? Math.floor(n / 100) : n);
+
+  // "CNMG432" alone means little to a reader; "CNMG432 (Rhombic 80°, 0.5" IC)" does.
+  // Re-decoding here (rather than trusting a name string carried along) means the
+  // display always matches ISO 1832 exactly as insertCode.ts defines it, with one
+  // source of truth for both the program parser and the reader-facing text.
+  function insertNote(toolNum: number): string {
+    const code = insertByTool?.get(toolNum);
+    if (!code) return '';
+    const parsed = parseInsertCode(code);
+    if (!parsed) return ` — ${code}`;
+    const ic = parsed.icSize !== undefined ? `, ${fmtNum(parsed.icSize)}${parsed.units === 'mm' ? 'mm' : '"'} IC` : '';
+    return ` — ${code} (${parsed.shape.name}${ic})`;
+  }
+
   // Blank line
   if (!block.raw.trim()) return '';
 
   // Percent delimiter
   if (block.raw.trim() === '%') return 'Program delimiter (%)';
 
-  // Comment-only line
+  // Comment-only line. Excludes a program-number line even when it also carries a
+  // trailing comment (O00200 (TITLE)) - that used to take this shortcut and print only
+  // "Comment: TITLE", silently dropping the O-number. See the programNumber handling
+  // below, which is what a line like that now falls through to.
   if (
     block.gCodes.length === 0 &&
     block.mCodes.length === 0 &&
@@ -68,12 +116,26 @@ export function narrateBlock(block: GCodeBlock, state: ModalState): string {
     block.toolNumber === undefined &&
     !block.macroAssignment &&
     !block.controlFlow &&
+    !block.programNumber &&
     block.comment
   ) {
     return `Comment: ${block.comment}`;
   }
 
   const parts: string[] = [];
+
+  // Program number (O-word). Previously never narrated at all - a bare O8000 line
+  // (subprogram header, this extension's own samples/mill-comprehensive.nc N/A line
+  // between operations) explained as nothing, and O00200 (TITLE) explained as only
+  // "Comment: TITLE" with the program number itself silently dropped (see the guard
+  // just above).
+  if (block.programNumber) {
+    // block.programNumber is the tokenizer's raw match, which already includes the O/o
+    // letter (e.g. "O00200") - prepending another "O" here produced "Program number
+    // OO00200" on the first run of this fix, caught by re-reading the actual output
+    // rather than trusting the code.
+    parts.push(`Program number ${block.programNumber}${block.comment ? ` — ${block.comment}` : ''}`);
+  }
 
   // -------------------------------------------------------------------------
   // G-code descriptions
@@ -237,6 +299,20 @@ export function narrateBlock(block: GCodeBlock, state: ModalState): string {
         break;
       }
 
+      case 75: {
+        // Lathe peck-grooving cycle: X=groove floor diameter, Z=end of groove,
+        // P=X infeed per pass, Q=Z step, R=retract. Found unhandled entirely (blank
+        // explanation) on this extension's own samples/lathe-turning.nc, N410.
+        const pos = fmtPosition(block, ['X', 'Z']);
+        const p = addrVal(block, 'P'), q = addrVal(block, 'Q'), r = addrVal(block, 'R');
+        let desc = `Peck groove${pos ? ` to ${pos}` : ''}`;
+        if (p !== null) desc += `, X infeed ${fmtNum(p)}`;
+        if (q !== null) desc += `, Z step ${fmtNum(q)}`;
+        if (r !== null) desc += `, retract ${fmtNum(r)}`;
+        parts.push(desc + feedStr(block, state) + ' (G75)');
+        break;
+      }
+
       case 76: {
         const z = addrVal(block, 'Z'), f = addrVal(block, 'F') ?? state.activeF;
         let desc = 'Thread cutting cycle';
@@ -354,6 +430,8 @@ export function narrateBlock(block: GCodeBlock, state: ModalState): string {
 
       case 94: parts.push('Set feed per minute (G94)'); break;
       case 95: parts.push('Set feed per revolution (G95)'); break;
+      case 98: parts.push('Set feed per minute (G98)'); break;
+      case 99: parts.push('Set feed per revolution (G99)'); break;
 
       case 96: {
         const s = addrVal(block, 'S') ?? state.activeS;
@@ -399,7 +477,8 @@ export function narrateBlock(block: GCodeBlock, state: ModalState): string {
 
       case 6: {
         const t = block.toolNumber ?? state.activeTool;
-        parts.push(t !== null ? `Tool change to T${t} (M6)` : 'Tool change (M6)');
+        const dt = t !== null ? decodeTool(t) : null;
+        parts.push(dt !== null ? `Tool change to T${dt} (M6)${insertNote(dt)}` : 'Tool change (M6)');
         break;
       }
 
@@ -407,6 +486,17 @@ export function narrateBlock(block: GCodeBlock, state: ModalState): string {
       case 8:  parts.push('Flood coolant on (M8)'); break;
       case 9:  parts.push('Coolant off (M9)'); break;
       case 19: parts.push('Orient spindle (M19)'); break;
+
+      case 29: {
+        // Rigid tap mode. Unhandled entirely (blank explanation) on this extension's
+        // own samples/mill-comprehensive.nc, N350 "M29 S500 (RIGID TAP MODE)" - the
+        // one line that explains what the following G84 rigid-tap block is about to
+        // do, silently dropped right where a reader needs it most.
+        const s = addrVal(block, 'S') ?? state.activeS;
+        parts.push(`Enable rigid tapping mode${s !== null ? ` at ${fmtNum(s)} RPM` : ''} (M29)`);
+        break;
+      }
+
       case 30: parts.push('End program and reset (M30)'); break;
 
       case 88: parts.push('Through-spindle coolant on (M88)'); break;
@@ -436,7 +526,14 @@ export function narrateBlock(block: GCodeBlock, state: ModalState): string {
   // Tool selection (T-word without M6)
   // -------------------------------------------------------------------------
   if (block.toolNumber !== undefined && !block.mCodes.some(m => m.code === 6)) {
-    parts.push(`Select T${block.toolNumber} (load next; M6 executes change)`);
+    const decoded = decodeTool(block.toolNumber);
+    const toolText = `T${decoded}${insertNote(decoded)}`;
+    // A lathe T-word indexes the turret by itself - there is no separate M6 step, unlike
+    // a mill where T only loads the tool and M6 executes the change. Same wrong-for-lathe
+    // phrasing bug as the undecoded number above; fixed with the same isLathe signal.
+    parts.push(isLathe
+      ? `Index turret to ${toolText} (indexes immediately, no M6)`
+      : `Select ${toolText} (load next; M6 executes change)`);
   }
 
   // -------------------------------------------------------------------------

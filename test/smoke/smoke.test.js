@@ -128,13 +128,9 @@ suite('JobLine extension smoke', function () {
     assert.equal(vscode.window.activeTextEditor.document.uri.fsPath, macroDocument.uri.fsPath);
     assert.ok(vscode.window.activeTextEditor.selection.active.line > 0, 'Macro navigation should move into macro flow lines');
 
-    // Use a program known to contain violations. The RevPak sample is private,
-    // so where it is absent this falls back to a public fixture that also trips
-    // the inspector; the G83/Q assertion below only applies to RevPak.
-    const usingRevpack = sampleProgram()[0] === 'revpack';
-    const inspected = usingRevpack
-      ? await openFixture('revpack', 'stem umc sample.nc')
-      : await openFixture('crash-scenarios', 'multiple-violations.nc');
+    // Use an intentionally invalid public fixture. Valid variable-peck I/J/K
+    // in a private sample must not be required to produce a false diagnostic.
+    const inspected = await openFixture('diagnostics', 'peck-missing-q.nc');
 
     const diagnostics = await waitFor(
       () => {
@@ -145,13 +141,8 @@ suite('JobLine extension smoke', function () {
       'diagnostics to populate for the inspected program'
     );
 
-    if (usingRevpack) {
-      assert.ok(diagnostics.some(diagnostic => diagnostic.message.includes('G83 peck cycle requires Q')),
-        'Expected RevPak fixture diagnostics to include the known G83/Q inspection finding');
-    } else {
-      assert.ok(diagnostics.length > 0,
-        'Expected the violations fixture to produce diagnostics');
-    }
+    assert.ok(diagnostics.some(diagnostic => diagnostic.message.includes('G83 peck cycle requires Q')),
+      'Expected the missing-peck fixture to produce the G83 inspection finding');
   });
 
   // ---------------------------------------------------------------------------
