@@ -123,6 +123,11 @@ describe('Diagnostics: G83 peck cycle — missing Q', () => {
     assert.ok(hasMsg(errorsOnly(diagnose('peck-missing-q.nc')), 'G83'));
   });
 
+  it('accepts the variable-peck I/J/K form used by the RevGrips UMC program', () => {
+    const diagnostics = diagnoseText('G90 G94\nG99 G83 Z-1.5609 R.9277 I.5 J.5 K.5 F20.\nG80');
+    assert.ok(!hasMsg(errorsOnly(diagnostics), 'peck cycle requires'));
+  });
+
   it('no warnings generated', () => {
     assert.strictEqual(warningsOnly(diagnose('peck-missing-q.nc')).length, 0);
   });

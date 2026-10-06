@@ -1,5 +1,7 @@
 # JobLine Improvement Plans
 
+> Historical planning document. Some items below have since shipped, including lint configuration and smoke coverage. For the 0.3.12 state and remaining work, use [README](../README.md) and the [feedback matrix](testing/USER_FEEDBACK_MATRIX.md). Sprint estimates below are original proposals, not current delivery commitments.
+
 ## Plan A: Incremental Improvements (Small Changes, Fast Wins)
 
 Objective: deliver low-risk quality and usability improvements in short cycles while preserving current behavior.

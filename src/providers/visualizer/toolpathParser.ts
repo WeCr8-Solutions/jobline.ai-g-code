@@ -144,15 +144,16 @@ function tessellateArc(
  * Does this program run on a turning machine?
  *
  * It changes how three things are read, so guessing wrong is worse than not
- * asking. G96/G97 (constant surface speed) and G70-G76 (turning and threading
- * cycles) only exist on a lathe; both are checked on the executable text so a
- * comment cannot trigger them.
+ * asking. Check executable text so comments cannot select diameter mode.
+ * G73 alone is ambiguous: mills use it for peck drilling. Only its P/Q
+ * contour-block form supplies turning evidence here.
  */
 function looksLikeTurning(lines: string[]): boolean {
   for (const line of lines) {
     const upper = executableText(line).toUpperCase();
     if (/G0*9[67](?=[A-Z+\-\s]|$)/.test(upper)) return true;
-    if (/G0*7[0-6](?=[A-Z+\-\s]|$)/.test(upper)) return true;
+    if (/G0*7[0-24-6](?=[A-Z+\-\s]|$)/.test(upper)) return true;
+    if (hasCode(upper, 'G', '73') && addressValue(upper, 'P') !== null && addressValue(upper, 'Q') !== null) return true;
   }
   return false;
 }
@@ -262,7 +263,12 @@ export function parseGCodeToPath(gcode: string): { path: ToolpathPoint[]; units:
       continue;
     }
 
-    if (!hasMove && aVal === null && bVal === null && cVal === null && !mStop) continue;
+    // An IJK full circle has motion even when its endpoint is omitted.
+    // Only center offsets in the selected plane can define that circle.
+    const centerOffsets = plane === 17 ? [iVal, jVal] : plane === 18 ? [iVal, kVal] : [jVal, kVal];
+    const hasCenterArc = (motionMode === 2 || motionMode === 3)
+      && centerOffsets.some(offset => offset !== null && offset !== 0);
+    if (!hasMove && !hasCenterArc && aVal === null && bVal === null && cVal === null && !mStop) continue;
 
     const x1 = xVal !== null ? (absolute ? xVal : x + xVal) : x;
     const y1 = yVal !== null ? (absolute ? yVal : y + yVal) : y;

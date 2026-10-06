@@ -22,6 +22,19 @@ const browserCandidates = process.platform === 'win32' ? [
 ] : [];
 const installedBrowser = browserCandidates.find(candidate => candidate && fs.existsSync(candidate));
 (async () => {
+  // Exercise the installed runtime so packaging exclusions cannot hide behind dev dependencies.
+  for (const file of ['package.json', 'dist/occt-import-js.js', 'dist/occt-import-js.wasm', 'LICENSE.md', 'dist/license.occt.txt', 'dist/license.occt-import-js.txt']) {
+    if (!fs.existsSync(path.join(root, 'node_modules/occt-import-js', file))) {
+      throw new Error(`Packaged STEP runtime missing: ${file}`);
+    }
+  }
+  const { tessellateSTEP } = require(path.join(root, 'out/src/providers/visualizer/stepTessellator.js'));
+  const step = await tessellateSTEP(fs.readFileSync(path.join(projectRoot, 'test/fixtures/step/box.step')));
+  if (step.triangleCount < 12 || step.meshVertices.length !== step.triangleCount * 9 ||
+      !Object.values(step.bounds).every(Number.isFinite) || step.bounds.maxX <= step.bounds.minX) {
+    throw new Error('Packaged STEP runtime produced invalid geometry');
+  }
+  console.log(JSON.stringify({ packagedStepTriangles: step.triangleCount, bounds: step.bounds }));
   const server = http.createServer((req, res) => {
     if (req.url === '/') {
       const html = fs.readFileSync(path.join(root, 'media/toolpathVisualizerWebview.html'), 'utf8')

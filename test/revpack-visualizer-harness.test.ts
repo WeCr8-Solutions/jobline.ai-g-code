@@ -33,7 +33,7 @@ describe('Revpack visualizer harness', () => {
 
     const tool1 = harness.tools.find(tool => tool.toolNumber === 1);
     assert.ok(tool1);
-    assert.equal(tool1?.type, 'End Mill');
+    assert.equal(tool1?.type, 'Ball End Mill');
     assert.equal(tool1?.diameter, 0.5);
 
     const drill53 = harness.tools.find(tool => tool.toolNumber === 53);

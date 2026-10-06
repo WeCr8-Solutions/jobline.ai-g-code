@@ -20,6 +20,8 @@ async function waitForFile(file, timeoutMs) {
 }
 
 async function applyVisualCaseControls(Panel, visualCase) {
+  Panel.sendControl({ type: 'resetVisualScene' });
+  await new Promise(resolve => setTimeout(resolve, 300));
   if (visualCase.externalTargetFile) {
     const archive = fs.readFileSync(visualCase.externalTargetFile);
     assert.ok(archive.length > 4, 'Justin Fusion archive must not be empty');
@@ -133,18 +135,26 @@ suite('JobLine visualizer screenshot matrix', function () {
     const deadline = Date.now() + 20000;
     while (Date.now() < deadline) {
       const status = ToolpathVisualizerPanel.renderStatus;
-      const pointsReady = expected ? status.pathPoints === expected : status.pathPoints > 1;
+      const pointsReady = expected != null ? status.pathPoints === expected : status.pathPoints > 1;
       if (pointsReady && status.reviewRendered) break;
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-    if (expected) {
+    if (expected != null) {
       assert.equal(
         ToolpathVisualizerPanel.renderStatus.pathPoints,
         expected,
         `Visualizer is showing a different program for ${visualCase.id}: expected ${expected} path points, got ${ToolpathVisualizerPanel.renderStatus.pathPoints}`
       );
     }
-    assert.ok(ToolpathVisualizerPanel.renderStatus.pathPoints > 1, 'Visualizer must render toolpath points before capture');
+    if (visualCase.importOnly) {
+      assert.equal(
+        ToolpathVisualizerPanel.renderStatus.pathPoints,
+        1,
+        `Import-only case ${visualCase.id} must contain only the parser's origin seed and no motion segments`
+      );
+    } else {
+      assert.ok(ToolpathVisualizerPanel.renderStatus.pathPoints > 1, 'Visualizer must render toolpath points before capture');
+    }
     assert.ok(ToolpathVisualizerPanel.renderStatus.reviewRendered, 'Program review must render before capture');
 
     await applyVisualCaseControls(ToolpathVisualizerPanel, visualCase);
@@ -153,7 +163,8 @@ suite('JobLine visualizer screenshot matrix', function () {
     // still posts renderReady, and the screenshot below is of the whole
     // workbench, so the editor text alone clears its size check. Ask the render
     // loop what it actually drew.
-    const probe = await ToolpathVisualizerPanel.requestVisualProbe(10000);
+    const probeTimeout = visualCase.expectedPoints > 100000 ? 30000 : 10000;
+    const probe = await ToolpathVisualizerPanel.requestVisualProbe(probeTimeout);
     assert.ok(probe, `Visualizer did not answer the visual probe for ${visualCase.id}`);
     assert.ok(!probe.error, `Visual probe failed for ${visualCase.id}: ${probe.error}`);
     assert.ok(probe.width > 0 && probe.height > 0, `Visualizer canvas has no size for ${visualCase.id}`);
@@ -161,6 +172,9 @@ suite('JobLine visualizer screenshot matrix', function () {
       probe.litRatio > 0.005,
       `Visualizer drew a blank scene for ${visualCase.id}: only ${probe.litPixels} of ${probe.sampledPixels} sampled pixels differ from the clear colour (${(probe.litRatio * 100).toFixed(3)}%)`
     );
+    if (!visualCase.targetModel && !visualCase.targetFile && !visualCase.targetFiles?.length && !visualCase.externalTargetFile) {
+      assert.equal(probe.targetLoaded, false, `G-code-only case ${visualCase.id} retained an unrelated target model`);
+    }
     const commands = await vscode.commands.getCommands(true);
     if (commands.includes('notifications.clearAll')) {
       await vscode.commands.executeCommand('notifications.clearAll');

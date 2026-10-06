@@ -122,5 +122,8 @@ test('visual screenshot matrix captures targeted regions, not full workbench scr
   assert.match(runner, /multi-scene-vise-target/);
   assert.match(runner, /targetCountAtLeast:\s*5/);
   assert.match(runner, /test\/fixtures\/scene\/target-part\.stl/);
+  assert.match(html, /case 'clearTargetModels'/);
+  assert.match(html, /case 'resetVisualScene'/);
+  assert.match(visualTest, /type: 'resetVisualScene'/);
   assert.doesNotMatch(runner, /jobline\.ai-CAM/);
 });

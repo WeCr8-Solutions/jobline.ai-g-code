@@ -104,6 +104,9 @@ export function runDiagnosticEngine(
         const hasZ = block.addresses.has('Z') || state.cannedCycleParams.has('Z');
         const hasR = block.addresses.has('R') || state.cannedCycleParams.has('R');
         const hasQ = block.addresses.has('Q') || state.cannedCycleParams.has('Q');
+        const hasVariablePeck = ['I', 'J', 'K'].every(
+          address => block.addresses.has(address) || state.cannedCycleParams.has(address)
+        );
         const hasF = block.addresses.has('F') || state.activeF !== null;
 
         if (!hasZ) {
@@ -112,8 +115,8 @@ export function runDiagnosticEngine(
         if (!hasR) {
           diags.push(err(block.line, 'Canned cycle requires R (R-plane)'));
         }
-        if ((intCode === 83 || intCode === 73) && !hasQ) {
-          diags.push(err(block.line, `G${intCode} peck cycle requires Q (peck depth)`));
+        if ((intCode === 83 || intCode === 73) && !hasQ && !hasVariablePeck) {
+          diags.push(err(block.line, `G${intCode} peck cycle requires Q or I/J/K peck parameters`));
         }
         if ((intCode === 84 || intCode === 74) && !hasF) {
           diags.push(err(block.line, `Tapping cycle G${intCode} requires F (feed = pitch × RPM)`));

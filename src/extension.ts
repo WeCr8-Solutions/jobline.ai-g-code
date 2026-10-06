@@ -27,6 +27,7 @@ import type { ToolpathPoint } from './providers/visualizer/toolpathParser';
 import { reviewGCodeProgram } from './providers/visualizer/programReview';
 import { loadStlMesh } from './providers/visualizer/stlMeshLoader';
 import { parseSTEP } from './providers/visualizer/stepParser';
+import { tessellateSTEP } from './providers/visualizer/stepTessellator';
 import { parseParasolidText } from './providers/visualizer/parasolidTextParser';
 import { extractFusionPreview, parseFusionSetupArchive } from './providers/visualizer/fusionArchiveParser';
 import type { Bounds3D } from './providers/visualizer/gcodeGoalComparison';
@@ -402,9 +403,11 @@ export function activate(context: vscode.ExtensionContext): void {
                 meshVertices = Array.from(parsed.positions);
               } else if (ext === 'stp' || ext === 'step') {
                 const parsed = parseSTEP(buffer);
-                bounds = parsed.bounds;
-                format = parsed.schema ? `STEP ${parsed.schema}` : 'STEP';
-                pointCount = parsed.pointCount;
+                const tessellated = await tessellateSTEP(bytes);
+                bounds = tessellated.bounds;
+                format = parsed.schema ? `STEP ${parsed.schema} mesh` : 'STEP mesh';
+                pointCount = tessellated.triangleCount * 3;
+                meshVertices = tessellated.meshVertices;
               } else {
                 const text = Buffer.from(bytes).toString('utf8');
                 const parsed = parseParasolidText(text);

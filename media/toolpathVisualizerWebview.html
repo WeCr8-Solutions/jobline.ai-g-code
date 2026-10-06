@@ -1520,7 +1520,7 @@
     let probeRequested = false;
     const CLEAR_RGB = [0x1a, 0x1a, 0x2e];
 
-    function readLitPixels() {
+    function readLitPixels(beforeOverlay) {
       const gl = renderer.getContext();
       const w = renderer.domElement.width;
       const h = renderer.domElement.height;
@@ -1553,9 +1553,11 @@
         const y = Math.floor(p / w);   // readPixels origin is bottom-left
         if (x >= gx0 && x <= gx1 && y >= gy0 && y <= gy1) {
           gnomonTotal++;
-          const gr = Math.abs(buf[i] - CLEAR_RGB[0]);
-          const gg = Math.abs(buf[i + 1] - CLEAR_RGB[1]);
-          const gb = Math.abs(buf[i + 2] - CLEAR_RGB[2]);
+          // Measure pixels actually changed by the overlay, not scene geometry
+          // that happens to be visible behind this corner when it is disabled.
+          const gr = Math.abs(buf[i] - (beforeOverlay ? beforeOverlay[i] : CLEAR_RGB[0]));
+          const gg = Math.abs(buf[i + 1] - (beforeOverlay ? beforeOverlay[i + 1] : CLEAR_RGB[1]));
+          const gb = Math.abs(buf[i + 2] - (beforeOverlay ? beforeOverlay[i + 2] : CLEAR_RGB[2]));
           if (gr + gg + gb > 12) gnomonLit++;
           continue;
         }
@@ -1571,11 +1573,19 @@
     function animate() {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
+      let beforeOverlay;
+      if (probeRequested) {
+        const gl = renderer.getContext();
+        const w = renderer.domElement.width;
+        const h = renderer.domElement.height;
+        beforeOverlay = new Uint8Array(w * h * 4);
+        gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, beforeOverlay);
+      }
       renderGnomon();
       if (probeRequested) {
         probeRequested = false;
         try {
-          const probe = readLitPixels();
+          const probe = readLitPixels(beforeOverlay);
           vscode.postMessage({
             type: 'visualProbe',
             litPixels: probe.lit,
@@ -2074,6 +2084,25 @@
           if (!userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
           break;
         }
+
+        case 'clearTargetModels':
+          targetModels = [];
+          activeTargetId = '';
+          syncTargetControls();
+          buildTargetModel();
+          break;
+
+        case 'resetVisualScene':
+          targetModels = [];
+          activeTargetId = '';
+          currentToolData = null;
+          stockIsDeclared = false;
+          fusionSetup = null;
+          for (const layer of ['targetModel', 'stock', 'workholding', 'tool', 'fusionReference']) {
+            setLayer(layer, null);
+          }
+          syncTargetControls();
+          break;
 
         case 'fusionSetup': {
           fusionSetup = msg.setup || null;

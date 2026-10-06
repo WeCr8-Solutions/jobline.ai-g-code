@@ -1,5 +1,7 @@
 # Operator Verification Report
 
+> Historical fixture run from April 2026. Results below do not describe the current 0.3.12 package. See [current verification coverage](docs/testing/USER_FEEDBACK_MATRIX.md) for recent results and remaining gaps.
+
 **Date:** 2026-04-26T20:44:51.247Z
 
 ## Fixture

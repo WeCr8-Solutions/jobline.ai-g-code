@@ -1,7 +1,8 @@
-# JobLine — Next Steps: From Phase 1 to Live Machine Connectivity
+# JobLine — Historical DNC and development roadmap
 
-**Current State:** Phase 1 COMPLETE — 56/56 tests, tokenizer, block parser, program model, modal state, macro evaluator, hover provider, syntax highlighting, 5 dialects  
-**What's Next:** Phase 2 (trees + diagnostics) → Phase 3 (cycle validation) → Phase 4 (dialects) → Phase 5-6 (DNC/FTP/machine connectivity + live monitoring)
+**Status as of 0.3.12 (2026-10-06):** Trees, live diagnostics, formatting, toolbox operations, and the 3D visualizer are implemented. DNC/FTP/machine connectivity remains planned. See [README](../README.md) for current capabilities and the [feedback matrix](testing/USER_FEEDBACK_MATRIX.md) for verified coverage and gaps.
+
+The phases and estimates below preserve the original design proposal. They are not the current task queue or release commitments.
 
 ---
 

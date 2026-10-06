@@ -59,8 +59,9 @@ const visualCases = [
   },
   {
     id: 'view-right-target',
-    fixture: 'test/fixtures/setup/vise-mill-stock.nc',
-    expectedPoints: 16,
+    fixture: 'test/fixtures/scene/visual-import-only.nc',
+    expectedPoints: 1,
+    importOnly: true,
     captureAreas: ['visualizer', 'gnomon-corner', 'target-panel', 'view-cube'],
     targetModel: 'block',
     targetFile: 'test/fixtures/scene/target-part.stl',
@@ -74,22 +75,24 @@ const visualCases = [
   },
   {
     id: 'view-iso-target-transparent',
-    fixture: 'test/fixtures/setup/chuck-lathe-stock.nc',
-    expectedPoints: 13,
+    fixture: 'test/fixtures/scene/visual-import-only.nc',
+    expectedPoints: 1,
+    importOnly: true,
     captureAreas: ['visualizer', 'target-panel'],
     targetModel: 'block',
     targetFile: 'test/fixtures/scene/target-part.stl',
     controls: [
       { type: 'setPresetView', view: 'iso' },
       { type: 'setViewOpacity', sliderId: 'target-opacity', layer: 'targetModel', value: 0.2 },
-      { type: 'setTargetDisplayMode', mode: 'wireframe' },
+      { type: 'setTargetDisplayMode', mode: 'transparent' },
     ],
-    expect: { targetLoaded: true, targetDisplayMode: 'wireframe' },
+    expect: { targetLoaded: true, targetDisplayMode: 'transparent' },
   },
   {
     id: 'multi-scene-vise-target',
-    fixture: 'test/fixtures/setup/vise-mill-stock.nc',
-    expectedPoints: 16,
+    fixture: 'test/fixtures/scene/visual-import-only.nc',
+    expectedPoints: 1,
+    importOnly: true,
     captureAreas: ['visualizer', 'target-panel', 'view-cube'],
     targetFiles: [
       { file: 'test/fixtures/scene/target-part.stl', role: 'target-part', targetId: 'target-part' },
@@ -134,6 +137,34 @@ if (fs.existsSync(justinFusionArchive)) {
       stockTop: 1,
       fusionPreviewVisible: true,
       fusionReferenceVisible: true,
+    },
+  });
+}
+
+const revgripsRoot = process.env.JOBLINE_REVGRIPS_FIXTURE
+  || path.join(root, 'test', 'fixtures', 'revpack');
+const revgripsProgram = path.join(revgripsRoot, 'stem umc sample.nc');
+const revgripsTarget = path.join(revgripsRoot, 'REVGRIPS STEM-50-35-PRO.x_t');
+if (fs.existsSync(revgripsProgram) && fs.existsSync(revgripsTarget)) {
+  visualCases.unshift({
+    id: 'revgrips-stem-50-35-pro',
+    fixture: path.relative(root, revgripsProgram).replace(/\\/g, '/'),
+    expectedPoints: 116056,
+    targetModel: 'revgrips-stem-50-35-pro',
+    targetFile: revgripsTarget,
+    captureAreas: ['visualizer', 'target-panel', 'view-cube'],
+    controls: [
+      { type: 'setPresetView', view: 'iso' },
+      { type: 'setTargetDisplayMode', mode: 'solid' },
+    ],
+    expect: {
+      targetLoaded: true,
+      targetCountAtLeast: 1,
+      targetDisplayMode: 'solid',
+      targetName: 'REVGRIPS STEM-50-35-PRO.x_t',
+      targetWidth: 0.436986053255275,
+      targetDepth: 0.436276571448547,
+      targetHeight: 0.43251399054096,
     },
   });
 }

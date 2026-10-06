@@ -6,6 +6,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.3.12] - 2026-10-06
+
+### Fixed
+
+- Render full-circle G02/G03 moves with in-plane center offsets even when XYZ endpoints are omitted.
+- Avoid interpreting milling G73 peck drilling as lathe diameter coordinates; retain P/Q contour-form detection.
+- Accept variable-peck I/J/K parameters in peck-cycle diagnostics.
+
+### Added
+
+- Tessellated STEP target geometry through the OpenCascade importer.
+- A 75-case motion regression matrix covering planes, units, coordinate modes, circle sizes and rapid/feed flags.
+
+### Testing
+
+- Restored the STEP cube fixture and corrected rendered overlay measurements and the diagnostics smoke fixture.
+- Full test suite and 15 rendered smoke tests pass. Smooth linear playback, automatic N-number maintenance and other reported visualizer issues remain separate work.
+
+### Documentation and packaging
+
+- Updated the README and contributor setup for current features, commands, verification steps, and known limitations; labeled original roadmaps and baseline results as historical.
+- Include the STEP JavaScript/WebAssembly runtime and license notices in the VSIX, with an extracted-package tessellation check.
+
 ## [0.3.11] - 2026-09-27
 
 ### Added
