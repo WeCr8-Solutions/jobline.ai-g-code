@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "savedAt": 1767225600000,
+  "fileType": "machine",
+  "extension": ".jblmachine",
+  "machine": {
+    "id": "okuma-lb3000",
+    "name": "Okuma LB3000 EX II",
+    "machineClass": "lathe",
+    "machineKind": "Turn Center (2-Axis)",
+    "control": {
+      "family": "okuma",
+      "model": "OSP-P300L"
+    },
+    "units": "metric",
+    "axes": [
+      {
+        "name": "X",
+        "min": -260,
+        "max": 0
+      },
+      {
+        "name": "Z",
+        "min": -600,
+        "max": 0
+      }
+    ],
+    "capabilities": {
+      "fourthAxis": false,
+      "fiveAxisSimultaneous": false,
+      "liveTooling": false,
+      "yAxisTurn": false,
+      "subSpindle": false,
+      "probing": false,
+      "throughSpindleCoolant": false,
+      "barFeeder": true
+    },
+    "workholding": "chuck",
+    "manufacturer": "Okuma",
+    "model": "LB3000 EX II",
+    "spindleMaxRpm": 5000,
+    "toolCapacity": 12,
+    "postProcessor": "okuma-osp-lathe"
+  }
+}

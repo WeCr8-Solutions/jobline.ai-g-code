@@ -78,4 +78,13 @@ describe('Workholding setup messages', () => {
     assert.ok(wh);
     assert.ok(wh!.gripDepth <= 2 / 2, `gripDepth ${wh!.gripDepth} exceeds half the 2in stock height`);
   });
+
+  it("lets the machine preset decide when the program text can't", () => {
+    // A face-and-turn in plain G0/G1 reads as a mill; on a lathe preset it is a lathe.
+    const msgs = buildAutoSimulationMessages(harness('3-Axis Vertical Mill', true), undefined, 'Turn Center (2-Axis)');
+    const type = msgs.find(m => m.type === 'machineType') as { machineType: string } | undefined;
+    const wh = msgs.find(m => m.type === 'workholdingSettings') as { mode: string } | undefined;
+    assert.equal(type?.machineType, 'Turn Center (2-Axis)');
+    assert.equal(wh?.mode, 'chuck');
+  });
 });

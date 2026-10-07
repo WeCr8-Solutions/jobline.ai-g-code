@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "savedAt": 1767225600000,
+  "fileType": "machine",
+  "extension": ".jblmachine",
+  "machine": {
+    "id": "haas-vf-2",
+    "name": "Haas VF-2",
+    "machineClass": "mill",
+    "machineKind": "3-Axis Vertical Mill",
+    "control": {
+      "family": "haas",
+      "model": "NGC"
+    },
+    "units": "inch",
+    "axes": [
+      {
+        "name": "X",
+        "min": -30,
+        "max": 0
+      },
+      {
+        "name": "Y",
+        "min": -16,
+        "max": 0
+      },
+      {
+        "name": "Z",
+        "min": -20,
+        "max": 0
+      }
+    ],
+    "capabilities": {
+      "fourthAxis": false,
+      "fiveAxisSimultaneous": false,
+      "liveTooling": false,
+      "yAxisTurn": false,
+      "subSpindle": false,
+      "probing": true,
+      "throughSpindleCoolant": false,
+      "barFeeder": false
+    },
+    "workholding": "vise",
+    "manufacturer": "Haas",
+    "model": "VF-2",
+    "spindleMaxRpm": 8100,
+    "toolCapacity": 20,
+    "postProcessor": "haas-ngc-mill"
+  }
+}

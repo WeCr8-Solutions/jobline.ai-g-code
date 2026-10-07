@@ -9,7 +9,7 @@ G-code editing, program inspection, and 3D toolpath review in VS Code, built by 
 Requires **VS Code 1.85 or newer**. To install a local release, run **Extensions: Install from VSIX...** and select `jobline-gcode-0.3.12.vsix`.
 
 1. Open an NC program, such as a `.nc`, `.gcode`, `.ngc`, `.tap`, or `.cnc` file.
-2. Run **JobLine: Select CNC / Robot Control Type** and **JobLine: Select Machine Type** to match the program.
+2. Run **JobLine: Switch Machine** (or click the machine in the status bar) and pick or create a machine preset. It is remembered, so you only do this again when a program is meant for a different machine.
 3. Open the **JobLine** Activity Bar panel to inspect operations, tools, offsets, cycles, probing, macros, and warnings.
 4. Run **Show Toolpath Visualizer** or **JobLine: Open Simulation Full Window** to review the path.
 5. Use **JobLine: Format G-Code** or the **JobLine Toolbox** commands to edit the program.
@@ -30,7 +30,29 @@ Additional built-in file associations are listed in [package.json](package.json)
 
 CNC control choices are **Fanuc, Haas, Siemens, Mazak, and Okuma**. **Fanuc Robot TP/LS** and **ABB RAPID** also have language/control entries. Coverage varies by dialect and program type; these entries do not imply complete controller emulation or robot kinematics.
 
-The sidebar includes Operations, Tools, Offsets, Canned Cycles, Probing, Macros & Flow, Toolbox, Alarms & Warnings, Commands, and Visualizer Settings.
+The sidebar includes Machine Setup, Operations, Tools, Offsets, Canned Cycles, Probing, Macros & Flow, Toolbox, Alarms & Warnings, Commands, and Visualizer Settings.
+
+## Machine presets
+
+A machine preset holds what JobLine needs to evaluate a program for one machine: control dialect and model, machine type, units, axis travel, spindle limit, options (4th/5th axis, live tooling, probing, sub-spindle…), workholding and the CAM post id. Choose it once and every program you open is read against it.
+
+- **Machine Setup** (top of the JobLine sidebar) shows the active machine and every preset. Click a preset to use it in this workspace; the star sets it as the default for all workspaces. Right-click to edit, duplicate, export or delete.
+- **JobLine: New Machine Setup** walks through name, control, machine type, units and travel (`X30 Y16 Z20`), then saves and applies the preset.
+- The status bar shows the active machine; click it to switch. The Visualizer Settings panel has the same picker.
+- If a program does not fit the active machine — turning codes on a mill, rotary moves on a 3-axis, a robot program on a CNC control — JobLine offers to switch or set up a new machine. Turn this off with `jobline.presets.warnOnMismatch`.
+
+Presets are `.jblmachine` files, the machine file format of **jobline.ai-CAM**, and the same files work in both. JobLine finds them in:
+
+| Where | Use it for |
+| --- | --- |
+| Any `*.jblmachine` in the workspace (e.g. `.jobline/machines/`) | Machines that belong to a job; commit them with the programs |
+| `jobline.presets.sharedFolders` | A shop network share everyone reads |
+| `jobline.presets.libraryPath` (default `~/.jobline/machines`) | Your own presets — jobline.ai-CAM uses the same default folder |
+| Built-in | Starting points for each supported control; edit one to make a copy |
+
+When two places hold the same preset id, the workspace copy wins, then shared folders, then your library. Opening a `.jblmachine` file gives completion and validation from [schemas/jblmachine.schema.json](schemas/jblmachine.schema.json). Examples are in [samples/machines](samples/machines).
+
+Applying a preset sets `jobline.machinePreset`, `jobline.controlType`, `jobline.machineType`, `jobline.units` and `jobline.detectedMachineType` in workspace settings, or in user settings when it is the default. The one-off **Select Control Type** / **Select Machine Type** commands still work; the sidebar marks a preset value you have overridden that way.
 
 ## Visualizer and imports
 
@@ -46,8 +68,11 @@ Open the Command Palette and search for **JobLine**, **G-Code**, or **Toolpath**
 
 | Command | Purpose |
 | --- | --- |
-| JobLine: Select CNC / Robot Control Type | Choose the control dialect |
-| JobLine: Select Machine Type | Choose mill, lathe, mill-turn, or grinder |
+| JobLine: Switch Machine | Pick the machine preset for this workspace |
+| JobLine: New Machine Setup | Create and apply a machine preset |
+| JobLine: Import Machine Preset (.jblmachine) | Add presets from jobline.ai-CAM or a share |
+| JobLine: Select CNC / Robot Control Type | One-off control dialect override |
+| JobLine: Select Machine Type (one-off) | One-off machine type override |
 | JobLine: Format G-Code | Format the active program |
 | JobLine: Open Plain Language Explanation | Explain program operations |
 | Show Toolpath Visualizer | Open the 3D view |
@@ -65,6 +90,10 @@ Find these under **Settings → JobLine G-Code**.
 
 | Setting | Default | Purpose |
 | --- | --- | --- |
+| `jobline.machinePreset` | `""` | Active machine preset id (user value = default for all workspaces) |
+| `jobline.presets.libraryPath` | `""` | Your preset folder; empty = `~/.jobline/machines` |
+| `jobline.presets.sharedFolders` | `[]` | Extra `.jblmachine` folders, e.g. a shop share |
+| `jobline.presets.warnOnMismatch` | `true` | Offer to switch when a program does not fit the machine |
 | `jobline.controlType` | `fanuc` | CNC or robot dialect |
 | `jobline.machineType` | `mill` | Machine profile |
 | `jobline.units` | `inch` | Default units; G20/G21 can override |

@@ -6,6 +6,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Machine presets: save a machine (control, machine type, units, travel, options, workholding) once and reuse it for every program. Choose per workspace or set a default for all workspaces.
+- **Machine Setup** sidebar view with the active machine, presets grouped by source, and inline use / set-default actions; status bar and Visualizer Settings pickers.
+- Preset wizard (**JobLine: New Machine Setup**), import, export, edit, duplicate and delete commands.
+- Presets are `.jblmachine` files shared with jobline.ai-CAM: same codec, JSON Schema and default library folder (`~/.jobline/machines`), plus workspace files and shared shop folders.
+- A prompt to switch machine when a program uses features the active preset lacks (turning codes on a mill, rotary moves on a 3-axis, robot vs. CNC programs).
+
+### Changed
+
+- The Commands view is grouped into Machine Setup, Check & Explain, Edit Program and Navigate.
+- The visualizer uses the active preset's machine type and workholding when the program text alone cannot tell (e.g. a plain G0/G1 lathe program).
+- **Select Machine Type** also sets the broad `jobline.machineType` profile, so cycle lists and lathe T-word decoding follow the pick.
+
+### Fixed
+
+- The Visualizer Settings machine-type override sent a message field the visualizer never read, so changing it had no effect.
+
 ## [0.3.12] - 2026-10-06
 
 ### Fixed

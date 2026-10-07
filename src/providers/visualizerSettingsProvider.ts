@@ -1,20 +1,50 @@
 import * as vscode from 'vscode';
 import { ToolpathVisualizerPanel } from './toolpathVisualizer';
+import { describeMachinePreset } from '../presets/jblMachine';
+import { MachinePresetStore } from '../presets/presetStore';
 
 export class VisualizerSettingsProvider implements vscode.WebviewViewProvider {
   static readonly viewId = 'jobline.visualizerSettings';
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  private view: vscode.WebviewView | undefined;
+
+  constructor(private readonly _extensionUri: vscode.Uri, private readonly store: MachinePresetStore) {}
+
+  /** Send the preset list and the active preset's machine to the webview. */
+  postPresets(): void {
+    if (!this.view) return;
+    const active = this.store.active()?.preset;
+    void this.view.webview.postMessage({
+      type: 'presets',
+      activeId: active?.id ?? '',
+      presets: this.store.list().map(entry => ({
+        id: entry.preset.id,
+        name: entry.preset.name,
+        description: describeMachinePreset(entry.preset),
+      })),
+      active: active ? { machineKind: active.machineKind, units: active.units, capabilities: active.capabilities } : null,
+    });
+  }
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ) {
+    this.view = webviewView;
+    webviewView.onDidDispose(() => { this.view = undefined; });
     webviewView.webview.options = { enableScripts: true };
     webviewView.webview.html = getVisualizerSettingsHtml();
 
     webviewView.webview.onDidReceiveMessage(msg => {
+      if (msg.type === 'ready') {
+        this.postPresets();
+        return;
+      }
+      if (msg.type === 'applyPreset' && typeof msg.id === 'string') {
+        void vscode.commands.executeCommand('jobline.presets.apply', msg.id);
+        return;
+      }
       if (msg.command) {
         vscode.commands.executeCommand(msg.command, msg.arg);
         return;
@@ -117,8 +147,47 @@ const VISUALIZER_SETTINGS_SCRIPT = `
   function launchSimulation() { vs.postMessage({ command: 'jobline.openSimulation' }); }
   function changeMachine() {
     const machine = document.getElementById('machineType').value;
-    vs.postMessage({ type: 'machineType', value: machine });
+    vs.postMessage({ type: 'machineType', machineType: machine });
   }
+  function applyPreset() {
+    const id = document.getElementById('presetSelect').value;
+    if (id) vs.postMessage({ type: 'applyPreset', id });
+  }
+  function switchPreset() { vs.postMessage({ command: 'jobline.presets.switch' }); }
+  function newPreset() { vs.postMessage({ command: 'jobline.presets.create' }); }
+  function renderPresets(msg) {
+    const select = document.getElementById('presetSelect');
+    select.textContent = '';
+    const none = document.createElement('option');
+    none.value = '';
+    none.textContent = msg.activeId ? '— choose a machine —' : '— no preset (individual settings) —';
+    select.appendChild(none);
+    for (const preset of msg.presets) {
+      const option = document.createElement('option');
+      option.value = preset.id;
+      option.textContent = preset.name;
+      option.title = preset.description;
+      select.appendChild(option);
+    }
+    select.value = msg.activeId || '';
+    const hint = document.getElementById('presetHint');
+    const current = msg.presets.find(p => p.id === msg.activeId);
+    hint.textContent = current ? current.description : 'Pick a saved machine so control, machine type and units are set for every program.';
+    if (!msg.active) return;
+    const kind = document.getElementById('machineType');
+    if (Array.from(kind.options).some(o => o.value === msg.active.machineKind || o.text === msg.active.machineKind)) {
+      kind.value = msg.active.machineKind;
+    }
+    const caps = msg.active.capabilities || {};
+    document.getElementById('capLiveTool').checked = !!caps.liveTooling;
+    document.getElementById('capProbing').checked = !!caps.probing;
+    document.getElementById('cap4thAxis').checked = !!caps.fourthAxis;
+    document.getElementById('cap5thAxis').checked = !!caps.fiveAxisSimultaneous;
+    setUnit(msg.active.units === 'metric' ? 'mm' : 'in');
+  }
+  window.addEventListener('message', event => {
+    if (event.data && event.data.type === 'presets') renderPresets(event.data);
+  });
   function updateCaps() {
     const caps = {
       liveTool: document.getElementById('capLiveTool').checked,
@@ -174,6 +243,7 @@ const VISUALIZER_SETTINGS_SCRIPT = `
     const checked = document.getElementById('cb' + layer.charAt(0).toUpperCase() + layer.slice(1)).checked;
     vs.postMessage({ type: 'layerToggle', layer, visible: checked });
   }
+  vs.postMessage({ type: 'ready' });
 `;
 
 const VISUALIZER_LAUNCH_SECTION = `
@@ -184,9 +254,16 @@ const VISUALIZER_LAUNCH_SECTION = `
 </div></details>`;
 
 const VISUALIZER_MACHINE_SECTION = `
-<details class="settings-group"><summary>Machine</summary>
+<details class="settings-group" open><summary>Machine</summary>
 <div class="sec">
-  <select id="machineType" onchange="changeMachine()">
+  <select id="presetSelect" class="select-input" onchange="applyPreset()" aria-label="Machine preset"></select>
+  <div id="presetHint" class="caps"></div>
+  <div class="unit-row">
+    <button class="sec" onclick="switchPreset()">Switch…</button>
+    <button class="sec" onclick="newPreset()">New…</button>
+  </div>
+  <div class="caps">Visualizer override (this session only)</div>
+  <select id="machineType" class="select-input" onchange="changeMachine()" aria-label="Machine type override">
     <option>3-Axis Vertical Mill</option>
     <option>4-Axis Mill</option>
     <option>5-Axis Mill (Trunnion)</option>
@@ -283,7 +360,10 @@ function getVisualizerSettingsHtml(): string {
   ].join('');
 }
 
-export function registerVisualizerSettings(context: vscode.ExtensionContext): void {
-  const provider = new VisualizerSettingsProvider(context.extensionUri);
-  context.subscriptions.push(vscode.window.registerWebviewViewProvider(VisualizerSettingsProvider.viewId, provider));
+export function registerVisualizerSettings(context: vscode.ExtensionContext, store: MachinePresetStore): void {
+  const provider = new VisualizerSettingsProvider(context.extensionUri, store);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(VisualizerSettingsProvider.viewId, provider),
+    store.onDidChange(() => provider.postPresets()),
+  );
 }

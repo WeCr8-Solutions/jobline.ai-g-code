@@ -146,6 +146,12 @@
           ".pgf"
         ],
         "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "json",
+        "extensions": [
+          ".jblmachine"
+        ]
       }
     ],
     "grammars": [
@@ -253,7 +259,7 @@
         "jobline.detectedMachineType": {
           "type": "string",
           "default": "",
-          "description": "Auto-detected or manually selected machine type."
+          "description": "Detailed machine type in use (e.g. \"Turn Center (2-Axis)\"). Set by machine presets and JobLine: Select Machine Type."
         },
         "jobline.additionalExtensions": {
           "type": "array",
@@ -262,6 +268,32 @@
           },
           "default": [],
           "description": "Extra file extensions to treat as G-code (e.g. [\".cpp\", \".sub\", \".001\"]). Useful for shop-specific file naming conventions not covered by the built-in list."
+        },
+        "jobline.machinePreset": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "markdownDescription": "Id of the active machine preset (`.jblmachine`). Set it in **User** settings to make it the default for every workspace; a workspace value overrides it. Use **JobLine: Switch Machine** rather than editing by hand — applying a preset also sets control type, machine type and units."
+        },
+        "jobline.presets.libraryPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "Folder for your own machine presets. Empty uses `~/.jobline/machines`, the same default jobline.ai-CAM uses, so presets saved in either app appear in both."
+        },
+        "jobline.presets.sharedFolders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "machine",
+          "markdownDescription": "Extra folders of `.jblmachine` files to offer, e.g. a shop network share that jobline.ai-CAM also points at."
+        },
+        "jobline.presets.warnOnMismatch": {
+          "type": "boolean",
+          "default": true,
+          "description": "Offer to switch machine when a program uses features the active machine preset does not have (turning codes on a mill, rotary axes on a 3-axis, a robot program on a CNC)."
         }
       }
     },
@@ -507,11 +539,71 @@
       },
       {
         "command": "jobline.selectMachineType",
-        "title": "JobLine: Select Machine Type"
+        "title": "JobLine: Select Machine Type (one-off)"
       },
       {
         "command": "jobline.insertStockHeader",
         "title": "JobLine: Insert Stock Header"
+      },
+      {
+        "command": "jobline.presets.switch",
+        "title": "JobLine: Switch Machine",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "jobline.presets.create",
+        "title": "JobLine: New Machine Setup",
+        "icon": "$(add)"
+      },
+      {
+        "command": "jobline.presets.saveCurrent",
+        "title": "JobLine: Save Current Setup as Machine Preset",
+        "icon": "$(save)"
+      },
+      {
+        "command": "jobline.presets.apply",
+        "title": "Use This Machine",
+        "icon": "$(check)"
+      },
+      {
+        "command": "jobline.presets.setDefault",
+        "title": "Set as Default Machine",
+        "icon": "$(star-empty)"
+      },
+      {
+        "command": "jobline.presets.duplicate",
+        "title": "Duplicate Machine Preset",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "jobline.presets.edit",
+        "title": "Edit Machine Preset File",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "jobline.presets.import",
+        "title": "JobLine: Import Machine Preset (.jblmachine)",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "jobline.presets.export",
+        "title": "Export Machine Preset (.jblmachine)",
+        "icon": "$(export)"
+      },
+      {
+        "command": "jobline.presets.delete",
+        "title": "Delete Machine Preset",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "jobline.presets.refresh",
+        "title": "JobLine: Reload Machine Presets",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "jobline.presets.openLibrary",
+        "title": "JobLine: Open Machine Preset Folder",
+        "icon": "$(folder-library)"
       }
     ],
     "menus": {
@@ -563,6 +655,36 @@
         }
       ],
       "view/title": [
+        {
+          "command": "jobline.presets.switch",
+          "when": "view == jobline.machineSetupTree",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jobline.presets.create",
+          "when": "view == jobline.machineSetupTree",
+          "group": "navigation@2"
+        },
+        {
+          "command": "jobline.presets.import",
+          "when": "view == jobline.machineSetupTree",
+          "group": "navigation@3"
+        },
+        {
+          "command": "jobline.presets.refresh",
+          "when": "view == jobline.machineSetupTree",
+          "group": "navigation@4"
+        },
+        {
+          "command": "jobline.presets.openLibrary",
+          "when": "view == jobline.machineSetupTree",
+          "group": "1_library"
+        },
+        {
+          "command": "jobline.presets.saveCurrent",
+          "when": "view == jobline.machineSetupTree",
+          "group": "1_library"
+        },
         {
           "command": "jobline.sidebar.prevOperation",
           "when": "view == jobline.operationsTree",
@@ -644,6 +766,66 @@
           "command": "jobline.tools.removeToolChange",
           "when": "view == jobline.toolsTree && viewItem == toolItem",
           "group": "inline@2"
+        },
+        {
+          "command": "jobline.presets.apply",
+          "when": "view == jobline.machineSetupTree && viewItem =~ /^presetItem/",
+          "group": "inline@1"
+        },
+        {
+          "command": "jobline.presets.setDefault",
+          "when": "view == jobline.machineSetupTree && viewItem =~ /^presetItem/",
+          "group": "inline@2"
+        },
+        {
+          "command": "jobline.presets.apply",
+          "when": "view == jobline.machineSetupTree && viewItem =~ /^presetItem/",
+          "group": "1_use@1"
+        },
+        {
+          "command": "jobline.presets.setDefault",
+          "when": "view == jobline.machineSetupTree && viewItem =~ /^presetItem/",
+          "group": "1_use@2"
+        },
+        {
+          "command": "jobline.presets.edit",
+          "when": "view == jobline.machineSetupTree && viewItem =~ /^presetItem/",
+          "group": "2_edit@1"
+        },
+        {
+          "command": "jobline.presets.duplicate",
+          "when": "view == jobline.machineSetupTree && viewItem =~ /^presetItem/",
+          "group": "2_edit@2"
+        },
+        {
+          "command": "jobline.presets.export",
+          "when": "view == jobline.machineSetupTree && viewItem =~ /^presetItem/",
+          "group": "2_edit@3"
+        },
+        {
+          "command": "jobline.presets.delete",
+          "when": "view == jobline.machineSetupTree && viewItem == presetItem.file",
+          "group": "3_delete"
+        },
+        {
+          "command": "jobline.presets.switch",
+          "when": "view == jobline.machineSetupTree && viewItem =~ /^(activePreset|noActivePreset)$/",
+          "group": "inline"
+        },
+        {
+          "command": "jobline.presets.edit",
+          "when": "view == jobline.machineSetupTree && viewItem == activePreset",
+          "group": "1_use"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "jobline.presets.apply",
+          "when": "false"
+        },
+        {
+          "command": "jobline.presets.duplicate",
+          "when": "false"
         }
       ]
     },
@@ -658,6 +840,10 @@
     },
     "views": {
       "jobline-explorer": [
+        {
+          "id": "jobline.machineSetupTree",
+          "name": "Machine Setup"
+        },
         {
           "id": "jobline.operationsTree",
           "name": "Operations"
@@ -701,13 +887,19 @@
           "type": "webview"
         }
       ]
-    }
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": "*.jblmachine",
+        "url": "./schemas/jblmachine.schema.json"
+      }
+    ]
   },
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
-    "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');require('./test/formatter.test.ts');require('./test/tool-extraction.test.ts');require('./test/workholding.test.ts');require('./test/lathe-review.test.ts');require('./test/turning-path.test.ts');require('./test/insert-code.test.ts');\"",
+    "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');require('./test/formatter.test.ts');require('./test/tool-extraction.test.ts');require('./test/workholding.test.ts');require('./test/lathe-review.test.ts');require('./test/turning-path.test.ts');require('./test/insert-code.test.ts');require('./test/machine-presets.test.ts');\"",
     "test:diagnostics": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/diagnostics.test.ts');\"",
     "test:review": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/program-review.test.ts');\"",
     "test:visualizer:harness": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/revpack-visualizer-harness.test.ts');\"",
