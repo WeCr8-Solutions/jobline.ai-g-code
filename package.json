@@ -924,7 +924,13 @@
     "package": "vsce package",
     "check:package": "node ./scripts/check-packaged-visualizer.cjs",
     "precompile": "npm run lint",
-    "vscode:prepublish": "npm run compile"
+    "vscode:prepublish": "npm run compile",
+    "agent": "node tools/agent-loop/cli.mjs",
+    "agent:run": "node tools/agent-loop/cli.mjs run",
+    "agent:watch": "node tools/agent-loop/cli.mjs run --watch",
+    "agent:gate": "node tools/agent-loop/cli.mjs gate",
+    "agent:status": "node tools/agent-loop/cli.mjs status",
+    "test:agent-loop": "node --test tools/agent-loop/test/unit.test.mjs tools/agent-loop/test/e2e.test.mjs"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",

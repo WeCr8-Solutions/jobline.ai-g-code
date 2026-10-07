@@ -249,6 +249,10 @@ describe('Shared with jobline.ai-CAM', () => {
   const pairs: Array<[string, string]> = [
     ['src/presets/jblMachine.ts', 'src/core/persistence/jblMachine.ts'],
     ['schemas/jblmachine.schema.json', 'schemas/jblmachine.schema.json'],
+    // The agent loop harness is shared too; only its config and tasks differ.
+    ...fs.readdirSync(path.join(root, 'tools/agent-loop'), { recursive: true })
+      .map(String).filter(file => /\.(mjs|md)$/.test(file))
+      .map(file => [`tools/agent-loop/${file}`, `tools/agent-loop/${file}`] as [string, string]),
   ];
   for (const [mine, theirs] of pairs) {
     it(`${mine} matches the CAM copy`, (t) => {

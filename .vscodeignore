@@ -44,3 +44,9 @@ docker-compose.qa.yml
 out/src/providers/visualizer/latheInserts/**
 out/src/providers/visualizer/manualGeometry.*
 out/src/providers/visualizer/machine*.js
+
+# Agent loop harness and tasks are development-only
+tools/**
+agent-tasks/**
+agent-loop.config.json
+.agent-loop/**

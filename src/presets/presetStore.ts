@@ -250,7 +250,7 @@ export class MachinePresetStore implements vscode.Disposable {
     await readFolder(this.libraryPath(), 'library');
     for (const folder of this.sharedFolders()) await readFolder(folder, 'shared');
     if (vscode.workspace.workspaceFolders?.length) {
-      const uris = await vscode.workspace.findFiles(`**/*${JBL_MACHINE_EXTENSION}`, '**/node_modules/**', 200);
+      const uris = await vscode.workspace.findFiles(`**/*${JBL_MACHINE_EXTENSION}`, '**/{node_modules,.agent-loop}/**', 200);
       await Promise.all(uris.filter(uri => uri.scheme === 'file').map(uri => readFile(uri.fsPath, 'workspace')));
     }
 
