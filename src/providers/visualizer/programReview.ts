@@ -2,6 +2,8 @@ import { BlockParser } from '../../parser/blockParser';
 import { ProgramModelBuilder } from '../../parser/programModel';
 import { Tokenizer } from '../../parser/tokenizer';
 import { DEFAULT_CONFIG, runDiagnosticEngine, type DiagnosticSeverity } from '../../diagnostics/engine';
+import { tapDrillFor } from '../../reference/shopReference';
+import type { ToolUsage } from '../../parser/types';
 
 export interface ProgramReviewFinding {
   id: string;
@@ -30,6 +32,38 @@ function executableText(text: string): string {
 
 function advisory(id: string, message: string, suggestion: string): ProgramReviewFinding {
   return { id, line: 0, severity: 'warning', category: 'setup', message, suggestion };
+}
+
+/** How close a drill must be to the reference tap drill, per program unit. */
+const TAP_DRILL_TOLERANCE = { in: 0.003, mm: 0.08 } as const;
+
+/**
+ * A tap whose comment names its thread ("1/4-20 TAP") needs a hole drilled at
+ * the tap drill size. The sizes come from the JobLine shop reference shared
+ * with the shop app's tap drill chart and CAM, so all three agree.
+ */
+export function tapDrillFindings(tools: ToolUsage[], units: 'in' | 'mm'): ProgramReviewFinding[] {
+  const findings: ProgramReviewFinding[] = [];
+  const drills = tools.filter(tool => tool.diameter && !/\btap\b/i.test(tool.description ?? ''));
+  for (const tap of tools) {
+    if (!/\btap\b/i.test(tap.description ?? '')) continue;
+    const row = tapDrillFor(tap.description ?? '');
+    if (!row) continue;
+    const toProgram = (value: number) => (row.units === units ? value : row.units === 'in' ? value * 25.4 : value / 25.4);
+    const wanted = [row.tapDrill75Dec, row.tapDrill50Dec, row.stiTapDrillDec].map(toProgram);
+    const matched = drills.some(drill => wanted.some(size => Math.abs((drill.diameter ?? 0) - size) <= TAP_DRILL_TOLERANCE[units]));
+    if (matched) continue;
+    const digits = units === 'in' ? 4 : 2;
+    findings.push({
+      id: `tap-drill-missing-T${tap.toolNumber}`,
+      line: tap.lineNumbers[0] ?? 0,
+      severity: 'info',
+      category: 'setup',
+      message: `T${tap.toolNumber} taps ${row.thread}, but no tool in this program drills its tap drill: ${row.tapDrill75} (${toProgram(row.tapDrill75Dec).toFixed(digits)}) for 75% thread or ${row.tapDrill50} (${toProgram(row.tapDrill50Dec).toFixed(digits)}) for 50%.`,
+      suggestion: 'Check that the hole is drilled in an earlier operation, or that the drill comment states its size.',
+    });
+  }
+  return findings;
 }
 
 export function reviewGCodeProgram(gcode: string, dialect = 'fanuc'): ProgramReview {
@@ -86,7 +120,11 @@ export function reviewGCodeProgram(gcode: string, dialect = 'fanuc'): ProgramRev
     findings.push(advisory('missing-program-end', 'No explicit program end found (M02/M30).', 'Add the control-appropriate program end after spindle and coolant shutdown.'));
   }
 
-  const macroLine = gcode.split(/\r?\n/).findIndex(line => /#\d+|\b(?:WHILE|IF|GOTO)\b/i.test(line));
+  findings.push(...tapDrillFindings(model.tools, /G0*21(?=[A-Z+\-\s]|$)/.test(code) ? 'mm' : 'in'));
+
+  // Comments are text, not code: a "#7 drill" in one is not a macro variable.
+  const codeOnly = (line: string) => line.replace(/\([^)]*\)/g, '').replace(/;.*$/, '');
+  const macroLine = gcode.split(/\r?\n/).findIndex(line => /#\d+|\b(?:WHILE|IF|GOTO)\b/i.test(codeOnly(line)));
   if (macroLine >= 0) {
     findings.push({
       id: 'simulation-macro-approximation',

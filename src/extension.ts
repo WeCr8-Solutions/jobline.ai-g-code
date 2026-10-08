@@ -31,10 +31,28 @@ import { tessellateSTEP } from './providers/visualizer/stepTessellator';
 import { parseParasolidText } from './providers/visualizer/parasolidTextParser';
 import { extractFusionPreview, parseFusionSetupArchive } from './providers/visualizer/fusionArchiveParser';
 import type { Bounds3D } from './providers/visualizer/gcodeGoalComparison';
+import { MachinePresetStore } from './presets/presetStore';
+import { registerPresetCommands } from './presets/presetCommands';
+import { registerMachineSetupTree } from './providers/machineSetupTreeProvider';
+import { machineClassForKind } from './presets/jblMachine';
 
 const LANGUAGE_ID = 'gcode';
 
 export function activate(context: vscode.ExtensionContext): void {
+        // Machine presets come first: the sidebar, status bar and visualizer all
+        // read the active machine from here.
+        const presetStore = new MachinePresetStore();
+        context.subscriptions.push(presetStore);
+        registerPresetCommands(context, presetStore);
+        registerMachineSetupTree(context, presetStore);
+        void presetStore.reload();
+
+        /** What the active preset says about the machine, for the simulation. */
+        function presetSimulationOverrides(): { workholding?: string; machineType?: string } {
+          const preset = presetStore.active()?.preset;
+          return preset ? { workholding: preset.workholding, machineType: preset.machineKind } : {};
+        }
+
         function getPreferredGCodeDoc(): vscode.TextDocument | undefined {
           return selectPreferredGCodeDocument({
             activeDocument: vscode.window.activeTextEditor?.document,
@@ -154,9 +172,9 @@ export function activate(context: vscode.ExtensionContext): void {
             const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
             const harness = buildVisualizerHarnessData(doc.getText(), controlType);
             playback.cutterSize = harness.tools[0]?.diameter || (harness.unit === 'mm' ? 6 : 0.25);
-            machineStatusBar.text = `$(vm) ${harness.setup.machineType}`;
-            machineStatusBar.tooltip = 'Auto-detected from the active G-code program; click to override';
-            for (const message of buildAutoSimulationMessages(harness)) {
+            updateMachineStatusBar(harness.setup.machineType);
+            const overrides = presetSimulationOverrides();
+            for (const message of buildAutoSimulationMessages(harness, overrides.workholding, overrides.machineType)) {
               ToolpathVisualizerPanel.queueMessage(message);
             }
             ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(doc.getText(), controlType) });
@@ -494,7 +512,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerCommandsTree(context);
 
   // Register the Visualizer Settings sidebar panel
-  registerVisualizerSettings(context);
+  registerVisualizerSettings(context, presetStore);
 
   // Register tools tree commands (Add / Go-To / Remove tool change)
   registerToolsCommands(context);
@@ -643,8 +661,11 @@ export function activate(context: vscode.ExtensionContext): void {
         const cfgTarget = activeFolder
           ? vscode.ConfigurationTarget.WorkspaceFolder
           : vscode.ConfigurationTarget.Global;
-        await vscode.workspace.getConfiguration('jobline', activeFolder?.uri).update('detectedMachineType', selected, cfgTarget);
-        machineStatusBar.text = `$(vm) ${selected}`;
+        const cfg = vscode.workspace.getConfiguration('jobline', activeFolder?.uri);
+        await cfg.update('detectedMachineType', selected, cfgTarget);
+        // Keep the broad profile (cycle lists, lathe T-word decoding) in step with the pick.
+        await cfg.update('machineType', machineClassForKind(selected), cfgTarget);
+        updateMachineStatusBar();
       }
     }
   );
@@ -667,11 +688,32 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.StatusBarAlignment.Left,
     99
   );
-  machineStatusBar.command = 'jobline.selectMachineType';
-  machineStatusBar.text = '$(vm) 3-Axis Vertical Mill';
-  machineStatusBar.tooltip = 'Click to change detected machine type';
+  machineStatusBar.command = 'jobline.presets.switch';
+  let lastDetectedMachineType: string | undefined;
+
+  /** Active preset name when there is one; otherwise the machine type in use. */
+  function updateMachineStatusBar(detectedMachineType?: string): void {
+    if (detectedMachineType !== undefined) lastDetectedMachineType = detectedMachineType;
+    const active = presetStore.active()?.preset;
+    const detectedNote = lastDetectedMachineType ? `\nProgram looks like: ${lastDetectedMachineType}` : '';
+    if (active) {
+      machineStatusBar.text = `$(server-process) ${active.name}`;
+      machineStatusBar.tooltip = `JobLine machine: ${active.name} (${active.machineKind})${detectedNote}\nClick to switch machine preset`;
+    } else {
+      const configured = vscode.workspace.getConfiguration('jobline').get<string>('detectedMachineType', '');
+      machineStatusBar.text = `$(vm) ${configured || lastDetectedMachineType || '3-Axis Vertical Mill'}`;
+      machineStatusBar.tooltip = `No machine preset chosen${detectedNote}\nClick to pick or create one so it is remembered`;
+    }
+  }
+  updateMachineStatusBar();
   machineStatusBar.show();
   context.subscriptions.push(machineStatusBar);
+
+  context.subscriptions.push(presetStore.onDidChange(() => {
+    updateMachineStatusBar();
+    const doc = getPreferredGCodeDoc();
+    if (doc) refreshVisualizerForDocument(doc, false);
+  }));
 
   // Insert stock header command
   const insertStockCmd = vscode.commands.registerCommand(
@@ -742,7 +784,8 @@ export function activate(context: vscode.ExtensionContext): void {
           playback.idx = Math.min(playback.idx, Math.max(0, result.path.length - 1));
           sendToolpathUpdate(result.path, playback.cutterSize, playback.idx, result.units);
           const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
-          for (const message of buildAutoSimulationMessages(buildVisualizerHarnessData(e.document.getText(), controlType))) {
+          const overrides = presetSimulationOverrides();
+          for (const message of buildAutoSimulationMessages(buildVisualizerHarnessData(e.document.getText(), controlType), overrides.workholding, overrides.machineType)) {
             ToolpathVisualizerPanel.queueMessage(message);
           }
           ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(e.document.getText(), controlType) });

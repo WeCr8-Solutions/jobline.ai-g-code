@@ -394,9 +394,16 @@ export class ProgramModelBuilder {
     return undefined;
   }
 
-  /** "1/2" -> 0.5, "3/8" -> 0.375. Also handles the "1/4-20" tap form. */
+  /**
+   * "1/2" -> 0.5, "3/8" -> 0.375. A thread callout ("1/4-20") is the tool's
+   * size only on a tap; on "#7 DRILL FOR 1/4-20" it names the hole's thread,
+   * not the drill, so it is skipped there.
+   */
   private static readFraction(text: string): number | undefined {
-    const m = text.match(/(?:^|[\s(-])(\d{1,2})\s*\/\s*(\d{1,2})(?![\d/])/);
+    const isTap = /\btap\b/i.test(text);
+    const m = text.match(isTap
+      ? /(?:^|[\s(-])(\d{1,2})\s*\/\s*(\d{1,2})(?![\d/])/
+      : /(?:^|[\s(-])(\d{1,2})\s*\/\s*(\d{1,2})(?![\d/])(?!\s*-\s*\d)/);
     if (!m) return undefined;
     const n = Number.parseInt(m[1], 10);
     const d = Number.parseInt(m[2], 10);
@@ -509,6 +516,11 @@ export class ProgramModelBuilder {
           depth: parseFloat(match[2]),
           height: parseFloat(match[3]),
         };
+      }
+      // "STOCK 3 X 2 X 1.5" (length x width x height), as many CAM posts write it.
+      const sized = block.comment.match(new RegExp(String.raw`\bSTOCK:?\s*(${N})\s*X\s*(${N})\s*X\s*(${N})`, 'i'));
+      if (sized) {
+        return { width: parseFloat(sized[1]), depth: parseFloat(sized[2]), height: parseFloat(sized[3]) };
       }
     }
     return undefined;

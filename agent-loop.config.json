@@ -1,0 +1,186 @@
+{
+  "tasksDir": "agent-tasks",
+  "host": {
+    "name": "${JOBLINE_AGENT_HOST:-}",
+    "tags": "${JOBLINE_AGENT_TAGS:-}"
+  },
+  "coordination": {
+    "mode": "${JOBLINE_AGENT_QUEUE:-local}",
+    "remote": "${JOBLINE_AGENT_REMOTE:-origin}",
+    "pushBranches": true
+  },
+  "concurrency": 4,
+  "checkConcurrency": 2,
+  "gate": [
+    "typecheck",
+    "lint",
+    "unit"
+  ],
+  "checks": {
+    "typecheck": {
+      "run": "npx tsc --noEmit -p tsconfig.json",
+      "timeout": "5m"
+    },
+    "lint": {
+      "run": "npm run lint",
+      "timeout": "5m"
+    },
+    "unit": {
+      "run": "npm test",
+      "timeout": "10m"
+    },
+    "all": {
+      "run": "npm run test:all",
+      "timeout": "20m"
+    },
+    "fixtures": {
+      "run": "npm run review:fixtures",
+      "timeout": "10m"
+    },
+    "visual": {
+      "run": "npm run test:e2e:visual",
+      "timeout": "20m",
+      "screenshots": true,
+      "screenshotDirs": [
+        "test-results/visual"
+      ]
+    }
+  },
+  "providers": {
+    "lmstudio": {
+      "type": "lmstudio",
+      "hosts": "${LMSTUDIO_HOSTS:-http://localhost:1234}",
+      "model": "${LMSTUDIO_MODEL:-qwen2.5-coder-14b-instruct}",
+      "concurrencyPerHost": 1,
+      "hostCooldown": "2m",
+      "timeout": "20m"
+    },
+    "local": {
+      "type": "ollama",
+      "model": "${OLLAMA_MODEL:-qwen2.5-coder:7b}",
+      "contextTokens": 32768,
+      "concurrency": 1,
+      "timeout": "15m",
+      "hosts": "${OLLAMA_HOSTS:-http://localhost:11434}"
+    },
+    "local-vision": {
+      "type": "ollama",
+      "host": "${OLLAMA_HOST:-http://localhost:11434}",
+      "model": "${OLLAMA_VISION_MODEL:-qwen2.5vl:7b}",
+      "vision": true,
+      "concurrency": 1
+    },
+    "lan": {
+      "type": "openai",
+      "baseUrl": "${OPENAI_BASE_URL:-http://localhost:8080/v1}",
+      "model": "${OPENAI_MODEL:-local-model}",
+      "apiKeyEnv": "OPENAI_API_KEY",
+      "concurrency": 2,
+      "requestsPerMinute": 30
+    },
+    "claude": {
+      "type": "anthropic",
+      "model": "${JOBLINE_AGENT_CLAUDE_MODEL}",
+      "effort": "high",
+      "vision": true,
+      "concurrency": 4,
+      "requestsPerMinute": 40,
+      "minInterval": "1s",
+      "timeout": "20m"
+    },
+    "claude-code": {
+      "type": "claude-code",
+      "model": "${JOBLINE_AGENT_CLAUDE_CODE_MODEL:-}",
+      "maxTurns": 40,
+      "concurrency": 2,
+      "minInterval": "10s",
+      "timeout": "30m"
+    }
+  },
+  "roles": {
+    "develop": {
+      "providers": [
+        "lmstudio",
+        "local",
+        "claude"
+      ],
+      "escalateAfter": 2
+    },
+    "fix": {
+      "providers": [
+        "lmstudio",
+        "local",
+        "claude"
+      ],
+      "escalateAfter": 2
+    },
+    "test": {
+      "providers": [
+        "lmstudio",
+        "local",
+        "claude"
+      ],
+      "escalateAfter": 2
+    },
+    "review": {
+      "providers": [
+        "claude"
+      ]
+    }
+  },
+  "edits": {
+    "allow": [
+      "src/**",
+      "test/**",
+      "media/**",
+      "syntaxes/**",
+      "samples/**",
+      "schemas/**",
+      "docs/**",
+      "README.md",
+      "CHANGELOG.md"
+    ],
+    "deny": [
+      "test/fixtures/revpack/**",
+      "test/fixtures/external-local/**",
+      "package-lock.json",
+      "PLATFORM.md"
+    ]
+  },
+  "context": {
+    "maxFileBytes": 80000,
+    "maxContextBytes": 300000,
+    "instructions": "VS Code extension in TypeScript (strict). Unit tests use node:test with assert/strict under test/, run through ts-node by npm test; add new test files to the npm test script. Match the surrounding code's naming and comment style. The parser lives in src/parser, the sidebar in src/providers, machine presets in src/presets. Never weaken a safety diagnostic to make a test pass. PLATFORM.md (included below) lists what this repository shares with the other JobLine repositories; if your change touches one of those contracts, say so in your summary so a follow-up task is filed there.",
+    "alwaysInclude": [
+      "PLATFORM.md"
+    ]
+  },
+  "waits": {
+    "betweenAttempts": {
+      "base": "30s",
+      "max": "10m"
+    },
+    "providerRetry": {
+      "base": "5s",
+      "max": "5m",
+      "retries": 5
+    },
+    "poll": "30s",
+    "lease": "45m",
+    "gateInterval": "15m"
+  },
+  "worktree": {
+    "base": "HEAD",
+    "linkNodeModules": true,
+    "setup": []
+  },
+  "task": {
+    "maxAttempts": 6,
+    "review": false
+  },
+  "autoTasks": {
+    "enabled": true,
+    "maxOpen": 3,
+    "review": false
+  }
+}

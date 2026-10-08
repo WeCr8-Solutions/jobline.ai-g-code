@@ -94,7 +94,9 @@ function uniqueWorkOffsets(model: ProgramModel): string[] {
 }
 
 function parseFraction(text: string): number | null {
-  const match = text.match(/(\d+)\s*\/\s*(\d+)/);
+  // A fraction followed by -TPI is a thread callout ("1/4-20" for a tap drill),
+  // not the tool's diameter.
+  const match = text.match(/(\d+)\s*\/\s*(\d+)(?!\d*\s*-\s*\d)/);
   if (!match) return null;
   const numerator = Number.parseFloat(match[1]);
   const denominator = Number.parseFloat(match[2]);
@@ -112,14 +114,17 @@ function parseDiameter(description: string): number | undefined {
     if (Number.isFinite(value) && value > 0) return value;
   }
 
-  const fraction = parseFraction(description);
-  if (fraction !== null) return fraction;
-
-  const decimalDiameter = description.match(/(?:^|[\s(])(\d+(?:\.\d+)?)\s*(?:BALL|BULL|FLAT|FACE|DRILL|TAP|REAM(?:ER)?|CHAMFER|ENDMILL|END MILL|SPOT\s*DRILL|SPOTDRILL|SLOTTING|SAW)/i);
+  // A decimal written next to the tool type wins over a fraction elsewhere in
+  // the text: "#7 (.201) DRILL FOR 1/4-20" is a 0.201 drill. Leading-point
+  // decimals (.201) count too.
+  const decimalDiameter = description.match(/(?:^|[\s(])(\d*\.?\d+)\)?\s*(?:BALL|BULL|FLAT|FACE|DRILL|TAP|REAM(?:ER)?|CHAMFER|ENDMILL|END MILL|SPOT\s*DRILL|SPOTDRILL|SLOTTING|SAW)/i);
   if (decimalDiameter) {
     const value = Number.parseFloat(decimalDiameter[1]);
     if (Number.isFinite(value) && value > 0) return value;
   }
+
+  const fraction = parseFraction(description);
+  if (fraction !== null) return fraction;
 
   return undefined;
 }

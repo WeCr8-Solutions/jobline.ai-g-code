@@ -28,12 +28,19 @@ export function workholdingModeFor(machineType: string, override?: string): 'non
   return /lathe|turn/i.test(machineType) ? 'chuck' : 'vise';
 }
 
+/**
+ * `machineTypeOverride` is the active machine preset's kind. The machine the
+ * program will actually run on beats what the program text suggests - a plain
+ * face-and-turn in G0/G1 reads as a mill, but on a lathe preset it is a lathe.
+ */
 export function buildAutoSimulationMessages(
   harness: VisualizerHarnessData,
   workholdingOverride?: string,
+  machineTypeOverride?: string,
 ): SimulationSetupMessage[] {
+  const machineType = machineTypeOverride || harness.setup.machineType;
   const messages: SimulationSetupMessage[] = [
-    { type: 'machineType', machineType: harness.setup.machineType },
+    { type: 'machineType', machineType },
   ];
 
   if (harness.setup.stockDimensions) {
@@ -49,7 +56,7 @@ export function buildAutoSimulationMessages(
 
     // Jaws are derived from the stock, so they are only meaningful once a stock
     // size is known - which is why this sits inside the stock branch.
-    const mode = workholdingModeFor(harness.setup.machineType, workholdingOverride);
+    const mode = workholdingModeFor(machineType, workholdingOverride);
     const scale = harness.unit === 'mm' ? 25.4 : 1;
     messages.push({
       type: 'workholdingSettings',

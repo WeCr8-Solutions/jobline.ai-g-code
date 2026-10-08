@@ -1,0 +1,2127 @@
+{
+  "format": "jobline-shop-reference",
+  "version": "1.0",
+  "publishedAt": "https://jobline.ai/reference/jobline-shop-reference.json",
+  "sources": {
+    "tapDrills": "Machinery's Handbook, 31st ed.; ASME B1.1 (Unified), ASME B1.13M (metric)",
+    "drillSizes": "ASME B94.11M number and letter drill sizes; fractions exact",
+    "npt": "ASME B1.20.1; tap drills without reaming per Machinery's Handbook",
+    "cuttingSpeeds": "HSS bands: https://littlemachineshop.com/pages/cutting-speeds; carbide and feeds are conservative JobLine starting estimates, not manufacturer limits"
+  },
+  "tapDrills": [
+    {
+      "thread": "#1-64",
+      "series": "UNC",
+      "tpi": 64,
+      "pitchMm": 0.3969,
+      "basicMajor": 0.073,
+      "basicPitch": 0.0629,
+      "basicMinor": 0.0538,
+      "units": "in",
+      "tapDrill75": "#53",
+      "tapDrill75Dec": 0.0595,
+      "tapDrill50": "#52",
+      "tapDrill50Dec": 0.0635,
+      "stiTapDrill": "#43",
+      "stiTapDrillDec": 0.089
+    },
+    {
+      "thread": "#2-56",
+      "series": "UNC",
+      "tpi": 56,
+      "pitchMm": 0.4536,
+      "basicMajor": 0.086,
+      "basicPitch": 0.0744,
+      "basicMinor": 0.0641,
+      "units": "in",
+      "tapDrill75": "#50",
+      "tapDrill75Dec": 0.07,
+      "tapDrill50": "#49",
+      "tapDrill50Dec": 0.073,
+      "stiTapDrill": "#41",
+      "stiTapDrillDec": 0.096
+    },
+    {
+      "thread": "#3-48",
+      "series": "UNC",
+      "tpi": 48,
+      "pitchMm": 0.5292,
+      "basicMajor": 0.099,
+      "basicPitch": 0.0855,
+      "basicMinor": 0.0734,
+      "units": "in",
+      "tapDrill75": "#47",
+      "tapDrill75Dec": 0.0785,
+      "tapDrill50": "#44",
+      "tapDrill50Dec": 0.086,
+      "stiTapDrill": "#37",
+      "stiTapDrillDec": 0.104
+    },
+    {
+      "thread": "#4-40",
+      "series": "UNC",
+      "tpi": 40,
+      "pitchMm": 0.635,
+      "basicMajor": 0.112,
+      "basicPitch": 0.0958,
+      "basicMinor": 0.0813,
+      "units": "in",
+      "tapDrill75": "#43",
+      "tapDrill75Dec": 0.089,
+      "tapDrill50": "#41",
+      "tapDrill50Dec": 0.096,
+      "stiTapDrill": "#31",
+      "stiTapDrillDec": 0.12
+    },
+    {
+      "thread": "#5-40",
+      "series": "UNC",
+      "tpi": 40,
+      "pitchMm": 0.635,
+      "basicMajor": 0.125,
+      "basicPitch": 0.1088,
+      "basicMinor": 0.0943,
+      "units": "in",
+      "tapDrill75": "#38",
+      "tapDrill75Dec": 0.1015,
+      "tapDrill50": "#36",
+      "tapDrill50Dec": 0.1065,
+      "stiTapDrill": "#29",
+      "stiTapDrillDec": 0.136
+    },
+    {
+      "thread": "#6-32",
+      "series": "UNC",
+      "tpi": 32,
+      "pitchMm": 0.7938,
+      "basicMajor": 0.138,
+      "basicPitch": 0.1177,
+      "basicMinor": 0.0997,
+      "units": "in",
+      "tapDrill75": "#36",
+      "tapDrill75Dec": 0.1065,
+      "tapDrill50": "#32",
+      "tapDrill50Dec": 0.116,
+      "stiTapDrill": "#25",
+      "stiTapDrillDec": 0.1495
+    },
+    {
+      "thread": "#8-32",
+      "series": "UNC",
+      "tpi": 32,
+      "pitchMm": 0.7938,
+      "basicMajor": 0.164,
+      "basicPitch": 0.1437,
+      "basicMinor": 0.1257,
+      "units": "in",
+      "tapDrill75": "#29",
+      "tapDrill75Dec": 0.136,
+      "tapDrill50": "#27",
+      "tapDrill50Dec": 0.144,
+      "stiTapDrill": "#18",
+      "stiTapDrillDec": 0.1695
+    },
+    {
+      "thread": "#10-24",
+      "series": "UNC",
+      "tpi": 24,
+      "pitchMm": 1.0583,
+      "basicMajor": 0.19,
+      "basicPitch": 0.1629,
+      "basicMinor": 0.1389,
+      "units": "in",
+      "tapDrill75": "#25",
+      "tapDrill75Dec": 0.1495,
+      "tapDrill50": "#20",
+      "tapDrill50Dec": 0.161,
+      "stiTapDrill": "#10",
+      "stiTapDrillDec": 0.1935
+    },
+    {
+      "thread": "#10-32",
+      "series": "UNC",
+      "tpi": 32,
+      "pitchMm": 0.7938,
+      "basicMajor": 0.19,
+      "basicPitch": 0.1697,
+      "basicMinor": 0.1517,
+      "units": "in",
+      "tapDrill75": "#21",
+      "tapDrill75Dec": 0.159,
+      "tapDrill50": "#16",
+      "tapDrill50Dec": 0.177,
+      "stiTapDrill": "#3",
+      "stiTapDrillDec": 0.213
+    },
+    {
+      "thread": "1/4-20",
+      "series": "UNC",
+      "tpi": 20,
+      "pitchMm": 1.27,
+      "basicMajor": 0.25,
+      "basicPitch": 0.2175,
+      "basicMinor": 0.1887,
+      "units": "in",
+      "tapDrill75": "#7",
+      "tapDrill75Dec": 0.201,
+      "tapDrill50": "7/32\"",
+      "tapDrill50Dec": 0.2188,
+      "stiTapDrill": "F",
+      "stiTapDrillDec": 0.257
+    },
+    {
+      "thread": "5/16-18",
+      "series": "UNC",
+      "tpi": 18,
+      "pitchMm": 1.4111,
+      "basicMajor": 0.3125,
+      "basicPitch": 0.2764,
+      "basicMinor": 0.2443,
+      "units": "in",
+      "tapDrill75": "F",
+      "tapDrill75Dec": 0.257,
+      "tapDrill50": "G",
+      "tapDrill50Dec": 0.261,
+      "stiTapDrill": "Q",
+      "stiTapDrillDec": 0.332
+    },
+    {
+      "thread": "3/8-16",
+      "series": "UNC",
+      "tpi": 16,
+      "pitchMm": 1.5875,
+      "basicMajor": 0.375,
+      "basicPitch": 0.3344,
+      "basicMinor": 0.2983,
+      "units": "in",
+      "tapDrill75": "5/16\"",
+      "tapDrill75Dec": 0.3125,
+      "tapDrill50": "Q",
+      "tapDrill50Dec": 0.332,
+      "stiTapDrill": "25/64\"",
+      "stiTapDrillDec": 0.3906
+    },
+    {
+      "thread": "7/16-14",
+      "series": "UNC",
+      "tpi": 14,
+      "pitchMm": 1.8143,
+      "basicMajor": 0.4375,
+      "basicPitch": 0.3911,
+      "basicMinor": 0.3499,
+      "units": "in",
+      "tapDrill75": "U",
+      "tapDrill75Dec": 0.368,
+      "tapDrill50": "25/64\"",
+      "tapDrill50Dec": 0.3906,
+      "stiTapDrill": "29/64\"",
+      "stiTapDrillDec": 0.4531
+    },
+    {
+      "thread": "1/2-13",
+      "series": "UNC",
+      "tpi": 13,
+      "pitchMm": 1.9538,
+      "basicMajor": 0.5,
+      "basicPitch": 0.45,
+      "basicMinor": 0.4056,
+      "units": "in",
+      "tapDrill75": "27/64\"",
+      "tapDrill75Dec": 0.4219,
+      "tapDrill50": "29/64\"",
+      "tapDrill50Dec": 0.4531,
+      "stiTapDrill": "33/64\"",
+      "stiTapDrillDec": 0.5156
+    },
+    {
+      "thread": "5/8-11",
+      "series": "UNC",
+      "tpi": 11,
+      "pitchMm": 2.3091,
+      "basicMajor": 0.625,
+      "basicPitch": 0.566,
+      "basicMinor": 0.5135,
+      "units": "in",
+      "tapDrill75": "17/32\"",
+      "tapDrill75Dec": 0.5312,
+      "tapDrill50": "9/16\"",
+      "tapDrill50Dec": 0.5625,
+      "stiTapDrill": "41/64\"",
+      "stiTapDrillDec": 0.6406
+    },
+    {
+      "thread": "3/4-10",
+      "series": "UNC",
+      "tpi": 10,
+      "pitchMm": 2.54,
+      "basicMajor": 0.75,
+      "basicPitch": 0.685,
+      "basicMinor": 0.6273,
+      "units": "in",
+      "tapDrill75": "21/32\"",
+      "tapDrill75Dec": 0.6562,
+      "tapDrill50": "11/16\"",
+      "tapDrill50Dec": 0.6875,
+      "stiTapDrill": "49/64\"",
+      "stiTapDrillDec": 0.7656
+    },
+    {
+      "thread": "7/8-9",
+      "series": "UNC",
+      "tpi": 9,
+      "pitchMm": 2.8222,
+      "basicMajor": 0.875,
+      "basicPitch": 0.8028,
+      "basicMinor": 0.7387,
+      "units": "in",
+      "tapDrill75": "49/64\"",
+      "tapDrill75Dec": 0.7656,
+      "tapDrill50": "51/64\"",
+      "tapDrill50Dec": 0.7969,
+      "stiTapDrill": "57/64\"",
+      "stiTapDrillDec": 0.8906
+    },
+    {
+      "thread": "1\"-8",
+      "series": "UNC",
+      "tpi": 8,
+      "pitchMm": 3.175,
+      "basicMajor": 1,
+      "basicPitch": 0.9188,
+      "basicMinor": 0.8466,
+      "units": "in",
+      "tapDrill75": "7/8\"",
+      "tapDrill75Dec": 0.875,
+      "tapDrill50": "59/64\"",
+      "tapDrill50Dec": 0.9219,
+      "stiTapDrill": "1-1/64\"",
+      "stiTapDrillDec": 1.0156
+    },
+    {
+      "thread": "#0-80",
+      "series": "UNF",
+      "tpi": 80,
+      "pitchMm": 0.3175,
+      "basicMajor": 0.06,
+      "basicPitch": 0.0519,
+      "basicMinor": 0.0447,
+      "units": "in",
+      "tapDrill75": "3/64\"",
+      "tapDrill75Dec": 0.0469,
+      "tapDrill50": "#55",
+      "tapDrill50Dec": 0.052,
+      "stiTapDrill": "#49",
+      "stiTapDrillDec": 0.073
+    },
+    {
+      "thread": "#1-72",
+      "series": "UNF",
+      "tpi": 72,
+      "pitchMm": 0.3528,
+      "basicMajor": 0.073,
+      "basicPitch": 0.064,
+      "basicMinor": 0.056,
+      "units": "in",
+      "tapDrill75": "#53",
+      "tapDrill75Dec": 0.0595,
+      "tapDrill50": "#52",
+      "tapDrill50Dec": 0.0635,
+      "stiTapDrill": "#45",
+      "stiTapDrillDec": 0.082
+    },
+    {
+      "thread": "#2-64",
+      "series": "UNF",
+      "tpi": 64,
+      "pitchMm": 0.3969,
+      "basicMajor": 0.086,
+      "basicPitch": 0.0759,
+      "basicMinor": 0.0668,
+      "units": "in",
+      "tapDrill75": "#50",
+      "tapDrill75Dec": 0.07,
+      "tapDrill50": "#48",
+      "tapDrill50Dec": 0.076,
+      "stiTapDrill": "#42",
+      "stiTapDrillDec": 0.0935
+    },
+    {
+      "thread": "#4-48",
+      "series": "UNF",
+      "tpi": 48,
+      "pitchMm": 0.5292,
+      "basicMajor": 0.112,
+      "basicPitch": 0.0985,
+      "basicMinor": 0.0864,
+      "units": "in",
+      "tapDrill75": "#42",
+      "tapDrill75Dec": 0.0935,
+      "tapDrill50": "#40",
+      "tapDrill50Dec": 0.098,
+      "stiTapDrill": "#27",
+      "stiTapDrillDec": 0.144
+    },
+    {
+      "thread": "#6-40",
+      "series": "UNF",
+      "tpi": 40,
+      "pitchMm": 0.635,
+      "basicMajor": 0.138,
+      "basicPitch": 0.1218,
+      "basicMinor": 0.1073,
+      "units": "in",
+      "tapDrill75": "#33",
+      "tapDrill75Dec": 0.113,
+      "tapDrill50": "#31",
+      "tapDrill50Dec": 0.12,
+      "stiTapDrill": "#19",
+      "stiTapDrillDec": 0.166
+    },
+    {
+      "thread": "#8-36",
+      "series": "UNF",
+      "tpi": 36,
+      "pitchMm": 0.7056,
+      "basicMajor": 0.164,
+      "basicPitch": 0.146,
+      "basicMinor": 0.1299,
+      "units": "in",
+      "tapDrill75": "#29",
+      "tapDrill75Dec": 0.136,
+      "tapDrill50": "#27",
+      "tapDrill50Dec": 0.144,
+      "stiTapDrill": "#13",
+      "stiTapDrillDec": 0.185
+    },
+    {
+      "thread": "#10-32",
+      "series": "UNF",
+      "tpi": 32,
+      "pitchMm": 0.7938,
+      "basicMajor": 0.19,
+      "basicPitch": 0.1697,
+      "basicMinor": 0.1517,
+      "units": "in",
+      "tapDrill75": "#21",
+      "tapDrill75Dec": 0.159,
+      "tapDrill50": "#16",
+      "tapDrill50Dec": 0.177,
+      "stiTapDrill": "#3",
+      "stiTapDrillDec": 0.213
+    },
+    {
+      "thread": "1/4-28",
+      "series": "UNF",
+      "tpi": 28,
+      "pitchMm": 0.9071,
+      "basicMajor": 0.25,
+      "basicPitch": 0.2268,
+      "basicMinor": 0.2062,
+      "units": "in",
+      "tapDrill75": "#3",
+      "tapDrill75Dec": 0.213,
+      "tapDrill50": "7/32\"",
+      "tapDrill50Dec": 0.2188,
+      "stiTapDrill": "H",
+      "stiTapDrillDec": 0.266
+    },
+    {
+      "thread": "5/16-24",
+      "series": "UNF",
+      "tpi": 24,
+      "pitchMm": 1.0583,
+      "basicMajor": 0.3125,
+      "basicPitch": 0.2854,
+      "basicMinor": 0.2614,
+      "units": "in",
+      "tapDrill75": "I",
+      "tapDrill75Dec": 0.272,
+      "tapDrill50": "J",
+      "tapDrill50Dec": 0.277,
+      "stiTapDrill": "S",
+      "stiTapDrillDec": 0.348
+    },
+    {
+      "thread": "3/8-24",
+      "series": "UNF",
+      "tpi": 24,
+      "pitchMm": 1.0583,
+      "basicMajor": 0.375,
+      "basicPitch": 0.3479,
+      "basicMinor": 0.3239,
+      "units": "in",
+      "tapDrill75": "Q",
+      "tapDrill75Dec": 0.332,
+      "tapDrill50": "S",
+      "tapDrill50Dec": 0.348,
+      "stiTapDrill": "27/64\"",
+      "stiTapDrillDec": 0.4219
+    },
+    {
+      "thread": "7/16-20",
+      "series": "UNF",
+      "tpi": 20,
+      "pitchMm": 1.27,
+      "basicMajor": 0.4375,
+      "basicPitch": 0.405,
+      "basicMinor": 0.3762,
+      "units": "in",
+      "tapDrill75": "W",
+      "tapDrill75Dec": 0.386,
+      "tapDrill50": "X",
+      "tapDrill50Dec": 0.397,
+      "stiTapDrill": "31/64\"",
+      "stiTapDrillDec": 0.4844
+    },
+    {
+      "thread": "1/2-20",
+      "series": "UNF",
+      "tpi": 20,
+      "pitchMm": 1.27,
+      "basicMajor": 0.5,
+      "basicPitch": 0.4675,
+      "basicMinor": 0.4387,
+      "units": "in",
+      "tapDrill75": "29/64\"",
+      "tapDrill75Dec": 0.4531,
+      "tapDrill50": "15/32\"",
+      "tapDrill50Dec": 0.4688,
+      "stiTapDrill": "35/64\"",
+      "stiTapDrillDec": 0.5469
+    },
+    {
+      "thread": "9/16-18",
+      "series": "UNF",
+      "tpi": 18,
+      "pitchMm": 1.4111,
+      "basicMajor": 0.5625,
+      "basicPitch": 0.5264,
+      "basicMinor": 0.4943,
+      "units": "in",
+      "tapDrill75": "33/64\"",
+      "tapDrill75Dec": 0.5156,
+      "tapDrill50": "17/32\"",
+      "tapDrill50Dec": 0.5312,
+      "stiTapDrill": "39/64\"",
+      "stiTapDrillDec": 0.6094
+    },
+    {
+      "thread": "3/4-16",
+      "series": "UNF",
+      "tpi": 16,
+      "pitchMm": 1.5875,
+      "basicMajor": 0.75,
+      "basicPitch": 0.7094,
+      "basicMinor": 0.6733,
+      "units": "in",
+      "tapDrill75": "11/16\"",
+      "tapDrill75Dec": 0.6875,
+      "tapDrill50": "45/64\"",
+      "tapDrill50Dec": 0.7031,
+      "stiTapDrill": "53/64\"",
+      "stiTapDrillDec": 0.8281
+    },
+    {
+      "thread": "M3×0.5",
+      "series": "Metric",
+      "pitchMm": 0.5,
+      "basicMajor": 3,
+      "basicPitch": 2.675,
+      "basicMinor": 2.459,
+      "units": "mm",
+      "tapDrill75": "2.5mm",
+      "tapDrill75Dec": 2.5,
+      "tapDrill50": "2.6mm",
+      "tapDrill50Dec": 2.6,
+      "stiTapDrill": "3.4mm",
+      "stiTapDrillDec": 3.4
+    },
+    {
+      "thread": "M4×0.7",
+      "series": "Metric",
+      "pitchMm": 0.7,
+      "basicMajor": 4,
+      "basicPitch": 3.545,
+      "basicMinor": 3.242,
+      "units": "mm",
+      "tapDrill75": "3.3mm",
+      "tapDrill75Dec": 3.3,
+      "tapDrill50": "3.5mm",
+      "tapDrill50Dec": 3.5,
+      "stiTapDrill": "4.5mm",
+      "stiTapDrillDec": 4.5
+    },
+    {
+      "thread": "M5×0.8",
+      "series": "Metric",
+      "pitchMm": 0.8,
+      "basicMajor": 5,
+      "basicPitch": 4.48,
+      "basicMinor": 4.134,
+      "units": "mm",
+      "tapDrill75": "4.2mm",
+      "tapDrill75Dec": 4.2,
+      "tapDrill50": "4.4mm",
+      "tapDrill50Dec": 4.4,
+      "stiTapDrill": "5.6mm",
+      "stiTapDrillDec": 5.6
+    },
+    {
+      "thread": "M6×1.0",
+      "series": "Metric",
+      "pitchMm": 1,
+      "basicMajor": 6,
+      "basicPitch": 5.35,
+      "basicMinor": 4.917,
+      "units": "mm",
+      "tapDrill75": "5.0mm",
+      "tapDrill75Dec": 5,
+      "tapDrill50": "5.2mm",
+      "tapDrill50Dec": 5.2,
+      "stiTapDrill": "6.7mm",
+      "stiTapDrillDec": 6.7
+    },
+    {
+      "thread": "M8×1.25",
+      "series": "Metric",
+      "pitchMm": 1.25,
+      "basicMajor": 8,
+      "basicPitch": 7.188,
+      "basicMinor": 6.647,
+      "units": "mm",
+      "tapDrill75": "6.8mm",
+      "tapDrill75Dec": 6.8,
+      "tapDrill50": "7.1mm",
+      "tapDrill50Dec": 7.1,
+      "stiTapDrill": "9.0mm",
+      "stiTapDrillDec": 9
+    },
+    {
+      "thread": "M10×1.5",
+      "series": "Metric",
+      "pitchMm": 1.5,
+      "basicMajor": 10,
+      "basicPitch": 9.026,
+      "basicMinor": 8.376,
+      "units": "mm",
+      "tapDrill75": "8.5mm",
+      "tapDrill75Dec": 8.5,
+      "tapDrill50": "8.8mm",
+      "tapDrill50Dec": 8.8,
+      "stiTapDrill": "10.7mm",
+      "stiTapDrillDec": 10.7
+    },
+    {
+      "thread": "M12×1.75",
+      "series": "Metric",
+      "pitchMm": 1.75,
+      "basicMajor": 12,
+      "basicPitch": 10.863,
+      "basicMinor": 10.106,
+      "units": "mm",
+      "tapDrill75": "10.2mm",
+      "tapDrill75Dec": 10.2,
+      "tapDrill50": "10.5mm",
+      "tapDrill50Dec": 10.5,
+      "stiTapDrill": "12.8mm",
+      "stiTapDrillDec": 12.8
+    },
+    {
+      "thread": "M14×2.0",
+      "series": "Metric",
+      "pitchMm": 2,
+      "basicMajor": 14,
+      "basicPitch": 12.701,
+      "basicMinor": 11.835,
+      "units": "mm",
+      "tapDrill75": "12.0mm",
+      "tapDrill75Dec": 12,
+      "tapDrill50": "12.5mm",
+      "tapDrill50Dec": 12.5,
+      "stiTapDrill": "15.0mm",
+      "stiTapDrillDec": 15
+    },
+    {
+      "thread": "M16×2.0",
+      "series": "Metric",
+      "pitchMm": 2,
+      "basicMajor": 16,
+      "basicPitch": 14.701,
+      "basicMinor": 13.835,
+      "units": "mm",
+      "tapDrill75": "14.0mm",
+      "tapDrill75Dec": 14,
+      "tapDrill50": "14.5mm",
+      "tapDrill50Dec": 14.5,
+      "stiTapDrill": "17.0mm",
+      "stiTapDrillDec": 17
+    },
+    {
+      "thread": "M20×2.5",
+      "series": "Metric",
+      "pitchMm": 2.5,
+      "basicMajor": 20,
+      "basicPitch": 18.376,
+      "basicMinor": 17.294,
+      "units": "mm",
+      "tapDrill75": "17.5mm",
+      "tapDrill75Dec": 17.5,
+      "tapDrill50": "18.0mm",
+      "tapDrill50Dec": 18,
+      "stiTapDrill": "21.5mm",
+      "stiTapDrillDec": 21.5
+    },
+    {
+      "thread": "M24×3.0",
+      "series": "Metric",
+      "pitchMm": 3,
+      "basicMajor": 24,
+      "basicPitch": 22.051,
+      "basicMinor": 20.752,
+      "units": "mm",
+      "tapDrill75": "21.0mm",
+      "tapDrill75Dec": 21,
+      "tapDrill50": "21.5mm",
+      "tapDrill50Dec": 21.5,
+      "stiTapDrill": "25.5mm",
+      "stiTapDrillDec": 25.5
+    }
+  ],
+  "drillSizes": [
+    {
+      "name": "#80",
+      "series": "number",
+      "inch": 0.0135,
+      "mm": 0.343
+    },
+    {
+      "name": "#79",
+      "series": "number",
+      "inch": 0.0145,
+      "mm": 0.368
+    },
+    {
+      "name": "1/64",
+      "series": "fraction",
+      "inch": 0.015625,
+      "mm": 0.397
+    },
+    {
+      "name": "#78",
+      "series": "number",
+      "inch": 0.016,
+      "mm": 0.406
+    },
+    {
+      "name": "#77",
+      "series": "number",
+      "inch": 0.018,
+      "mm": 0.457
+    },
+    {
+      "name": "#76",
+      "series": "number",
+      "inch": 0.02,
+      "mm": 0.508
+    },
+    {
+      "name": "#75",
+      "series": "number",
+      "inch": 0.021,
+      "mm": 0.533
+    },
+    {
+      "name": "#74",
+      "series": "number",
+      "inch": 0.0225,
+      "mm": 0.571
+    },
+    {
+      "name": "#73",
+      "series": "number",
+      "inch": 0.024,
+      "mm": 0.61
+    },
+    {
+      "name": "#72",
+      "series": "number",
+      "inch": 0.025,
+      "mm": 0.635
+    },
+    {
+      "name": "#71",
+      "series": "number",
+      "inch": 0.026,
+      "mm": 0.66
+    },
+    {
+      "name": "#70",
+      "series": "number",
+      "inch": 0.028,
+      "mm": 0.711
+    },
+    {
+      "name": "#69",
+      "series": "number",
+      "inch": 0.0292,
+      "mm": 0.742
+    },
+    {
+      "name": "#68",
+      "series": "number",
+      "inch": 0.031,
+      "mm": 0.787
+    },
+    {
+      "name": "1/32",
+      "series": "fraction",
+      "inch": 0.03125,
+      "mm": 0.794
+    },
+    {
+      "name": "#67",
+      "series": "number",
+      "inch": 0.032,
+      "mm": 0.813
+    },
+    {
+      "name": "#66",
+      "series": "number",
+      "inch": 0.033,
+      "mm": 0.838
+    },
+    {
+      "name": "#65",
+      "series": "number",
+      "inch": 0.035,
+      "mm": 0.889
+    },
+    {
+      "name": "#64",
+      "series": "number",
+      "inch": 0.036,
+      "mm": 0.914
+    },
+    {
+      "name": "#63",
+      "series": "number",
+      "inch": 0.037,
+      "mm": 0.94
+    },
+    {
+      "name": "#62",
+      "series": "number",
+      "inch": 0.038,
+      "mm": 0.965
+    },
+    {
+      "name": "#61",
+      "series": "number",
+      "inch": 0.039,
+      "mm": 0.991
+    },
+    {
+      "name": "#60",
+      "series": "number",
+      "inch": 0.04,
+      "mm": 1.016
+    },
+    {
+      "name": "#59",
+      "series": "number",
+      "inch": 0.041,
+      "mm": 1.041
+    },
+    {
+      "name": "#58",
+      "series": "number",
+      "inch": 0.042,
+      "mm": 1.067
+    },
+    {
+      "name": "#57",
+      "series": "number",
+      "inch": 0.043,
+      "mm": 1.092
+    },
+    {
+      "name": "#56",
+      "series": "number",
+      "inch": 0.0465,
+      "mm": 1.181
+    },
+    {
+      "name": "3/64",
+      "series": "fraction",
+      "inch": 0.046875,
+      "mm": 1.191
+    },
+    {
+      "name": "#55",
+      "series": "number",
+      "inch": 0.052,
+      "mm": 1.321
+    },
+    {
+      "name": "#54",
+      "series": "number",
+      "inch": 0.055,
+      "mm": 1.397
+    },
+    {
+      "name": "#53",
+      "series": "number",
+      "inch": 0.0595,
+      "mm": 1.511
+    },
+    {
+      "name": "1/16",
+      "series": "fraction",
+      "inch": 0.0625,
+      "mm": 1.588
+    },
+    {
+      "name": "#52",
+      "series": "number",
+      "inch": 0.0635,
+      "mm": 1.613
+    },
+    {
+      "name": "#51",
+      "series": "number",
+      "inch": 0.067,
+      "mm": 1.702
+    },
+    {
+      "name": "#50",
+      "series": "number",
+      "inch": 0.07,
+      "mm": 1.778
+    },
+    {
+      "name": "#49",
+      "series": "number",
+      "inch": 0.073,
+      "mm": 1.854
+    },
+    {
+      "name": "#48",
+      "series": "number",
+      "inch": 0.076,
+      "mm": 1.93
+    },
+    {
+      "name": "5/64",
+      "series": "fraction",
+      "inch": 0.078125,
+      "mm": 1.984
+    },
+    {
+      "name": "#47",
+      "series": "number",
+      "inch": 0.0785,
+      "mm": 1.994
+    },
+    {
+      "name": "#46",
+      "series": "number",
+      "inch": 0.081,
+      "mm": 2.057
+    },
+    {
+      "name": "#45",
+      "series": "number",
+      "inch": 0.082,
+      "mm": 2.083
+    },
+    {
+      "name": "#44",
+      "series": "number",
+      "inch": 0.086,
+      "mm": 2.184
+    },
+    {
+      "name": "#43",
+      "series": "number",
+      "inch": 0.089,
+      "mm": 2.261
+    },
+    {
+      "name": "#42",
+      "series": "number",
+      "inch": 0.0935,
+      "mm": 2.375
+    },
+    {
+      "name": "3/32",
+      "series": "fraction",
+      "inch": 0.09375,
+      "mm": 2.381
+    },
+    {
+      "name": "#41",
+      "series": "number",
+      "inch": 0.096,
+      "mm": 2.438
+    },
+    {
+      "name": "#40",
+      "series": "number",
+      "inch": 0.098,
+      "mm": 2.489
+    },
+    {
+      "name": "#39",
+      "series": "number",
+      "inch": 0.0995,
+      "mm": 2.527
+    },
+    {
+      "name": "#38",
+      "series": "number",
+      "inch": 0.1015,
+      "mm": 2.578
+    },
+    {
+      "name": "#37",
+      "series": "number",
+      "inch": 0.104,
+      "mm": 2.642
+    },
+    {
+      "name": "#36",
+      "series": "number",
+      "inch": 0.1065,
+      "mm": 2.705
+    },
+    {
+      "name": "7/64",
+      "series": "fraction",
+      "inch": 0.109375,
+      "mm": 2.778
+    },
+    {
+      "name": "#35",
+      "series": "number",
+      "inch": 0.11,
+      "mm": 2.794
+    },
+    {
+      "name": "#34",
+      "series": "number",
+      "inch": 0.111,
+      "mm": 2.819
+    },
+    {
+      "name": "#33",
+      "series": "number",
+      "inch": 0.113,
+      "mm": 2.87
+    },
+    {
+      "name": "#32",
+      "series": "number",
+      "inch": 0.116,
+      "mm": 2.946
+    },
+    {
+      "name": "#31",
+      "series": "number",
+      "inch": 0.12,
+      "mm": 3.048
+    },
+    {
+      "name": "1/8",
+      "series": "fraction",
+      "inch": 0.125,
+      "mm": 3.175
+    },
+    {
+      "name": "#30",
+      "series": "number",
+      "inch": 0.1285,
+      "mm": 3.264
+    },
+    {
+      "name": "#29",
+      "series": "number",
+      "inch": 0.136,
+      "mm": 3.454
+    },
+    {
+      "name": "#28",
+      "series": "number",
+      "inch": 0.1405,
+      "mm": 3.569
+    },
+    {
+      "name": "9/64",
+      "series": "fraction",
+      "inch": 0.140625,
+      "mm": 3.572
+    },
+    {
+      "name": "#27",
+      "series": "number",
+      "inch": 0.144,
+      "mm": 3.658
+    },
+    {
+      "name": "#26",
+      "series": "number",
+      "inch": 0.147,
+      "mm": 3.734
+    },
+    {
+      "name": "#25",
+      "series": "number",
+      "inch": 0.1495,
+      "mm": 3.797
+    },
+    {
+      "name": "#24",
+      "series": "number",
+      "inch": 0.152,
+      "mm": 3.861
+    },
+    {
+      "name": "#23",
+      "series": "number",
+      "inch": 0.154,
+      "mm": 3.912
+    },
+    {
+      "name": "5/32",
+      "series": "fraction",
+      "inch": 0.15625,
+      "mm": 3.969
+    },
+    {
+      "name": "#22",
+      "series": "number",
+      "inch": 0.157,
+      "mm": 3.988
+    },
+    {
+      "name": "#21",
+      "series": "number",
+      "inch": 0.159,
+      "mm": 4.039
+    },
+    {
+      "name": "#20",
+      "series": "number",
+      "inch": 0.161,
+      "mm": 4.089
+    },
+    {
+      "name": "#19",
+      "series": "number",
+      "inch": 0.166,
+      "mm": 4.216
+    },
+    {
+      "name": "#18",
+      "series": "number",
+      "inch": 0.1695,
+      "mm": 4.305
+    },
+    {
+      "name": "11/64",
+      "series": "fraction",
+      "inch": 0.171875,
+      "mm": 4.366
+    },
+    {
+      "name": "#17",
+      "series": "number",
+      "inch": 0.173,
+      "mm": 4.394
+    },
+    {
+      "name": "#16",
+      "series": "number",
+      "inch": 0.177,
+      "mm": 4.496
+    },
+    {
+      "name": "#15",
+      "series": "number",
+      "inch": 0.18,
+      "mm": 4.572
+    },
+    {
+      "name": "#14",
+      "series": "number",
+      "inch": 0.182,
+      "mm": 4.623
+    },
+    {
+      "name": "#13",
+      "series": "number",
+      "inch": 0.185,
+      "mm": 4.699
+    },
+    {
+      "name": "3/16",
+      "series": "fraction",
+      "inch": 0.1875,
+      "mm": 4.762
+    },
+    {
+      "name": "#12",
+      "series": "number",
+      "inch": 0.189,
+      "mm": 4.801
+    },
+    {
+      "name": "#11",
+      "series": "number",
+      "inch": 0.191,
+      "mm": 4.851
+    },
+    {
+      "name": "#10",
+      "series": "number",
+      "inch": 0.1935,
+      "mm": 4.915
+    },
+    {
+      "name": "#9",
+      "series": "number",
+      "inch": 0.196,
+      "mm": 4.978
+    },
+    {
+      "name": "#8",
+      "series": "number",
+      "inch": 0.199,
+      "mm": 5.055
+    },
+    {
+      "name": "#7",
+      "series": "number",
+      "inch": 0.201,
+      "mm": 5.105
+    },
+    {
+      "name": "13/64",
+      "series": "fraction",
+      "inch": 0.203125,
+      "mm": 5.159
+    },
+    {
+      "name": "#6",
+      "series": "number",
+      "inch": 0.204,
+      "mm": 5.182
+    },
+    {
+      "name": "#5",
+      "series": "number",
+      "inch": 0.2055,
+      "mm": 5.22
+    },
+    {
+      "name": "#4",
+      "series": "number",
+      "inch": 0.209,
+      "mm": 5.309
+    },
+    {
+      "name": "#3",
+      "series": "number",
+      "inch": 0.213,
+      "mm": 5.41
+    },
+    {
+      "name": "7/32",
+      "series": "fraction",
+      "inch": 0.21875,
+      "mm": 5.556
+    },
+    {
+      "name": "#2",
+      "series": "number",
+      "inch": 0.221,
+      "mm": 5.613
+    },
+    {
+      "name": "#1",
+      "series": "number",
+      "inch": 0.228,
+      "mm": 5.791
+    },
+    {
+      "name": "A",
+      "series": "letter",
+      "inch": 0.234,
+      "mm": 5.944
+    },
+    {
+      "name": "15/64",
+      "series": "fraction",
+      "inch": 0.234375,
+      "mm": 5.953
+    },
+    {
+      "name": "B",
+      "series": "letter",
+      "inch": 0.238,
+      "mm": 6.045
+    },
+    {
+      "name": "C",
+      "series": "letter",
+      "inch": 0.242,
+      "mm": 6.147
+    },
+    {
+      "name": "D",
+      "series": "letter",
+      "inch": 0.246,
+      "mm": 6.248
+    },
+    {
+      "name": "1/4",
+      "series": "fraction",
+      "inch": 0.25,
+      "mm": 6.35
+    },
+    {
+      "name": "E",
+      "series": "letter",
+      "inch": 0.25,
+      "mm": 6.35
+    },
+    {
+      "name": "F",
+      "series": "letter",
+      "inch": 0.257,
+      "mm": 6.528
+    },
+    {
+      "name": "G",
+      "series": "letter",
+      "inch": 0.261,
+      "mm": 6.629
+    },
+    {
+      "name": "17/64",
+      "series": "fraction",
+      "inch": 0.265625,
+      "mm": 6.747
+    },
+    {
+      "name": "H",
+      "series": "letter",
+      "inch": 0.266,
+      "mm": 6.756
+    },
+    {
+      "name": "I",
+      "series": "letter",
+      "inch": 0.272,
+      "mm": 6.909
+    },
+    {
+      "name": "J",
+      "series": "letter",
+      "inch": 0.277,
+      "mm": 7.036
+    },
+    {
+      "name": "K",
+      "series": "letter",
+      "inch": 0.281,
+      "mm": 7.137
+    },
+    {
+      "name": "9/32",
+      "series": "fraction",
+      "inch": 0.28125,
+      "mm": 7.144
+    },
+    {
+      "name": "L",
+      "series": "letter",
+      "inch": 0.29,
+      "mm": 7.366
+    },
+    {
+      "name": "M",
+      "series": "letter",
+      "inch": 0.295,
+      "mm": 7.493
+    },
+    {
+      "name": "19/64",
+      "series": "fraction",
+      "inch": 0.296875,
+      "mm": 7.541
+    },
+    {
+      "name": "N",
+      "series": "letter",
+      "inch": 0.302,
+      "mm": 7.671
+    },
+    {
+      "name": "5/16",
+      "series": "fraction",
+      "inch": 0.3125,
+      "mm": 7.938
+    },
+    {
+      "name": "O",
+      "series": "letter",
+      "inch": 0.316,
+      "mm": 8.026
+    },
+    {
+      "name": "P",
+      "series": "letter",
+      "inch": 0.323,
+      "mm": 8.204
+    },
+    {
+      "name": "21/64",
+      "series": "fraction",
+      "inch": 0.328125,
+      "mm": 8.334
+    },
+    {
+      "name": "Q",
+      "series": "letter",
+      "inch": 0.332,
+      "mm": 8.433
+    },
+    {
+      "name": "R",
+      "series": "letter",
+      "inch": 0.339,
+      "mm": 8.611
+    },
+    {
+      "name": "11/32",
+      "series": "fraction",
+      "inch": 0.34375,
+      "mm": 8.731
+    },
+    {
+      "name": "S",
+      "series": "letter",
+      "inch": 0.348,
+      "mm": 8.839
+    },
+    {
+      "name": "T",
+      "series": "letter",
+      "inch": 0.358,
+      "mm": 9.093
+    },
+    {
+      "name": "23/64",
+      "series": "fraction",
+      "inch": 0.359375,
+      "mm": 9.128
+    },
+    {
+      "name": "U",
+      "series": "letter",
+      "inch": 0.368,
+      "mm": 9.347
+    },
+    {
+      "name": "3/8",
+      "series": "fraction",
+      "inch": 0.375,
+      "mm": 9.525
+    },
+    {
+      "name": "V",
+      "series": "letter",
+      "inch": 0.377,
+      "mm": 9.576
+    },
+    {
+      "name": "W",
+      "series": "letter",
+      "inch": 0.386,
+      "mm": 9.804
+    },
+    {
+      "name": "25/64",
+      "series": "fraction",
+      "inch": 0.390625,
+      "mm": 9.922
+    },
+    {
+      "name": "X",
+      "series": "letter",
+      "inch": 0.397,
+      "mm": 10.084
+    },
+    {
+      "name": "Y",
+      "series": "letter",
+      "inch": 0.404,
+      "mm": 10.262
+    },
+    {
+      "name": "13/32",
+      "series": "fraction",
+      "inch": 0.40625,
+      "mm": 10.319
+    },
+    {
+      "name": "Z",
+      "series": "letter",
+      "inch": 0.413,
+      "mm": 10.49
+    },
+    {
+      "name": "27/64",
+      "series": "fraction",
+      "inch": 0.421875,
+      "mm": 10.716
+    },
+    {
+      "name": "7/16",
+      "series": "fraction",
+      "inch": 0.4375,
+      "mm": 11.112
+    },
+    {
+      "name": "29/64",
+      "series": "fraction",
+      "inch": 0.453125,
+      "mm": 11.509
+    },
+    {
+      "name": "15/32",
+      "series": "fraction",
+      "inch": 0.46875,
+      "mm": 11.906
+    },
+    {
+      "name": "31/64",
+      "series": "fraction",
+      "inch": 0.484375,
+      "mm": 12.303
+    },
+    {
+      "name": "1/2",
+      "series": "fraction",
+      "inch": 0.5,
+      "mm": 12.7
+    },
+    {
+      "name": "33/64",
+      "series": "fraction",
+      "inch": 0.515625,
+      "mm": 13.097
+    },
+    {
+      "name": "17/32",
+      "series": "fraction",
+      "inch": 0.53125,
+      "mm": 13.494
+    },
+    {
+      "name": "35/64",
+      "series": "fraction",
+      "inch": 0.546875,
+      "mm": 13.891
+    },
+    {
+      "name": "9/16",
+      "series": "fraction",
+      "inch": 0.5625,
+      "mm": 14.288
+    },
+    {
+      "name": "37/64",
+      "series": "fraction",
+      "inch": 0.578125,
+      "mm": 14.684
+    },
+    {
+      "name": "19/32",
+      "series": "fraction",
+      "inch": 0.59375,
+      "mm": 15.081
+    },
+    {
+      "name": "39/64",
+      "series": "fraction",
+      "inch": 0.609375,
+      "mm": 15.478
+    },
+    {
+      "name": "5/8",
+      "series": "fraction",
+      "inch": 0.625,
+      "mm": 15.875
+    },
+    {
+      "name": "41/64",
+      "series": "fraction",
+      "inch": 0.640625,
+      "mm": 16.272
+    },
+    {
+      "name": "21/32",
+      "series": "fraction",
+      "inch": 0.65625,
+      "mm": 16.669
+    },
+    {
+      "name": "43/64",
+      "series": "fraction",
+      "inch": 0.671875,
+      "mm": 17.066
+    },
+    {
+      "name": "11/16",
+      "series": "fraction",
+      "inch": 0.6875,
+      "mm": 17.463
+    },
+    {
+      "name": "45/64",
+      "series": "fraction",
+      "inch": 0.703125,
+      "mm": 17.859
+    },
+    {
+      "name": "23/32",
+      "series": "fraction",
+      "inch": 0.71875,
+      "mm": 18.256
+    },
+    {
+      "name": "47/64",
+      "series": "fraction",
+      "inch": 0.734375,
+      "mm": 18.653
+    },
+    {
+      "name": "3/4",
+      "series": "fraction",
+      "inch": 0.75,
+      "mm": 19.05
+    },
+    {
+      "name": "49/64",
+      "series": "fraction",
+      "inch": 0.765625,
+      "mm": 19.447
+    },
+    {
+      "name": "25/32",
+      "series": "fraction",
+      "inch": 0.78125,
+      "mm": 19.844
+    },
+    {
+      "name": "51/64",
+      "series": "fraction",
+      "inch": 0.796875,
+      "mm": 20.241
+    },
+    {
+      "name": "13/16",
+      "series": "fraction",
+      "inch": 0.8125,
+      "mm": 20.638
+    },
+    {
+      "name": "53/64",
+      "series": "fraction",
+      "inch": 0.828125,
+      "mm": 21.034
+    },
+    {
+      "name": "27/32",
+      "series": "fraction",
+      "inch": 0.84375,
+      "mm": 21.431
+    },
+    {
+      "name": "55/64",
+      "series": "fraction",
+      "inch": 0.859375,
+      "mm": 21.828
+    },
+    {
+      "name": "7/8",
+      "series": "fraction",
+      "inch": 0.875,
+      "mm": 22.225
+    },
+    {
+      "name": "57/64",
+      "series": "fraction",
+      "inch": 0.890625,
+      "mm": 22.622
+    },
+    {
+      "name": "29/32",
+      "series": "fraction",
+      "inch": 0.90625,
+      "mm": 23.019
+    },
+    {
+      "name": "59/64",
+      "series": "fraction",
+      "inch": 0.921875,
+      "mm": 23.416
+    },
+    {
+      "name": "15/16",
+      "series": "fraction",
+      "inch": 0.9375,
+      "mm": 23.813
+    },
+    {
+      "name": "61/64",
+      "series": "fraction",
+      "inch": 0.953125,
+      "mm": 24.209
+    },
+    {
+      "name": "31/32",
+      "series": "fraction",
+      "inch": 0.96875,
+      "mm": 24.606
+    },
+    {
+      "name": "63/64",
+      "series": "fraction",
+      "inch": 0.984375,
+      "mm": 25.003
+    },
+    {
+      "name": "1",
+      "series": "fraction",
+      "inch": 1,
+      "mm": 25.4
+    }
+  ],
+  "npt": [
+    {
+      "size": "1/16",
+      "tpi": 27,
+      "pipeOd": 0.3125,
+      "tapDrill": "D",
+      "tapDrillInch": 0.246
+    },
+    {
+      "size": "1/8",
+      "tpi": 27,
+      "pipeOd": 0.405,
+      "tapDrill": "R",
+      "tapDrillInch": 0.339
+    },
+    {
+      "size": "1/4",
+      "tpi": 18,
+      "pipeOd": 0.54,
+      "tapDrill": "7/16",
+      "tapDrillInch": 0.4375
+    },
+    {
+      "size": "3/8",
+      "tpi": 18,
+      "pipeOd": 0.675,
+      "tapDrill": "37/64",
+      "tapDrillInch": 0.5781
+    },
+    {
+      "size": "1/2",
+      "tpi": 14,
+      "pipeOd": 0.84,
+      "tapDrill": "23/32",
+      "tapDrillInch": 0.7188
+    },
+    {
+      "size": "3/4",
+      "tpi": 14,
+      "pipeOd": 1.05,
+      "tapDrill": "59/64",
+      "tapDrillInch": 0.9219
+    },
+    {
+      "size": "1",
+      "tpi": 11.5,
+      "pipeOd": 1.315,
+      "tapDrill": "1-5/32",
+      "tapDrillInch": 1.1563
+    },
+    {
+      "size": "1-1/4",
+      "tpi": 11.5,
+      "pipeOd": 1.66,
+      "tapDrill": "1-1/2",
+      "tapDrillInch": 1.5
+    },
+    {
+      "size": "1-1/2",
+      "tpi": 11.5,
+      "pipeOd": 1.9,
+      "tapDrill": "1-47/64",
+      "tapDrillInch": 1.7344
+    },
+    {
+      "size": "2",
+      "tpi": 11.5,
+      "pipeOd": 2.375,
+      "tapDrill": "2-7/32",
+      "tapDrillInch": 2.2188
+    }
+  ],
+  "cuttingSpeeds": [
+    {
+      "id": "6061",
+      "material": "6061-T6 aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T6",
+      "hardnessHB": [
+        80,
+        110
+      ],
+      "note": "Use sharp, polished edges and reliable chip evacuation.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        500,
+        1000
+      ],
+      "turningHssSfm": [
+        500,
+        600
+      ],
+      "turningCarbideSfm": [
+        600,
+        1200
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.006
+      ]
+    },
+    {
+      "id": "7075",
+      "material": "7075-T6 aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T6",
+      "hardnessHB": [
+        135,
+        175
+      ],
+      "note": "Higher strength than 6061; monitor chip adhesion.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        400,
+        800
+      ],
+      "turningHssSfm": [
+        500,
+        600
+      ],
+      "turningCarbideSfm": [
+        500,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.005
+      ]
+    },
+    {
+      "id": "1018",
+      "material": "1018 low-carbon steel",
+      "group": "P · Steel",
+      "condition": "As supplied / normalized",
+      "hardnessHB": [
+        110,
+        180
+      ],
+      "note": "Low-carbon steel can form a built-up edge.",
+      "millingHssSfm": [
+        65,
+        110
+      ],
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningHssSfm": [
+        125,
+        215
+      ],
+      "turningCarbideSfm": [
+        250,
+        500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.004
+      ]
+    },
+    {
+      "id": "1045",
+      "material": "1045 medium-carbon steel",
+      "group": "P · Steel",
+      "condition": "Normalized",
+      "hardnessHB": [
+        160,
+        230
+      ],
+      "note": "Heat treatment changes cutting behavior substantially.",
+      "millingHssSfm": [
+        25,
+        100
+      ],
+      "millingCarbideSfm": [
+        150,
+        300
+      ],
+      "turningHssSfm": [
+        55,
+        180
+      ],
+      "turningCarbideSfm": [
+        200,
+        400
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.004
+      ]
+    },
+    {
+      "id": "4140",
+      "material": "4140 alloy steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        170,
+        240
+      ],
+      "note": "Reference family includes resulfurized grades; ordinary 4140 may cut less freely. Verify tooling data.",
+      "millingHssSfm": [
+        35,
+        100
+      ],
+      "millingCarbideSfm": [
+        120,
+        250
+      ],
+      "turningHssSfm": [
+        70,
+        200
+      ],
+      "turningCarbideSfm": [
+        180,
+        350
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "4140-qt",
+      "material": "4140 alloy steel · prehardened",
+      "group": "P · Steel",
+      "condition": "Quenched & tempered",
+      "hardnessHB": [
+        260,
+        340
+      ],
+      "note": "Condition-specific speeds are estimates; carbide is preferred. Check actual hardness on the material certificate.",
+      "millingHssSfm": [
+        20,
+        40
+      ],
+      "millingCarbideSfm": [
+        80,
+        160
+      ],
+      "turningHssSfm": [
+        30,
+        60
+      ],
+      "turningCarbideSfm": [
+        100,
+        220
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.003
+      ]
+    },
+    {
+      "id": "304",
+      "material": "304 stainless steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        140,
+        210
+      ],
+      "note": "Work-hardens; avoid dwelling or rubbing. Maintain a positive cut.",
+      "millingHssSfm": [
+        70,
+        75
+      ],
+      "millingCarbideSfm": [
+        80,
+        160
+      ],
+      "turningHssSfm": [
+        115,
+        135
+      ],
+      "turningCarbideSfm": [
+        100,
+        250
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.003
+      ]
+    },
+    {
+      "id": "316",
+      "material": "316 stainless steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        145,
+        215
+      ],
+      "note": "Grade-specific speeds are estimates. Tough chips and work hardening demand consistent engagement.",
+      "millingHssSfm": [
+        40,
+        60
+      ],
+      "millingCarbideSfm": [
+        60,
+        140
+      ],
+      "turningHssSfm": [
+        60,
+        100
+      ],
+      "turningCarbideSfm": [
+        80,
+        200
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.003
+      ]
+    },
+    {
+      "id": "a2",
+      "material": "A2 tool steel",
+      "group": "P · Steel",
+      "condition": "Annealed only",
+      "hardnessHB": [
+        180,
+        240
+      ],
+      "note": "Not suitable for hardened A2. Hardened tooling requires supplier-specific data.",
+      "millingHssSfm": [
+        40,
+        50
+      ],
+      "millingCarbideSfm": [
+        80,
+        160
+      ],
+      "turningHssSfm": [
+        80,
+        125
+      ],
+      "turningCarbideSfm": [
+        120,
+        250
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.003
+      ]
+    },
+    {
+      "id": "gray-iron",
+      "material": "Gray cast iron · Class 30",
+      "group": "K · Cast iron",
+      "condition": "As cast",
+      "hardnessHB": [
+        160,
+        240
+      ],
+      "note": "Abrasive material; control dust. Dry-cut adjustment is not applied to cast iron.",
+      "millingHssSfm": [
+        70,
+        100
+      ],
+      "millingCarbideSfm": [
+        150,
+        300
+      ],
+      "turningHssSfm": [
+        145,
+        215
+      ],
+      "turningCarbideSfm": [
+        150,
+        300
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.005
+      ]
+    },
+    {
+      "id": "c360",
+      "material": "C360 free-cutting brass",
+      "group": "N · Nonferrous",
+      "condition": "Half-hard",
+      "hardnessHB": [
+        80,
+        150
+      ],
+      "note": "Use brass-compatible geometry; aggressive rake can grab.",
+      "millingHssSfm": [
+        100,
+        200
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        300,
+        350
+      ],
+      "turningCarbideSfm": [
+        400,
+        600
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.005
+      ]
+    }
+  ]
+}

@@ -245,6 +245,9 @@ function screenshotClip(metrics, area) {
 }
 
 async function capturePage(webSocketDebuggerUrl, area) {
+  if (typeof WebSocket === 'undefined') {
+    throw new Error(`Screenshot capture needs the global WebSocket (Node 22 or newer); this is Node ${process.version}.`);
+  }
   return await new Promise((resolve, reject) => {
     const socket = new WebSocket(webSocketDebuggerUrl);
     const requests = new Map();
@@ -347,7 +350,12 @@ async function main() {
     if (fs.existsSync(file)) fs.rmSync(file);
   }
 
-  const capture = captureWhenReady();
+  // If capturing fails, every case would otherwise wait out its own timeout
+  // (about ten minutes in all) before the real error is reported.
+  const capture = captureWhenReady().catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
   const userDataDir = path.join(artifactDir, `vscode-profile-${process.pid}`);
   const tests = runTests({
     version: process.env.JOBLINE_VSCODE_TEST_VERSION || '1.96.4',

@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://jobline.ai/schemas/jblmachine.schema.json",
+  "title": "JobLine machine preset (.jblmachine)",
+  "description": "One machine setup shared by the JobLine G-Code extension and jobline.ai-CAM. Keep in sync with src/presets/jblMachine.ts (g-code) and src/core/persistence/jblMachine.ts (CAM).",
+  "type": "object",
+  "required": ["version", "fileType", "machine"],
+  "properties": {
+    "version": { "type": "string", "description": "File format version.", "default": "1.0" },
+    "savedAt": { "type": "number", "description": "Milliseconds since the Unix epoch." },
+    "fileType": { "const": "machine" },
+    "extension": { "const": ".jblmachine" },
+    "machine": { "$ref": "#/definitions/preset" }
+  },
+  "definitions": {
+    "preset": {
+      "type": "object",
+      "required": ["id", "name", "machineClass", "control"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Stable id, unique within a library." },
+        "name": { "type": "string", "minLength": 1, "description": "What the shop calls this machine." },
+        "manufacturer": { "type": "string" },
+        "model": { "type": "string" },
+        "machineClass": {
+          "enum": ["mill", "lathe", "mill-turn", "grinder"],
+          "description": "Broad profile: drives cycle lists and lathe T-word decoding."
+        },
+        "machineKind": {
+          "type": "string",
+          "description": "Detailed kind.",
+          "examples": ["3-Axis Vertical Mill", "4-Axis Mill", "5-Axis Mill (Trunnion)", "5-Axis Mill (Rotary Table)", "Turn Center (2-Axis)", "5-Axis Mill-Turn", "Multi-Spindle Transfer", "Grinding Center"]
+        },
+        "control": {
+          "type": "object",
+          "required": ["family"],
+          "properties": {
+            "family": { "enum": ["fanuc", "haas", "siemens", "mazak", "okuma", "mitsubishi", "heidenhain", "manual", "unknown", "fanuc-robot", "abb"] },
+            "model": { "type": "string", "examples": ["31i-B", "NGC", "Sinumerik 840D sl", "OSP-P300L"] }
+          },
+          "additionalProperties": false
+        },
+        "units": { "enum": ["inch", "metric"], "default": "inch" },
+        "axes": {
+          "type": "array",
+          "description": "Travel limits in the preset's units (degrees for A/B/C).",
+          "items": {
+            "type": "object",
+            "required": ["name", "min", "max"],
+            "properties": {
+              "name": { "enum": ["X", "Y", "Z", "A", "B", "C"] },
+              "min": { "type": "number" },
+              "max": { "type": "number" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "spindleMaxRpm": { "type": "number", "exclusiveMinimum": 0 },
+        "toolCapacity": { "type": "integer", "minimum": 0 },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "fourthAxis": { "type": "boolean" },
+            "fiveAxisSimultaneous": { "type": "boolean" },
+            "liveTooling": { "type": "boolean" },
+            "yAxisTurn": { "type": "boolean" },
+            "subSpindle": { "type": "boolean" },
+            "probing": { "type": "boolean" },
+            "throughSpindleCoolant": { "type": "boolean" },
+            "barFeeder": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "workholding": { "enum": ["none", "vise", "chuck"] },
+        "postProcessor": { "type": "string", "description": "Post processor id jobline.ai-CAM uses for this machine." },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

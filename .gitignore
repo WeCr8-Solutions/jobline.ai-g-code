@@ -20,3 +20,6 @@ test/fixtures/revpack/
 
 # Local agent/editor config - developer paths and tool settings, not shippable
 .claude/
+
+# Agent loop state, worktrees, logs and screenshots
+.agent-loop/
