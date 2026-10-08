@@ -1,5 +1,5 @@
 // Watching computers you can't reach. Each computer running the loop pushes
-// a heartbeat to refs/agent-hosts/<name> on the shared git remote: what it is
+// a heartbeat to the branch agent-hosts/<name> on the shared git remote: what it is
 // doing, its task counts, the last gate result, free disk, which providers
 // answer, and its model scoreboard. `monitor` reads every heartbeat from any
 // clone, including a cloud session, and flags computers that went quiet,
@@ -10,7 +10,7 @@ import os from 'node:os';
 import { git } from './exec.mjs';
 import { readAttempts, summarize } from './stats.mjs';
 
-const PREFIX = 'refs/agent-hosts/';
+const prefixOf = (config) => (config.monitoring?.refPrefix ?? 'refs/heads/agent-hosts/').replace(/\/?$/, '/');
 
 export function freeDiskGb(dir) {
   try {
@@ -55,16 +55,17 @@ export async function publishHeartbeat(config, payload) {
   const tree = await git(['mktree'], { cwd, input: '' });
   const commit = await git(['-c', 'user.name=JobLine Agent Loop', '-c', 'user.email=agent-loop@localhost', 'commit-tree', tree, '-m', JSON.stringify(payload)], { cwd });
   // One writer per host, so a forced update is safe.
-  await git(['push', '-q', '--no-verify', '--force', remote, `${commit}:${PREFIX}${payload.host}`], { cwd });
+  await git(['push', '-q', '--no-verify', '--force', remote, `${commit}:${prefixOf(config)}${payload.host}`], { cwd });
 }
 
 export async function readHeartbeats(config) {
   const remote = config.coordination.remote ?? 'origin';
   const cwd = config.root;
-  const out = await git(['ls-remote', remote, `${PREFIX}*`], { cwd });
-  const names = out.split('\n').filter(Boolean).map(line => line.split(/\s+/)[1].slice(PREFIX.length));
+  const prefix = prefixOf(config);
+  const out = await git(['ls-remote', remote, `${prefix}*`], { cwd });
+  const names = out.split('\n').filter(Boolean).map(line => line.split(/\s+/)[1].slice(prefix.length));
   if (!names.length) return [];
-  await git(['fetch', '-q', '--no-tags', remote, `+${PREFIX}*:refs/agent-hosts-seen/*`], { cwd });
+  await git(['fetch', '-q', '--no-tags', remote, `+${prefix}*:refs/agent-hosts-seen/*`], { cwd });
   return Promise.all(names.map(async (name) => {
     try {
       return JSON.parse(await git(['log', '-1', '--format=%B', `refs/agent-hosts-seen/${name}`], { cwd }));

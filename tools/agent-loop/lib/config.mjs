@@ -36,8 +36,10 @@ const DEFAULTS = {
   task: { maxAttempts: 5, review: false, finalChecks: [] },
   artifacts: { screenshotDirs: [] },
   host: { name: '', tags: '' },
-  coordination: { mode: 'local', remote: 'origin', refPrefix: 'refs/agent-claims/', pushBranches: true, taskBranch: 'agent-queue' },
-  monitoring: { publish: 'auto' },
+  // Claims and heartbeats live under refs/heads/ (as branches): every git host
+  // and proxy accepts branch pushes, while some refuse custom ref namespaces.
+  coordination: { mode: 'local', remote: 'origin', refPrefix: 'refs/heads/agent-claims/', pushBranches: true, taskBranch: 'agent-queue' },
+  monitoring: { publish: 'auto', refPrefix: 'refs/heads/agent-hosts/' },
   limits: { minFreeDiskGb: 5, maxRuntime: '', until: '', restartEvery: '' },
   autoTasks: { enabled: false, maxOpen: 5, review: false },
 };

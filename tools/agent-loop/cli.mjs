@@ -128,7 +128,7 @@ async function doctor(config) {
       line(true, `remote ${config.coordination.remote} reachable`);
       const state = new StateStore(config.stateDir);
       await publishHeartbeat(config, heartbeatPayload({ config, host, loop: 'doctor', state, startedAt: new Date().toISOString(), note: 'preflight' }));
-      line(true, 'can publish heartbeats', `refs/agent-hosts/${host.name}`);
+      line(true, 'can publish heartbeats', `${(config.monitoring?.refPrefix ?? 'refs/heads/agent-hosts/').replace('refs/heads/', '')}${host.name}`);
     } catch (err) {
       line(false, 'shared queue', err.message.split('\n')[0]);
     }

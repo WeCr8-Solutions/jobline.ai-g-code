@@ -1,7 +1,7 @@
 // Several computers working one queue.
 //
 // Each host runs the loop in its own clone. In "git" mode a host claims a task
-// by creating refs/agent-claims/<id> on the shared remote (usually origin):
+// by creating the branch agent-claims/<id> on the shared remote (usually origin):
 // creating a ref that already exists is rejected, so two hosts can never take
 // the same task, and no server beyond the git remote is needed. The claim
 // is a tiny commit whose message holds {status, owner, until, branch}. Lease
@@ -39,7 +39,7 @@ function localCoordinator() {
 
 function gitCoordinator(config, events) {
   const remote = config.coordination.remote ?? 'origin';
-  const prefix = (config.coordination.refPrefix ?? 'refs/agent-claims/').replace(/\/?$/, '/');
+  const prefix = (config.coordination.refPrefix ?? 'refs/heads/agent-claims/').replace(/\/?$/, '/');
   const pushBranches = config.coordination.pushBranches !== false;
   const cwd = config.root;
   const ref = (id) => `${prefix}${id}`;

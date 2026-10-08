@@ -124,7 +124,7 @@ JOBLINE_AGENT_TAGS=gpu,vscode  # what this computer can do (its OS is added auto
 npm run agent:watch
 ```
 
-A computer claims a task by creating `refs/agent-claims/<id>` on the remote.
+A computer claims a task by creating `the branch `agent-claims/<id>`` on the remote.
 Git refuses to create a ref that already exists, so two computers can't take
 the same task, and no extra server is needed. Leases are renewed every
 attempt. If a computer goes quiet, its task returns to the queue when the
@@ -134,7 +134,9 @@ and `status` shows the shared queue.
 A task with `runsOn: [windows]` only goes to computers with that tag. Use it
 for checks that need a particular OS or tool, for example the VS Code visual
 tests or Playwright baselines kept per platform. If your git host doesn't
-accept custom refs, set `coordination.refPrefix` to `refs/heads/agent-claims/`.
+needs them out of the branch list, set `coordination.refPrefix` and
+`monitoring.refPrefix` to custom namespaces such as `refs/agent-claims/` (some
+hosts and proxies refuse pushes outside `refs/heads/`).
 
 ## Problems become tasks
 
@@ -156,7 +158,7 @@ CAM's machine test bench uses this to turn module findings into fix tasks.
 ## Unattended runs
 
 - **Heartbeats:** on a shared queue (or with `monitoring.publish: true`),
-  each computer pushes its status to `refs/agent-hosts/<name>` every
+  each computer pushes its status to `the branch `agent-hosts/<name>`` every
   `waits.heartbeat` (5 min). `monitor` reads them from any clone.
 - **Scoreboard:** every attempt goes to `.agent-loop/stats.jsonl`. A role
   with `"adaptive": true` orders its providers by measured success.

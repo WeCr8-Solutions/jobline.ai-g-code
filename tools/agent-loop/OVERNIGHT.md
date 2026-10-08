@@ -10,9 +10,9 @@ watch them through GitHub without opening any ports.
 ```mermaid
 flowchart LR
   subgraph GitHub
-    Q[agent-queue branch<br/>shared fix tasks]
-    C[refs/agent-claims/*<br/>who has which task]
-    H[refs/agent-hosts/*<br/>heartbeats + model scores]
+    Q[agent-queue<br/>shared fix tasks]
+    C[agent-claims/*<br/>who has which task]
+    H[agent-hosts/*<br/>heartbeats + model scores]
     B[agent/* branches<br/>finished work]
   end
   Y[yumsourcandy<br/>gate + worker] --> Q
@@ -26,7 +26,7 @@ flowchart LR
 
 - One computer runs the **gate** (the repo's checks) every 15 minutes. It
   turns failures and findings into fix tasks on the `agent-queue` branch.
-- Every computer runs **workers**. They claim tasks through `refs/agent-claims`,
+- Every computer runs **workers**. They claim tasks through `agent-claims/*` branches,
   so no task runs twice, and push finished branches as `agent/<id>` for a
   person to review.
 - Every computer pushes a **heartbeat** every 5 minutes: what it is doing,
