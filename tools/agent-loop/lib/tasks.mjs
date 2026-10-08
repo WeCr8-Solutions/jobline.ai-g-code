@@ -9,6 +9,8 @@
 //   checks: [typecheck, unit]
 //   maxAttempts: 4
 //   dependsOn: [other-task-id]
+//   runsOn: [windows, gpu]       # only hosts with all these tags take it
+//   updateGoldens: true          # refresh regression baselines, for review
 //   ---
 //   Add tests for ...
 //
@@ -72,6 +74,9 @@ export function parseTask(text, filePath) {
     review: data.review === undefined ? undefined : Boolean(data.review),
     screenshots: Boolean(data.screenshots),
     dependsOn: list(data.dependsOn),
+    runsOn: list(data.runsOn),
+    updateGoldens: Boolean(data.updateGoldens),
+    auto: Boolean(data.auto),
     priority: Number(data.priority ?? 0),
     enabled: data.enabled !== false,
     body,

@@ -2,7 +2,7 @@
 // JobLine agent loop. See tools/agent-loop/README.md.
 //
 //   node tools/agent-loop/cli.mjs run [--watch] [--only a,b] [--concurrency N]
-//   node tools/agent-loop/cli.mjs gate [--watch] [--checks a,b]
+//   node tools/agent-loop/cli.mjs gate [--watch] [--checks a,b] [--file-tasks]
 //   node tools/agent-loop/cli.mjs status [--watch]
 //   node tools/agent-loop/cli.mjs new "Title" [--role test]
 //   node tools/agent-loop/cli.mjs providers
@@ -17,6 +17,7 @@ import { StateStore } from './lib/state.mjs';
 import { readRecentEvents } from './lib/events.mjs';
 import { pingProvider } from './lib/providers.mjs';
 import { removeWorktree } from './lib/worktree.mjs';
+import { createCoordinator, hostIdentity } from './lib/coordination.mjs';
 import { sleep } from './lib/util.mjs';
 
 function parseArgs(argv) {
@@ -34,7 +35,7 @@ function parseArgs(argv) {
 
 const list = (value) => (typeof value === 'string' ? value.split(',').map(s => s.trim()).filter(Boolean) : undefined);
 
-function printStatus(config) {
+async function printStatus(config) {
   const state = new StateStore(config.stateDir);
   const { tasks, problems } = listTasks(path.join(config.root, config.tasksDir));
   const rows = tasks.map((task) => {
@@ -52,6 +53,19 @@ function printStatus(config) {
   const gate = state.data.gate;
   if (gate.lastRun) {
     console.log(`\nGate: ${gate.lastOk ? 'passing' : `failing (${(gate.lastFailed ?? []).join(', ')})`} - last run ${gate.lastRun}, ${gate.passes ?? 0}/${gate.runs ?? 0} runs passed`);
+  }
+  const host = hostIdentity(config);
+  console.log(`\nThis host: ${host.name} [${[...host.tags].join(', ')}], ${config.coordination.mode} queue`);
+  if (config.coordination.mode === 'git') {
+    try {
+      const claims = await createCoordinator(config).list();
+      if (claims.length) {
+        console.log(`Shared queue on ${config.coordination.remote}:`);
+        for (const c of claims) console.log(`  ${c.id.padEnd(widths[0])}  ${String(c.status ?? '?').padEnd(8)} ${c.owner ?? ''}${c.status === 'running' && c.until ? ` until ${new Date(c.until).toISOString().slice(11, 16)}` : ''}`);
+      }
+    } catch (err) {
+      console.log(`Shared queue unavailable: ${err.message.split('\n')[0]}`);
+    }
   }
   const recent = readRecentEvents(config.stateDir, 8);
   if (recent.length) {
@@ -79,13 +93,13 @@ async function main() {
       return Object.values(results).some(r => r === 'blocked' || r === 'crashed') ? 1 : 0;
     }
     case 'gate': {
-      const result = await runGateLoop(config, { watch: Boolean(args.watch), names: list(args.checks) });
+      const result = await runGateLoop(config, { watch: Boolean(args.watch), names: list(args.checks), fileTasks: args['file-tasks'] ? true : undefined });
       return result?.ok ? 0 : 1;
     }
     case 'status': {
       do {
         if (args.watch) console.clear();
-        printStatus(config);
+        await printStatus(config);
         if (args.watch) await sleep(5000);
       } while (args.watch);
       return 0;
@@ -112,6 +126,7 @@ async function main() {
     case 'reset': {
       const id = args._[1];
       await new StateStore(config.stateDir).reset(id);
+      if (id && config.coordination.mode === 'git') await createCoordinator(config).forget(id);
       if (id && args['remove-worktree']) await removeWorktree(config, id, { deleteBranch: Boolean(args['delete-branch']) });
       console.log(id ? `Reset ${id}; it will run again.` : 'Reset all task state.');
       return 0;

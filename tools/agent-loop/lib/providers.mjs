@@ -1,7 +1,8 @@
 // Model providers. Each one answers `complete({system, prompt, images, cwd})`.
 //
 //   ollama       local models through Ollama (/api/chat)
-//   openai       any OpenAI-compatible server: LM Studio, llama.cpp, vLLM,
+//   lmstudio     LM Studio's local server (OpenAI-compatible, default :1234)
+//   openai       any other OpenAI-compatible server: llama.cpp, vLLM,
 //                OpenRouter, a hosted gateway
 //   anthropic    Claude through the official @anthropic-ai/sdk, loaded only
 //                when this provider is used, so local-only setups stay
@@ -14,6 +15,10 @@
 // edit the worktree, and the harness reverts anything outside the allowed paths.
 // Every provider is paced (requests per minute, minimum gap), limited in
 // concurrency, and retried with backoff on rate limits and server errors.
+//
+// Local providers (ollama, lmstudio, openai) can list several `hosts`, e.g. a
+// GPU box per bench. Requests go to the least busy host that is up; a host
+// that stops answering is rested for `hostCooldown` while the others carry on.
 
 import fs from 'node:fs';
 import os from 'node:os';
@@ -90,7 +95,7 @@ function ollama(spec) {
 }
 
 function openaiCompatible(spec) {
-  const base = (spec.baseUrl || 'http://localhost:1234/v1').replace(/\/$/, '');
+  const base = (spec.baseUrl || spec.host || 'http://localhost:1234/v1').replace(/\/$/, '');
   const key = spec.apiKeyEnv ? process.env[spec.apiKeyEnv] : undefined;
   return {
     mode: 'diff',
@@ -212,43 +217,91 @@ function command(spec) {
   };
 }
 
-const FACTORIES = { ollama, openai: openaiCompatible, anthropic, 'claude-code': claudeCode, command };
+/**
+ * LM Studio speaks the OpenAI API at /v1. With "Just-in-Time model loading"
+ * on (LM Studio > Developer), naming any downloaded model loads it on first use.
+ */
+function lmstudio(spec) {
+  return openaiCompatible({ ...spec, baseUrl: lmstudioBase(spec.baseUrl ?? spec.host) });
+}
+
+function lmstudioBase(url) {
+  const base = (url || 'http://localhost:1234').replace(/\/$/, '');
+  return /\/v1$/.test(base) ? base : `${base}/v1`;
+}
+
+const FACTORIES = { ollama, lmstudio, openai: openaiCompatible, anthropic, 'claude-code': claudeCode, command };
+const HOSTED_TYPES = new Set(['ollama', 'lmstudio', 'openai']);
+
+/** `hosts` as a list, or as a comma-separated string so it can come from an environment variable. */
+export function splitHosts(hosts) {
+  const list = Array.isArray(hosts) ? hosts : typeof hosts === 'string' ? hosts.split(',') : [];
+  return list.map(h => String(h).trim()).filter(Boolean);
+}
 
 /**
- * Build every configured provider, each wrapped with its own pacing,
- * concurrency limit and retry loop.
+ * Build every configured provider, each wrapped with its own pacing, retry
+ * loop and, per host, a concurrency limit.
  */
 export function createProviders(config, events, { factories = FACTORIES, clock } = {}) {
+  const now = clock?.now ?? Date.now;
+  const wait = clock?.sleep ?? sleep;
   const providers = {};
   for (const [name, raw] of Object.entries(config.providers)) {
     const factory = factories[raw.type];
     if (!factory) throw new Error(`providers.${name}: unknown type "${raw.type}" (use ${Object.keys(FACTORIES).join(', ')})`);
     const spec = { ...raw, timeoutMs: parseDuration(raw.timeout ?? '15m') };
-    let inner;
-    const build = () => (inner ??= factory(spec));
+    const configuredHosts = splitHosts(raw.hosts);
+    const hostList = HOSTED_TYPES.has(raw.type) && configuredHosts.length ? configuredHosts : [undefined];
+    const perHost = raw.concurrencyPerHost ?? raw.concurrency ?? 2;
+    const cooldownMs = parseDuration(raw.hostCooldown ?? '60s');
+    const pool = hostList.map(host => ({
+      host,
+      inner: undefined,
+      build() { return (this.inner ??= factory(host ? { ...spec, host, baseUrl: host } : spec)); },
+      slots: createSemaphore(perHost),
+      downUntil: 0,
+    }));
+    const pick = () => {
+      const up = pool.filter(entry => entry.downUntil <= now());
+      const candidates = up.length ? up : [...pool].sort((a, b) => a.downUntil - b.downUntil).slice(0, 1);
+      return candidates.reduce((best, entry) =>
+        (entry.slots.active + entry.slots.waiting < best.slots.active + best.slots.waiting ? entry : best));
+    };
     const limiter = createRateLimiter({
       perMinute: raw.requestsPerMinute ?? 0,
       minIntervalMs: parseDuration(raw.minInterval ?? 0),
     }, clock);
-    const slots = createSemaphore(raw.concurrency ?? 2);
     const { baseMs, maxMs, retries } = config.waitsMs.providerRetry;
     providers[name] = {
       name,
-      get mode() { return build().mode; },
+      hosts: hostList.filter(Boolean),
+      get mode() { return pool[0].build().mode; },
       vision: Boolean(raw.vision),
       async complete(request) {
         for (let attempt = 1; ; attempt++) {
           await limiter.take(request.signal);
+          const entry = pick();
           try {
-            const started = Date.now();
-            const result = await slots.run(() => build().complete(request));
-            events?.emit('provider.reply', { task: request.task, attempt: request.attempt, provider: name, durationMs: Date.now() - started, chars: result.text.length });
+            const started = now();
+            const result = await entry.slots.run(() => entry.build().complete(request));
+            events?.emit('provider.reply', {
+              task: request.task, attempt: request.attempt, provider: entry.host ? `${name}@${entry.host}` : name,
+              durationMs: now() - started, chars: result.text.length,
+            });
             return result;
           } catch (err) {
             if (request.signal?.aborted || !(err instanceof ProviderError) || !err.retryable || attempt > retries) throw err;
+            // No HTTP status means the host didn't answer: rest it, and go
+            // straight to another host if one is up.
+            if (err.status === undefined && pool.length > 1) {
+              entry.downUntil = now() + cooldownMs;
+              events?.emit('provider.host-down', { task: request.task, provider: name, message: `${entry.host} not answering; resting it for ${Math.round(cooldownMs / 1000)}s` });
+              if (pool.some(other => other.downUntil <= now())) continue;
+            }
             const waitMs = Math.max(err.retryAfterMs ?? 0, backoffDelay(attempt, { baseMs, maxMs }));
             events?.emit('provider.wait', { task: request.task, attempt: request.attempt, provider: name, waitMs, message: `${err.message.slice(0, 120)} - retrying in ${Math.round(waitMs / 1000)}s` });
-            await (clock?.sleep ?? sleep)(waitMs, request.signal);
+            await wait(waitMs, request.signal);
           }
         }
       },
@@ -260,6 +313,28 @@ export function createProviders(config, events, { factories = FACTORIES, clock }
 /** Quick reachability check for `providers` command. */
 export async function pingProvider(config, name) {
   const spec = config.providers[name];
+  if (HOSTED_TYPES.has(spec.type) && splitHosts(spec.hosts).length) {
+    const results = await Promise.all(splitHosts(spec.hosts).map(async (host) => {
+      try {
+        return `${host}: ${await pingOne({ ...spec, host, baseUrl: host })}`;
+      } catch (err) {
+        return `${host}: unreachable (${err.message})`;
+      }
+    }));
+    return results.join('\n' + ' '.repeat(30));
+  }
+  return pingOne(spec, config);
+}
+
+async function pingOne(spec, config) {
+  if (spec.type === 'lmstudio') {
+    const base = lmstudioBase(spec.baseUrl ?? spec.host);
+    const res = await fetch(`${base}/models`, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return `HTTP ${res.status}`;
+    const ids = ((await res.json()).data ?? []).map(m => m.id);
+    if (!spec.model || ids.includes(spec.model)) return `ok (${spec.model ?? 'no model set'})`;
+    return `reachable; "${spec.model}" not listed. Load it (lms load ${spec.model}) or turn on JIT loading. Available: ${ids.slice(0, 5).join(', ') || 'none'}`;
+  }
   if (spec.type === 'ollama') {
     const host = (spec.host || 'http://localhost:11434').replace(/\/$/, '');
     const res = await fetch(`${host}/api/tags`, { signal: AbortSignal.timeout(5000) });
@@ -268,7 +343,7 @@ export async function pingProvider(config, name) {
     return found ? `ok (${spec.model} installed)` : `reachable, but ${spec.model} is not pulled (ollama pull ${spec.model})`;
   }
   if (spec.type === 'openai') {
-    const base = (spec.baseUrl || 'http://localhost:1234/v1').replace(/\/$/, '');
+    const base = (spec.baseUrl || spec.host || 'http://localhost:1234/v1').replace(/\/$/, '');
     const key = spec.apiKeyEnv ? process.env[spec.apiKeyEnv] : undefined;
     const res = await fetch(`${base}/models`, { headers: key ? { authorization: `Bearer ${key}` } : {}, signal: AbortSignal.timeout(5000) });
     return res.ok ? 'ok' : `HTTP ${res.status}`;

@@ -26,7 +26,7 @@ export function runCommand(command, { cwd, env = {}, timeoutMs = 600_000, signal
     const child = spawn(command, {
       cwd,
       shell: true,
-      env: { ...process.env, ...env, CI: process.env.CI ?? '1', FORCE_COLOR: '0' },
+      env: { ...process.env, CI: process.env.CI ?? '1', FORCE_COLOR: '0', NO_COLOR: '1', ...env },
       detached: process.platform !== 'win32',
       stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
     });

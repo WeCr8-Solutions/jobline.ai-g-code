@@ -42,7 +42,7 @@ function collectScreenshots(cwd, dirs, since, artifactDir) {
  * (optional ones are recorded and skipped past). Returns per-check results and
  * any screenshots produced.
  */
-export async function runGate(config, names, { cwd, semaphore, events, signal, artifactDir, task, attempt }) {
+export async function runGate(config, names, { cwd, semaphore, events, signal, artifactDir, task, attempt, updateGoldens = false }) {
   const results = [];
   const screenshots = [];
   for (const name of names) {
@@ -51,9 +51,16 @@ export async function runGate(config, names, { cwd, semaphore, events, signal, a
     if (signal?.aborted) break;
     const started = Date.now();
     events?.emit('check.start', { task, attempt, check: name });
+    // A check may report findings (not failures) as JSON at this path.
+    const issuesFile = path.join(cwd, '.agent-loop', 'issues', `${name}.json`);
+    fs.rmSync(issuesFile, { force: true });
+    fs.mkdirSync(path.dirname(issuesFile), { recursive: true });
     const result = await semaphore.run(() => runCommand(check.run, {
-      cwd, env: check.env, timeoutMs: check.timeoutMs, signal,
+      cwd, env: { ...check.env, ...(updateGoldens && check.updateEnv ? check.updateEnv : {}), AGENT_LOOP_ISSUES_FILE: issuesFile },
+      timeoutMs: check.timeoutMs, signal,
     }));
+    let issues = [];
+    try { issues = JSON.parse(fs.readFileSync(issuesFile, 'utf8')); } catch { /* none reported */ }
     const shots = artifactDir && (check.screenshots || check.screenshotDirs)
       ? collectScreenshots(cwd, [].concat(check.screenshotDirs ?? config.artifacts.screenshotDirs), started - 1000, artifactDir)
       : [];
@@ -61,6 +68,7 @@ export async function runGate(config, names, { cwd, semaphore, events, signal, a
     const entry = {
       name, ok: result.ok, optional: Boolean(check.optional), timedOut: result.timedOut,
       durationMs: result.durationMs, output: tail(result.output, check.outputChars ?? 6000), screenshots: shots,
+      issues: Array.isArray(issues) ? issues.filter(i => i && i.key) : [],
     };
     results.push(entry);
     events?.emit(result.ok ? 'check.pass' : 'check.fail', {

@@ -1,31 +1,67 @@
 {
   "tasksDir": "agent-tasks",
+  "host": {
+    "name": "${JOBLINE_AGENT_HOST:-}",
+    "tags": "${JOBLINE_AGENT_TAGS:-}"
+  },
+  "coordination": {
+    "mode": "${JOBLINE_AGENT_QUEUE:-local}",
+    "remote": "${JOBLINE_AGENT_REMOTE:-origin}",
+    "pushBranches": true
+  },
   "concurrency": 4,
   "checkConcurrency": 2,
-
-  "gate": ["typecheck", "lint", "unit"],
+  "gate": [
+    "typecheck",
+    "lint",
+    "unit"
+  ],
   "checks": {
-    "typecheck": { "run": "npx tsc --noEmit -p tsconfig.json", "timeout": "5m" },
-    "lint": { "run": "npm run lint", "timeout": "5m" },
-    "unit": { "run": "npm test", "timeout": "10m" },
-    "all": { "run": "npm run test:all", "timeout": "20m" },
-    "fixtures": { "run": "npm run review:fixtures", "timeout": "10m" },
+    "typecheck": {
+      "run": "npx tsc --noEmit -p tsconfig.json",
+      "timeout": "5m"
+    },
+    "lint": {
+      "run": "npm run lint",
+      "timeout": "5m"
+    },
+    "unit": {
+      "run": "npm test",
+      "timeout": "10m"
+    },
+    "all": {
+      "run": "npm run test:all",
+      "timeout": "20m"
+    },
+    "fixtures": {
+      "run": "npm run review:fixtures",
+      "timeout": "10m"
+    },
     "visual": {
       "run": "npm run test:e2e:visual",
       "timeout": "20m",
       "screenshots": true,
-      "screenshotDirs": ["test-results/visual"]
+      "screenshotDirs": [
+        "test-results/visual"
+      ]
     }
   },
-
   "providers": {
+    "lmstudio": {
+      "type": "lmstudio",
+      "hosts": "${LMSTUDIO_HOSTS:-http://localhost:1234}",
+      "model": "${LMSTUDIO_MODEL:-qwen2.5-coder-14b-instruct}",
+      "concurrencyPerHost": 1,
+      "hostCooldown": "2m",
+      "timeout": "20m"
+    },
     "local": {
       "type": "ollama",
-      "host": "${OLLAMA_HOST:-http://localhost:11434}",
       "model": "${OLLAMA_MODEL:-qwen2.5-coder:7b}",
       "contextTokens": 32768,
       "concurrency": 1,
-      "timeout": "15m"
+      "timeout": "15m",
+      "hosts": "${OLLAMA_HOSTS:-http://localhost:11434}"
     },
     "local-vision": {
       "type": "ollama",
@@ -36,7 +72,7 @@
     },
     "lan": {
       "type": "openai",
-      "baseUrl": "${OPENAI_BASE_URL:-http://localhost:1234/v1}",
+      "baseUrl": "${OPENAI_BASE_URL:-http://localhost:8080/v1}",
       "model": "${OPENAI_MODEL:-local-model}",
       "apiKeyEnv": "OPENAI_API_KEY",
       "concurrency": 2,
@@ -61,33 +97,81 @@
       "timeout": "30m"
     }
   },
-
   "roles": {
-    "develop": { "providers": ["local", "claude"], "escalateAfter": 2 },
-    "fix": { "providers": ["local", "claude"], "escalateAfter": 2 },
-    "test": { "providers": ["local", "claude"], "escalateAfter": 2 },
-    "review": { "providers": ["claude"] }
+    "develop": {
+      "providers": [
+        "lmstudio",
+        "local",
+        "claude"
+      ],
+      "escalateAfter": 2
+    },
+    "fix": {
+      "providers": [
+        "lmstudio",
+        "local",
+        "claude"
+      ],
+      "escalateAfter": 2
+    },
+    "test": {
+      "providers": [
+        "lmstudio",
+        "local",
+        "claude"
+      ],
+      "escalateAfter": 2
+    },
+    "review": {
+      "providers": [
+        "claude"
+      ]
+    }
   },
-
   "edits": {
-    "allow": ["src/**", "test/**", "media/**", "syntaxes/**", "samples/**", "schemas/**", "docs/**", "README.md", "CHANGELOG.md"],
-    "deny": ["test/fixtures/revpack/**", "test/fixtures/external-local/**", "package-lock.json"]
+    "allow": [
+      "src/**",
+      "test/**",
+      "media/**",
+      "syntaxes/**",
+      "samples/**",
+      "schemas/**",
+      "docs/**",
+      "README.md",
+      "CHANGELOG.md"
+    ],
+    "deny": [
+      "test/fixtures/revpack/**",
+      "test/fixtures/external-local/**",
+      "package-lock.json"
+    ]
   },
-
   "context": {
     "maxFileBytes": 80000,
     "maxContextBytes": 300000,
     "instructions": "VS Code extension in TypeScript (strict). Unit tests use node:test with assert/strict under test/, run through ts-node by npm test; add new test files to the npm test script. Match the surrounding code's naming and comment style. The parser lives in src/parser, the sidebar in src/providers, machine presets in src/presets. Never weaken a safety diagnostic to make a test pass."
   },
-
   "waits": {
-    "betweenAttempts": { "base": "30s", "max": "10m" },
-    "providerRetry": { "base": "5s", "max": "5m", "retries": 5 },
+    "betweenAttempts": {
+      "base": "30s",
+      "max": "10m"
+    },
+    "providerRetry": {
+      "base": "5s",
+      "max": "5m",
+      "retries": 5
+    },
     "poll": "30s",
     "lease": "45m",
     "gateInterval": "15m"
   },
-
-  "worktree": { "base": "HEAD", "linkNodeModules": true, "setup": [] },
-  "task": { "maxAttempts": 5, "review": false }
+  "worktree": {
+    "base": "HEAD",
+    "linkNodeModules": true,
+    "setup": []
+  },
+  "task": {
+    "maxAttempts": 6,
+    "review": false
+  }
 }

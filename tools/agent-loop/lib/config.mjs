@@ -32,8 +32,11 @@ const DEFAULTS = {
     gateInterval: '15m',
   },
   worktree: { base: 'HEAD', linkNodeModules: true, setup: [] },
-  task: { maxAttempts: 5, review: false },
+  task: { maxAttempts: 5, review: false, finalChecks: [] },
   artifacts: { screenshotDirs: [] },
+  host: { name: '', tags: '' },
+  coordination: { mode: 'local', remote: 'origin', refPrefix: 'refs/agent-claims/', pushBranches: true },
+  autoTasks: { enabled: false, maxOpen: 5, review: false },
 };
 
 function merge(base, override) {
@@ -76,6 +79,8 @@ export function loadConfig(root, { file = CONFIG_FILE, env = process.env } = {})
     else if (!check || typeof check.run !== 'string') problems.push(`checks.${name} needs a "run" command`);
   }
   for (const name of config.gate) if (!config.checks[name]) problems.push(`gate lists "${name}" but checks has no such entry`);
+  for (const name of config.task.finalChecks ?? []) if (!config.checks[name]) problems.push(`task.finalChecks lists "${name}" but checks has no such entry`);
+  if (!['local', 'git'].includes(config.coordination.mode)) problems.push('coordination.mode must be "local" or "git"');
   for (const [name, provider] of Object.entries(config.providers)) {
     if (!provider?.type) problems.push(`providers.${name} needs a "type"`);
   }

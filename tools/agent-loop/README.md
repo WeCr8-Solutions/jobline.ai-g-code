@@ -87,14 +87,78 @@ checkout.
 
 | `type` | For | Mode | Notes |
 | --- | --- | --- | --- |
-| `ollama` | Local models (Qwen coder, Llama, etc.) | diff | `host`, `model`, `contextTokens`; set `vision: true` for a vision model used as reviewer |
-| `openai` | LM Studio, llama.cpp server, vLLM, OpenRouter, any OpenAI-compatible gateway | diff | `baseUrl`, `model`, `apiKeyEnv` |
+| `lmstudio` | LM Studio's local server | diff | `host`/`hosts` (default `http://localhost:1234`), `model`. Turn on the server (Developer tab) and either load the model or enable Just-in-Time loading. `providers` lists what's loaded |
+| `ollama` | Local models through Ollama | diff | `host`/`hosts`, `model`, `contextTokens`; set `vision: true` for a vision model used as reviewer |
+| `openai` | llama.cpp server, vLLM, OpenRouter, any other OpenAI-compatible gateway | diff | `baseUrl`/`hosts`, `model`, `apiKeyEnv` |
 | `anthropic` | Claude API | diff | Install `@anthropic-ai/sdk` and set `model` (the config reads `JOBLINE_AGENT_CLAUDE_MODEL`). `effort`, `maxTokens`, `vision`. Server-side refusal fallback is on unless `"fallbacks": false` |
 | `claude-code` | Claude Code CLI, headless | agentic | Uses your `claude` login. `allowedTools` defaults to file tools only, with no shell |
 | `command` | Anything else (aider, a codex wrapper, your own script) | `diff` or `agentic` | `run` gets the prompt on stdin, or as a file via `{promptFile}` |
 
 Only tasks whose role reaches a provider ever call it, so a machine with only
-Ollama works with the default config until a task escalates.
+LM Studio or Ollama works with the default config until a task escalates.
+The default roles try LM Studio twice, then Ollama twice, then Claude.
+
+## Several computers
+
+Two separate things can be spread out, and they combine.
+
+**Model servers.** Give a local provider several `hosts`, as a list or a
+comma-separated string, so it can come from an environment variable:
+
+```bash
+LMSTUDIO_HOSTS=http://gpu-1:1234,http://gpu-2:1234,http://localhost:1234
+```
+
+Requests go to the least busy host (`concurrencyPerHost` each). A host that
+stops answering is rested for `hostCooldown` while the others carry on.
+
+**Workers.** Any number of computers can work one queue. Each runs the loop
+in its own clone of the repo, with:
+
+```bash
+JOBLINE_AGENT_QUEUE=git        # share the queue through the git remote
+JOBLINE_AGENT_HOST=bench-2     # name shown in status and claims (default: hostname)
+JOBLINE_AGENT_TAGS=gpu,vscode  # what this computer can do (its OS is added automatically)
+npm run agent:watch
+```
+
+A computer claims a task by creating `refs/agent-claims/<id>` on the remote.
+Git refuses to create a ref that already exists, so two computers can't take
+the same task, and no extra server is needed. Leases are renewed every
+attempt. If a computer goes quiet, its task returns to the queue when the
+lease (`waits.lease`) runs out. Finished branches are pushed as `agent/<id>`,
+and `status` shows the shared queue.
+
+A task with `runsOn: [windows]` only goes to computers with that tag. Use it
+for checks that need a particular OS or tool, for example the VS Code visual
+tests or Playwright baselines kept per platform. If your git host doesn't
+accept custom refs, set `coordination.refPrefix` to `refs/heads/agent-claims/`.
+
+## Problems become tasks
+
+With `autoTasks.enabled` (or `gate --file-tasks`), a failing gate on the main
+checkout writes `agent-tasks/auto-gate-<check>.md` with the failure output.
+The repo files the output mentions are listed in it. A check can also report
+findings that don't fail it: it writes JSON to the path in
+`AGENT_LOOP_ISSUES_FILE`, and each finding becomes `auto-<check>-<key>.md`.
+CAM's machine test bench uses this to turn module findings into fix tasks.
+
+- Findings already queued are refreshed, not duplicated.
+- A finding that comes back after its task was done reopens the task (a
+  regression).
+- A blocked task stays blocked until a person runs `reset`, so a problem the
+  agents can't fix doesn't use model time on every gate run.
+- `autoTasks.maxOpen` caps how many open at once; the rest are filed as those
+  finish.
+
+## Regression baselines and slow checks
+
+`task.finalChecks` (e.g. `["view", "build"]`) run only after a task's gate
+passes, so slow checks don't run on every attempt. A check with `updateEnv`
+(e.g. `{"UPDATE_GOLDEN": "1"}`) runs with those variables for tasks marked
+`updateGoldens: true`. The refreshed baselines are committed with the change,
+so the reviewer sees the code diff and the output diff together. Deny the
+baseline files in `edits.deny` so agents can't edit them directly.
 
 ## Screenshots
 
@@ -136,6 +200,8 @@ checks: [typecheck, unit]      # defaults to the config's gate
 maxAttempts: 4
 review: true                   # optional reviewer pass
 dependsOn: [other-task]        # wait for another task to finish
+runsOn: [windows]              # only computers with these tags
+updateGoldens: true            # refresh regression baselines for review
 priority: 10                   # higher runs first
 enabled: false                 # park it
 ---
@@ -149,6 +215,14 @@ not listed is invisible to `diff`-mode models.
 ## Tests
 
 `npm run test:agent-loop` covers waits, pacing, locks, leases, parsing and
-path safety. It also runs four end-to-end loops in scratch git repos with
-scripted models: fail then fix with escalation and review, refused paths, an
-agentic CLI provider, and the CI gate.
+path safety. It also runs end-to-end loops in scratch git repos with scripted
+models:
+- fail, then fix with escalation and review
+- refused paths
+- an agentic CLI provider
+- the CI gate
+- LM Studio against a fake local server, and host failover
+- two clones sharing a queue through a bare remote, where every task finishes
+  exactly once
+- filed and reopened fix tasks
+- final checks with baseline refresh

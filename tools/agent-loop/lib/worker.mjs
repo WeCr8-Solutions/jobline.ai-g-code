@@ -42,8 +42,16 @@ function writeReport(config, task, record, lines) {
 }
 
 export async function runTask(ctx, task) {
-  const { config, state, events, providers, checkSemaphore, signal, owner } = ctx;
+  const { config, state, events, providers, checkSemaphore, signal, owner, coordinator } = ctx;
   if (!(await state.claim(task.id, owner, config.waitsMs.leaseMs))) return 'skipped';
+  // On a shared queue, another computer may already have it.
+  const shared = await coordinator.claim(task.id, owner, config.waitsMs.leaseMs);
+  if (!shared.ok) {
+    await state.patch(task.id, { status: shared.status === 'running' ? 'pending' : shared.status, lease: undefined, heldBy: shared.owner });
+    return 'skipped';
+  }
+  const finish = async (status, extra = {}) => coordinator.finish(task.id, owner, status, { branch: branchName(task.id), ...extra }).catch(err =>
+    events.emit('coord.error', { task: task.id, message: err.message.split('\n')[0] }));
   const maxAttempts = task.maxAttempts ?? config.task.maxAttempts;
   const gate = task.checks ?? config.gate;
   const review = task.review ?? config.task.review;
@@ -59,6 +67,7 @@ export async function runTask(ctx, task) {
     }
   } catch (err) {
     await state.patch(task.id, { status: 'blocked', lastError: err.message, lease: undefined });
+    await finish('blocked');
     events.emit('task.blocked', { task: task.id, message: err.message.split('\n')[0] });
     return 'blocked';
   }
@@ -70,6 +79,7 @@ export async function runTask(ctx, task) {
     if (signal.aborted) break;
     await state.patch(task.id, { attempts: attempt });
     await state.renew(task.id, owner, config.waitsMs.leaseMs);
+    await coordinator.renew(task.id, owner, config.waitsMs.leaseMs).catch(() => {});
     const role = attempt === 1 || !failure ? task.role : (config.roles.fix ? 'fix' : task.role);
     const roleSpec = config.roles[role] ?? config.roles[task.role] ?? config.roles.develop;
     if (!roleSpec) throw new Error(`No role "${role}" (or "develop") in the config`);
@@ -102,7 +112,14 @@ export async function runTask(ctx, task) {
 
       // 3. Run the gate, collecting screenshots.
       const artifactDir = path.join(config.stateDir, 'artifacts', task.id, `attempt-${attempt}`);
-      const result = await runGate(config, gate, { cwd, semaphore: checkSemaphore, events, signal, artifactDir, task: task.id, attempt });
+      const gateOptions = { cwd, semaphore: checkSemaphore, events, signal, artifactDir, task: task.id, attempt, updateGoldens: task.updateGoldens };
+      let result = await runGate(config, gate, gateOptions);
+      // Slow checks (build, e2e, regression) run once the fast gate passes.
+      const finalChecks = (config.task.finalChecks ?? []).filter(name => !gate.includes(name));
+      if (result.ok && finalChecks.length) {
+        const final = await runGate(config, finalChecks, gateOptions);
+        result = { ok: final.ok, results: [...result.results, ...final.results], failed: final.failed, screenshots: [...result.screenshots, ...final.screenshots] };
+      }
       if (!result.ok) {
         failure = describeFailures(result.failed);
         await outcome('checks-failed', result.failed.map(f => f.name).join(', '));
@@ -124,9 +141,10 @@ export async function runTask(ctx, task) {
           }
         }
         if (approved) {
-          const sha = await commitAll(cwd, `agent(${task.id}): ${task.title}\n\nAttempts: ${attempt}. Checks: ${gate.join(', ')}.`);
+          const sha = await commitAll(cwd, `agent(${task.id}): ${task.title}\n\nAttempts: ${attempt}. Checks: ${[...gate, ...finalChecks].join(', ')}.`);
           await outcome('passed', sha ? sha.slice(0, 10) : 'no diff');
           await state.patch(task.id, { status: 'done', lease: undefined, lastFailure: undefined, commit: sha });
+          await finish('done', { commit: sha });
           const report = writeReport(config, task, state.task(task.id), [`- Commit: \`${sha}\``, `- Screenshots: ${result.screenshots.length}`]);
           events.emit('task.done', { task: task.id, attempt, message: `passed; review ${path.relative(config.root, report)}` });
           return 'done';
@@ -138,6 +156,7 @@ export async function runTask(ctx, task) {
         // A harness or git failure, not a model mistake: stop rather than spin.
         await outcome('error', err.message);
         await state.patch(task.id, { status: 'blocked', lastError: err.message, lease: undefined });
+        await finish('blocked');
         writeReport(config, task, state.task(task.id), [`- Error: ${err.message}`]);
         events.emit('task.blocked', { task: task.id, attempt, message: err.message.split('\n')[0] });
         return 'blocked';
@@ -156,10 +175,12 @@ export async function runTask(ctx, task) {
 
   if (signal.aborted) {
     await state.patch(task.id, { status: 'pending', lease: undefined });
+    await coordinator.release(task.id, owner).catch(() => {});
     events.emit('task.paused', { task: task.id, message: 'stopped; will resume next run' });
     return 'paused';
   }
   await state.patch(task.id, { status: 'blocked', lease: undefined });
+  await finish('blocked');
   const report = writeReport(config, task, state.task(task.id), ['- Needs a person: the last failure is in the table and in state.json (lastFailure).']);
   events.emit('task.blocked', { task: task.id, message: `gave up after ${maxAttempts} attempts; see ${path.relative(config.root, report)}` });
   return 'blocked';

@@ -930,7 +930,7 @@
     "agent:watch": "node tools/agent-loop/cli.mjs run --watch",
     "agent:gate": "node tools/agent-loop/cli.mjs gate",
     "agent:status": "node tools/agent-loop/cli.mjs status",
-    "test:agent-loop": "node --test tools/agent-loop/test/unit.test.mjs tools/agent-loop/test/e2e.test.mjs"
+    "test:agent-loop": "node --test tools/agent-loop/test/unit.test.mjs tools/agent-loop/test/e2e.test.mjs tools/agent-loop/test/multi.test.mjs"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",
