@@ -60,6 +60,18 @@ export function expandEnv(value, env = process.env) {
   return value.replace(/\$\{([A-Z0-9_]+)(?::-([^}]*))?\}/gi, (_, name, fallback) => env[name] ?? fallback ?? '');
 }
 
+/** Ensure a host string has a URL scheme. Ollama's own OLLAMA_HOST env var
+    convention is scheme-less (e.g. "127.0.0.1:11434", for binding), but our
+    config reuses the same env var name expecting a full fetch URL — if a
+    machine has OLLAMA_HOST set for Ollama itself, expandEnv happily
+    substitutes it in verbatim and the resulting "host" has no scheme,
+    which fetch()/new URL() then reject outright. */
+export function normalizeHost(value, fallback) {
+  const v = (value || fallback || '').trim();
+  if (!v) return v;
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(v) ? v : `http://${v}`;
+}
+
 /** Limit how many callers run at once. */
 export function createSemaphore(limit) {
   let active = 0;

@@ -24,7 +24,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { runCommand } from './exec.mjs';
-import { backoffDelay, createRateLimiter, createSemaphore, parseDuration, sleep } from './util.mjs';
+import { backoffDelay, createRateLimiter, createSemaphore, normalizeHost, parseDuration, sleep } from './util.mjs';
 
 export class ProviderError extends Error {
   constructor(message, { retryable = false, retryAfterMs, status } = {}) {
@@ -76,7 +76,7 @@ const imageBase64 = (file) => fs.readFileSync(file).toString('base64');
 const imageMime = (file) => (/\.png$/i.test(file) ? 'image/png' : /\.webp$/i.test(file) ? 'image/webp' : 'image/jpeg');
 
 function ollama(spec) {
-  const host = (spec.host || 'http://localhost:11434').replace(/\/$/, '');
+  const host = normalizeHost(spec.host, 'http://localhost:11434').replace(/\/$/, '');
   return {
     mode: 'diff',
     async complete({ system, prompt, images = [], signal }) {
@@ -95,7 +95,7 @@ function ollama(spec) {
 }
 
 function openaiCompatible(spec) {
-  const base = (spec.baseUrl || spec.host || 'http://localhost:1234/v1').replace(/\/$/, '');
+  const base = normalizeHost(spec.baseUrl || spec.host, 'http://localhost:1234/v1').replace(/\/$/, '');
   const key = spec.apiKeyEnv ? process.env[spec.apiKeyEnv] : undefined;
   return {
     mode: 'diff',
@@ -226,7 +226,7 @@ function lmstudio(spec) {
 }
 
 function lmstudioBase(url) {
-  const base = (url || 'http://localhost:1234').replace(/\/$/, '');
+  const base = normalizeHost(url, 'http://localhost:1234').replace(/\/$/, '');
   return /\/v1$/.test(base) ? base : `${base}/v1`;
 }
 
@@ -236,7 +236,7 @@ const HOSTED_TYPES = new Set(['ollama', 'lmstudio', 'openai']);
 /** `hosts` as a list, or as a comma-separated string so it can come from an environment variable. */
 export function splitHosts(hosts) {
   const list = Array.isArray(hosts) ? hosts : typeof hosts === 'string' ? hosts.split(',') : [];
-  return list.map(h => String(h).trim()).filter(Boolean);
+  return list.map(h => normalizeHost(String(h).trim())).filter(Boolean);
 }
 
 /**
@@ -345,14 +345,14 @@ async function pingOne(spec, config) {
     return `reachable; "${spec.model}" not listed. Load it (lms load ${spec.model}) or turn on JIT loading. Available: ${ids.slice(0, 5).join(', ') || 'none'}`;
   }
   if (spec.type === 'ollama') {
-    const host = (spec.host || 'http://localhost:11434').replace(/\/$/, '');
+    const host = normalizeHost(spec.host, 'http://localhost:11434').replace(/\/$/, '');
     const res = await fetch(`${host}/api/tags`, { signal: AbortSignal.timeout(5000) });
     const json = await res.json();
     const found = (json.models ?? []).some(m => m.name === spec.model || m.model === spec.model);
     return found ? `ok (${spec.model} installed)` : `reachable, but ${spec.model} is not pulled (ollama pull ${spec.model})`;
   }
   if (spec.type === 'openai') {
-    const base = (spec.baseUrl || spec.host || 'http://localhost:1234/v1').replace(/\/$/, '');
+    const base = normalizeHost(spec.baseUrl || spec.host, 'http://localhost:1234/v1').replace(/\/$/, '');
     const key = spec.apiKeyEnv ? process.env[spec.apiKeyEnv] : undefined;
     const res = await fetch(`${base}/models`, { headers: key ? { authorization: `Bearer ${key}` } : {}, signal: AbortSignal.timeout(5000) });
     return res.ok ? 'ok' : `HTTP ${res.status}`;
