@@ -1,14 +1,15 @@
 /**
- * `.jblmachine` — the JobLine machine setup file, shared by the g-code extension
- * and jobline.ai-CAM.
+ * `.jblmachine` — the JobLine machine setup file, shared by the g-code
+ * extension, jobline.ai-CAM and the JobLine.ai shop app (shift-handover-hub).
  *
- * This file is kept byte-for-byte identical in both repositories:
+ * This file is kept byte-for-byte identical in all three repositories:
  *   g-code: src/presets/jblMachine.ts
  *   CAM:    src/core/persistence/jblMachine.ts
- * It has no imports so it compiles under either toolchain. Change it in one
- * repository, copy it to the other, and bump JBL_MACHINE_FORMAT_VERSION when a
- * field changes meaning. The JSON Schema for the file lives at
- * schemas/jblmachine.schema.json in both repositories.
+ *   hub:    src/lib/jobline/jblMachine.ts
+ * It has no imports so it compiles under any of their toolchains. Change it in
+ * one repository, copy it to the others, and bump JBL_MACHINE_FORMAT_VERSION
+ * when a field changes meaning. The JSON Schema for the file lives at
+ * schemas/jblmachine.schema.json in every repository.
  *
  * A file holds one machine preset inside CAM's JobLineMachineEnvelope:
  *
@@ -142,7 +143,7 @@ export function machineClassForKind(kind: string): JblMachineClass {
   const known = JBL_MACHINE_KINDS.find(entry => entry.kind.toLowerCase() === kind.trim().toLowerCase());
   if (known) return known.machineClass;
   const text = kind.toLowerCase();
-  if (/mill[\s-]*turn|multi[\s-]*spindle|swiss/.test(text)) return 'mill-turn';
+  if (/mill[\s-]*turn|turn[\s/-]*mill|multi[\s-]*spindle|swiss/.test(text)) return 'mill-turn';
   if (/lathe|turn/.test(text)) return 'lathe';
   if (/grind/.test(text)) return 'grinder';
   return 'mill';

@@ -133,6 +133,10 @@ describe('.jblmachine codec', () => {
     assert.equal(machineClassForKind('Turn Center (2-Axis)'), 'lathe');
     assert.equal(machineClassForKind('5-Axis Mill-Turn'), 'mill-turn');
     assert.equal(machineClassForKind('Swiss-type'), 'mill-turn');
+    // The JobLine.ai shop app's machine type list.
+    assert.equal(machineClassForKind('Turn/Mill (Y-Axis)'), 'mill-turn');
+    assert.equal(machineClassForKind('Turn Center (2-Axis)'), 'lathe');
+    assert.equal(machineClassForKind('Horizontal Mill'), 'mill');
     assert.equal(machineClassForKind('Grinding Center'), 'grinder');
     assert.equal(machineClassForKind('4-Axis Mill'), 'mill');
   });
@@ -253,18 +257,37 @@ describe('Shared with jobline.ai-CAM', () => {
     ...['nc', 'json', 'summary.json'].map(ext =>
       [`test/fixtures/cam-bench/haas-vf2-lang-makrogrip.${ext}`, `samples/testbench/haas-vf2-lang-makrogrip.${ext}`] as [string, string]),
     // The agent loop harness is shared too; only its config and tasks differ.
-    ...fs.readdirSync(path.join(root, 'tools/agent-loop'), { recursive: true })
-      .map(String).filter(file => /\.(mjs|md|sh|ps1|example)$/.test(file))
-      .map(file => [`tools/agent-loop/${file}`, `tools/agent-loop/${file}`] as [string, string]),
+    ...harnessFiles(),
   ];
+  checkPairs(camRoot, 'jobline.ai-CAM', pairs);
+});
+
+describe('Shared with the JobLine.ai shop app (shift-handover-hub)', () => {
+  const hubRoot = path.join(root, '..', 'shift-handover-hub');
+  checkPairs(hubRoot, 'shift-handover-hub', [
+    ['src/presets/jblMachine.ts', 'src/lib/jobline/jblMachine.ts'],
+    ['schemas/jblmachine.schema.json', 'schemas/jblmachine.schema.json'],
+    ['samples/machines/haas-vf-2.jblmachine', 'src/lib/jobline/__fixtures__/haas-vf-2.jblmachine'],
+    ['samples/machines/okuma-lb3000.jblmachine', 'src/lib/jobline/__fixtures__/okuma-lb3000.jblmachine'],
+    ...harnessFiles(),
+  ]);
+});
+
+function harnessFiles(): Array<[string, string]> {
+  return fs.readdirSync(path.join(root, 'tools/agent-loop'), { recursive: true })
+    .map(String).filter(file => /\.(mjs|md|sh|ps1|example)$/.test(file))
+    .map(file => [`tools/agent-loop/${file}`, `tools/agent-loop/${file}`]);
+}
+
+function checkPairs(otherRoot: string, repo: string, pairs: Array<[string, string]>): void {
   for (const [mine, theirs] of pairs) {
-    it(`${mine} matches the CAM copy`, (t) => {
-      const other = path.join(camRoot, theirs);
+    it(`${mine} matches the ${repo} copy`, (t) => {
+      const other = path.join(otherRoot, theirs);
       if (!fs.existsSync(other)) {
-        t.skip('jobline.ai-CAM is not checked out next to this repository');
+        t.skip(`${repo} is not checked out next to this repository`);
         return;
       }
       assert.equal(fs.readFileSync(path.join(root, mine), 'utf8'), fs.readFileSync(other, 'utf8'));
     });
   }
-});
+}

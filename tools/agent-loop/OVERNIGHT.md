@@ -37,7 +37,9 @@ flowchart LR
 ## Set up each computer (once)
 
 Do this in each repository you want worked on (`jobline.ai-g-code`,
-`jobline.ai-CAM`), on each computer.
+`jobline.ai-CAM`, `shift-handover-hub`), on each computer. Each repository
+has its own queue, claims and heartbeats on its own remote, so a computer can
+run one, two or all three.
 
 1. Clone the repo, check out the branch to work on, and run `npm ci`. For CAM,
    also run `npx playwright install chromium`, or set
