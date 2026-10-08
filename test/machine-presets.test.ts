@@ -258,6 +258,7 @@ describe('Shared with jobline.ai-CAM', () => {
       [`test/fixtures/cam-bench/haas-vf2-lang-makrogrip.${ext}`, `samples/testbench/haas-vf2-lang-makrogrip.${ext}`] as [string, string]),
     ['data/reference/jobline-shop-reference.json', 'src/core/reference/jobline-shop-reference.json'],
     // The agent loop harness is shared too; only its config and tasks differ.
+    ['PLATFORM.md', 'PLATFORM.md'],
     ...harnessFiles(),
   ];
   checkPairs(camRoot, 'jobline.ai-CAM', pairs);
@@ -272,6 +273,7 @@ describe('Shared with the JobLine.ai shop app (shift-handover-hub)', () => {
     ['samples/machines/okuma-lb3000.jblmachine', 'src/lib/jobline/__fixtures__/okuma-lb3000.jblmachine'],
     // The shop reference (tap drills, threads, drills, NPT, speeds) is generated there.
     ['data/reference/jobline-shop-reference.json', 'public/reference/jobline-shop-reference.json'],
+    ['PLATFORM.md', 'PLATFORM.md'],
     ...harnessFiles(),
   ]);
 });

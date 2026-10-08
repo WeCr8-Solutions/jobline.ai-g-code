@@ -12,7 +12,7 @@ import { extractPatch, patchPaths, disallowedPaths } from '../lib/patch.mjs';
 import { acquireLock, StateStore } from '../lib/state.mjs';
 import { providerForAttempt } from '../lib/worker.mjs';
 import { readyTasks } from '../lib/pool.mjs';
-import { parseVerdict } from '../lib/prompt.mjs';
+import { contextPatterns, gatherFiles, parseVerdict } from '../lib/prompt.mjs';
 import { loadConfig, ALWAYS_DENIED } from '../lib/config.mjs';
 import { createProviders, ProviderError } from '../lib/providers.mjs';
 
@@ -177,6 +177,22 @@ describe('state and locks', () => {
     assert.equal(await store.claim('t', 'w2', 500), true);
     await store.patch('t', { status: 'done' });
     assert.equal(await store.claim('t', 'w3', 500), false);
+  });
+});
+
+describe('prompt context', () => {
+  it('adds context.alwaysInclude files that exist, after the task files', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-ctx-'));
+    fs.writeFileSync(path.join(dir, 'PLATFORM.md'), '# Platform');
+    fs.writeFileSync(path.join(dir, 'a.ts'), 'export {};');
+    const config = { context: { alwaysInclude: ['PLATFORM.md', 'MISSING.md'], maxFileBytes: 1000, maxContextBytes: 10_000 } };
+    const patterns = contextPatterns({ files: ['a.ts', 'PLATFORM.md'] }, config, dir);
+    assert.deepEqual(patterns, ['a.ts', 'PLATFORM.md']);
+    const files = gatherFiles(dir, patterns, config.context);
+    assert.deepEqual(files.files.map(f => f.path).sort(), ['PLATFORM.md', 'a.ts']);
+    // A missing always-include file is never offered to the model as one to create.
+    assert.deepEqual(files.missing, []);
+    assert.deepEqual(contextPatterns({ files: [] }, { context: {} }, dir), []);
   });
 });
 

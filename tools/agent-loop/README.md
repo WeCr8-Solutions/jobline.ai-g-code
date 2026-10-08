@@ -186,6 +186,15 @@ passes, so slow checks don't run on every attempt. A check with `updateEnv`
 so the reviewer sees the code diff and the output diff together. Deny the
 baseline files in `edits.deny` so agents can't edit them directly.
 
+## Context every prompt carries
+
+`context.instructions` is the repository's conventions in a few sentences.
+`context.alwaysInclude` lists files sent with every task (after the task's own
+files, within `maxContextBytes`). All three JobLine repositories include
+`PLATFORM.md`, so a local model or Claude working in one repository knows which
+files are shared with the other two and files a follow-up task when a change
+needs work there. A listed file that doesn't exist is skipped.
+
 ## Screenshots
 
 Mark a check with `"screenshots": true` and `"screenshotDirs": [...]`. Images

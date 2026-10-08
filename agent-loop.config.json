@@ -143,13 +143,17 @@
     "deny": [
       "test/fixtures/revpack/**",
       "test/fixtures/external-local/**",
-      "package-lock.json"
+      "package-lock.json",
+      "PLATFORM.md"
     ]
   },
   "context": {
     "maxFileBytes": 80000,
     "maxContextBytes": 300000,
-    "instructions": "VS Code extension in TypeScript (strict). Unit tests use node:test with assert/strict under test/, run through ts-node by npm test; add new test files to the npm test script. Match the surrounding code's naming and comment style. The parser lives in src/parser, the sidebar in src/providers, machine presets in src/presets. Never weaken a safety diagnostic to make a test pass."
+    "instructions": "VS Code extension in TypeScript (strict). Unit tests use node:test with assert/strict under test/, run through ts-node by npm test; add new test files to the npm test script. Match the surrounding code's naming and comment style. The parser lives in src/parser, the sidebar in src/providers, machine presets in src/presets. Never weaken a safety diagnostic to make a test pass. PLATFORM.md (included below) lists what this repository shares with the other JobLine repositories; if your change touches one of those contracts, say so in your summary so a follow-up task is filed there.",
+    "alwaysInclude": [
+      "PLATFORM.md"
+    ]
   },
   "waits": {
     "betweenAttempts": {

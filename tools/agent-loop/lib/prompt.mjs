@@ -32,6 +32,17 @@ function walk(root, dir, out) {
   }
 }
 
+/**
+ * Files a prompt carries: the task's own, then context.alwaysInclude (e.g.
+ * PLATFORM.md, which says what in this repository is shared with the other
+ * JobLine repositories). Task files come first so they win the size budget.
+ */
+export function contextPatterns(task, config, cwd) {
+  // A missing always-include file is skipped, not reported as "to create".
+  const always = (config.context?.alwaysInclude ?? []).filter(file => !cwd || fs.existsSync(path.join(cwd, file)));
+  return [...new Set([...(task.files ?? []), ...always])];
+}
+
 /** The task's files (paths or globs), read from the worktree, within the size budget. */
 export function gatherFiles(cwd, patterns, { maxFileBytes, maxContextBytes }) {
   if (!patterns.length) return { files: [], skipped: [] };

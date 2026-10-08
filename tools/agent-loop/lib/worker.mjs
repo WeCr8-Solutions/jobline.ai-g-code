@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { applyPatch, disallowedPaths, extractPatch, patchPaths } from './patch.mjs';
 import { describeFailures, runGate } from './checks.mjs';
-import { buildPrompt, gatherFiles, parseVerdict } from './prompt.mjs';
+import { buildPrompt, contextPatterns, gatherFiles, parseVerdict } from './prompt.mjs';
 import { changedFiles, commitAll, diffText, ensureWorktree, revertDisallowed, branchName, removeWorktree } from './worktree.mjs';
 import { runCommand } from './exec.mjs';
 import { ProviderError } from './providers.mjs';
@@ -97,7 +97,7 @@ export async function runTask(ctx, task) {
 
     try {
       // 1. Ask the model for a change.
-      const files = gatherFiles(cwd, task.files, config.context);
+      const files = gatherFiles(cwd, contextPatterns(task, config, cwd), config.context);
       const diffSoFar = attempt > 1 ? await diffText(cwd) : '';
       const { system, prompt } = buildPrompt({ config, task, role, mode: provider.mode, files, failure, diff: diffSoFar, attempt });
       events.emit('model.ask', { task: task.id, attempt, provider: providerName, message: `${role} via ${providerName}` });

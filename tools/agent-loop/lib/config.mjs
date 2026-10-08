@@ -23,7 +23,7 @@ const DEFAULTS = {
   providers: {},
   roles: {},
   edits: { allow: ['src/**', 'test/**'], deny: [] },
-  context: { maxFileBytes: 60_000, maxContextBytes: 300_000, instructions: '' },
+  context: { maxFileBytes: 60_000, maxContextBytes: 300_000, instructions: '', alwaysInclude: [] },
   waits: {
     betweenAttempts: { base: '20s', max: '10m' },
     providerRetry: { base: '5s', max: '5m', retries: 5 },
