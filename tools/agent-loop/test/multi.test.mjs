@@ -222,6 +222,7 @@ describe('final checks and golden updates', () => {
       providers: { cli: { type: 'command', mode: 'agentic', run: `${node} -e "require('fs').writeFileSync('src/post.ts','export const x = 2;\\\\n')"` } },
       roles: { develop: { providers: ['cli'] } },
       task: { finalChecks: ['golden'] },
+      worktree: { removeWhenDone: false },
       waits: { betweenAttempts: { base: '10ms', max: '20ms' } },
     });
     fs.mkdirSync(path.join(root, 'agent-tasks'));

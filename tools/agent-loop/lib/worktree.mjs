@@ -24,10 +24,20 @@ async function branchExists(root, branch) {
   }
 }
 
-/** Create (or reuse) the worktree for a task. Returns its absolute path. */
-export async function ensureWorktree(config, id) {
+/**
+ * Create (or reuse) the worktree for a task. Returns its absolute path.
+ * `fresh`: the task is starting over (new, or reopened after it was done), so
+ * an existing branch from an earlier run is archived as
+ * agent-archive/<id>-<time> and work starts again from the base.
+ */
+export async function ensureWorktree(config, id, { fresh = false } = {}) {
   const dir = worktreePath(config, id);
   const branch = branchName(id);
+  if (fresh && await branchExists(config.root, branch)) {
+    if (fs.existsSync(dir)) await git(['worktree', 'remove', '--force', dir], { cwd: config.root });
+    const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13);
+    await git(['branch', '-m', branch, `agent-archive/${id}-${stamp}`], { cwd: config.root });
+  }
   if (!fs.existsSync(path.join(dir, '.git'))) {
     fs.mkdirSync(path.dirname(dir), { recursive: true });
     await git(['worktree', 'prune'], { cwd: config.root });

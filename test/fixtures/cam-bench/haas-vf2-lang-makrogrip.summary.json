@@ -1,0 +1,50 @@
+{
+  "setup": "haas-vf2-lang-makrogrip",
+  "units": "inch",
+  "workOffset": "G54",
+  "stockTopAboveTable": 5.0039,
+  "jawOpening": 2,
+  "operations": [
+    {
+      "id": "face",
+      "tool": 1,
+      "moves": 15,
+      "cutLength": 18.96,
+      "minZ": -0.02
+    },
+    {
+      "id": "profile",
+      "tool": 2,
+      "moves": 8,
+      "cutLength": 11.6,
+      "minZ": -0.5
+    },
+    {
+      "id": "pocket",
+      "tool": 2,
+      "moves": 8,
+      "cutLength": 1.85,
+      "minZ": -0.25
+    },
+    {
+      "id": "holes",
+      "tool": 3,
+      "moves": 16,
+      "cutLength": 3.0412,
+      "minZ": -0.6603
+    }
+  ],
+  "postedLines": 77,
+  "cycleSeconds": 52.4,
+  "errors": [],
+  "warnings": [
+    "collision-check-placeholder",
+    "generic-post-incomplete",
+    "holder-check-heuristic",
+    "offset-pocket-rectangles-only",
+    "removal-estimate-wrong",
+    "simple-toolpath-hardcoded",
+    "straight-plunge-pocket",
+    "straight-plunge-profile"
+  ]
+}

@@ -86,7 +86,9 @@ export function reviewGCodeProgram(gcode: string, dialect = 'fanuc'): ProgramRev
     findings.push(advisory('missing-program-end', 'No explicit program end found (M02/M30).', 'Add the control-appropriate program end after spindle and coolant shutdown.'));
   }
 
-  const macroLine = gcode.split(/\r?\n/).findIndex(line => /#\d+|\b(?:WHILE|IF|GOTO)\b/i.test(line));
+  // Comments are text, not code: a "#7 drill" in one is not a macro variable.
+  const codeOnly = (line: string) => line.replace(/\([^)]*\)/g, '').replace(/;.*$/, '');
+  const macroLine = gcode.split(/\r?\n/).findIndex(line => /#\d+|\b(?:WHILE|IF|GOTO)\b/i.test(codeOnly(line)));
   if (macroLine >= 0) {
     findings.push({
       id: 'simulation-macro-approximation',

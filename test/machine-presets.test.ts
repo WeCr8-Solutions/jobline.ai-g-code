@@ -249,9 +249,12 @@ describe('Shared with jobline.ai-CAM', () => {
   const pairs: Array<[string, string]> = [
     ['src/presets/jblMachine.ts', 'src/core/persistence/jblMachine.ts'],
     ['schemas/jblmachine.schema.json', 'schemas/jblmachine.schema.json'],
+    // CAM's test bench outputs the extension reads in test/cam-bench.test.ts.
+    ...['nc', 'json', 'summary.json'].map(ext =>
+      [`test/fixtures/cam-bench/haas-vf2-lang-makrogrip.${ext}`, `samples/testbench/haas-vf2-lang-makrogrip.${ext}`] as [string, string]),
     // The agent loop harness is shared too; only its config and tasks differ.
     ...fs.readdirSync(path.join(root, 'tools/agent-loop'), { recursive: true })
-      .map(String).filter(file => /\.(mjs|md)$/.test(file))
+      .map(String).filter(file => /\.(mjs|md|sh|ps1|example)$/.test(file))
       .map(file => [`tools/agent-loop/${file}`, `tools/agent-loop/${file}`] as [string, string]),
   ];
   for (const [mine, theirs] of pairs) {

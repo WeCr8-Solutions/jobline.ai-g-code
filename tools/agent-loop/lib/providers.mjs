@@ -273,12 +273,21 @@ export function createProviders(config, events, { factories = FACTORIES, clock }
       minIntervalMs: parseDuration(raw.minInterval ?? 0),
     }, clock);
     const { baseMs, maxMs, retries } = config.waitsMs.providerRetry;
+    // Hard cap per run, so an overnight loop can't spend without limit on a hosted model.
+    const budget = Number(raw.maxRequestsPerRun ?? 0);
+    let requests = 0;
     providers[name] = {
       name,
+      model: raw.model,
       hosts: hostList.filter(Boolean),
       get mode() { return pool[0].build().mode; },
       vision: Boolean(raw.vision),
       async complete(request) {
+        if (budget && requests >= budget) {
+          events?.emit('provider.budget', { task: request.task, provider: name, message: `${budget}-request budget for this run used up` });
+          throw new ProviderError(`${name} has used its ${budget}-request budget for this run`);
+        }
+        requests++;
         for (let attempt = 1; ; attempt++) {
           await limiter.take(request.signal);
           const entry = pick();

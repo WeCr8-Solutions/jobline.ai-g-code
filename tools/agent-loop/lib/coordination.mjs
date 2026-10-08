@@ -103,10 +103,17 @@ function gitCoordinator(config, events) {
       const current = await remoteClaim(id);
       if (current?.owner === owner) await write(id, { status: 'pending', owner, until: 0 }, current.sha);
     },
+    /** Every claim on the remote, read with a single fetch. */
     async list() {
       const out = await git(['ls-remote', remote, `${prefix}*`], { cwd });
-      const ids = out.split('\n').filter(Boolean).map(line => line.split(/\s+/)[1].slice(prefix.length));
-      return Promise.all(ids.map(async id => ({ id, ...(await remoteClaim(id)) })));
+      const entries = out.split('\n').filter(Boolean).map(line => { const [sha, name] = line.split(/\s+/); return { sha, id: name.slice(prefix.length) }; });
+      if (!entries.length) return [];
+      await git(['fetch', '-q', '--no-tags', remote, `+${prefix}*:refs/agent-claims-seen/*`], { cwd });
+      return Promise.all(entries.map(async ({ sha, id }) => {
+        let info = {};
+        try { info = JSON.parse(await git(['log', '-1', '--format=%B', `refs/agent-claims-seen/${id}`], { cwd })); } catch { /* foreign ref */ }
+        return { id, sha, ...info };
+      }));
     },
     /** Forget a task everywhere (the `reset` command). */
     async forget(id) {

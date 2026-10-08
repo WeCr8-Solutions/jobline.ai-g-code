@@ -12,14 +12,15 @@ import path from 'node:path';
 import { applyPatch, disallowedPaths, extractPatch, patchPaths } from './patch.mjs';
 import { describeFailures, runGate } from './checks.mjs';
 import { buildPrompt, gatherFiles, parseVerdict } from './prompt.mjs';
-import { changedFiles, commitAll, diffText, ensureWorktree, revertDisallowed, branchName } from './worktree.mjs';
+import { changedFiles, commitAll, diffText, ensureWorktree, revertDisallowed, branchName, removeWorktree } from './worktree.mjs';
 import { runCommand } from './exec.mjs';
 import { ProviderError } from './providers.mjs';
+import { recordAttempt } from './stats.mjs';
 import { backoffDelay, formatDuration, sleep } from './util.mjs';
 
-/** Which provider handles attempt `n` for a role. */
-export function providerForAttempt(roleSpec, attempt) {
-  const list = [].concat(roleSpec.providers ?? roleSpec.provider);
+/** Which provider handles attempt `n` for a role. `order` overrides the config order (adaptive roles). */
+export function providerForAttempt(roleSpec, attempt, order) {
+  const list = order ?? [].concat(roleSpec.providers ?? roleSpec.provider);
   const step = Math.max(1, roleSpec.escalateAfter ?? 2);
   return list[Math.min(list.length - 1, Math.floor((attempt - 1) / step))];
 }
@@ -47,7 +48,7 @@ export async function runTask(ctx, task) {
   // On a shared queue, another computer may already have it.
   const shared = await coordinator.claim(task.id, owner, config.waitsMs.leaseMs);
   if (!shared.ok) {
-    await state.patch(task.id, { status: shared.status === 'running' ? 'pending' : shared.status, lease: undefined, heldBy: shared.owner });
+    await state.patch(task.id, { status: shared.status === 'running' ? 'pending' : shared.status, lease: undefined, heldBy: shared.owner, fromShared: shared.status !== 'running' });
     return 'skipped';
   }
   const finish = async (status, extra = {}) => coordinator.finish(task.id, owner, status, { branch: branchName(task.id), ...extra }).catch(err =>
@@ -60,7 +61,7 @@ export async function runTask(ctx, task) {
 
   let cwd;
   try {
-    cwd = await ensureWorktree(config, task.id);
+    cwd = await ensureWorktree(config, task.id, { fresh: startAttempt === 1 });
     for (const setup of config.worktree.setup) {
       const result = await runCommand(setup, { cwd, timeoutMs: 15 * 60_000, signal });
       if (!result.ok) throw new Error(`worktree setup "${setup}" failed:\n${result.output.slice(-2000)}`);
@@ -83,9 +84,16 @@ export async function runTask(ctx, task) {
     const role = attempt === 1 || !failure ? task.role : (config.roles.fix ? 'fix' : task.role);
     const roleSpec = config.roles[role] ?? config.roles[task.role] ?? config.roles.develop;
     if (!roleSpec) throw new Error(`No role "${role}" (or "develop") in the config`);
-    const providerName = providerForAttempt(roleSpec, attempt);
+    const providerName = providerForAttempt(roleSpec, attempt, ctx.providerOrder?.(role, roleSpec));
     const provider = providers[providerName];
-    const outcome = (kind, detail) => state.addHistory(task.id, { attempt, provider: providerName, outcome: kind, detail });
+    let modelMs;
+    const outcome = (kind, detail) => {
+      recordAttempt(config.stateDir, {
+        host: ctx.host?.name, task: task.id, role, provider: providerName, model: provider.model, mode: provider.mode,
+        attempt, outcome: kind, modelMs, auto: task.auto || undefined,
+      });
+      return state.addHistory(task.id, { attempt, provider: providerName, outcome: kind, detail });
+    };
 
     try {
       // 1. Ask the model for a change.
@@ -93,7 +101,9 @@ export async function runTask(ctx, task) {
       const diffSoFar = attempt > 1 ? await diffText(cwd) : '';
       const { system, prompt } = buildPrompt({ config, task, role, mode: provider.mode, files, failure, diff: diffSoFar, attempt });
       events.emit('model.ask', { task: task.id, attempt, provider: providerName, message: `${role} via ${providerName}` });
+      const asked = Date.now();
       const reply = await provider.complete({ system, prompt, cwd, signal, task: task.id, attempt });
+      modelMs = Date.now() - asked;
 
       // 2. Apply it (diff mode) or police it (agentic mode).
       if (provider.mode === 'diff') {
@@ -144,7 +154,9 @@ export async function runTask(ctx, task) {
           const sha = await commitAll(cwd, `agent(${task.id}): ${task.title}\n\nAttempts: ${attempt}. Checks: ${[...gate, ...finalChecks].join(', ')}.`);
           await outcome('passed', sha ? sha.slice(0, 10) : 'no diff');
           await state.patch(task.id, { status: 'done', lease: undefined, lastFailure: undefined, commit: sha });
-          await finish('done', { commit: sha });
+          await finish('done', { commit: sha, provider: providerName, model: provider.model, attempts: attempt });
+          // The branch keeps the work; the worktree is only disk space now.
+          if (config.worktree.removeWhenDone) await removeWorktree(config, task.id).catch(() => {});
           const report = writeReport(config, task, state.task(task.id), [`- Commit: \`${sha}\``, `- Screenshots: ${result.screenshots.length}`]);
           events.emit('task.done', { task: task.id, attempt, message: `passed; review ${path.relative(config.root, report)}` });
           return 'done';

@@ -56,9 +56,9 @@ export function runCommand(command, { cwd, env = {}, timeoutMs = 600_000, signal
 }
 
 /** Run git with arguments (no shell), returning trimmed stdout or throwing with stderr. */
-export function git(args, { cwd, input } = {}) {
+export function git(args, { cwd, input, env } = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn('git', args, { cwd, stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'] });
+    const child = spawn('git', args, { cwd, env: env ? { ...process.env, ...env } : process.env, stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'] });
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', (c) => { stdout += c; });

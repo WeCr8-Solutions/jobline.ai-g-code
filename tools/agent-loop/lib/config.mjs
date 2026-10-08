@@ -30,12 +30,15 @@ const DEFAULTS = {
     poll: '30s',
     lease: '45m',
     gateInterval: '15m',
+    heartbeat: '5m',
   },
-  worktree: { base: 'HEAD', linkNodeModules: true, setup: [] },
+  worktree: { base: 'HEAD', linkNodeModules: true, setup: [], removeWhenDone: true },
   task: { maxAttempts: 5, review: false, finalChecks: [] },
   artifacts: { screenshotDirs: [] },
   host: { name: '', tags: '' },
-  coordination: { mode: 'local', remote: 'origin', refPrefix: 'refs/agent-claims/', pushBranches: true },
+  coordination: { mode: 'local', remote: 'origin', refPrefix: 'refs/agent-claims/', pushBranches: true, taskBranch: 'agent-queue' },
+  monitoring: { publish: 'auto' },
+  limits: { minFreeDiskGb: 5, maxRuntime: '', until: '', restartEvery: '' },
   autoTasks: { enabled: false, maxOpen: 5, review: false },
 };
 
@@ -100,7 +103,13 @@ export function loadConfig(root, { file = CONFIG_FILE, env = process.env } = {})
       pollMs: parseDuration(config.waits.poll),
       leaseMs: parseDuration(config.waits.lease),
       gateIntervalMs: parseDuration(config.waits.gateInterval),
+      heartbeatMs: parseDuration(config.waits.heartbeat ?? '5m'),
     };
+    config.limitsMs = {
+      maxRuntimeMs: config.limits.maxRuntime ? parseDuration(config.limits.maxRuntime) : undefined,
+      restartEveryMs: config.limits.restartEvery ? parseDuration(config.limits.restartEvery) : undefined,
+    };
+    config.limits.minFreeDiskGb = Number(config.limits.minFreeDiskGb ?? 5);
     for (const check of Object.values(config.checks)) check.timeoutMs = parseDuration(check.timeout ?? '10m');
   } catch (err) {
     problems.push(err.message);

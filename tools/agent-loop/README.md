@@ -20,6 +20,8 @@ npm run agent:status                # what happened (add --watch for a live view
 git log agent/cover-decimal-travel-input   # review, then merge like any branch
 ```
 
+**Running unattended on several computers?** See [OVERNIGHT.md](OVERNIGHT.md).
+
 ## How a task runs
 
 ```mermaid
@@ -151,6 +153,28 @@ CAM's machine test bench uses this to turn module findings into fix tasks.
 - `autoTasks.maxOpen` caps how many open at once; the rest are filed as those
   finish.
 
+## Unattended runs
+
+- **Heartbeats:** on a shared queue (or with `monitoring.publish: true`),
+  each computer pushes its status to `refs/agent-hosts/<name>` every
+  `waits.heartbeat` (5 min). `monitor` reads them from any clone.
+- **Scoreboard:** every attempt goes to `.agent-loop/stats.jsonl`. A role
+  with `"adaptive": true` orders its providers by measured success.
+- **Limits:**
+  - `limits.minFreeDiskGb` (5) stops new tasks when disk runs low.
+  - `--until` / `limits.until` and `--for` / `limits.maxRuntime` stop taking
+    work at a time.
+  - `--restart-every` exits with code 75 so the supervisor pulls and restarts.
+  - `providers.<n>.maxRequestsPerRun` caps a hosted model's requests per run.
+- **Cleanup:** a finished task's worktree is removed (the branch stays). A
+  task that starts over (new, or reopened after a regression) archives its old
+  branch as `agent-archive/<id>-<time>` and starts again from the base.
+- **Shared fix tasks:** tasks the gate files are also published to the
+  `agent-queue` branch (`coordination.taskBranch`), which every computer
+  reads. The main branch isn't touched.
+- **Supervisor:** `supervisor/` has start and stop scripts for macOS/Linux and
+  Windows, and login installers (launchd, Task Scheduler).
+
 ## Regression baselines and slow checks
 
 `task.finalChecks` (e.g. `["view", "build"]`) run only after a task's gate
@@ -178,11 +202,15 @@ show in `status`.
 ## Commands
 
 ```
-run [--watch] [--only a,b] [--concurrency N]   work the queue
+run [--watch] [--only a,b] [--concurrency N] [--until 06:30] [--for 10h] [--restart-every 3h]
+                                               work the queue
 gate [--watch] [--checks a,b]                  run checks on the main checkout
 status [--watch]                               tasks, gate result, recent events
 new "Title" [--role develop|test|fix]          scaffold a task file
 providers                                      reachability of each provider
+doctor                                         preflight for an unattended run (exit 1 if not ready)
+monitor [--json] [--watch]                     every computer's heartbeat: OK / LOOK / DOWN
+stats [--by-role] [--since 24h] [--all-hosts]  which models pass, by measured results
 reset [id] [--remove-worktree] [--delete-branch]  forget state so a task runs again
 ```
 
@@ -226,3 +254,7 @@ models:
   exactly once
 - filed and reopened fix tasks
 - final checks with baseline refresh
+- the model scoreboard and adaptive ordering, stop times and provider budgets
+- three computers on one remote: the gate on one files a fix through
+  `agent-queue`, another does it, the third skips it, and all three show in
+  `monitor`; a regressed fix is reopened for every computer

@@ -173,5 +173,10 @@
   "task": {
     "maxAttempts": 6,
     "review": false
+  },
+  "autoTasks": {
+    "enabled": true,
+    "maxOpen": 3,
+    "review": false
   }
 }
