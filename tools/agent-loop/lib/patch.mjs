@@ -18,6 +18,31 @@ export function extractPatch(text) {
   return patch.endsWith('\n') ? patch : `${patch}\n`;
 }
 
+/**
+ * Small local models reliably drop directory prefixes even when told the
+ * exact path (confirmed empirically: qwen2.5-coder:7b and llama3.1:8b both
+ * wrote "a/styles.css" instead of "a/src/renderer/styles.css" for the same
+ * task, unchanged by adding an explicit instruction). Rather than keep
+ * tuning the prompt for something these models don't reliably follow,
+ * rewrite basename-only paths to the one known task file they unambiguously
+ * match, before the patch ever reaches the allow/deny check or git apply.
+ */
+export function fixupPaths(patch, knownPaths) {
+  if (!knownPaths?.length) return patch;
+  const byBasename = new Map();
+  for (const p of knownPaths) {
+    const base = p.split('/').pop();
+    if (byBasename.has(base)) byBasename.set(base, null); // ambiguous, don't guess
+    else byBasename.set(base, p);
+  }
+  const fix = (p) => (knownPaths.includes(p) ? p : byBasename.get(p.split('/').pop()) || p);
+  return patch
+    .replace(/^diff --git a\/(\S+) b\/(\S+)/gm, (_, a, b) => `diff --git a/${fix(a)} b/${fix(b)}`)
+    .replace(/^(---\s+a\/)(\S+)/gm, (_, prefix, p) => `${prefix}${fix(p)}`)
+    .replace(/^(\+\+\+\s+b\/)(\S+)/gm, (_, prefix, p) => `${prefix}${fix(p)}`)
+    .replace(/^(rename (?:from|to) )(\S+)/gm, (_, prefix, p) => `${prefix}${fix(p)}`);
+}
+
 /** Repo-relative paths a patch creates, changes, renames or deletes. */
 export function patchPaths(patch) {
   const paths = new Set();

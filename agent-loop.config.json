@@ -102,7 +102,7 @@
       "providers": [
         "lmstudio",
         "local",
-        "claude"
+        "claude-code"
       ],
       "escalateAfter": 2
     },
@@ -110,7 +110,7 @@
       "providers": [
         "lmstudio",
         "local",
-        "claude"
+        "claude-code"
       ],
       "escalateAfter": 2
     },
@@ -118,13 +118,13 @@
       "providers": [
         "lmstudio",
         "local",
-        "claude"
+        "claude-code"
       ],
       "escalateAfter": 2
     },
     "review": {
       "providers": [
-        "claude"
+        "claude-code"
       ]
     }
   },

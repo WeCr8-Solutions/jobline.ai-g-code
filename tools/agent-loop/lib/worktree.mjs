@@ -82,13 +82,23 @@ export async function revertDisallowed(dir, rules) {
 }
 
 export async function diffText(dir, maxChars = 40_000) {
-  await git(['add', '-A', '--', '.', ':!node_modules'], { cwd: dir });
+  // No ":!node_modules" pathspec here: .gitignore already skips it silently
+  // during plain "-A .", and when linkNodeModules makes it a Windows junction,
+  // the explicit exclusion pathspec itself trips git's ignored-path refusal
+  // (confirmed via direct repro — "git add -A -- . :!node_modules" fails on a
+  // clean worktree with "node_modules" flagged as ignored; plain "-A ." does not).
+  await git(['add', '-A', '--', '.'], { cwd: dir });
   const diff = await git(['diff', '--cached'], { cwd: dir });
   return diff.length > maxChars ? `${diff.slice(0, maxChars)}\n…(diff trimmed)` : diff;
 }
 
 export async function commitAll(dir, message) {
-  await git(['add', '-A', '--', '.', ':!node_modules'], { cwd: dir });
+  // No ":!node_modules" pathspec here: .gitignore already skips it silently
+  // during plain "-A .", and when linkNodeModules makes it a Windows junction,
+  // the explicit exclusion pathspec itself trips git's ignored-path refusal
+  // (confirmed via direct repro — "git add -A -- . :!node_modules" fails on a
+  // clean worktree with "node_modules" flagged as ignored; plain "-A ." does not).
+  await git(['add', '-A', '--', '.'], { cwd: dir });
   const staged = await git(['diff', '--cached', '--name-only'], { cwd: dir });
   if (!staged) return undefined;
   await git(['-c', 'user.name=JobLine Agent Loop', '-c', 'user.email=agent-loop@localhost', 'commit', '-q', '-m', message], { cwd: dir });

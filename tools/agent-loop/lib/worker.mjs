@@ -9,7 +9,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { applyPatch, disallowedPaths, extractPatch, patchPaths } from './patch.mjs';
+import { applyPatch, disallowedPaths, extractPatch, fixupPaths, patchPaths } from './patch.mjs';
 import { describeFailures, runGate } from './checks.mjs';
 import { buildPrompt, contextPatterns, gatherFiles, parseVerdict } from './prompt.mjs';
 import { changedFiles, commitAll, diffText, ensureWorktree, revertDisallowed, branchName, removeWorktree } from './worktree.mjs';
@@ -108,7 +108,7 @@ export async function runTask(ctx, task) {
       // 2. Apply it (diff mode) or police it (agentic mode).
       if (provider.mode === 'diff') {
         if (reply.truncated) throw Object.assign(new Error('The reply hit the output limit before the diff ended. Make a smaller change.'), { kind: 'no-change' });
-        const patch = extractPatch(reply.text);
+        const patch = fixupPaths(extractPatch(reply.text), task.files);
         if (!patch.trim()) throw Object.assign(new Error('The reply contained no diff. Reply with a ```diff block only.'), { kind: 'no-change' });
         const bad = disallowedPaths(patchPaths(patch), config.edits);
         if (bad.length) throw Object.assign(new Error(`The diff touches paths you may not change: ${bad.join(', ')}. Only change ${config.edits.allow.join(', ')}.`), { kind: 'refused-paths' });

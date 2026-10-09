@@ -7,10 +7,33 @@ import path from 'node:path';
 import { globToRegExp } from './util.mjs';
 
 const DIFF_RULES = `Reply with ONE unified diff (git format) inside a single \`\`\`diff block and nothing else.
-- Paths are relative to the repository root, with a/ and b/ prefixes.
+- Paths are relative to the repository root, with a/ and b/ prefixes. Copy
+  the path EXACTLY as shown in that file's "## path" heading below, in full —
+  not just the filename. "## src/renderer/styles.css" means the diff path is
+  "a/src/renderer/styles.css", never "a/styles.css".
 - Include enough unchanged context lines for the diff to apply.
 - To create a file, diff from /dev/null. Do not rewrite whole files that only need a small change.
-- Only touch files you were shown or files the task asks you to create.`;
+- Only touch files you were shown or files the task asks you to create.
+
+Worked example of the exact format required — a small CSS change to one file:
+\`\`\`diff
+diff --git a/src/renderer/styles.css b/src/renderer/styles.css
+--- a/src/renderer/styles.css
++++ b/src/renderer/styles.css
+@@ -12,7 +12,7 @@ body {
+ .sidebar {
+   width: 240px;
+-  min-width: 240px;
++  min-width: 56px;
+   flex-shrink: 0;
+ }
+\`\`\`
+Notice: \`@@ -12,7 +12,7 @@\` gives the old and new starting line + line count for
+that hunk; every unchanged line starts with a space, every removed line with
+\`-\`, every added line with \`+\`; there is no text before \`diff --git\` or after
+the closing fence. A diff missing or miscounting the \`@@\` header, or wrapped in
+extra prose, will fail to apply — if you are unsure of exact line numbers,
+include more surrounding context rather than guessing the count.`;
 
 const AGENTIC_RULES = `Edit the files in the current directory directly. Do not run builds or tests; the harness runs them after you finish.
 Only change what the task needs. When you are done, reply with a two-line summary of what you changed.`;
@@ -77,6 +100,14 @@ export function buildPrompt({ config, task, role, mode, files, failure, diff, at
   if (files.skipped?.length) parts.push(`Too large to include (ask for less or split the task): ${files.skipped.join(', ')}`);
   if (diff) parts.push('# Change so far (staged in the worktree)', `\`\`\`diff\n${diff}\n\`\`\``);
   if (failure) parts.push(`# Attempt ${attempt - 1} failed`, failure, 'Fix the cause. Your diff applies on top of the change so far.');
+  // Closing reminder, deliberately the LAST thing before generation: a long
+  // file dump otherwise ends up the most recent context, and small models
+  // reliably default to "describe this code" instead of acting on the task
+  // stated earlier (confirmed empirically — every local model tested, across
+  // three different architectures, did exactly this without this reminder).
+  if (role !== 'review') {
+    parts.push(`Now do the task: ${task.title}. ${mode === 'agentic' ? 'Edit the files directly.' : 'Reply with ONLY the unified diff — no explanation, no description of the current code, nothing before `diff --git` or after the closing fence.'}`);
+  }
   return { system, prompt: parts.join('\n\n') };
 }
 
