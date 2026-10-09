@@ -236,7 +236,7 @@ const HOSTED_TYPES = new Set(['ollama', 'lmstudio', 'openai']);
 /** `hosts` as a list, or as a comma-separated string so it can come from an environment variable. */
 export function splitHosts(hosts) {
   const list = Array.isArray(hosts) ? hosts : typeof hosts === 'string' ? hosts.split(',') : [];
-  return list.map(h => normalizeHost(String(h).trim())).filter(Boolean);
+  return list.map(h => String(h).trim()).filter(Boolean);
 }
 
 /**
