@@ -54,6 +54,8 @@ const COMMAND_GROUPS: CommandGroup[] = [
   },
 ];
 
+const FOUNDING_SHOP_URL = 'https://jobline.ai/founding-shop?utm_source=vscode';
+
 class CommandTreeItem extends vscode.TreeItem {
   constructor(item: CommandItem) {
     super(item.label, vscode.TreeItemCollapsibleState.None);
@@ -73,6 +75,11 @@ class CommandGroupTreeItem extends vscode.TreeItem {
 }
 
 class CommandsTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+  private readonly changed = new vscode.EventEmitter<vscode.TreeItem | undefined>();
+  readonly onDidChangeTreeData = this.changed.event;
+
+  refresh(): void { this.changed.fire(undefined); }
+
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
   }
@@ -81,11 +88,21 @@ class CommandsTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeIte
     if (element instanceof CommandGroupTreeItem) {
       return Promise.resolve(element.group.items.map(item => new CommandTreeItem(item)));
     }
-    return Promise.resolve(element ? [] : COMMAND_GROUPS.map(group => new CommandGroupTreeItem(group)));
+    const groups: vscode.TreeItem[] = COMMAND_GROUPS.map(group => new CommandGroupTreeItem(group));
+    if (vscode.workspace.getConfiguration('jobline.ui').get<boolean>('showLinks', true)) {
+      const link = new vscode.TreeItem('Run shift handoffs for your shop free (Founding Shop)');
+      link.iconPath = new vscode.ThemeIcon('link-external');
+      link.command = { command: 'vscode.open', title: 'Founding Shop', arguments: [vscode.Uri.parse(FOUNDING_SHOP_URL)] };
+      groups.push(link);
+    }
+    return Promise.resolve(element ? [] : groups);
   }
 }
 
 export function registerCommandsTree(context: vscode.ExtensionContext): void {
   const provider = new CommandsTreeDataProvider();
   context.subscriptions.push(vscode.window.registerTreeDataProvider('jobline.commandsTree', provider));
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
+    if (e.affectsConfiguration('jobline.ui.showLinks')) provider.refresh();
+  }));
 }

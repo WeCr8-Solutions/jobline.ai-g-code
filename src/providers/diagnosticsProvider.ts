@@ -23,11 +23,11 @@ function isGCodeDocument(document: vscode.TextDocument): boolean {
   return isGCodeFile(document);
 }
 
-function runDiagnostics(
+export function runDiagnostics(
   document: vscode.TextDocument,
   collection: vscode.DiagnosticCollection,
-): void {
-  if (!isGCodeDocument(document)) { collection.delete(document.uri); return; }
+): vscode.Diagnostic[] | undefined {
+  if (!isGCodeDocument(document)) { collection.delete(document.uri); return undefined; }
 
   const cfg = vscode.workspace.getConfiguration();
   const engineConfig: DiagnosticConfig = {
@@ -48,7 +48,7 @@ function runDiagnostics(
     stateAtBlock = model.stateAtBlock;
   } catch {
     collection.delete(document.uri);
-    return;
+    return undefined;
   }
 
   const engineDiags = runDiagnosticEngine(blocks, stateAtBlock, engineConfig);
@@ -68,9 +68,10 @@ function runDiagnostics(
   });
 
   collection.set(document.uri, vsDiags);
+  return vsDiags;
 }
 
-export function registerDiagnosticsProvider(context: vscode.ExtensionContext): void {
+export function registerDiagnosticsProvider(context: vscode.ExtensionContext): vscode.DiagnosticCollection {
   const collection = vscode.languages.createDiagnosticCollection('jobline');
   context.subscriptions.push(collection);
 
@@ -93,4 +94,5 @@ export function registerDiagnosticsProvider(context: vscode.ExtensionContext): v
     }),
     vscode.workspace.onDidCloseTextDocument(doc => collection.delete(doc.uri)),
   );
+  return collection;
 }

@@ -174,6 +174,11 @@
     "configuration": {
       "title": "JobLine G-Code",
       "properties": {
+        "jobline.ui.showLinks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show optional Founding Shop and G-Code Academy links in the sidebar and hover cards."
+        },
         "jobline.controlType": {
           "type": "string",
           "default": "fanuc",
@@ -909,7 +914,8 @@
     "test:visualizer-ui": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/visualizer-ui-controls.test.ts');require('./test/stl-mesh-loader.test.ts');require('./test/fusion-archive.test.ts');\"",
     "test:hover-cards": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/hover-cards.test.ts');\"",
     "test:feedback-matrix": "node --test test/user-feedback-motion-matrix.test.cjs",
-    "test:all": "npm test && npm run test:feedback-matrix && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:simulation-matrix && npm run test:pipeline-gate && npm run test:visualizer-ui && npm run test:hover-cards",
+    "test:rating": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,strict:false}});require('./test/validation-rating.test.ts');\"",
+    "test:all": "npm test && npm run test:feedback-matrix && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:simulation-matrix && npm run test:pipeline-gate && npm run test:visualizer-ui && npm run test:hover-cards && npm run test:rating",
     "test:smoke": "node ./scripts/run-extension-smoke.js",
     "test:e2e:visual": "npm run compile && node ./scripts/run-visual-e2e.js",
     "test:e2e:hover": "npm run compile && node ./scripts/run-hover-e2e.js",

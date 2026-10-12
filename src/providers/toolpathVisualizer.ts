@@ -34,6 +34,12 @@ export class ToolpathVisualizerPanel {
     targetLoaded?: boolean;
     targetCount?: number;
     activeTargetRole?: string;
+    activeTargetName?: string;
+    activeTargetBounds?: { minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number } | null;
+    activeTargetOffset?: { x: number; y: number; z: number } | null;
+    stock?: { w: number; d: number; h: number } | null;
+    stockOrigin?: { x: number; y: number; z: number };
+    fusionSetup?: unknown;
     targetDisplayMode?: string;
     insertCode?: string;
     turningToolVisible?: boolean;
@@ -162,6 +168,12 @@ export class ToolpathVisualizerPanel {
           targetLoaded: Boolean(msg.targetLoaded),
           targetCount: Number(msg.targetCount) || 0,
           activeTargetRole: typeof msg.activeTargetRole === 'string' ? msg.activeTargetRole : '',
+          activeTargetName: typeof msg.activeTargetName === 'string' ? msg.activeTargetName : '',
+          activeTargetBounds: msg.activeTargetBounds ?? null,
+          activeTargetOffset: msg.activeTargetOffset ?? null,
+          stock: msg.stock ?? null,
+          stockOrigin: msg.stockOrigin ?? { x: 0, y: 0, z: 0 },
+          fusionSetup: msg.fusionSetup ?? null,
           targetDisplayMode: typeof msg.targetDisplayMode === 'string' ? msg.targetDisplayMode : '',
           insertCode: typeof msg.insertCode === 'string' ? msg.insertCode : '',
           turningToolVisible: Boolean(msg.turningToolVisible),

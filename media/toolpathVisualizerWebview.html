@@ -1606,6 +1606,7 @@
             activeTargetRole: getActiveTarget()?.role || '',
             activeTargetName: getActiveTarget()?.name || '',
             activeTargetBounds: getActiveTarget()?.bounds ? Object.assign({}, getActiveTarget().bounds) : null,
+            activeTargetOffset: getActiveTarget()?.offset ? Object.assign({}, getActiveTarget().offset) : null,
             targetDisplayMode: getActiveTarget()?.displayMode || targetDisplayMode,
             insertCode: currentToolData?.insertCode || '',
             activeToolNumber: Number(currentToolData?.toolNumber) || null,
@@ -2000,6 +2001,13 @@
           // Drives the same function as the view-cube buttons so the screenshot
           // matrix can prove Top/Right/Left/Iso are not dead labels.
           setPresetView(msg.view);
+          break;
+        }
+        case 'clickViewCube': {
+          const view = String(msg.view || '');
+          const button = Array.from(document.querySelectorAll('#view-cube .cube-btn'))
+            .find(item => item.getAttribute('data-view') === view);
+          if (button) button.click();
           break;
         }
         case 'setPlaybackSpeed': {

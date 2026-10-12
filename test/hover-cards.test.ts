@@ -6,6 +6,7 @@ import Module = require('node:module');
 
 const originalLoad = (Module as any)._load;
 const vscodeMock = {
+  workspace: { getConfiguration: () => ({ get: (_key: string, defaultValue: boolean) => defaultValue }) },
   Uri: {
     file(filePath: string) {
       return { fsPath: filePath, path: filePath.replace(/\\/g, '/'), toString: () => `file:///${filePath.replace(/\\/g, '/')}` };
@@ -38,6 +39,7 @@ describe('Mill hover cards', () => {
     const md = getHoverMarkdown('G1 X1.25 Y-0.5 Z-0.125 F18.', 0, 1, extensionUri);
     assert.ok(md);
     const text = md.value;
+    assert.match(text, /Explore G-Code Academy/);
     assert.match(text, /JobLine\.ai/);
     assert.match(text, /Natural Language View/);
     assert.match(text, /EXPLAINED/);
@@ -60,6 +62,7 @@ describe('Mill hover cards', () => {
     assert.match(text, /Deep\\-Hole Peck Drilling.*G83/);
     assert.match(text, /Q 0\\\.05/);
     assert.match(text, /Confirm Q peck depth/);
+    assert.match(text, /Quiz me on G83/);
   });
 
   it('preserves legacy fallback for non-card address hovers', () => {

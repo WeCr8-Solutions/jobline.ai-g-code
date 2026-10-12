@@ -45,13 +45,11 @@ async function applyVisualCaseControls(Panel, visualCase) {
     await new Promise(resolve => setTimeout(resolve, 1200));
   } else if (!visualCase.externalTargetFile && (visualCase.targetModel || visualCase.targetFile)) {
     const root = path.resolve(__dirname, '..', '..');
-    const targetFile = firstExistingFile([
-      visualCase.targetFile && path.resolve(root, ...String(visualCase.targetFile).split('/')),
-      path.resolve('C:/tmp/jobline-review/jobline.ai-CAM/src/renderer/public/fixtures/local/part.stl'),
-      path.resolve('C:/tmp/jobline-review/jobline.ai-CAM/src/renderer/public/fixtures/rectangle-profile-goal.stl'),
-      path.join(root, 'test', 'fixtures', 'cross-format', 'box.stl'),
-    ].filter(Boolean));
-    assert.ok(targetFile, 'A real STL/STP/Parasolid target model fixture must be available for visual testing');
+    assert.ok(visualCase.targetFile, `Explicit targetFile required for ${visualCase.id}`);
+    const targetFile = path.isAbsolute(visualCase.targetFile)
+      ? path.resolve(visualCase.targetFile)
+      : path.resolve(root, ...String(visualCase.targetFile).split('/'));
+    assert.ok(fs.existsSync(targetFile), `Requested target model missing for ${visualCase.id}: ${targetFile}`);
     await vscode.commands.executeCommand('jobline.gcode.importTargetModel', vscode.Uri.file(targetFile));
     await new Promise(resolve => setTimeout(resolve, 1200));
   }
@@ -91,6 +89,7 @@ async function applyVisualCaseControls(Panel, visualCase) {
       const stockYOk = expect.stockMinY == null || Math.abs((probe.stockOrigin?.y || 0) - expect.stockMinY) < 1e-6;
       const stockTopOk = expect.stockTop == null || Math.abs(((probe.stockOrigin?.z || 0) + (probe.stock?.h || 0)) - expect.stockTop) < 1e-6;
       const targetNameOk = !expect.targetName || probe.activeTargetName === expect.targetName;
+      const targetOffsetOk = !expect.targetOffset || ['x', 'y', 'z'].every(axis => Math.abs((probe.activeTargetOffset?.[axis] ?? NaN) - expect.targetOffset[axis]) < 1e-6);
       const targetWidthOk = expect.targetWidth == null || Math.abs(((probe.activeTargetBounds?.maxX || 0) - (probe.activeTargetBounds?.minX || 0)) - expect.targetWidth) < 1e-6;
       const targetDepthOk = expect.targetDepth == null || Math.abs(((probe.activeTargetBounds?.maxY || 0) - (probe.activeTargetBounds?.minY || 0)) - expect.targetDepth) < 1e-6;
       const targetHeightOk = expect.targetHeight == null || Math.abs(((probe.activeTargetBounds?.maxZ || 0) - (probe.activeTargetBounds?.minZ || 0)) - expect.targetHeight) < 1e-6;
@@ -99,10 +98,42 @@ async function applyVisualCaseControls(Panel, visualCase) {
       const toolVisibleOk = expect.toolVisible == null || probe.toolVisible === expect.toolVisible;
       const fusionPreviewOk = expect.fusionPreviewVisible == null || probe.fusionPreviewVisible === expect.fusionPreviewVisible;
       const fusionReferenceOk = expect.fusionReferenceVisible == null || probe.fusionReferenceVisible === expect.fusionReferenceVisible;
-      if (insertOk && targetOk && targetCountOk && modeOk && speedOk && fusionOffsetOk && fusionInferredOk && fusionFixtureOk && stockOk && stockXOk && stockYOk && stockTopOk && targetNameOk && targetWidthOk && targetDepthOk && targetHeightOk && toolNumberOk && toolDiameterOk && toolVisibleOk && fusionPreviewOk && fusionReferenceOk) return;
+      if (insertOk && targetOk && targetCountOk && modeOk && speedOk && fusionOffsetOk && fusionInferredOk && fusionFixtureOk && stockOk && stockXOk && stockYOk && stockTopOk && targetNameOk && targetOffsetOk && targetWidthOk && targetDepthOk && targetHeightOk && toolNumberOk && toolDiameterOk && toolVisibleOk && fusionPreviewOk && fusionReferenceOk) return;
       await new Promise(resolve => setTimeout(resolve, 250));
     }
   }
+}
+
+async function verifyRevgripsSetup(Panel, document, artifactDir) {
+  const steps = [];
+  // G54 identifies the work coordinate system; its measured machine datum is
+  // external to the NC file and must still be entered/verified at the machine.
+  assert.match(document.getText(), /\bG54\b/i, 'RevGrips program must select G54');
+  steps.push({ step: 'G54 program selection', ok: true });
+
+  const loaded = await Panel.requestVisualProbe(30000);
+  assert.equal(loaded?.activeTargetName, 'REVGRIPS STEM-50-35-PRO.x_t');
+  assert.equal(loaded?.targetLoaded, true);
+  steps.push({ step: 'Exact Parasolid target loaded', ok: true, target: loaded.activeTargetName });
+
+  Panel.sendControl({ type: 'setTargetOffset', x: 0.125, y: -0.25, z: 0.375 });
+  await new Promise(resolve => setTimeout(resolve, 300));
+  const placed = await Panel.requestVisualProbe(30000);
+  assert.deepEqual(placed?.activeTargetOffset, { x: 0.125, y: -0.25, z: 0.375 });
+  steps.push({ step: 'Manual target XYZ placement', ok: true, offset: placed.activeTargetOffset });
+
+  for (const [view, theta, phi] of [['top', 0, 0.0001], ['right', Math.PI / 2, Math.PI / 2], ['iso', Math.PI / 4, Math.PI / 3.5]]) {
+    Panel.sendControl({ type: 'clickViewCube', view });
+    await new Promise(resolve => setTimeout(resolve, 250));
+    const probe = await Panel.requestVisualProbe(30000);
+    assert.ok(probe?.orbit && Math.abs(probe.orbit.theta - theta) < 0.001 && Math.abs(probe.orbit.phi - phi) < 0.001,
+      `ViewCube ${view} did not move the camera`);
+    steps.push({ step: `ViewCube ${view}`, ok: true, orbit: probe.orbit });
+  }
+
+  Panel.sendControl({ type: 'setTargetOffset', x: 0, y: 0, z: 0 });
+  await new Promise(resolve => setTimeout(resolve, 250));
+  fs.writeFileSync(path.join(artifactDir, 'revgrips-setup-steps.json'), JSON.stringify(steps, null, 2));
 }
 
 suite('JobLine visualizer screenshot matrix', function () {
@@ -122,6 +153,9 @@ suite('JobLine visualizer screenshot matrix', function () {
     const document = await vscode.workspace.openTextDocument(fixture);
     await vscode.window.showTextDocument(document, { preview: false, preserveFocus: false });
     await vscode.commands.executeCommand('jobline.openSimulation');
+    if (visualCase.id === 'clean-mill') {
+      await vscode.commands.executeCommand('workbench.view.extension.jobline-explorer');
+    }
     const expectedModule = path.join(extension.extensionPath, 'out', 'src', 'providers', 'toolpathVisualizer.js').replace(/\\/g, '/').toLowerCase();
     // Windows drive casing can create a second CommonJS instance with empty static state.
     const loaded = Object.values(require.cache).find(item => item.filename.replace(/\\/g, '/').toLowerCase() === expectedModule && item.exports.ToolpathVisualizerPanel?.currentPanel);
@@ -158,6 +192,9 @@ suite('JobLine visualizer screenshot matrix', function () {
     assert.ok(ToolpathVisualizerPanel.renderStatus.reviewRendered, 'Program review must render before capture');
 
     await applyVisualCaseControls(ToolpathVisualizerPanel, visualCase);
+    if (visualCase.id === 'revgrips-stem-50-35-pro') {
+      await verifyRevgripsSetup(ToolpathVisualizerPanel, document, artifactDir);
+    }
 
     // Those two only prove the DATA reached the webview - a dead GL context
     // still posts renderReady, and the screenshot below is of the whole
@@ -187,6 +224,21 @@ suite('JobLine visualizer screenshot matrix', function () {
 
     if (visualCase.expect?.targetLoaded) {
       assert.equal(probe.targetLoaded, true, `Target model was not loaded for ${visualCase.id}`);
+    }
+    if (visualCase.expect?.targetName) {
+      assert.equal(probe.activeTargetName, visualCase.expect.targetName, `Wrong target model rendered for ${visualCase.id}`);
+    }
+    if (visualCase.expect?.targetOffset) {
+      for (const axis of ['x', 'y', 'z']) {
+        assert.ok(Math.abs((probe.activeTargetOffset?.[axis] ?? NaN) - visualCase.expect.targetOffset[axis]) < 1e-6,
+          `Target ${axis.toUpperCase()} placement did not apply for ${visualCase.id}`);
+      }
+    }
+    for (const [axis, low, high] of [['targetWidth', 'minX', 'maxX'], ['targetDepth', 'minY', 'maxY'], ['targetHeight', 'minZ', 'maxZ']]) {
+      if (visualCase.expect?.[axis] != null) {
+        assert.ok(Math.abs(((probe.activeTargetBounds?.[high] ?? NaN) - (probe.activeTargetBounds?.[low] ?? NaN)) - visualCase.expect[axis]) < 1e-6,
+          `${axis} of the imported model did not match for ${visualCase.id}`);
+      }
     }
     if (visualCase.expect?.targetCountAtLeast != null) {
       assert.ok(

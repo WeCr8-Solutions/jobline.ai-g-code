@@ -4,6 +4,7 @@
   "publishedAt": "https://jobline.ai/reference/jobline-shop-reference.json",
   "sources": {
     "tapDrills": "Machinery's Handbook, 31st ed.; ASME B1.1 (Unified), ASME B1.13M (metric)",
+    "rollTapDrills": "Form tap formula at 65% thread (OSG / Emuge form tap guidance); supplier tables are authoritative",
     "drillSizes": "ASME B94.11M number and letter drill sizes; fractions exact",
     "npt": "ASME B1.20.1; tap drills without reaming per Machinery's Handbook",
     "cuttingSpeeds": "HSS bands: https://littlemachineshop.com/pages/cutting-speeds; carbide and feeds are conservative JobLine starting estimates, not manufacturer limits"
@@ -23,7 +24,8 @@
       "tapDrill50": "#52",
       "tapDrill50Dec": 0.0635,
       "stiTapDrill": "#43",
-      "stiTapDrillDec": 0.089
+      "stiTapDrillDec": 0.089,
+      "stiInsertSize": "#1-64×1D"
     },
     {
       "thread": "#2-56",
@@ -39,7 +41,8 @@
       "tapDrill50": "#49",
       "tapDrill50Dec": 0.073,
       "stiTapDrill": "#41",
-      "stiTapDrillDec": 0.096
+      "stiTapDrillDec": 0.096,
+      "stiInsertSize": "#2-56×1D"
     },
     {
       "thread": "#3-48",
@@ -55,7 +58,8 @@
       "tapDrill50": "#44",
       "tapDrill50Dec": 0.086,
       "stiTapDrill": "#37",
-      "stiTapDrillDec": 0.104
+      "stiTapDrillDec": 0.104,
+      "stiInsertSize": "#3-48×1D"
     },
     {
       "thread": "#4-40",
@@ -71,7 +75,8 @@
       "tapDrill50": "#41",
       "tapDrill50Dec": 0.096,
       "stiTapDrill": "#31",
-      "stiTapDrillDec": 0.12
+      "stiTapDrillDec": 0.12,
+      "stiInsertSize": "#4-40×1D"
     },
     {
       "thread": "#5-40",
@@ -87,7 +92,8 @@
       "tapDrill50": "#36",
       "tapDrill50Dec": 0.1065,
       "stiTapDrill": "#29",
-      "stiTapDrillDec": 0.136
+      "stiTapDrillDec": 0.136,
+      "stiInsertSize": "#5-40×1D"
     },
     {
       "thread": "#6-32",
@@ -103,7 +109,8 @@
       "tapDrill50": "#32",
       "tapDrill50Dec": 0.116,
       "stiTapDrill": "#25",
-      "stiTapDrillDec": 0.1495
+      "stiTapDrillDec": 0.1495,
+      "stiInsertSize": "#6-32×1D"
     },
     {
       "thread": "#8-32",
@@ -119,7 +126,8 @@
       "tapDrill50": "#27",
       "tapDrill50Dec": 0.144,
       "stiTapDrill": "#18",
-      "stiTapDrillDec": 0.1695
+      "stiTapDrillDec": 0.1695,
+      "stiInsertSize": "#8-32×1D"
     },
     {
       "thread": "#10-24",
@@ -135,7 +143,8 @@
       "tapDrill50": "#20",
       "tapDrill50Dec": 0.161,
       "stiTapDrill": "#10",
-      "stiTapDrillDec": 0.1935
+      "stiTapDrillDec": 0.1935,
+      "stiInsertSize": "#10-24×1D"
     },
     {
       "thread": "#10-32",
@@ -151,7 +160,8 @@
       "tapDrill50": "#16",
       "tapDrill50Dec": 0.177,
       "stiTapDrill": "#3",
-      "stiTapDrillDec": 0.213
+      "stiTapDrillDec": 0.213,
+      "stiInsertSize": "#10-32×1D"
     },
     {
       "thread": "1/4-20",
@@ -167,7 +177,8 @@
       "tapDrill50": "7/32\"",
       "tapDrill50Dec": 0.2188,
       "stiTapDrill": "F",
-      "stiTapDrillDec": 0.257
+      "stiTapDrillDec": 0.257,
+      "stiInsertSize": "1/4-20×1D"
     },
     {
       "thread": "5/16-18",
@@ -183,7 +194,8 @@
       "tapDrill50": "G",
       "tapDrill50Dec": 0.261,
       "stiTapDrill": "Q",
-      "stiTapDrillDec": 0.332
+      "stiTapDrillDec": 0.332,
+      "stiInsertSize": "5/16-18×1D"
     },
     {
       "thread": "3/8-16",
@@ -199,7 +211,8 @@
       "tapDrill50": "Q",
       "tapDrill50Dec": 0.332,
       "stiTapDrill": "25/64\"",
-      "stiTapDrillDec": 0.3906
+      "stiTapDrillDec": 0.3906,
+      "stiInsertSize": "3/8-16×1D"
     },
     {
       "thread": "7/16-14",
@@ -215,7 +228,8 @@
       "tapDrill50": "25/64\"",
       "tapDrill50Dec": 0.3906,
       "stiTapDrill": "29/64\"",
-      "stiTapDrillDec": 0.4531
+      "stiTapDrillDec": 0.4531,
+      "stiInsertSize": "7/16-14×1D"
     },
     {
       "thread": "1/2-13",
@@ -231,7 +245,8 @@
       "tapDrill50": "29/64\"",
       "tapDrill50Dec": 0.4531,
       "stiTapDrill": "33/64\"",
-      "stiTapDrillDec": 0.5156
+      "stiTapDrillDec": 0.5156,
+      "stiInsertSize": "1/2-13×1D"
     },
     {
       "thread": "5/8-11",
@@ -247,7 +262,8 @@
       "tapDrill50": "9/16\"",
       "tapDrill50Dec": 0.5625,
       "stiTapDrill": "41/64\"",
-      "stiTapDrillDec": 0.6406
+      "stiTapDrillDec": 0.6406,
+      "stiInsertSize": "5/8-11×1D"
     },
     {
       "thread": "3/4-10",
@@ -263,7 +279,8 @@
       "tapDrill50": "11/16\"",
       "tapDrill50Dec": 0.6875,
       "stiTapDrill": "49/64\"",
-      "stiTapDrillDec": 0.7656
+      "stiTapDrillDec": 0.7656,
+      "stiInsertSize": "3/4-10×1D"
     },
     {
       "thread": "7/8-9",
@@ -279,7 +296,8 @@
       "tapDrill50": "51/64\"",
       "tapDrill50Dec": 0.7969,
       "stiTapDrill": "57/64\"",
-      "stiTapDrillDec": 0.8906
+      "stiTapDrillDec": 0.8906,
+      "stiInsertSize": "7/8-9×1D"
     },
     {
       "thread": "1\"-8",
@@ -295,7 +313,8 @@
       "tapDrill50": "59/64\"",
       "tapDrill50Dec": 0.9219,
       "stiTapDrill": "1-1/64\"",
-      "stiTapDrillDec": 1.0156
+      "stiTapDrillDec": 1.0156,
+      "stiInsertSize": "1\"-8×1D"
     },
     {
       "thread": "#0-80",
@@ -311,7 +330,8 @@
       "tapDrill50": "#55",
       "tapDrill50Dec": 0.052,
       "stiTapDrill": "#49",
-      "stiTapDrillDec": 0.073
+      "stiTapDrillDec": 0.073,
+      "stiInsertSize": "#0-80×1D"
     },
     {
       "thread": "#1-72",
@@ -327,7 +347,8 @@
       "tapDrill50": "#52",
       "tapDrill50Dec": 0.0635,
       "stiTapDrill": "#45",
-      "stiTapDrillDec": 0.082
+      "stiTapDrillDec": 0.082,
+      "stiInsertSize": "#1-72×1D"
     },
     {
       "thread": "#2-64",
@@ -343,7 +364,8 @@
       "tapDrill50": "#48",
       "tapDrill50Dec": 0.076,
       "stiTapDrill": "#42",
-      "stiTapDrillDec": 0.0935
+      "stiTapDrillDec": 0.0935,
+      "stiInsertSize": "#2-64×1D"
     },
     {
       "thread": "#4-48",
@@ -359,7 +381,8 @@
       "tapDrill50": "#40",
       "tapDrill50Dec": 0.098,
       "stiTapDrill": "#27",
-      "stiTapDrillDec": 0.144
+      "stiTapDrillDec": 0.144,
+      "stiInsertSize": "#4-48×1D"
     },
     {
       "thread": "#6-40",
@@ -375,7 +398,8 @@
       "tapDrill50": "#31",
       "tapDrill50Dec": 0.12,
       "stiTapDrill": "#19",
-      "stiTapDrillDec": 0.166
+      "stiTapDrillDec": 0.166,
+      "stiInsertSize": "#6-40×1D"
     },
     {
       "thread": "#8-36",
@@ -391,7 +415,8 @@
       "tapDrill50": "#27",
       "tapDrill50Dec": 0.144,
       "stiTapDrill": "#13",
-      "stiTapDrillDec": 0.185
+      "stiTapDrillDec": 0.185,
+      "stiInsertSize": "#8-36×1D"
     },
     {
       "thread": "#10-32",
@@ -407,7 +432,8 @@
       "tapDrill50": "#16",
       "tapDrill50Dec": 0.177,
       "stiTapDrill": "#3",
-      "stiTapDrillDec": 0.213
+      "stiTapDrillDec": 0.213,
+      "stiInsertSize": "#10-32×1D"
     },
     {
       "thread": "1/4-28",
@@ -423,7 +449,8 @@
       "tapDrill50": "7/32\"",
       "tapDrill50Dec": 0.2188,
       "stiTapDrill": "H",
-      "stiTapDrillDec": 0.266
+      "stiTapDrillDec": 0.266,
+      "stiInsertSize": "1/4-28×1D"
     },
     {
       "thread": "5/16-24",
@@ -439,7 +466,8 @@
       "tapDrill50": "J",
       "tapDrill50Dec": 0.277,
       "stiTapDrill": "S",
-      "stiTapDrillDec": 0.348
+      "stiTapDrillDec": 0.348,
+      "stiInsertSize": "5/16-24×1D"
     },
     {
       "thread": "3/8-24",
@@ -455,7 +483,8 @@
       "tapDrill50": "S",
       "tapDrill50Dec": 0.348,
       "stiTapDrill": "27/64\"",
-      "stiTapDrillDec": 0.4219
+      "stiTapDrillDec": 0.4219,
+      "stiInsertSize": "3/8-24×1D"
     },
     {
       "thread": "7/16-20",
@@ -471,7 +500,8 @@
       "tapDrill50": "X",
       "tapDrill50Dec": 0.397,
       "stiTapDrill": "31/64\"",
-      "stiTapDrillDec": 0.4844
+      "stiTapDrillDec": 0.4844,
+      "stiInsertSize": "7/16-20×1D"
     },
     {
       "thread": "1/2-20",
@@ -487,7 +517,8 @@
       "tapDrill50": "15/32\"",
       "tapDrill50Dec": 0.4688,
       "stiTapDrill": "35/64\"",
-      "stiTapDrillDec": 0.5469
+      "stiTapDrillDec": 0.5469,
+      "stiInsertSize": "1/2-20×1D"
     },
     {
       "thread": "9/16-18",
@@ -503,7 +534,8 @@
       "tapDrill50": "17/32\"",
       "tapDrill50Dec": 0.5312,
       "stiTapDrill": "39/64\"",
-      "stiTapDrillDec": 0.6094
+      "stiTapDrillDec": 0.6094,
+      "stiInsertSize": "9/16-18×1D"
     },
     {
       "thread": "3/4-16",
@@ -519,7 +551,8 @@
       "tapDrill50": "45/64\"",
       "tapDrill50Dec": 0.7031,
       "stiTapDrill": "53/64\"",
-      "stiTapDrillDec": 0.8281
+      "stiTapDrillDec": 0.8281,
+      "stiInsertSize": "3/4-16×1D"
     },
     {
       "thread": "M3×0.5",
@@ -534,7 +567,8 @@
       "tapDrill50": "2.6mm",
       "tapDrill50Dec": 2.6,
       "stiTapDrill": "3.4mm",
-      "stiTapDrillDec": 3.4
+      "stiTapDrillDec": 3.4,
+      "stiInsertSize": "M3×0.5×1D"
     },
     {
       "thread": "M4×0.7",
@@ -549,7 +583,8 @@
       "tapDrill50": "3.5mm",
       "tapDrill50Dec": 3.5,
       "stiTapDrill": "4.5mm",
-      "stiTapDrillDec": 4.5
+      "stiTapDrillDec": 4.5,
+      "stiInsertSize": "M4×0.7×1D"
     },
     {
       "thread": "M5×0.8",
@@ -564,7 +599,8 @@
       "tapDrill50": "4.4mm",
       "tapDrill50Dec": 4.4,
       "stiTapDrill": "5.6mm",
-      "stiTapDrillDec": 5.6
+      "stiTapDrillDec": 5.6,
+      "stiInsertSize": "M5×0.8×1D"
     },
     {
       "thread": "M6×1.0",
@@ -579,7 +615,8 @@
       "tapDrill50": "5.2mm",
       "tapDrill50Dec": 5.2,
       "stiTapDrill": "6.7mm",
-      "stiTapDrillDec": 6.7
+      "stiTapDrillDec": 6.7,
+      "stiInsertSize": "M6×1.0×1D"
     },
     {
       "thread": "M8×1.25",
@@ -594,7 +631,8 @@
       "tapDrill50": "7.1mm",
       "tapDrill50Dec": 7.1,
       "stiTapDrill": "9.0mm",
-      "stiTapDrillDec": 9
+      "stiTapDrillDec": 9,
+      "stiInsertSize": "M8×1.25×1D"
     },
     {
       "thread": "M10×1.5",
@@ -609,7 +647,8 @@
       "tapDrill50": "8.8mm",
       "tapDrill50Dec": 8.8,
       "stiTapDrill": "10.7mm",
-      "stiTapDrillDec": 10.7
+      "stiTapDrillDec": 10.7,
+      "stiInsertSize": "M10×1.5×1D"
     },
     {
       "thread": "M12×1.75",
@@ -624,7 +663,8 @@
       "tapDrill50": "10.5mm",
       "tapDrill50Dec": 10.5,
       "stiTapDrill": "12.8mm",
-      "stiTapDrillDec": 12.8
+      "stiTapDrillDec": 12.8,
+      "stiInsertSize": "M12×1.75×1D"
     },
     {
       "thread": "M14×2.0",
@@ -639,7 +679,8 @@
       "tapDrill50": "12.5mm",
       "tapDrill50Dec": 12.5,
       "stiTapDrill": "15.0mm",
-      "stiTapDrillDec": 15
+      "stiTapDrillDec": 15,
+      "stiInsertSize": "M14×2.0×1D"
     },
     {
       "thread": "M16×2.0",
@@ -654,7 +695,8 @@
       "tapDrill50": "14.5mm",
       "tapDrill50Dec": 14.5,
       "stiTapDrill": "17.0mm",
-      "stiTapDrillDec": 17
+      "stiTapDrillDec": 17,
+      "stiInsertSize": "M16×2.0×1D"
     },
     {
       "thread": "M20×2.5",
@@ -669,7 +711,8 @@
       "tapDrill50": "18.0mm",
       "tapDrill50Dec": 18,
       "stiTapDrill": "21.5mm",
-      "stiTapDrillDec": 21.5
+      "stiTapDrillDec": 21.5,
+      "stiInsertSize": "M20×2.5×1D"
     },
     {
       "thread": "M24×3.0",
@@ -684,7 +727,354 @@
       "tapDrill50": "21.5mm",
       "tapDrill50Dec": 21.5,
       "stiTapDrill": "25.5mm",
-      "stiTapDrillDec": 25.5
+      "stiTapDrillDec": 25.5,
+      "stiInsertSize": "M24×3.0×1D"
+    }
+  ],
+  "rollTapDrills": [
+    {
+      "thread": "#1-64",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.0661,
+      "drill": "#51",
+      "drillDec": 0.067
+    },
+    {
+      "thread": "#2-56",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.0781,
+      "drill": "5/64",
+      "drillDec": 0.078125
+    },
+    {
+      "thread": "#3-48",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.0898,
+      "drill": "#43",
+      "drillDec": 0.089
+    },
+    {
+      "thread": "#4-40",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.101,
+      "drill": "#38",
+      "drillDec": 0.1015
+    },
+    {
+      "thread": "#5-40",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.114,
+      "drill": "#33",
+      "drillDec": 0.113
+    },
+    {
+      "thread": "#6-32",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.1242,
+      "drill": "1/8",
+      "drillDec": 0.125
+    },
+    {
+      "thread": "#8-32",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.1502,
+      "drill": "#25",
+      "drillDec": 0.1495
+    },
+    {
+      "thread": "#10-24",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.1716,
+      "drill": "11/64",
+      "drillDec": 0.171875
+    },
+    {
+      "thread": "#10-32",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.1762,
+      "drill": "#16",
+      "drillDec": 0.177
+    },
+    {
+      "thread": "1/4-20",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.2279,
+      "drill": "#1",
+      "drillDec": 0.228
+    },
+    {
+      "thread": "5/16-18",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.2879,
+      "drill": "L",
+      "drillDec": 0.29
+    },
+    {
+      "thread": "3/8-16",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.3474,
+      "drill": "S",
+      "drillDec": 0.348
+    },
+    {
+      "thread": "7/16-14",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.4059,
+      "drill": "13/32",
+      "drillDec": 0.40625
+    },
+    {
+      "thread": "1/2-13",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.466,
+      "drill": "15/32",
+      "drillDec": 0.46875
+    },
+    {
+      "thread": "5/8-11",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.5848,
+      "drill": "37/64",
+      "drillDec": 0.578125
+    },
+    {
+      "thread": "3/4-10",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.7058,
+      "drill": "45/64",
+      "drillDec": 0.703125
+    },
+    {
+      "thread": "7/8-9",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.8259,
+      "drill": "53/64",
+      "drillDec": 0.828125
+    },
+    {
+      "thread": "1\"-8",
+      "series": "UNC",
+      "units": "in",
+      "drillExact": 0.9448,
+      "drill": "15/16",
+      "drillDec": 0.9375
+    },
+    {
+      "thread": "#0-80",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.0545,
+      "drill": "#54",
+      "drillDec": 0.055
+    },
+    {
+      "thread": "#1-72",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.0669,
+      "drill": "#51",
+      "drillDec": 0.067
+    },
+    {
+      "thread": "#2-64",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.0791,
+      "drill": "#47",
+      "drillDec": 0.0785
+    },
+    {
+      "thread": "#4-48",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.1028,
+      "drill": "#37",
+      "drillDec": 0.104
+    },
+    {
+      "thread": "#6-40",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.127,
+      "drill": "#30",
+      "drillDec": 0.1285
+    },
+    {
+      "thread": "#8-36",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.1517,
+      "drill": "#24",
+      "drillDec": 0.152
+    },
+    {
+      "thread": "#10-32",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.1762,
+      "drill": "#16",
+      "drillDec": 0.177
+    },
+    {
+      "thread": "1/4-28",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.2342,
+      "drill": "15/64",
+      "drillDec": 0.234375
+    },
+    {
+      "thread": "5/16-24",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.2941,
+      "drill": "M",
+      "drillDec": 0.295
+    },
+    {
+      "thread": "3/8-24",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.3566,
+      "drill": "T",
+      "drillDec": 0.358
+    },
+    {
+      "thread": "7/16-20",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.4154,
+      "drill": "Z",
+      "drillDec": 0.413
+    },
+    {
+      "thread": "1/2-20",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.4779,
+      "drill": "31/64",
+      "drillDec": 0.484375
+    },
+    {
+      "thread": "9/16-18",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.5379,
+      "drill": "17/32",
+      "drillDec": 0.53125
+    },
+    {
+      "thread": "3/4-16",
+      "series": "UNF",
+      "units": "in",
+      "drillExact": 0.7224,
+      "drill": "23/32",
+      "drillDec": 0.71875
+    },
+    {
+      "thread": "M3×0.5",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 2.779,
+      "drill": "2.80 mm",
+      "drillDec": 2.8
+    },
+    {
+      "thread": "M4×0.7",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 3.691,
+      "drill": "3.70 mm",
+      "drillDec": 3.7
+    },
+    {
+      "thread": "M5×0.8",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 4.646,
+      "drill": "4.65 mm",
+      "drillDec": 4.65
+    },
+    {
+      "thread": "M6×1.0",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 5.558,
+      "drill": "5.55 mm",
+      "drillDec": 5.55
+    },
+    {
+      "thread": "M8×1.25",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 7.448,
+      "drill": "7.45 mm",
+      "drillDec": 7.45
+    },
+    {
+      "thread": "M10×1.5",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 9.337,
+      "drill": "9.35 mm",
+      "drillDec": 9.35
+    },
+    {
+      "thread": "M12×1.75",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 11.227,
+      "drill": "11.25 mm",
+      "drillDec": 11.25
+    },
+    {
+      "thread": "M14×2.0",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 13.116,
+      "drill": "13.10 mm",
+      "drillDec": 13.1
+    },
+    {
+      "thread": "M16×2.0",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 15.116,
+      "drill": "15.10 mm",
+      "drillDec": 15.1
+    },
+    {
+      "thread": "M20×2.5",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 18.895,
+      "drill": "18.90 mm",
+      "drillDec": 18.9
+    },
+    {
+      "thread": "M24×3.0",
+      "series": "Metric",
+      "units": "mm",
+      "drillExact": 22.674,
+      "drill": "22.65 mm",
+      "drillDec": 22.65
     }
   ],
   "drillSizes": [

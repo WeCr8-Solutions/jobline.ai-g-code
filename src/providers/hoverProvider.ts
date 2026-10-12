@@ -107,6 +107,11 @@ export function getHoverMarkdown(
   const md = new vscode.MarkdownString(legacy);
   md.supportThemeIcons = true;
   md.isTrusted = true;
+  if ((token.type === 'G' || token.type === 'M') && vscode.workspace.getConfiguration('jobline.ui').get<boolean>('showLinks', true)) {
+    const code = `${token.type}${token.code}`;
+    const quiz = ['G81', 'G82', 'G83'].includes(code);
+    md.appendMarkdown(`\n\n[${quiz ? `Quiz me on ${code}` : 'Explore G-Code Academy'}](https://jobline.ai/resources/gcode-academy?utm_source=vscode&code=${code})`);
+  }
   return md;
 }
 
@@ -391,6 +396,11 @@ function formatMillHoverCard(token: GCodeToken, tokens: GCodeToken[], extensionU
   md.appendMarkdown(`\n\n> $(lightbulb) **${escapeMd(card.kid)}**`);
   if (card.caution) {
     md.appendMarkdown(`\n\n> $(warning) ${escapeMd(card.caution)}`);
+  }
+
+  if (vscode.workspace.getConfiguration('jobline.ui').get<boolean>('showLinks', true)) {
+    const quiz = ['G81', 'G82', 'G83'].includes(command);
+    md.appendMarkdown(`\n\n[${quiz ? `Quiz me on ${command}` : 'Explore G-Code Academy'}](https://jobline.ai/resources/gcode-academy?utm_source=vscode&code=${command})`);
   }
 
   return md;

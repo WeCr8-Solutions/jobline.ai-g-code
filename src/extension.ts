@@ -18,7 +18,8 @@ import { isGCodeFile } from './utils/fileTypes';
 import { selectPreferredGCodeDocument } from './utils/gcodeDocumentTracker';
 import { openExplanationPanel } from './providers/explanationProvider';
 import { ToolboxViewProvider, registerToolboxCommands } from './providers/toolboxProvider';
-import { registerDiagnosticsProvider } from './providers/diagnosticsProvider';
+import { registerDiagnosticsProvider, runDiagnostics } from './providers/diagnosticsProvider';
+import { RatingState, recordRatingChoice, recordSuccessfulValidation } from './validationRating';
 import { registerFormatter } from './providers/formatterProvider';
 import { registerSubprogramProvider } from './providers/subprogramProvider';
 import { buildVisualizerHarnessData } from './providers/visualizer/fixtureHarness';
@@ -518,7 +519,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerToolsCommands(context);
 
   // Register diagnostic squiggles provider
-  registerDiagnosticsProvider(context);
+  const diagnosticCollection = registerDiagnosticsProvider(context);
 
   // Register G-Code formatter
   registerFormatter(context);
@@ -597,18 +598,37 @@ export function activate(context: vscode.ExtensionContext): void {
   );
   context.subscriptions.push(explainCmd);
 
-  // Validate program (placeholder — full implementation in Phase 3)
+  // Explicitly re-run the same engine used by live diagnostics.
   const validateCmd = vscode.commands.registerCommand(
     'jobline.validateProgram',
-    () => {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        vscode.window.showWarningMessage('No active editor');
+    async () => {
+      const document = getPreferredGCodeDoc();
+      if (!document) {
+        vscode.window.showWarningMessage('Open a G-code program to validate.');
         return;
       }
-      vscode.window.showInformationMessage(
-        'JobLine: Full validation coming in Phase 3. Syntax highlighting and hover are active.'
+      const diagnostics = runDiagnostics(document, diagnosticCollection);
+      if (!diagnostics) {
+        vscode.window.showErrorMessage('JobLine: Could not parse this program for validation.');
+        return;
+      }
+      const errors = diagnostics.filter(d => d.severity === vscode.DiagnosticSeverity.Error).length;
+      const warnings = diagnostics.length - errors;
+      void vscode.commands.executeCommand('workbench.actions.view.problems');
+      void vscode.window.showInformationMessage(`JobLine: Validation complete — ${errors} error(s), ${warnings} warning(s).`);
+      if (errors > 0) return;
+      const key = 'jobline.rating.v1';
+      const result = recordSuccessfulValidation(context.globalState.get<RatingState>(key));
+      await context.globalState.update(key, result.state);
+      if (!result.prompt) return;
+      const choice = await vscode.window.showInformationMessage(
+        'JobLine helped validate your programs. Would you rate the extension?',
+        'Rate', 'Later', 'Never'
       );
+      await context.globalState.update(key, recordRatingChoice(result.state, choice));
+      if (choice === 'Rate') {
+        await vscode.env.openExternal(vscode.Uri.parse('https://marketplace.visualstudio.com/items?itemName=WeCr8-Solutions.jobline-gcode&ssr=false#review-details'));
+      }
     }
   );
   context.subscriptions.push(validateCmd);

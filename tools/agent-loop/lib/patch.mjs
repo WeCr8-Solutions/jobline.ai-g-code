@@ -18,15 +18,10 @@ export function extractPatch(text) {
   return patch.endsWith('\n') ? patch : `${patch}\n`;
 }
 
-/**
- * Small local models reliably drop directory prefixes even when told the
- * exact path (confirmed empirically: qwen2.5-coder:7b and llama3.1:8b both
- * wrote "a/styles.css" instead of "a/src/renderer/styles.css" for the same
- * task, unchanged by adding an explicit instruction). Rather than keep
- * tuning the prompt for something these models don't reliably follow,
- * rewrite basename-only paths to the one known task file they unambiguously
- * match, before the patch ever reaches the allow/deny check or git apply.
- */
+/** Deterministically fix a model-generated diff that dropped a directory
+    prefix from a path, by matching on basename against the task's known
+    files. Ambiguous basenames (same name under two different directories)
+    are left alone rather than guessed. */
 export function fixupPaths(patch, knownPaths) {
   if (!knownPaths?.length) return patch;
   const byBasename = new Map();

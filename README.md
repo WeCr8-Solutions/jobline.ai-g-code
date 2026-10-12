@@ -28,6 +28,16 @@ Additional built-in file associations are listed in [package.json](package.json)
 | Imports | STL geometry, tessellated STEP target geometry, and Fusion F3D setup metadata/model dimensional reference |
 | Repository tools | G-code review, fixture review, and manufacturing-pipeline checks |
 
+**Validate Program** reruns the live diagnostic engine for the active G-code file, reports error and warning counts, and opens Problems. The formatter applies configured spacing, case, and decimal rules to the current document. The visualizer lets you inspect the parsed toolpath and scene before running a program on a machine; it is a review aid, not collision certification.
+
+### In the editor
+
+![G83 peck-drilling hover card in a G-code editor](images/marketplace/hover-g83.png)
+
+![Operations, tools, and machine setup in the JobLine sidebar](images/marketplace/sidebar.png)
+
+![3D toolpath and stock in the JobLine visualizer](images/marketplace/toolpath.png)
+
 CNC control choices are **Fanuc, Haas, Siemens, Mazak, and Okuma**. **Fanuc Robot TP/LS** and **ABB RAPID** also have language/control entries. Coverage varies by dialect and program type; these entries do not imply complete controller emulation or robot kinematics.
 
 The sidebar includes Machine Setup, Operations, Tools, Offsets, Canned Cycles, Probing, Macros & Flow, Toolbox, Alarms & Warnings, Commands, and Visualizer Settings.
@@ -74,6 +84,7 @@ Open the Command Palette and search for **JobLine**, **G-Code**, or **Toolpath**
 | JobLine: Select CNC / Robot Control Type | One-off control dialect override |
 | JobLine: Select Machine Type (one-off) | One-off machine type override |
 | JobLine: Format G-Code | Format the active program |
+| JobLine: Validate Program | Rerun diagnostics, show counts, and open Problems |
 | JobLine: Open Plain Language Explanation | Explain program operations |
 | Show Toolpath Visualizer | Open the 3D view |
 | G-Code: Open Program in Visualizer | Select a program for review |
@@ -81,8 +92,6 @@ Open the Command Palette and search for **JobLine**, **G-Code**, or **Toolpath**
 | G-Code: Play / Pause / Stop | Control playback |
 | G-Code: Step Forward / Step Back / Jump to Line | Navigate the path |
 | JobLine Toolbox: Insert Line Numbers / Remove Line Numbers / Renumber Lines | Apply explicit numbering edits |
-
-**JobLine: Validate Program still displays a placeholder message.** Diagnostics run through the live diagnostic provider; the command is not an additional verification gate.
 
 ## Settings
 
@@ -104,6 +113,7 @@ Find these under **Settings → JobLine G-Code**.
 | `jobline.formatter.wordSpacing` | `true` | Separate words with spaces |
 | `jobline.formatter.decimalPlaces` | `null` | Preserve decimals unless configured |
 | `jobline.formatter.uppercaseGM` | `true` | Uppercase G/M codes |
+| `jobline.ui.showLinks` | `true` | Show the optional Founding Shop sidebar and Academy hover links |
 
 ## Known limitations and next work
 
@@ -113,17 +123,25 @@ Find these under **Settings → JobLine G-Code**.
 - Controller-specific cycles, macro/subprogram execution, rotary motion, and robot motion need broader coverage. Generic ISO tests do not certify every dialect.
 - Machine connectivity/DNC remains planning work, not a shipped transfer feature.
 
+### Roadmap
+
+- Optional JobLine account sign-in to connect activity with a [free talent profile](https://jobline.ai/talent).
+- Send a reviewed program and tool list to a shop job or work order, with a recorded revision and sender.
+- Machine Connect for controlled transfer and shop-floor feedback; no machine transfer is included in this release.
+
 The preview and diagnostics support program review; they are not machine collision certification.
 
 ## Development and verification
 
 See [SETUP.md](SETUP.md) for installation, debugging, test commands, and packaging. The [feedback matrix](docs/testing/USER_FEEDBACK_MATRIX.md) distinguishes parser checks from rendered behavior and remaining gaps.
 
-For the 0.3.12 working tree verified on **2026-10-06**, `npm run test:all` passed, including the 75-case motion matrix; the rendered extension smoke suite passed 15 tests. The VSIX check exercised STEP tessellation and visualizer rendering at desktop and narrow widths. These results cover those fixtures, not every machine or reported issue.
+For the 0.3.12 working tree verified on **2026-10-11**, `npm run test:all` passed, including the 75-case motion matrix. The private RevGrips visual E2E verified target selection, manual placement, and ViewCube presets; its Parasolid target is still a bounds envelope rather than a tessellated solid. These checks cover those fixtures, not every machine or reported issue.
 
 ## Feedback and project information
 
 Report problems through [GitHub Issues](https://github.com/WeCr8-Solutions/jobline.ai-g-code/issues). Include the extension version, controller and machine type, units, a minimal NC example, expected behavior, and a screenshot or recording for visual problems. Include relevant model/tool dimensions for import or sizing problems.
+
+Learn or practice codes in [G-Code Academy](https://jobline.ai/resources/gcode-academy?utm_source=vscode), or create a [free JobLine talent profile](https://jobline.ai/talent?utm_source=vscode). The extension runs locally; it does not send program contents to JobLine. Optional links open only when selected.
 
 - [Changelog](CHANGELOG.md)
 - [Contributor setup](SETUP.md)

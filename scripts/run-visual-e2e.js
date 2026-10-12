@@ -14,7 +14,19 @@ const debugPort = 9333;
 // first case was ever really tested. Waiting for the expected count is what
 // makes each case measure its own render.
 const visualCases = [
-  { id: 'clean-mill', fixture: 'test/fixtures/diagnostics/clean-mill.nc', expectedPoints: 195 },
+  { id: 'clean-mill', fixture: 'test/fixtures/diagnostics/clean-mill.nc', expectedPoints: 195, captureAreas: ['visualizer', 'workbench'] },
+  {
+    id: 'clean-mill-solid-target',
+    fixture: 'test/fixtures/diagnostics/clean-mill.nc',
+    expectedPoints: 195,
+    targetFile: 'test/fixtures/scene/target-part.stl',
+    captureAreas: ['visualizer', 'workbench'],
+    controls: [
+      { type: 'setTargetDisplayMode', mode: 'solid' },
+      { type: 'setLayerVisible', layer: 'sweptTube', visible: false },
+    ],
+    expect: { targetLoaded: true, targetCountAtLeast: 1, targetDisplayMode: 'solid', targetName: 'target-part.stl' },
+  },
   { id: 'unsafe-review', fixture: 'test/fixtures/crash-scenarios/multiple-violations.nc', expectedPoints: 17 },
   { id: 'lathe', fixture: 'test/fixtures/okuma/facing-od-rough.nc', expectedPoints: 13 },
   // These two declare STOCK, which is what makes the stock box and the jaws
@@ -156,6 +168,7 @@ if (fs.existsSync(revgripsProgram) && fs.existsSync(revgripsTarget)) {
     controls: [
       { type: 'setPresetView', view: 'iso' },
       { type: 'setTargetDisplayMode', mode: 'solid' },
+      { type: 'setLayerVisible', layer: 'sweptTube', visible: false },
     ],
     expect: {
       targetLoaded: true,
@@ -214,6 +227,8 @@ function screenshotClip(metrics, area) {
     height: Math.max(40, Math.floor(Math.min(clip.height, viewport.height - clip.y))),
     scale: 1,
   });
+
+  if (area === 'workbench') return clamp(viewport);
 
   if (area === 'gnomon-corner') {
     return clamp({ x: webview.x, y: webview.y, width: Math.min(230, webview.width), height: Math.min(170, webview.height) });
