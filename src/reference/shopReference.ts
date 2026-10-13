@@ -7,7 +7,11 @@
  * src/lib/reference/shopReference.ts and published at
  * https://jobline.ai/reference/jobline-shop-reference.json). Change the data
  * in the shop app and copy the file here; test/machine-presets.test.ts fails
- * when the copies differ.
+ * when the copies differ, and test/shop-reference.test.ts pins the version and
+ * spot-checks rows.
+ *
+ * Current copy: v1.2.1 (#10-32 is UNF only, tap drill #21; #10-24 is the only
+ * #10 UNC thread, tap drill #25).
  */
 import reference from '../../data/reference/jobline-shop-reference.json';
 
@@ -26,12 +30,25 @@ export interface TapDrillRow {
   tapDrill50Dec: number;
   stiTapDrill: string;
   stiTapDrillDec: number;
+  /** Helical insert size the STI drill is for, e.g. "1/4-20×1D". */
+  stiInsertSize?: string;
+}
+
+/** Form (roll) tap drill at 65% thread. */
+export interface RollTapDrillRow {
+  thread: string;
+  series: 'UNC' | 'UNF' | 'Metric';
+  units: 'in' | 'mm';
+  drillExact: number;
+  drill: string;
+  drillDec: number;
 }
 
 export interface ShopReference {
   format: 'jobline-shop-reference';
   version: string;
   tapDrills: TapDrillRow[];
+  rollTapDrills: RollTapDrillRow[];
   drillSizes: Array<{ name: string; series: 'number' | 'letter' | 'fraction'; inch: number; mm: number }>;
   npt: Array<{ size: string; tpi: number; pipeOd: number; tapDrill: string; tapDrillInch: number }>;
 }
