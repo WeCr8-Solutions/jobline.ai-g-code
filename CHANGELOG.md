@@ -29,7 +29,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Synced `data/reference/jobline-shop-reference.json` to v1.1 from the JobLine shop app (corrected 50% tap drills, NPT tap drills and carbide milling SFM; shift-handover-hub PR #184).
+- Synced `data/reference/jobline-shop-reference.json` to v1.2.1 from the JobLine shop app (shift-handover-hub PRs #184 and #185): corrected 50% tap drills, NPT tap drills and carbide milling SFM; a larger cutting-speed table; and #10-32 is now UNF only (75% tap drill #21), with #10-24 the only #10 UNC thread (#25). The earlier bundle also listed #10-32 under UNC.
 - The Commands view is grouped into Machine Setup, Check & Explain, Edit Program and Navigate.
 - The visualizer uses the active preset's machine type and workholding when the program text alone cannot tell (e.g. a plain G0/G1 lathe program).
 - **Select Machine Type** also sets the broad `jobline.machineType` profile, so cycle lists and lathe T-word decoding follow the pick.

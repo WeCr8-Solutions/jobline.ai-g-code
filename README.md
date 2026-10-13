@@ -74,7 +74,7 @@ Insert, remove, or renumber N-lines; strip comments; uppercase G/M codes; add or
 
 ### Tap drill check
 
-When a tool comment names a thread (`T3 M06 (1/4-20 TAP)`, `M8 X 1.25 FORM TAP`), the program review checks that an earlier tool drills a matching tap drill (75%, 50%, or STI size) and tells you the right size if none does. Sizes come from the JobLine shop reference (`jobline-shop-reference.json` v1.1: UNC, UNF, and metric tap drills, roll-tap drills, number/letter/fraction drill sizes, NPT, and cutting speeds), the same data behind the [tap drill chart](https://jobline.ai/tools/charts/tap-drill-chart?utm_source=vscode&utm_medium=marketplace&utm_campaign=jobline-gcode) on jobline.ai.
+When a tool comment names a thread (`T3 M06 (1/4-20 TAP)`, `M8 X 1.25 FORM TAP`), the program review checks that an earlier tool drills a matching tap drill (75%, 50%, or STI size) and tells you the right size if none does. Sizes come from the JobLine shop reference (`jobline-shop-reference.json` v1.2.1: UNC, UNF, and metric tap drills, roll-tap drills, number/letter/fraction drill sizes, NPT, and cutting speeds), the same data behind the [tap drill chart](https://jobline.ai/tools/charts/tap-drill-chart?utm_source=vscode&utm_medium=marketplace&utm_campaign=jobline-gcode) on jobline.ai.
 
 ### Machine presets
 
