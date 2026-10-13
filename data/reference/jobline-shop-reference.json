@@ -1,13 +1,13 @@
 {
   "format": "jobline-shop-reference",
-  "version": "1.0",
+  "version": "1.1",
   "publishedAt": "https://jobline.ai/reference/jobline-shop-reference.json",
   "sources": {
     "tapDrills": "Machinery's Handbook, 31st ed.; ASME B1.1 (Unified), ASME B1.13M (metric)",
     "rollTapDrills": "Form tap formula at 65% thread (OSG / Emuge form tap guidance); supplier tables are authoritative",
     "drillSizes": "ASME B94.11M number and letter drill sizes; fractions exact",
-    "npt": "ASME B1.20.1; tap drills without reaming per Machinery's Handbook",
-    "cuttingSpeeds": "HSS bands: https://littlemachineshop.com/pages/cutting-speeds; carbide and feeds are conservative JobLine starting estimates, not manufacturer limits"
+    "npt": "ASME B1.20.1 sizes; tap drills without reaming per Tapco pipe tap chart (OSG agrees)",
+    "cuttingSpeeds": "HSS bands: https://littlemachineshop.com/pages/cutting-speeds; carbide milling SFM and chip loads: https://www.lakeshorecarbide.com/pdf/GENERAL%20PURPOSE%20EM%20SPECS.pdf; turning carbide and feed per rev are conservative JobLine estimates (machining-core 1.0.0)"
   },
   "tapDrills": [
     {
@@ -21,8 +21,8 @@
       "units": "in",
       "tapDrill75": "#53",
       "tapDrill75Dec": 0.0595,
-      "tapDrill50": "#52",
-      "tapDrill50Dec": 0.0635,
+      "tapDrill50": "1/16\"",
+      "tapDrill50Dec": 0.0625,
       "stiTapDrill": "#43",
       "stiTapDrillDec": 0.089,
       "stiInsertSize": "#1-64×1D"
@@ -89,8 +89,8 @@
       "units": "in",
       "tapDrill75": "#38",
       "tapDrill75Dec": 0.1015,
-      "tapDrill50": "#36",
-      "tapDrill50Dec": 0.1065,
+      "tapDrill50": "7/64\"",
+      "tapDrill50Dec": 0.1094,
       "stiTapDrill": "#29",
       "stiTapDrillDec": 0.136,
       "stiInsertSize": "#5-40×1D"
@@ -157,8 +157,8 @@
       "units": "in",
       "tapDrill75": "#21",
       "tapDrill75Dec": 0.159,
-      "tapDrill50": "#16",
-      "tapDrill50Dec": 0.177,
+      "tapDrill50": "#18",
+      "tapDrill50Dec": 0.1695,
       "stiTapDrill": "#3",
       "stiTapDrillDec": 0.213,
       "stiInsertSize": "#10-32×1D"
@@ -191,8 +191,8 @@
       "units": "in",
       "tapDrill75": "F",
       "tapDrill75Dec": 0.257,
-      "tapDrill50": "G",
-      "tapDrill50Dec": 0.261,
+      "tapDrill50": "J",
+      "tapDrill50Dec": 0.277,
       "stiTapDrill": "Q",
       "stiTapDrillDec": 0.332,
       "stiInsertSize": "5/16-18×1D"
@@ -412,8 +412,8 @@
       "units": "in",
       "tapDrill75": "#29",
       "tapDrill75Dec": 0.136,
-      "tapDrill50": "#27",
-      "tapDrill50Dec": 0.144,
+      "tapDrill50": "#26",
+      "tapDrill50Dec": 0.147,
       "stiTapDrill": "#13",
       "stiTapDrillDec": 0.185,
       "stiInsertSize": "#8-36×1D"
@@ -429,8 +429,8 @@
       "units": "in",
       "tapDrill75": "#21",
       "tapDrill75Dec": 0.159,
-      "tapDrill50": "#16",
-      "tapDrill50Dec": 0.177,
+      "tapDrill50": "#18",
+      "tapDrill50Dec": 0.1695,
       "stiTapDrill": "#3",
       "stiTapDrillDec": 0.213,
       "stiInsertSize": "#10-32×1D"
@@ -446,8 +446,8 @@
       "units": "in",
       "tapDrill75": "#3",
       "tapDrill75Dec": 0.213,
-      "tapDrill50": "7/32\"",
-      "tapDrill50Dec": 0.2188,
+      "tapDrill50": "#1",
+      "tapDrill50Dec": 0.228,
       "stiTapDrill": "H",
       "stiTapDrillDec": 0.266,
       "stiInsertSize": "1/4-28×1D"
@@ -463,8 +463,8 @@
       "units": "in",
       "tapDrill75": "I",
       "tapDrill75Dec": 0.272,
-      "tapDrill50": "J",
-      "tapDrill50Dec": 0.277,
+      "tapDrill50": "9/32\"",
+      "tapDrill50Dec": 0.2812,
       "stiTapDrill": "S",
       "stiTapDrillDec": 0.348,
       "stiInsertSize": "5/16-24×1D"
@@ -495,10 +495,10 @@
       "basicPitch": 0.405,
       "basicMinor": 0.3762,
       "units": "in",
-      "tapDrill75": "W",
-      "tapDrill75Dec": 0.386,
-      "tapDrill50": "X",
-      "tapDrill50Dec": 0.397,
+      "tapDrill75": "25/64\"",
+      "tapDrill75Dec": 0.3906,
+      "tapDrill50": "Y",
+      "tapDrill50Dec": 0.404,
       "stiTapDrill": "31/64\"",
       "stiTapDrillDec": 0.4844,
       "stiInsertSize": "7/16-20×1D"
@@ -564,8 +564,8 @@
       "units": "mm",
       "tapDrill75": "2.5mm",
       "tapDrill75Dec": 2.5,
-      "tapDrill50": "2.6mm",
-      "tapDrill50Dec": 2.6,
+      "tapDrill50": "2.7mm",
+      "tapDrill50Dec": 2.7,
       "stiTapDrill": "3.4mm",
       "stiTapDrillDec": 3.4,
       "stiInsertSize": "M3×0.5×1D"
@@ -596,8 +596,8 @@
       "units": "mm",
       "tapDrill75": "4.2mm",
       "tapDrill75Dec": 4.2,
-      "tapDrill50": "4.4mm",
-      "tapDrill50Dec": 4.4,
+      "tapDrill50": "4.5mm",
+      "tapDrill50Dec": 4.5,
       "stiTapDrill": "5.6mm",
       "stiTapDrillDec": 5.6,
       "stiInsertSize": "M5×0.8×1D"
@@ -612,8 +612,8 @@
       "units": "mm",
       "tapDrill75": "5.0mm",
       "tapDrill75Dec": 5,
-      "tapDrill50": "5.2mm",
-      "tapDrill50Dec": 5.2,
+      "tapDrill50": "5.4mm",
+      "tapDrill50Dec": 5.4,
       "stiTapDrill": "6.7mm",
       "stiTapDrillDec": 6.7,
       "stiInsertSize": "M6×1.0×1D"
@@ -628,8 +628,8 @@
       "units": "mm",
       "tapDrill75": "6.8mm",
       "tapDrill75Dec": 6.8,
-      "tapDrill50": "7.1mm",
-      "tapDrill50Dec": 7.1,
+      "tapDrill50": "7.2mm",
+      "tapDrill50Dec": 7.2,
       "stiTapDrill": "9.0mm",
       "stiTapDrillDec": 9,
       "stiInsertSize": "M8×1.25×1D"
@@ -644,8 +644,8 @@
       "units": "mm",
       "tapDrill75": "8.5mm",
       "tapDrill75Dec": 8.5,
-      "tapDrill50": "8.8mm",
-      "tapDrill50Dec": 8.8,
+      "tapDrill50": "9.0mm",
+      "tapDrill50Dec": 9,
       "stiTapDrill": "10.7mm",
       "stiTapDrillDec": 10.7,
       "stiInsertSize": "M10×1.5×1D"
@@ -660,8 +660,8 @@
       "units": "mm",
       "tapDrill75": "10.2mm",
       "tapDrill75Dec": 10.2,
-      "tapDrill50": "10.5mm",
-      "tapDrill50Dec": 10.5,
+      "tapDrill50": "10.9mm",
+      "tapDrill50Dec": 10.9,
       "stiTapDrill": "12.8mm",
       "stiTapDrillDec": 12.8,
       "stiInsertSize": "M12×1.75×1D"
@@ -676,8 +676,8 @@
       "units": "mm",
       "tapDrill75": "12.0mm",
       "tapDrill75Dec": 12,
-      "tapDrill50": "12.5mm",
-      "tapDrill50Dec": 12.5,
+      "tapDrill50": "12.7mm",
+      "tapDrill50Dec": 12.7,
       "stiTapDrill": "15.0mm",
       "stiTapDrillDec": 15,
       "stiInsertSize": "M14×2.0×1D"
@@ -692,8 +692,8 @@
       "units": "mm",
       "tapDrill75": "14.0mm",
       "tapDrill75Dec": 14,
-      "tapDrill50": "14.5mm",
-      "tapDrill50Dec": 14.5,
+      "tapDrill50": "14.75mm",
+      "tapDrill50Dec": 14.75,
       "stiTapDrill": "17.0mm",
       "stiTapDrillDec": 17,
       "stiInsertSize": "M16×2.0×1D"
@@ -708,8 +708,8 @@
       "units": "mm",
       "tapDrill75": "17.5mm",
       "tapDrill75Dec": 17.5,
-      "tapDrill50": "18.0mm",
-      "tapDrill50Dec": 18,
+      "tapDrill50": "18.5mm",
+      "tapDrill50Dec": 18.5,
       "stiTapDrill": "21.5mm",
       "stiTapDrillDec": 21.5,
       "stiInsertSize": "M20×2.5×1D"
@@ -724,8 +724,8 @@
       "units": "mm",
       "tapDrill75": "21.0mm",
       "tapDrill75Dec": 21,
-      "tapDrill50": "21.5mm",
-      "tapDrill50Dec": 21.5,
+      "tapDrill50": "22.0mm",
+      "tapDrill50Dec": 22,
       "stiTapDrill": "25.5mm",
       "stiTapDrillDec": 25.5,
       "stiInsertSize": "M24×3.0×1D"
@@ -2111,8 +2111,8 @@
       "size": "1/8",
       "tpi": 27,
       "pipeOd": 0.405,
-      "tapDrill": "R",
-      "tapDrillInch": 0.339
+      "tapDrill": "Q",
+      "tapDrillInch": 0.332
     },
     {
       "size": "1/4",
@@ -2125,36 +2125,36 @@
       "size": "3/8",
       "tpi": 18,
       "pipeOd": 0.675,
-      "tapDrill": "37/64",
-      "tapDrillInch": 0.5781
+      "tapDrill": "9/16",
+      "tapDrillInch": 0.5625
     },
     {
       "size": "1/2",
       "tpi": 14,
       "pipeOd": 0.84,
-      "tapDrill": "23/32",
-      "tapDrillInch": 0.7188
+      "tapDrill": "45/64",
+      "tapDrillInch": 0.7031
     },
     {
       "size": "3/4",
       "tpi": 14,
       "pipeOd": 1.05,
-      "tapDrill": "59/64",
-      "tapDrillInch": 0.9219
+      "tapDrill": "29/32",
+      "tapDrillInch": 0.9062
     },
     {
       "size": "1",
       "tpi": 11.5,
       "pipeOd": 1.315,
-      "tapDrill": "1-5/32",
-      "tapDrillInch": 1.1563
+      "tapDrill": "1-9/64",
+      "tapDrillInch": 1.1406
     },
     {
       "size": "1-1/4",
       "tpi": 11.5,
       "pipeOd": 1.66,
-      "tapDrill": "1-1/2",
-      "tapDrillInch": 1.5
+      "tapDrill": "1-31/64",
+      "tapDrillInch": 1.4844
     },
     {
       "size": "1-1/2",
@@ -2167,8 +2167,8 @@
       "size": "2",
       "tpi": 11.5,
       "pipeOd": 2.375,
-      "tapDrill": "2-7/32",
-      "tapDrillInch": 2.2188
+      "tapDrill": "2-13/64",
+      "tapDrillInch": 2.2031
     }
   ],
   "cuttingSpeeds": [
@@ -2188,7 +2188,7 @@
       ],
       "millingCarbideSfm": [
         500,
-        1000
+        1100
       ],
       "turningHssSfm": [
         500,
@@ -2199,8 +2199,8 @@
         1200
       ],
       "chipLoadIpt": [
-        0.002,
-        0.006
+        0.0025,
+        0.0045
       ]
     },
     {
@@ -2218,8 +2218,8 @@
         165
       ],
       "millingCarbideSfm": [
-        400,
-        800
+        500,
+        1100
       ],
       "turningHssSfm": [
         500,
@@ -2230,8 +2230,8 @@
         1000
       ],
       "chipLoadIpt": [
-        0.002,
-        0.005
+        0.0025,
+        0.0045
       ]
     },
     {
@@ -2249,8 +2249,8 @@
         110
       ],
       "millingCarbideSfm": [
-        200,
-        400
+        250,
+        500
       ],
       "turningHssSfm": [
         125,
@@ -2261,7 +2261,7 @@
         500
       ],
       "chipLoadIpt": [
-        0.0015,
+        0.002,
         0.004
       ]
     },
@@ -2280,8 +2280,8 @@
         100
       ],
       "millingCarbideSfm": [
-        150,
-        300
+        200,
+        400
       ],
       "turningHssSfm": [
         55,
@@ -2293,7 +2293,7 @@
       ],
       "chipLoadIpt": [
         0.0015,
-        0.004
+        0.0035
       ]
     },
     {
@@ -2305,14 +2305,14 @@
         170,
         240
       ],
-      "note": "Reference family includes resulfurized grades; ordinary 4140 may cut less freely. Verify tooling data.",
+      "note": "HSS reference family includes resulfurized grades; ordinary 4140 may cut less freely. Verify tooling data.",
       "millingHssSfm": [
         35,
         100
       ],
       "millingCarbideSfm": [
-        120,
-        250
+        200,
+        400
       ],
       "turningHssSfm": [
         70,
@@ -2336,14 +2336,14 @@
         260,
         340
       ],
-      "note": "Condition-specific speeds are estimates; carbide is preferred. Check actual hardness on the material certificate.",
+      "note": "Carbide is preferred. Check actual hardness on the material certificate.",
       "millingHssSfm": [
         20,
         40
       ],
       "millingCarbideSfm": [
-        80,
-        160
+        150,
+        350
       ],
       "turningHssSfm": [
         30,
@@ -2355,7 +2355,7 @@
       ],
       "chipLoadIpt": [
         0.001,
-        0.003
+        0.002
       ]
     },
     {
@@ -2373,8 +2373,8 @@
         75
       ],
       "millingCarbideSfm": [
-        80,
-        160
+        250,
+        350
       ],
       "turningHssSfm": [
         115,
@@ -2386,7 +2386,7 @@
       ],
       "chipLoadIpt": [
         0.001,
-        0.003
+        0.002
       ]
     },
     {
@@ -2398,14 +2398,14 @@
         145,
         215
       ],
-      "note": "Grade-specific speeds are estimates. Tough chips and work hardening demand consistent engagement.",
+      "note": "HSS speeds are estimates (316 is not in the published austenitic row). Tough chips and work hardening demand consistent engagement.",
       "millingHssSfm": [
         40,
         60
       ],
       "millingCarbideSfm": [
-        60,
-        140
+        250,
+        350
       ],
       "turningHssSfm": [
         60,
@@ -2417,7 +2417,7 @@
       ],
       "chipLoadIpt": [
         0.001,
-        0.003
+        0.002
       ]
     },
     {
@@ -2435,8 +2435,8 @@
         50
       ],
       "millingCarbideSfm": [
-        80,
-        160
+        150,
+        400
       ],
       "turningHssSfm": [
         80,
@@ -2447,8 +2447,8 @@
         250
       ],
       "chipLoadIpt": [
-        0.001,
-        0.003
+        0.0012,
+        0.0025
       ]
     },
     {
@@ -2467,7 +2467,7 @@
       ],
       "millingCarbideSfm": [
         150,
-        300
+        350
       ],
       "turningHssSfm": [
         145,
@@ -2479,7 +2479,7 @@
       ],
       "chipLoadIpt": [
         0.002,
-        0.005
+        0.004
       ]
     },
     {
@@ -2497,7 +2497,7 @@
         200
       ],
       "millingCarbideSfm": [
-        250,
+        300,
         500
       ],
       "turningHssSfm": [
@@ -2509,8 +2509,8 @@
         600
       ],
       "chipLoadIpt": [
-        0.002,
-        0.005
+        0.0025,
+        0.0035
       ]
     }
   ]

@@ -50,3 +50,10 @@ tools/**
 agent-tasks/**
 agent-loop.config.json
 .agent-loop/**
+
+# Dev/agent docs and README screenshots (README uses absolute image URLs)
+AGENTS.md
+CLAUDE.md
+PLATFORM.md
+qa-report.md
+images/marketplace/**
