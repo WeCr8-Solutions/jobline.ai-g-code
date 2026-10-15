@@ -1,5 +1,5 @@
 import type { VisualizerHarnessData } from './fixtureHarness';
-import { isCylinder, type RevPack } from './revpack';
+import { isCylinder, isSeededTestPack, SEEDED_TEST_PACK_LABEL, type RevPack } from './revpack';
 
 export type SimulationSetupMessage =
   | { type: 'machineType'; machineType: string }
@@ -42,6 +42,9 @@ export type SimulationSetupMessage =
       workOffsets: Record<string, { x: number; y?: number; z: number }>;
       tools: Array<{ t: number; h?: number; type: string; diameter: number; gaugeLength: number; description?: string }>;
       source?: string;
+      /** 'seeded-errors' for a harness pack whose findings are intentional. */
+      purpose?: string;
+      seededLabel?: string;
     };
 
 /**
@@ -204,5 +207,7 @@ export function revPackInfoMessage(pack: RevPack, source?: string): Extract<Simu
     workOffsets: pack.workOffsets,
     tools: pack.tools.map(tool => ({ t: tool.t, h: tool.h, type: tool.type, diameter: tool.diameter, gaugeLength: tool.gaugeLength, description: tool.description })),
     source,
+    purpose: pack.purpose,
+    seededLabel: isSeededTestPack(pack) ? SEEDED_TEST_PACK_LABEL : undefined,
   };
 }

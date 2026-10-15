@@ -11,7 +11,7 @@
 
 import type { RevPack } from './revpack';
 import { correlateProgramWithRevPack } from './revpackCorrelation';
-import { buildRevPackGeometry, geometryDigest } from './revpackGeometry';
+import { buildRevPackGeometry, geometryDigest, loadStl, meshVolume } from './revpackGeometry';
 
 const round = (n: number): number => {
   const r = Math.round(n * 1e4) / 1e4;
@@ -36,5 +36,24 @@ export function revPackParitySnapshot(pack: RevPack, gcode: string, targetStl?: 
       machineExtents: extents,
     },
     geometry: geometryDigest(geometry),
+  };
+}
+
+/**
+ * Digest of one part file read through the shared STL reader: what every
+ * product must agree on for an imported model (triangle count, wireframe edge
+ * count, bounds and volume). Used for the AR4 real-part checks, whose files
+ * stay local (their licence forbids redistribution) while the digests are
+ * committed as ar4-parts.golden.json in all three repositories.
+ */
+export function meshFileDigest(stl: ArrayBuffer | Uint8Array): { format: string; triangles: number; edges: number; min: number[]; max: number[]; volume: number } {
+  const mesh = loadStl(stl, 1_000_000);
+  return {
+    format: mesh.format,
+    triangles: mesh.triangleCount,
+    edges: mesh.edges.length / 6,
+    min: mesh.bounds.min.map(round),
+    max: mesh.bounds.max.map(round),
+    volume: Math.round(meshVolume(mesh.positions) * 100) / 100,
   };
 }

@@ -8,6 +8,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.14] - 2026-10-15
+
+### RevPacks
+
+- New: RevPack v2 setups. A program is checked against its pack (travel, rapids into stock or workholding, offsets, tools and gauge lengths, spindle limits, TCPC/DWO) and drawn from it: auto-detected `revpack.json` beside a program, **JobLine: Load RevPack...** / **Clear RevPack**, stock, every workholding solid, tools at gauge length and the in-process stock from the shared kernel, correlation findings as diagnostics with click-to-line.
+- **Real target parts.** Every public pack's target is now a solid of what its program cuts, as STEP (B-rep, loaded through OpenCascade in the pack's units) with an STL of the same solid beside it: the UMC-750 bracket (faced top, R0.25 pocket, two side holes drilled at B90, 0.09 x 45 deg chamfers on two top edges), the VF-2 vise plate (faced, four 1/4-20 tap-drill holes), the LB3000 shaft (dia 50 / 70, 2 x 45 chamfer, two 3 mm grooves) and the TruLaser nest (six 200 x 150 x 3 parts). They replace placeholder boxes. Generator: `scripts/revpack-targets/generate_targets.py` (CadQuery).
+- The UMC-750 sample now drills two side holes and its chamfer pass actually reaches the edges (it stopped 0.19 in short before); the LB3000 sample grooves the shaft with a new T05 3 mm grooving insert. Both packs still check clean.
+- The target draws as an opaque gold solid with the stock translucent over it (RevPack fixtures in steel grey), feature edges only in Wireframe.
+- **Target only** shows just the finished part. **Compare** colours the in-process stock against the target: on size, remaining material, gouge (seen from +Z, with the cell counts and largest values).
+- The seeded-error pack is labelled everywhere: its name, a "Seeded test pack: errors are intentional" banner on the panel, and the same text on each of its Problems entries.
+
+### Fixed
+
+- RevPack checker: a rapid that crashed into stock was reported a second time on the retract out of it; the crash path now counts as cut.
+- RevPack checker: a tool with no known diameter sitting exactly on a heightmap cell corner touched no cell, so a rapid straight down through the stock went unreported.
+- In-process stock: a tap removed a full cylinder of its major diameter (shown as a gouge against the tap-drill bore); TCPC passes tilted up to 30 deg are now cut instead of skipped.
+- Visual E2E: the window is forced to 1600 x 1000 (VS Code ignored `--window-size` and captured at 1024 x 768).
+
 ## [0.3.13] - 2026-10-13
 
 ### Marketplace listing

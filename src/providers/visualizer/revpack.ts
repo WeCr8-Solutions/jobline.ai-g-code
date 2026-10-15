@@ -6,8 +6,12 @@
  * magazine, or what machine it runs on. A RevPack carries those, so a program
  * can be checked against the setup it will actually meet:
  *
- *   target       the finished part (STL / Parasolid text), for display and the
- *                cut-envelope comparison
+ *   target       the finished part, for display and the target-vs-stock
+ *                comparison: STEP (B-rep, read through OpenCascade where the
+ *                host has it) with an STL beside it for hosts that do not
+ *                (the hub and CAM), or STL / Parasolid text alone
+ *   purpose      'seeded-errors' marks a test pack whose program carries
+ *                deliberate mistakes; every UI says so next to its findings
  *   stock        the raw blank, in work (part) coordinates
  *   workholding  vise jaws, chuck jaws, clamps, fixture plates, in work coords
  *   workOffsets  where each G54.. zero sits in MACHINE coordinates
@@ -112,7 +116,12 @@ export interface RevPack {
   name: string;
   units: RevPackUnits;
   program: { file: string; dialect: string };
-  target?: { file: string; format: 'stl' | 'parasolid-text' };
+  target?: RevPackTarget;
+  /**
+   * 'seeded-errors': a harness pack whose program has deliberate mistakes so
+   * the checks can be proven to catch them. UIs label it as a seeded test pack.
+   */
+  purpose?: 'part' | 'seeded-errors';
   /** Box stock (mill) or a cylinder (lathe). */
   stock: RevPackBox | RevPackCylinder;
   workholding: Array<RevPackBox | RevPackCylinder>;
@@ -125,6 +134,31 @@ export interface RevPack {
   /** What the harness expects of this pack. */
   expect?: { clean?: boolean; findingIds?: string[] };
 }
+
+export type RevPackTargetFormat = 'stl' | 'step' | 'parasolid-text';
+
+export interface RevPackTarget {
+  /** The preferred model, relative to the revpack.json. */
+  file: string;
+  format: RevPackTargetFormat;
+  /** STL of the same solid, for hosts without a STEP/Parasolid reader. */
+  stl?: string;
+}
+
+/** The STL a host without a B-rep reader should load, or undefined. */
+export function targetStlFile(pack: Pick<RevPack, 'target'>): string | undefined {
+  const target = pack.target;
+  if (!target) return undefined;
+  if (target.format === 'stl') return target.file;
+  return target.stl;
+}
+
+/** True for a seeded-errors harness pack (its findings are intentional). */
+export function isSeededTestPack(pack: Pick<RevPack, 'purpose' | 'expect'>): boolean {
+  return pack.purpose === 'seeded-errors';
+}
+
+export const SEEDED_TEST_PACK_LABEL = 'Seeded test pack: errors are intentional';
 
 export function isCylinder(shape: RevPackBox | RevPackCylinder): shape is RevPackCylinder {
   return typeof (shape as RevPackCylinder).diameter === 'number';
@@ -158,6 +192,14 @@ export function validateRevPack(raw: unknown): RevPackValidation {
       if (!(axis.max > axis.min)) errors.push(`machine axis ${axis.name}: max must exceed min`);
     }
     if (!machine.kinematics) errors.push('machine.kinematics is required');
+  }
+  if (pack.target) {
+    const formats: RevPackTargetFormat[] = ['stl', 'step', 'parasolid-text'];
+    if (!pack.target.file) errors.push('target.file is required when target is given');
+    if (!formats.includes(pack.target.format)) errors.push(`target.format must be one of ${formats.join(', ')}`);
+  }
+  if (pack.purpose !== undefined && pack.purpose !== 'part' && pack.purpose !== 'seeded-errors') {
+    errors.push('purpose must be "part" or "seeded-errors"');
   }
   for (const tool of pack.tools ?? []) {
     if (!(tool.diameter > 0)) errors.push(`T${tool.t}: diameter must be > 0`);

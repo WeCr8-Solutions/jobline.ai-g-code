@@ -8,8 +8,9 @@
     "dialect": "okuma"
   },
   "target": {
-    "file": "target.stl",
-    "format": "stl"
+    "file": "target.step",
+    "format": "step",
+    "stl": "target.stl"
   },
   "stock": {
     "name": "4140 bar dia 80 x 120 (1 mm face stock)",
@@ -46,6 +47,13 @@
       "diameter": 9.525,
       "gaugeLength": 1,
       "description": "OD FINISH VNMG160404"
+    },
+    {
+      "t": 5,
+      "type": "Lathe Grooving Insert",
+      "diameter": 3,
+      "gaugeLength": 1,
+      "description": "OD GROOVE 3.0 WIDE"
     }
   ],
   "machine": {

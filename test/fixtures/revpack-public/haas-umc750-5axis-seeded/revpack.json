@@ -1,15 +1,17 @@
 {
   "schema": "jobline.revpack/2",
   "id": "haas-umc750-bracket-seeded",
-  "name": "UMC-750 bracket with seeded errors",
+  "name": "Seeded test pack: UMC-750 bracket (errors are intentional)",
+  "purpose": "seeded-errors",
   "units": "in",
   "program": {
     "file": "O05002.nc",
     "dialect": "haas"
   },
   "target": {
-    "file": "../haas-umc750-5axis/target.stl",
-    "format": "stl"
+    "file": "../haas-umc750-5axis/target.step",
+    "format": "step",
+    "stl": "../haas-umc750-5axis/target.stl"
   },
   "stock": {
     "name": "6061 block 3.0 x 2.0 x 1.5",

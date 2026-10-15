@@ -8,8 +8,9 @@
     "dialect": "haas"
   },
   "target": {
-    "file": "target.stl",
-    "format": "stl"
+    "file": "target.step",
+    "format": "step",
+    "stl": "target.stl"
   },
   "stock": {
     "name": "6061 block 3.0 x 2.0 x 1.5",

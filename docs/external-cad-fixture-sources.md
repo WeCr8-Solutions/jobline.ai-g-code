@@ -26,3 +26,22 @@ Use this note when sourcing real target, vise, jaw, holder, and tooling models f
    - `target-panel`
    - `view-cube`
 5. Do not commit the downloaded model unless redistribution is explicitly permitted.
+
+## AR4 robot parts (real-part import checks)
+
+The AR4 checks (`test/ar4-parts.test.ts`, the `ar4-*` visual E2E cases and the
+matching tests in jobline.ai-CAM and shift-handover-hub) use five Annin Robotics
+AR4 servo-gripper parts, each as Annin's STEP + STL pair:
+`AR4_SG1_base`, `AR4_SG1_carriage`, `AR4_SG1_gear`, `AR4_SG1_jaw1`, `AR4_SG1_center_bar`
+(from Annin's "AR4 Servo Gripper CAD.zip").
+
+- Licence: Annin Robotics Open Source Non-Commercial License v1.1 (2025),
+  <https://github.com/Annin-Robotics/ar4-hmi/blob/main/LICENSE.txt>. Section 2
+  permits educational, research and personal non-commercial use and forbids
+  redistributing or hosting the design files. So the files are **never
+  committed**: put them in `test/fixtures/external-local/ar4/` (gitignored, with
+  `LICENSE-ANNIN-ROBOTICS.txt` beside them) or point `JOBLINE_AR4_DIR` at them.
+- Only their digests are committed: `test/fixtures/ar4-parts.golden.json`
+  (triangle and edge counts, bounds, volume), byte-identical in all three
+  repositories. Regenerate with `npx ts-node --transpileOnly scripts/ar4-parts-golden.ts`.
+- Without the files every AR4 check skips.

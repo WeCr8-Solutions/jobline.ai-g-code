@@ -8,6 +8,11 @@ const { runTests } = require('@vscode/test-electron');
 const root = path.resolve(__dirname, '..');
 const artifactDir = path.join(root, 'test-results', 'visual');
 const debugPort = 9333;
+// Workbench size for every capture. --window-size alone is not honoured by
+// VS Code (it restores its own 1024x768), so the size is also forced through
+// the DevTools protocol once the window is up.
+const windowWidth = Number(process.env.JOBLINE_VISUAL_WIDTH || 1600);
+const windowHeight = Number(process.env.JOBLINE_VISUAL_HEIGHT || 1000);
 // expectedPoints pins each case to its OWN program. The panel is reused across
 // cases, and the probe used to read whatever was still on screen: case 2
 // reported case 1's 195 points and case 3 reported case 2's 17, so only the
@@ -133,34 +138,89 @@ const revpackCases = [
   { pack: 'haas-umc750-5axis-seeded', id: 'umc750-seeded', clean: false, inProcess: true, problems: true },
   { pack: 'haas-vf2-vise', id: 'vf2-vise', clean: true, inProcess: true },
   { pack: 'okuma-lb3000-lathe', id: 'lb3000', clean: true, inProcess: false },
+  { pack: 'trumpf-trulaser3030', id: 'trulaser3030', clean: true, inProcess: false },
 ];
-for (const rp of revpackCases) {
+// Extra views of one mode: Target only (every other layer hidden) and the
+// remaining-material vs gouge colouring of the in-process stock.
+const revpackExtras = [
+  { pack: 'haas-umc750-5axis', id: 'umc750-clean-targetonly', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'setTargetOnly', on: true }], targetOnly: true },
+  { pack: 'haas-umc750-5axis', id: 'umc750-clean-compare', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'setCompareMode', on: true }], compare: true },
+  { pack: 'haas-umc750-5axis-seeded', id: 'umc750-seeded-compare', base: 'umc750-seeded', mode: 'solid', controls: [{ type: 'setCompareMode', on: true }], compare: true },
+  { pack: 'haas-vf2-vise', id: 'vf2-vise-compare', base: 'vf2-vise', mode: 'solid', controls: [{ type: 'setCompareMode', on: true }], compare: true },
+];
+function revpackCase(rp, mode, extra) {
   const packJson = JSON.parse(fs.readFileSync(path.join(root, 'test', 'fixtures', 'revpack-public', rp.pack, 'revpack.json'), 'utf8'));
-  for (const mode of ['solid', 'wireframe']) {
-    visualCases.push({
-      id: `revpack-${rp.id}-${mode}`,
-      fixture: `test/fixtures/revpack-public/${rp.pack}/${packJson.program.file}`,
-      expectedPoints: null,
-      captureAreas: ['visualizer', 'workbench'],
-      controls: [
-        { type: 'setPresetView', view: 'iso' },
-        // The cut solid would sit over the pack's in-process stock; the
-        // screenshots are about the pack's target, stock, fixture and tool.
-        { type: 'setLayerVisible', layer: 'sweptTube', visible: false },
-        { type: 'setSceneRenderMode', mode },
-      ],
-      revpack: {
-        id: packJson.id,
-        name: packJson.name,
-        mode,
-        clean: rp.clean,
-        workholding: packJson.workholding.length,
-        tools: packJson.tools.length,
-        inProcess: rp.inProcess,
-        showProblems: !!rp.problems,
-      },
-      expect: { targetLoaded: true },
-    });
+  return {
+    id: `revpack-${extra ? extra.id : rp.id + '-' + mode}`,
+    fixture: `test/fixtures/revpack-public/${rp.pack}/${packJson.program.file}`,
+    expectedPoints: null,
+    captureAreas: ['visualizer', 'workbench'],
+    controls: [
+      { type: 'setPresetView', view: 'iso' },
+      // The cut solid would sit over the pack's in-process stock; the
+      // screenshots are about the pack's target, stock, fixture and tool.
+      { type: 'setLayerVisible', layer: 'sweptTube', visible: false },
+      { type: 'setSceneRenderMode', mode },
+      ...(extra ? extra.controls : []),
+    ],
+    revpack: {
+      id: packJson.id,
+      name: packJson.name,
+      mode,
+      clean: rp.clean,
+      seeded: packJson.purpose === 'seeded-errors',
+      workholding: packJson.workholding.length,
+      tools: packJson.tools.length,
+      inProcess: rp.inProcess,
+      showProblems: !!rp.problems && !extra,
+      stepTarget: packJson.target?.format === 'step',
+      targetOnly: !!extra?.targetOnly,
+      compare: !!extra?.compare,
+    },
+    expect: { targetLoaded: true },
+  };
+}
+for (const rp of revpackCases) {
+  for (const mode of ['solid', 'wireframe']) visualCases.push(revpackCase(rp, mode));
+}
+for (const extra of revpackExtras) visualCases.push(revpackCase(revpackCases.find(rp => rp.id === extra.base), extra.mode, extra));
+
+// AR4 real parts (local only - the Annin licence forbids redistributing the
+// files; see test/ar4Parts.ts). Each part is imported through the STEP
+// (OpenCascade) path and the STL path, in solid and wireframe, and its bounds
+// are checked against ar4-parts.golden.json.
+const ar4Root = process.env.JOBLINE_AR4_DIR || path.join(root, 'test', 'fixtures', 'external-local', 'ar4');
+const ar4GoldenFile = path.join(root, 'test', 'fixtures', 'ar4-parts.golden.json');
+const AR4_VISUAL_PARTS = [
+  { id: 'sg1-base', stl: 'AR4_SG1_base.STL', step: 'AR4_SG1_base.STEP' },
+  { id: 'sg1-carriage', stl: 'AR4_SG1_carriage.STL', step: 'AR4_SG1_carriage.STEP' },
+  { id: 'sg1-gear', stl: 'AR4_SG1_gear.STL', step: 'AR4_SG1_gear.STEP' },
+  { id: 'sg1-jaw1', stl: 'AR4_SG1_jaw1.STL', step: 'AR4_SG1_jaw1.STEP' },
+  { id: 'sg1-center-bar', stl: 'AR4_SG1_center_bar.STL', step: 'AR4_SG1_center_bar.STEP' },
+];
+if (fs.existsSync(ar4GoldenFile) && AR4_VISUAL_PARTS.every(part => fs.existsSync(path.join(ar4Root, part.stl)))) {
+  const ar4Golden = JSON.parse(fs.readFileSync(ar4GoldenFile, 'utf8'));
+  for (const part of AR4_VISUAL_PARTS) {
+    for (const format of ['step', 'stl']) {
+      for (const mode of ['solid', 'wireframe']) {
+        visualCases.push({
+          id: `ar4-${part.id}-${format}-${mode}`,
+          fixture: 'test/fixtures/scene/visual-import-only.nc',
+          expectedPoints: 1,
+          importOnly: true,
+          targetFile: path.join(ar4Root, part[format]),
+          targetModel: `ar4-${part.id}`,
+          captureAreas: ['visualizer'],
+          controls: [
+            { type: 'setPresetView', view: 'iso' },
+            { type: 'setSceneRenderMode', mode },
+            { type: 'setTargetDisplayMode', mode },
+          ],
+          ar4: { part: part.id, format, mode, golden: ar4Golden[part.id] },
+          expect: { targetLoaded: true, targetDisplayMode: mode },
+        });
+      }
+    }
   }
 }
 
@@ -225,7 +285,10 @@ if (fs.existsSync(revgripsProgram) && fs.existsSync(revgripsTarget)) {
 }
 
 if (process.env.JOBLINE_VISUAL_REVPACK_ONLY) {
-  visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.revpack));
+  visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.revpack || (process.env.JOBLINE_VISUAL_AR4 !== '0' && item.ar4)));
+}
+if (process.env.JOBLINE_VISUAL_AR4_ONLY) {
+  visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.ar4));
 }
 if (process.env.JOBLINE_VISUAL_CASE) {
   const selected = visualCases.filter(item => item.id === process.env.JOBLINE_VISUAL_CASE);
@@ -369,13 +432,58 @@ async function capturePage(webSocketDebuggerUrl, area) {
   });
 }
 
+let sizeSession = null;
+/**
+ * Resize the real window (Browser.setWindowBounds); if the screen cannot fit
+ * it, keep a DevTools session open that emulates the size, so the workbench
+ * lays out at windowWidth x windowHeight for every case.
+ */
+async function forceWindowSize() {
+  const target = await findWorkbenchTarget(120000);
+  const version = await (await fetch(`http://127.0.0.1:${debugPort}/json/version`)).json();
+  const browserCall = (method, params) => new Promise((resolve, reject) => {
+    const socket = new WebSocket(version.webSocketDebuggerUrl);
+    socket.addEventListener('open', () => socket.send(JSON.stringify({ id: 1, method, params })));
+    socket.addEventListener('message', event => { const m = JSON.parse(String(event.data)); if (m.id === 1) { socket.close(); m.error ? reject(new Error(m.error.message)) : resolve(m.result); } });
+    socket.addEventListener('error', () => reject(new Error('browser socket failed')));
+  });
+  try {
+    const { windowId } = await browserCall('Browser.getWindowForTarget', { targetId: target.id });
+    await browserCall('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal' } });
+    await browserCall('Browser.setWindowBounds', { windowId, bounds: { left: 0, top: 0, width: windowWidth, height: windowHeight } });
+  } catch (error) {
+    console.warn('Browser.setWindowBounds failed:', error.message);
+  }
+  await delay(800);
+  sizeSession = new WebSocket(target.webSocketDebuggerUrl);
+  await new Promise((resolve, reject) => { sizeSession.addEventListener('open', resolve); sizeSession.addEventListener('error', reject); });
+  let id = 1;
+  const call = (method, params = {}) => new Promise(resolve => {
+    const myId = id++;
+    const onMessage = event => { const m = JSON.parse(String(event.data)); if (m.id === myId) { sizeSession.removeEventListener('message', onMessage); resolve(m.result || m.error); } };
+    sizeSession.addEventListener('message', onMessage);
+    sizeSession.send(JSON.stringify({ id: myId, method, params }));
+  });
+  const inner = await call('Runtime.evaluate', { returnByValue: true, expression: '[window.innerWidth, window.innerHeight]' });
+  const [w, h] = inner?.result?.value || [0, 0];
+  if (w < windowWidth || h < windowHeight) {
+    await call('Emulation.setDeviceMetricsOverride', { width: windowWidth, height: windowHeight, deviceScaleFactor: 1, mobile: false });
+    console.log(`Workbench was ${w}x${h}; emulating ${windowWidth}x${windowHeight} for the captures.`);
+  } else {
+    sizeSession.close();
+    sizeSession = null;
+    console.log(`Workbench is ${w}x${h}.`);
+  }
+}
+
 async function captureWhenReady() {
   const results = [];
+  await forceWindowSize().catch(error => console.warn('Could not force the window size:', error.message));
   for (const visualCase of visualCases) {
     const readyFile = path.join(artifactDir, `${visualCase.id}.ready`);
     const capturedFile = path.join(artifactDir, `${visualCase.id}.captured`);
     const errorFile = path.join(artifactDir, `${visualCase.id}.error`);
-    const deadline = Date.now() + 90000;
+    const deadline = Date.now() + 150000;
     while (!fs.existsSync(readyFile) && !fs.existsSync(errorFile) && Date.now() < deadline) await delay(100);
     if (fs.existsSync(errorFile)) {
       const reason = fs.readFileSync(errorFile, 'utf8');
@@ -401,6 +509,7 @@ async function captureWhenReady() {
     results.push({ ...visualCase, screenshots });
     fs.writeFileSync(capturedFile, 'ok');
   }
+  if (sizeSession) sizeSession.close();
   fs.writeFileSync(path.join(artifactDir, 'visual-matrix.json'), JSON.stringify({
     capturedAt: new Date().toISOString(),
     cases: results,
@@ -431,7 +540,7 @@ async function main() {
     version: process.env.JOBLINE_VSCODE_TEST_VERSION || '1.96.4',
     extensionDevelopmentPath: process.env.JOBLINE_EXTENSION_UNDER_TEST || root,
     extensionTestsPath: path.join(root, 'test', 'visual', 'runTest.js'),
-    launchArgs: [root, '--new-window', '--disable-updates', '--skip-welcome', '--skip-release-notes', '--window-size=1600,1000', '--use-gl=swiftshader', '--enable-unsafe-swiftshader', `--user-data-dir=${userDataDir}`, `--remote-debugging-port=${debugPort}`],
+    launchArgs: [root, '--new-window', '--disable-updates', '--skip-welcome', '--skip-release-notes', `--window-size=${windowWidth},${windowHeight}`, '--use-gl=swiftshader', '--enable-unsafe-swiftshader', `--user-data-dir=${userDataDir}`, `--remote-debugging-port=${debugPort}`],
     extensionTestsEnv: {
       JOBLINE_VISUAL_ARTIFACT_DIR: artifactDir,
       JOBLINE_VISUAL_CASES: JSON.stringify(visualCases),

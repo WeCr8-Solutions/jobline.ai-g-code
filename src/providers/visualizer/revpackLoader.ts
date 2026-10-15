@@ -17,11 +17,12 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { validateRevPack, type RevPack } from './revpack';
+import { targetStlFile, validateRevPack, type RevPack } from './revpack';
 import { correlateProgramWithRevPack, type CorrelationReport } from './revpackCorrelation';
 import { buildRevPackSimulationMessages, type SimulationSetupMessage } from './simulationSetup';
 import { buildRevPackGeometry, loadStl, type GeoMesh, type RevPackGeometry } from './revpackGeometry';
 import type { VisualizerHarnessData } from './fixtureHarness';
+import { tessellateSTEP } from './stepTessellator';
 
 export interface LoadedRevPack {
   pack: RevPack;
@@ -103,32 +104,85 @@ export interface RevPackTargetMessage {
   bounds: { minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number };
   offset: { x: number; y: number; z: number };
   source: 'revpack';
+  /** How the triangles were produced: the shared kernel's STL reader or OpenCascade (STEP). */
+  loader: 'stl' | 'step-occt';
+  /** STEP only: its tessellation's bounds against the pack's STL of the same solid. */
+  stlCrossCheck?: { maxBoundsDelta: number; ok: boolean; stlTriangles: number; stepTriangles: number };
 }
 
-/** The pack's target STL as the visualizer's targetModel message. */
+type MsgBounds = RevPackTargetMessage['bounds'];
+const toMsgBounds = (b: { min: number[]; max: number[] }): MsgBounds =>
+  ({ minX: b.min[0], minY: b.min[1], minZ: b.min[2], maxX: b.max[0], maxY: b.max[1], maxZ: b.max[2] });
+
+/**
+ * The pack's target as the visualizer's targetModel message, from its STL
+ * (the target itself, or the STL beside a STEP target). Drawn as an opaque
+ * solid: the stock goes translucent over it.
+ */
 export function revPackTargetMessage(loaded: LoadedRevPack): RevPackTargetMessage | undefined {
-  const target = loaded.pack.target;
-  if (!target?.file || target.format !== 'stl') return undefined;
-  const file = path.resolve(loaded.dir, target.file);
+  const stl = targetStlFile(loaded.pack);
+  if (!stl) return undefined;
+  const file = path.resolve(loaded.dir, stl);
   if (!fs.existsSync(file)) return undefined;
   // The shared kernel's STL reader - the same triangles CAM and the hub draw.
   const mesh = loadStl(fs.readFileSync(file));
-  const b = mesh.bounds;
   return {
     type: 'targetModel',
     id: 'revpack-target',
     targetId: 'target-part',
     role: 'target-part',
-    displayMode: 'transparent',
-    opacity: 0.45,
+    displayMode: 'solid',
+    opacity: 1,
     name: `${path.basename(file)} (RevPack target)`,
     format: `STL ${mesh.format}`,
     pointCount: mesh.triangleCount * 3,
     meshVertices: Array.from(mesh.positions),
-    bounds: { minX: b.min[0], minY: b.min[1], minZ: b.min[2], maxX: b.max[0], maxY: b.max[1], maxZ: b.max[2] },
+    bounds: toMsgBounds(mesh.bounds),
     offset: { x: 0, y: 0, z: 0 },
     source: 'revpack',
+    loader: 'stl',
   };
+}
+
+/** Largest difference between two bounds, in model units. */
+export function boundsDelta(a: MsgBounds, b: MsgBounds): number {
+  return Math.max(...(['minX', 'minY', 'minZ', 'maxX', 'maxY', 'maxZ'] as const).map(k => Math.abs(a[k] - b[k])));
+}
+
+/**
+ * A STEP target read through OpenCascade (occt-import-js), in the pack's
+ * units, cross-checked against the pack's STL of the same solid. Undefined
+ * when the pack's target is not STEP or the file is missing.
+ */
+export async function revPackStepTargetMessage(loaded: LoadedRevPack): Promise<RevPackTargetMessage | undefined> {
+  const target = loaded.pack.target;
+  if (!target || target.format !== 'step') return undefined;
+  const file = path.resolve(loaded.dir, target.file);
+  if (!fs.existsSync(file)) return undefined;
+  const step = await tessellateSTEP(new Uint8Array(fs.readFileSync(file)), { linearUnit: loaded.pack.units === 'in' ? 'inch' : 'millimeter' });
+  const message: RevPackTargetMessage = {
+    type: 'targetModel',
+    id: 'revpack-target',
+    targetId: 'target-part',
+    role: 'target-part',
+    displayMode: 'solid',
+    opacity: 1,
+    name: `${path.basename(file)} (RevPack target)`,
+    format: 'STEP (OpenCascade)',
+    pointCount: step.triangleCount * 3,
+    meshVertices: step.meshVertices,
+    bounds: step.bounds,
+    offset: { x: 0, y: 0, z: 0 },
+    source: 'revpack',
+    loader: 'step-occt',
+  };
+  const stl = revPackTargetMessage(loaded);
+  if (stl && target.stl) {
+    const delta = boundsDelta(stl.bounds, step.bounds);
+    const size = Math.max(stl.bounds.maxX - stl.bounds.minX, stl.bounds.maxY - stl.bounds.minY, stl.bounds.maxZ - stl.bounds.minZ);
+    message.stlCrossCheck = { maxBoundsDelta: delta, ok: delta <= size * 0.002, stlTriangles: stl.pointCount / 3, stepTriangles: step.triangleCount };
+  }
+  return message;
 }
 
 export interface RevPackFindingsMessage {
@@ -161,7 +215,12 @@ export interface RevPackSceneMessage {
   units: 'in' | 'mm';
   machineClass: string;
   stock: WireMesh;
-  inProcess?: WireMesh & { removedVolume: number; stockVolume: number; skippedTilted: number };
+  inProcess?: WireMesh & {
+    removedVolume: number; stockVolume: number; skippedTilted: number;
+    /** Comparison class per in-process triangle (0 on size, 1 remaining, 2 gouge). */
+    triClass?: number[];
+    comparison?: { onSize: number; remaining: number; gouge: number; maxRemaining: number; maxGouge: number; tolerance: number };
+  };
   workholding: Array<{ name: string } & WireMesh>;
   tools: Array<{ t: number; kind: string; gaugeLength: number; stickOut: number; cutter: WireMesh; holder?: WireMesh }>;
 }
@@ -178,6 +237,15 @@ export function revPackSceneMessage(geometry: RevPackGeometry): RevPackSceneMess
       removedVolume: geometry.inProcess.zmap.removedVolume,
       stockVolume: geometry.inProcess.zmap.stockVolume,
       skippedTilted: geometry.inProcess.zmap.skippedTilted,
+      triClass: geometry.inProcess.mesh.triClass ? Array.from(geometry.inProcess.mesh.triClass) : undefined,
+      comparison: geometry.inProcess.comparison ? {
+        onSize: geometry.inProcess.comparison.onSize,
+        remaining: geometry.inProcess.comparison.remaining,
+        gouge: geometry.inProcess.comparison.gouge,
+        maxRemaining: geometry.inProcess.comparison.maxRemaining,
+        maxGouge: geometry.inProcess.comparison.maxGouge,
+        tolerance: geometry.inProcess.comparison.tolerance,
+      } : undefined,
     } : undefined,
     workholding: geometry.workholding.map(item => ({ name: item.name, ...wire(item.mesh) })),
     tools: geometry.tools.map(tool => ({
@@ -205,7 +273,8 @@ export function buildRevPackScene(loaded: LoadedRevPack, gcode: string, harnessT
     if (message.type === 'revpackInfo') message.source = loaded.file;
   }
   const report = correlateProgramWithRevPack(gcode, loaded.pack);
-  const targetFile = loaded.pack.target?.format === 'stl' ? path.resolve(loaded.dir, loaded.pack.target.file) : undefined;
+  const stl = targetStlFile(loaded.pack);
+  const targetFile = stl ? path.resolve(loaded.dir, stl) : undefined;
   const geometry = buildRevPackGeometry(loaded.pack, {
     targetStl: targetFile && fs.existsSync(targetFile) ? fs.readFileSync(targetFile) : undefined,
     segments: report.segments,

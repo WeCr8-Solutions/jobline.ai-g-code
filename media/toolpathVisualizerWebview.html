@@ -187,6 +187,11 @@
     #revpack-meta { padding: 0 10px 6px; color: #aeb8c8; }
     #revpack-findings .review-item { padding: 6px 10px; }
     #render-mode-row .play-btn.active { background: #3b2a66; border-color: #b084ff; color: #fff; }
+    #render-mode-row .play-btn.toggle.active { background: #5a3d00; border-color: #ffb000; color: #fff; }
+    #render-mode-row .play-btn:disabled { opacity: 0.4; cursor: default; }
+    #compare-legend { display: none; font-size: 11px; color: #c9d1d9; padding: 2px 0 4px; }
+    #compare-legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 3px 0 8px; vertical-align: -1px; }
+    #revpack-seeded { display: none; margin: 0 10px 6px; padding: 5px 8px; border-radius: 4px; background: #4a2a00; border: 1px solid #ffb000; color: #ffd27a; font-weight: 700; }
 
     /* JobLine polish pass: small, low-risk visual overrides. */
     #hud, #playback-panel, #review-panel, #view-panel, #target-panel, #view-cube {
@@ -250,6 +255,7 @@
 
   <details id="revpack-panel" open aria-label="RevPack setup and correlation findings">
     <summary><span id="revpack-badge">RevPack: none</span><span id="revpack-status"></span></summary>
+    <div id="revpack-seeded" role="note"></div>
     <div id="revpack-meta"></div>
     <div id="revpack-findings"></div>
   </details>
@@ -265,7 +271,10 @@
     <div class="play-row" id="render-mode-row" aria-label="Layer render mode">
       <button class="play-btn active" data-render-mode="solid" title="Stock, workholding, target and tool as shaded solids">Solid</button>
       <button class="play-btn" data-render-mode="wireframe" title="Stock, workholding, target and tool as wireframes">Wireframe</button>
+      <button class="play-btn toggle" id="btn-target-only" title="Show only the finished part (the RevPack target)">Target only</button>
+      <button class="play-btn toggle" id="btn-compare" title="Colour the in-process stock against the target: remaining material vs gouge">Compare</button>
     </div>
+    <div id="compare-legend" aria-live="polite"></div>
     <div class="title">Simulation speed <span id="speed-readout">1x</span></div>
     <div class="play-row">
       <button class="play-btn primary" id="play">Play / Resume</button>
@@ -544,6 +553,16 @@
     // RevPack state. packShapes replaces the single derived jaw pair whenever
     // a pack says what actually holds the part.
     let revpackInfo = null;
+    // Target-only view and target-vs-stock comparison colouring (RevPack).
+    let targetOnly = false;
+    let compareMode = false;
+    const TARGET_ONLY_HIDES = ['stock', 'workholding', 'tool', 'toolHolder', 'path', 'sweptTube', 'origin', 'fusionReference'];
+    // The finished part draws as an opaque gold solid; the stock over it is
+    // kept this translucent so the part reads through it.
+    const STOCK_OVER_TARGET = 0.18;
+    const REVPACK_TARGET_COLOR = 0xffb000;
+    const COMPARE_COLORS = { 0: [0.42, 0.50, 0.60], 1: [0.21, 0.84, 1.0], 2: [1.0, 0.23, 0.23] };
+    function packTargetLoaded() { return targetModels.some(item => item.source === 'revpack'); }
     let packShapes = [];
     let revpackFindings = null;
     // Solids from the shared RevPack geometry kernel (revpackGeometry.ts, the
@@ -583,7 +602,7 @@
       }
       layerMeshes[key] = obj;
       if (obj) {
-        obj.visible = layerVis[key] !== false;
+        obj.visible = layerVis[key] !== false && !(targetOnly && TARGET_ONLY_HIDES.includes(key));
         scene.add(obj);
         // A rebuilt mesh arrives at its constructor opacity, so without this the
         // View sliders would stop describing the scene the moment anything
@@ -811,7 +830,7 @@
     let isTurning = false;
 
     /** Shared-kernel arrays (part coords, G-code axes) -> lit mesh + edge lines. */
-    function sharedMeshGroup(wireMesh, color, opacity, name) {
+    function sharedMeshGroup(wireMesh, color, opacity, name, triClass) {
       const group = new THREE.Group();
       group.name = name || 'RevPack solid';
       if (!wireMesh) return group;
@@ -824,8 +843,18 @@
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       geo.computeVertexNormals();
       const col = new THREE.Color(color);
+      const colored = Array.isArray(triClass) && triClass.length * 9 === src.length;
+      if (colored) {
+        // Remaining-vs-gouge colouring: one class per kernel triangle.
+        const colors = new Float32Array(src.length);
+        for (let t = 0; t < triClass.length; t++) {
+          const c = COMPARE_COLORS[triClass[t]] || COMPARE_COLORS[0];
+          for (let v = 0; v < 3; v++) colors.set(c, t * 9 + v * 3);
+        }
+        geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      }
       const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
-        color: col, opacity, transparent: opacity < 0.999, side: THREE.DoubleSide, shininess: 30,
+        color: colored ? 0xffffff : col, vertexColors: colored, opacity, transparent: opacity < 0.999, side: THREE.DoubleSide, shininess: 30,
       }));
       mesh.name = (name || 'solid') + ' body';
       group.add(mesh);
@@ -850,7 +879,9 @@
         // RevPack: the in-process stock (Z-map after the program's 3-axis
         // cuts) when the kernel produced one, with the raw blank's outline;
         // otherwise the raw blank solid. Part coordinates - no stock transform.
-        const solid = sharedMeshGroup(packScene.inProcess || packScene.stock, color, 0.55, packScene.inProcess ? 'In-process stock' : 'Stock');
+        const comparing = compareMode && packScene.inProcess && Array.isArray(packScene.inProcess.triClass);
+        const solid = sharedMeshGroup(packScene.inProcess || packScene.stock, color, 0.55, packScene.inProcess ? 'In-process stock' : 'Stock',
+          comparing ? packScene.inProcess.triClass : undefined);
         if (packScene.inProcess) {
           const outline = sharedMeshGroup({ positions: [], edges: packScene.stock.edges }, color, 0.55, 'Raw stock outline');
           solid.add(...outline.children);
@@ -916,7 +947,9 @@
 
     /** Every RevPack workholding solid, from the shared kernel (part coords). */
     function buildPackWorkholding() {
-      const col = new THREE.Color(workCfg.color || '#c0704f');
+      // Steel grey for a RevPack's fixture, so the gold target is the only
+      // warm-coloured solid on screen.
+      const col = new THREE.Color(packScene ? '#8d97a8' : (workCfg.color || '#c0704f'));
       const group = new THREE.Group();
       group.name = 'RevPack workholding';
       if (packScene && Array.isArray(packScene.workholding) && packScene.workholding.length) {
@@ -1388,8 +1421,35 @@
       const isHidden = itemDisplayMode === 'hidden';
       const isWireframe = itemDisplayMode === 'wireframe';
       const isSolid = itemDisplayMode === 'solid';
-      const color = targetColor(item.role);
-      if (Array.isArray(item.meshVertices) && item.meshVertices.length >= 9) {
+      const isPackTarget = item.source === 'revpack';
+      const color = isPackTarget ? REVPACK_TARGET_COLOR : (Number.isFinite(Number(item.color)) ? Number(item.color) : targetColor(item.role));
+      if (Array.isArray(item.meshVertices) && item.meshVertices.length >= 9 && isPackTarget) {
+        // RevPack finished part: an opaque gold solid with its feature edges,
+        // or feature edges alone in Wireframe (named "... body" so the Layers
+        // toggle treats it like the shared-kernel solids).
+        const pos = [];
+        for (let i = 0; i + 2 < item.meshVertices.length; i += 3) {
+          const p = gc3(Number(item.meshVertices[i]) + itemOffset.x, Number(item.meshVertices[i + 1]) + itemOffset.y, Number(item.meshVertices[i + 2]) + itemOffset.z);
+          pos.push(p.x, p.y, p.z);
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        geo.computeVertexNormals();
+        const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+          color, emissive: 0x2a1800, specular: 0xfff1c0, shininess: 60, side: THREE.DoubleSide,
+          transparent: false, opacity: 1, depthWrite: true,
+        }));
+        mesh.name = 'target body';
+        mesh.renderOrder = 1;
+        mesh.visible = !isHidden && !isWireframe;
+        const edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(geo, 20),
+          new THREE.LineBasicMaterial({ color: isWireframe ? 0xffc640 : 0x4a2c00, transparent: !isWireframe, opacity: isWireframe ? 1 : 0.6 })
+        );
+        edges.name = 'target edges';
+        edges.visible = !isHidden;
+        group.add(mesh, edges);
+      } else if (Array.isArray(item.meshVertices) && item.meshVertices.length >= 9) {
         const pos = [];
         for (let i = 0; i + 2 < item.meshVertices.length; i += 3) {
           const p = gc3(
@@ -1800,6 +1860,16 @@
             revpackFindingsRendered: document.querySelectorAll('#revpack-findings .review-item').length,
             revpackFindingsSummary: revpackFindings?.summary || null,
             workholdingShapes: packShapes.length,
+            targetOnly,
+            compareMode,
+            comparison: comparisonSummary(),
+            activeTargetFormat: getActiveTarget()?.format || '',
+            activeTargetPointCount: Number(getActiveTarget()?.pointCount) || 0,
+            activeTargetSource: getActiveTarget()?.source || '',
+            activeTargetLoader: getActiveTarget()?.loader || '',
+            targetStlCrossCheck: getActiveTarget()?.stlCrossCheck || null,
+            targetHuePixels: countTargetHuePixels(beforeOverlay, renderer.domElement.width, renderer.domElement.height),
+            seededBanner: document.getElementById('revpack-seeded')?.style.display === 'block' ? (document.getElementById('revpack-seeded')?.textContent || '') : '',
             sharedKernel: packScene ? { packId: packScene.packId, workholding: (packScene.workholding || []).length, tools: (packScene.tools || []).length, inProcess: !!packScene.inProcess, removedVolume: packScene.inProcess?.removedVolume ?? null } : null,
             layers: layerReport(false),
           });
@@ -1832,11 +1902,21 @@
         root.traverse?.((node) => {
           const mats = Array.isArray(node.material) ? node.material : (node.material ? [node.material] : []);
           for (const m of mats) {
-            const forceSolid = layer === 'targetModel' && getActiveTarget()?.displayMode === 'solid';
+            const forceSolid = layer === 'targetModel' && (getActiveTarget()?.displayMode === 'solid' || packTargetLoaded());
             const forceWire = layer === 'targetModel' && getActiveTarget()?.displayMode === 'wireframe';
-            m.opacity = forceSolid ? 1 : value;
-            m.transparent = !forceSolid && value < 0.999;
-            m.depthWrite = forceSolid || value >= 0.999;
+            // The stock over a RevPack's finished part stays see-through so
+            // the part reads through it (Compare draws the stock coloured).
+            let eff = value;
+            if (name === 'stock' && packTargetLoaded() && !compareMode) {
+              eff = (node.isLine || node.isLineSegments) ? Math.min(value, 0.6) : Math.min(value, STOCK_OVER_TARGET);
+            }
+            if (forceSolid && (node.isLine || node.isLineSegments) && packTargetLoaded()) {
+              m.needsUpdate = true;
+              continue; // target edge lines keep their own look
+            }
+            m.opacity = forceSolid ? 1 : eff;
+            m.transparent = !forceSolid && eff < 0.999;
+            m.depthWrite = forceSolid || eff >= 0.999;
             // Wireframe follows the Layers toggle for every solid layer, and the
             // target's own display mode on top of it. Line work has no
             // wireframe flag and is left alone.
@@ -2059,6 +2139,59 @@
       });
     }
 
+    /** Only the finished part: every other layer hidden (their checkboxes keep their state). */
+    function setTargetOnly(on) {
+      targetOnly = !!on;
+      document.getElementById('btn-target-only')?.classList.toggle('active', targetOnly);
+      for (const key of TARGET_ONLY_HIDES) {
+        if (layerMeshes[key]) layerMeshes[key].visible = layerVis[key] !== false && !targetOnly;
+      }
+      if (layerMeshes.targetModel && targetOnly) layerMeshes.targetModel.visible = true;
+    }
+
+    function comparisonSummary() {
+      return packScene && packScene.inProcess && packScene.inProcess.comparison ? packScene.inProcess.comparison : null;
+    }
+
+    function renderCompareLegend() {
+      const legend = document.getElementById('compare-legend');
+      const btn = document.getElementById('btn-compare');
+      const cmp = comparisonSummary();
+      if (btn) { btn.disabled = !cmp; btn.classList.toggle('active', compareMode && !!cmp); }
+      if (!legend) return;
+      if (!compareMode || !cmp) { legend.style.display = 'none'; legend.textContent = ''; return; }
+      const u = packScene.units === 'mm' ? 'mm' : 'in';
+      const sw = (c) => `<span class="sw" style="background: rgb(${c.map(v => Math.round(v * 255)).join(',')})"></span>`;
+      legend.innerHTML = `${sw(COMPARE_COLORS[0])}on size ${cmp.onSize}` +
+        `${sw(COMPARE_COLORS[1])}remaining ${cmp.remaining}${cmp.remaining ? ` (max ${cmp.maxRemaining.toFixed(u === 'mm' ? 2 : 4)} ${u})` : ''}` +
+        `${sw(COMPARE_COLORS[2])}gouge ${cmp.gouge}${cmp.gouge ? ` (max ${cmp.maxGouge.toFixed(u === 'mm' ? 2 : 4)} ${u})` : ''}` +
+        ` · cells, tol ${cmp.tolerance} ${u}, seen from +Z`;
+      legend.style.display = 'block';
+    }
+
+    function setCompareMode(on) {
+      compareMode = !!on && !!comparisonSummary();
+      buildStock();
+      renderCompareLegend();
+      reapplyViewOpacity();
+    }
+    document.getElementById('btn-target-only')?.addEventListener('click', () => setTargetOnly(!targetOnly));
+    document.getElementById('btn-compare')?.addEventListener('click', () => setCompareMode(!compareMode));
+
+    /** Pixels of the composite frame in the gold target hue: proof the part shows through the stock. */
+    function countTargetHuePixels(buf, w, h) {
+      if (!buf) return 0;
+      let n = 0;
+      for (let i = 0; i < w * h * 4; i += 4) {
+        const r = buf[i] / 255, g = buf[i + 1] / 255, b = buf[i + 2] / 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        if (max < 0.42 || max - min < 0.3 || max !== r) continue;
+        const hue = 60 * ((g - b) / (max - min));
+        if ((max - min) / max > 0.55 && hue >= 30 && hue <= 56) n++;
+      }
+      return n;
+    }
+
     /**
      * What each layer holds and whether it draws, for the visual test bed:
      * meshes vs line work, how many meshes are wireframe, and how many pixels
@@ -2107,6 +2240,12 @@
       panel.style.display = active ? 'block' : 'none';
       if (!active) return;
       document.getElementById('revpack-badge').textContent = `RevPack: ${revpackInfo.name || revpackInfo.id}`;
+      const seeded = revpackInfo.purpose === 'seeded-errors';
+      const seededEl = document.getElementById('revpack-seeded');
+      if (seededEl) {
+        seededEl.textContent = seeded ? (revpackInfo.seededLabel || 'Seeded test pack: errors are intentional') : '';
+        seededEl.style.display = seeded ? 'block' : 'none';
+      }
       document.getElementById('revpack-badge').title = revpackInfo.source || revpackInfo.id;
       const offsets = Object.entries(revpackInfo.workOffsets || {})
         .map(([code, o]) => `${code} X${o.x} Y${o.y ?? 0} Z${o.z}`).join(' · ');
@@ -2121,7 +2260,10 @@
       list.replaceChildren();
       const findings = Array.isArray(revpackFindings?.findings) ? revpackFindings.findings : [];
       const sum = revpackFindings?.summary || { errors: 0, warnings: 0, infos: 0, pass: true };
-      status.textContent = revpackFindings ? (sum.errors ? `${sum.errors} errors, ${sum.warnings} warnings` : `pass · ${sum.warnings} warnings`) : '';
+      const intentional = revpackInfo.purpose === 'seeded-errors';
+      status.textContent = revpackFindings
+        ? (sum.errors ? `${sum.errors} ${intentional ? 'seeded (intentional) errors' : 'errors'}, ${sum.warnings} warnings` : `pass · ${sum.warnings} warnings`)
+        : '';
       status.className = sum.errors ? 'fail' : 'pass';
       for (const finding of findings) {
         const item = document.createElement('div');
@@ -2405,6 +2547,9 @@
           stockIsDeclared = false;
           fusionSetup = null;
           revpackInfo = null; packShapes = []; revpackFindings = null; packScene = null;
+          compareMode = false;
+          setTargetOnly(false);
+          renderCompareLegend();
           renderRevPack();
           for (const layer of ['targetModel', 'stock', 'workholding', 'tool', 'fusionReference']) {
             setLayer(layer, null);
@@ -2437,6 +2582,8 @@
         case 'revpackScene': {
           const newPack = !!msg.packId && msg.packId !== (packScene && packScene.packId);
           packScene = msg.packId ? msg : null;
+          if (newPack || !packScene) compareMode = false;
+          renderCompareLegend();
           buildStock();
           buildWorkholding();
           buildToolLayer(currentToolData);
@@ -2469,6 +2616,14 @@
         case 'sceneRenderMode':
         case 'setSceneRenderMode':
           setSceneRenderMode(msg.mode);
+          break;
+
+        case 'setTargetOnly':
+          setTargetOnly(msg.on);
+          break;
+
+        case 'setCompareMode':
+          setCompareMode(msg.on);
           break;
 
         case 'removeTargetModel': {

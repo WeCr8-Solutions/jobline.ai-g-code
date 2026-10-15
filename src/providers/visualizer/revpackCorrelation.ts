@@ -58,6 +58,8 @@ export interface CorrelationSegment {
   line: number;
   /** True when the tool axis was tilted off part +Z on this move. */
   tilted: boolean;
+  /** Tool axis (tip toward holder) in PART coordinates. */
+  axis: Vec3;
 }
 
 export interface CorrelationReport {
@@ -173,11 +175,16 @@ class HeightMap {
     const i1 = Math.min(this.nx - 1, Math.floor((x + radius - this.box.min[0]) / this.step));
     const j0 = Math.max(0, Math.floor((y - radius - this.box.min[1]) / this.step));
     const j1 = Math.min(this.ny - 1, Math.floor((y + radius - this.box.min[1]) / this.step));
+    // The cell the point itself is in always counts. Without it a zero-radius
+    // (unknown) tool sitting on a cell corner touched no cell at all, so a
+    // rapid straight down through the stock went unreported.
+    const ic = Math.floor((x - this.box.min[0]) / this.step);
+    const jc = Math.floor((y - this.box.min[1]) / this.step);
     for (let i = i0; i <= i1; i++) {
       for (let j = j0; j <= j1; j++) {
         const cx = this.box.min[0] + (i + 0.5) * this.step;
         const cy = this.box.min[1] + (j + 0.5) * this.step;
-        if ((cx - x) ** 2 + (cy - y) ** 2 <= (radius + this.step * 0.5) ** 2) fn(i * this.ny + j);
+        if ((i === ic && j === jc) || (cx - x) ** 2 + (cy - y) ** 2 <= (radius + this.step * 0.5) ** 2) fn(i * this.ny + j);
       }
     }
   }
@@ -453,8 +460,14 @@ export function correlateProgramWithRevPack(gcode: string, pack: RevPack): Corre
     // Backing straight out along the tool axis retraces the way the tool went
     // in (a drill cycle's retract), so it never meets uncut stock.
     const retract = length > 0 && ((to[0] - from[0]) * axisPart[0] + (to[1] - from[1]) * axisPart[1] + (to[2] - from[2]) * axisPart[2]) / length > 0.999;
+    // One finding per hazard per move. After a rapid hits the stock, the
+    // rest of that move is cut out of the material model: the crash already
+    // happened, so the retract out of it must not be reported a second time.
+    let stockHit = false;
     for (let k = 0; k <= steps; k++) {
       const p = add(from, scale(sub(to, from), k / steps));
+      if (stockHit && heightMap && vertical) heightMap.cut(p[0], p[1], p[2], radius);
+      if (stockHit && profile) profile.cut(Math.abs(p[0]), p[2]);
       // Workholding: tip and body, every move.
       for (const holder of pack.workholding) {
         check('collision');
@@ -468,6 +481,7 @@ export function correlateProgramWithRevPack(gcode: string, pack: RevPack): Corre
           return;
         }
       }
+      if (stockHit) continue;
       // Stock: rapids only, against what is left.
       if (heightMap && stockBox) {
         if (rapid) {
@@ -477,7 +491,9 @@ export function correlateProgramWithRevPack(gcode: string, pack: RevPack): Corre
             if (highest > -Infinity && p[2] < highest - 0.002 * unitScale) {
               report('collision', 'error', 'rapid-into-stock', line,
                 `Rapid takes T${loaded ?? '?'} to Z${p[2].toFixed(4)} where uncut stock stands at Z${highest.toFixed(4)}.`, false);
-              return;
+              stockHit = true;
+              heightMap.cut(p[0], p[1], p[2], radius);
+              continue;
             }
           } else if (!retract && insideBox(p, stockBox, radius * 0.5)) {
             report('collision', 'warning', 'rapid-near-stock-tilted', line,
@@ -496,7 +512,9 @@ export function correlateProgramWithRevPack(gcode: string, pack: RevPack): Corre
           if (remaining > 0 && r < remaining - 0.002 * unitScale && r >= (stockCyl.innerDiameter ?? 0) / 2) {
             report('collision', 'error', 'rapid-into-stock', line,
               `Rapid takes T${loaded ?? '?'} to X${(r * 2).toFixed(4)} Z${p[2].toFixed(4)}, inside uncut stock (dia ${(remaining * 2).toFixed(4)}).`, false);
-            return;
+            stockHit = true;
+            profile.cut(r, p[2]);
+            continue;
           }
         } else {
           profile.cut(r, p[2]);
@@ -538,7 +556,7 @@ export function correlateProgramWithRevPack(gcode: string, pack: RevPack): Corre
     checkTravel(line, gaugeMachine);
     const from = lastTip ?? tipPart;
     collide(line, from, tipPart, axisPart, rapid);
-    segments.push({ from, to: tipPart, rapid, tool: loaded, line, tilted: !turning && axisPart[2] < 0.9999 });
+    segments.push({ from, to: tipPart, rapid, tool: loaded, line, tilted: !turning && axisPart[2] < 0.9999, axis: axisPart });
     lastTip = tipPart;
     gauge = gaugeMachine;
     gaugeKnown = true;

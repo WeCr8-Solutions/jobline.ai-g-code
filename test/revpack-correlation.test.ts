@@ -91,11 +91,11 @@ describe('Haas UMC-750 5-axis correlation', () => {
 });
 
 describe('Okuma Spaceturn LB3000 EX II (OSP) correlation', () => {
-  it('turns the shaft clean with OSP T-words (offset, tool, nose-R)', () => {
+  it('turns and grooves the shaft clean with OSP T-words (offset, tool, nose-R)', () => {
     const { pack, gcode } = load('okuma-lb3000-lathe');
     const report = correlateProgramWithRevPack(gcode, pack);
     assert.equal(report.summary.errors, 0, report.findings.map(f => f.id).join(', '));
-    assert.deepEqual(report.toolsUsed, [1, 3]);
+    assert.deepEqual(report.toolsUsed, [1, 3, 5]);
   });
 
   it('flags a Fanuc-posted program on the OSP machine (the seed-e2e "LB3000 (Fanuc-post)" case)', () => {

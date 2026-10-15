@@ -17,6 +17,7 @@ import * as assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { revPackParitySnapshot } from '../src/providers/visualizer/revpackParity';
+import { targetStlFile } from '../src/providers/visualizer/revpack';
 
 const repo = path.join(__dirname, '..');
 const packs = path.join(__dirname, 'fixtures', 'revpack-public');
@@ -27,7 +28,8 @@ describe('RevPack parity snapshot', () => {
     it(`${dir}: matches the shared golden`, () => {
       const pack = JSON.parse(fs.readFileSync(path.join(packs, dir, 'revpack.json'), 'utf8'));
       const gcode = fs.readFileSync(path.join(packs, dir, pack.program.file), 'utf8');
-      const target = pack.target?.format === 'stl' ? fs.readFileSync(path.join(packs, dir, pack.target.file)) : undefined;
+      const stl = targetStlFile(pack);
+      const target = stl ? fs.readFileSync(path.join(packs, dir, stl)) : undefined;
       assert.deepEqual(JSON.parse(JSON.stringify(revPackParitySnapshot(pack, gcode, target))), golden[dir]);
     });
   }

@@ -25,7 +25,8 @@ import { registerFormatter } from './providers/formatterProvider';
 import { registerSubprogramProvider } from './providers/subprogramProvider';
 import { buildVisualizerHarnessData } from './providers/visualizer/fixtureHarness';
 import { buildAutoSimulationMessages } from './providers/visualizer/simulationSetup';
-import { buildRevPackScene, clearRevPackMessages, findRevPackForProgram, readRevPack, type LoadedRevPack } from './providers/visualizer/revpackLoader';
+import { buildRevPackScene, clearRevPackMessages, findRevPackForProgram, readRevPack, revPackStepTargetMessage, type LoadedRevPack } from './providers/visualizer/revpackLoader';
+import { isSeededTestPack, SEEDED_TEST_PACK_LABEL } from './providers/visualizer/revpack';
 import type { CorrelationFinding } from './providers/visualizer/revpackCorrelation';
 import type { ToolpathPoint } from './providers/visualizer/toolpathParser';
 import { reviewGCodeProgram } from './providers/visualizer/programReview';
@@ -210,14 +211,17 @@ export function activate(context: vscode.ExtensionContext): void {
           return findRevPackForProgram(doc.uri.fsPath, folder);
         }
 
-        function publishRevPackDiagnostics(doc: vscode.TextDocument, findings: CorrelationFinding[], packName: string): void {
+        function publishRevPackDiagnostics(doc: vscode.TextDocument, findings: CorrelationFinding[], packName: string, seeded = false): void {
           const diagnostics = findings.map(finding => {
             const line = Math.max(0, Math.min(doc.lineCount - 1, finding.line - 1));
             const range = doc.lineAt(line).range;
             const severity = finding.severity === 'error' ? vscode.DiagnosticSeverity.Error
               : finding.severity === 'warning' ? vscode.DiagnosticSeverity.Warning
                 : vscode.DiagnosticSeverity.Information;
-            const diagnostic = new vscode.Diagnostic(range, `${finding.message} [RevPack: ${packName}]`, severity);
+            // A seeded test pack's program is wrong on purpose; say so on every
+            // finding so nobody chases them as real problems.
+            const label = seeded ? `${SEEDED_TEST_PACK_LABEL} - RevPack: ${packName}` : `RevPack: ${packName}`;
+            const diagnostic = new vscode.Diagnostic(range, `${finding.message} [${label}]`, severity);
             diagnostic.source = 'JobLine RevPack';
             diagnostic.code = finding.id;
             return diagnostic;
@@ -240,8 +244,18 @@ export function activate(context: vscode.ExtensionContext): void {
             for (const message of scene.setup) ToolpathVisualizerPanel.queueMessage(message);
             if (scene.target) ToolpathVisualizerPanel.queueMessage(scene.target);
             ToolpathVisualizerPanel.queueMessage(scene.findings);
-            publishRevPackDiagnostics(doc, scene.report.findings, loaded.pack.name || loaded.pack.id);
+            publishRevPackDiagnostics(doc, scene.report.findings, loaded.pack.name || loaded.pack.id, isSeededTestPack(loaded.pack));
             activeRevPacks.set(doc.uri.toString(), loaded.file);
+            // A STEP target replaces the STL one once OpenCascade has
+            // tessellated it (same id), unless the program moved on meanwhile.
+            if (loaded.pack.target?.format === 'step') {
+              const key = doc.uri.toString();
+              revPackStepTargetMessage(loaded).then(message => {
+                if (message && activeRevPacks.get(key) === loaded.file) ToolpathVisualizerPanel.queueMessage(message);
+              }, err => {
+                console.warn('JobLine RevPack: STEP target could not be read, keeping its STL:', err);
+              });
+            }
           } else {
             playback.cutterSize = harness.tools[0]?.diameter || (harness.unit === 'mm' ? 6 : 0.25);
             updateMachineStatusBar(harness.setup.machineType);

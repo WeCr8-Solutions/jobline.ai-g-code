@@ -23,6 +23,7 @@
  *   featureEdges       wireframe: boundary + crease edges of any mesh
  *   toolSolids         cutter + holder from a RevPack tool (gauge length)
  *   zmapStock          in-process stock for 3-axis cuts (Z-map removal)
+ *   compareStockToTarget   remaining material vs gouge, per Z-map cell
  *   buildRevPackGeometry   every layer for one pack
  *   geometryDigest     rounded numbers two implementations must agree on
  *
@@ -30,14 +31,15 @@
  * X right, Y away, Z up / spindle axis. Mapping to a renderer's axes is the
  * renderer's job.
  *
- * Not here yet: STEP (needs the OpenCascade WASM kernel, which the extension
- * loads through occt-import-js and the hub bundle does not carry) and exact
- * Parasolid B-rep (only a bounds envelope is read today).
+ * STEP targets are read by the extension through OpenCascade (occt-import-js);
+ * every pack with a STEP target also carries an STL of the same solid
+ * (target.stl), which is what this kernel, CAM and the hub load. Exact
+ * Parasolid B-rep is not read (only a bounds envelope).
  */
 
-import { isCylinder, type RevPack, type RevPackTool, type Vec3 } from './revpack';
+import { isCylinder, targetStlFile, type RevPack, type RevPackTool, type Vec3 } from './revpack';
 
-export const REVPACK_GEOMETRY_VERSION = '1.0';
+export const REVPACK_GEOMETRY_VERSION = '1.1';
 
 export interface GeoBounds { min: Vec3; max: Vec3 }
 
@@ -370,7 +372,12 @@ export interface CutSegmentLike {
   rapid: boolean;
   tool: number | null;
   tilted: boolean;
+  /** Tool axis in part coordinates, when known. */
+  axis?: Vec3;
 }
+
+/** Tilts up to this angle are cut as if vertical (no undercut is possible from above). */
+export const ZMAP_MAX_TILT_DEG = 30;
 
 export interface ZMapStock {
   nx: number;
@@ -387,16 +394,22 @@ export interface ZMapStock {
   /** Feed moves applied / skipped (tilted tool axis, unknown tool, outside stock). */
   applied: number;
   skippedTilted: number;
+  /** Tilted moves within ZMAP_MAX_TILT_DEG, cut with the tool axis taken as vertical. */
+  approxTilted: number;
   skippedNoTool: number;
+  /** Tap moves: a tap cuts the thread form into the tap-drill bore, not a full cylinder. */
+  threadMoves: number;
 }
 
 /**
  * Material removal for 3-axis cuts: a height field over the stock top. Each
  * feed move lowers every cell under the cutter to the tool's bottom at that
  * point (flat for end/face mills, a cone for drills, spot drills and
- * chamfers). Tilted (5-axis) moves are counted, not cut: a Z-map cannot
- * represent undercuts, so they are reported as skipped rather than drawn
- * wrong.
+ * chamfers). A move tilted up to ZMAP_MAX_TILT_DEG (a TCPC chamfer or
+ * swarf pass) is cut with its axis taken as vertical and counted in
+ * approxTilted; steeper ones (3+2 side work) are counted, not cut: a Z-map
+ * cannot represent undercuts, so they are reported as skipped rather than
+ * drawn wrong.
  */
 export function zmapStock(
   stock: { min: Vec3; max: Vec3 },
@@ -414,12 +427,20 @@ export function zmapStock(
   const zBottom = stock.min[2];
   const heights = new Float32Array(nx * ny).fill(zTop);
   const byT = new Map(tools.map(tool => [tool.t, tool]));
-  let applied = 0, skippedTilted = 0, skippedNoTool = 0;
+  let applied = 0, skippedTilted = 0, approxTilted = 0, skippedNoTool = 0, threadMoves = 0;
+  const minAxisZ = Math.cos((ZMAP_MAX_TILT_DEG * Math.PI) / 180);
   for (const seg of segments) {
     if (seg.rapid) continue;
-    if (seg.tilted) { skippedTilted++; continue; }
+    if (seg.tilted) {
+      if (!seg.axis || seg.axis[2] < minAxisZ) { skippedTilted++; continue; }
+      approxTilted++;
+    }
     const tool = seg.tool == null ? undefined : byT.get(seg.tool);
     if (!tool) { skippedNoTool++; continue; }
+    // A tap's diameter is the thread's major diameter; removing a full
+    // cylinder of it would show the whole thread depth as cut (and as a gouge
+    // against a target modelled at the tap-drill size). The bore is the drill's.
+    if (/\btap\b/i.test(tool.type) && !/drill/i.test(tool.type)) { threadMoves++; continue; }
     const kind = toolKind(tool, machineClass);
     const r = tool.diameter / 2;
     const cone = kind === 'drill' ? Math.tan((59 * Math.PI) / 180) : kind === 'chamfer' ? 1 : 0;
@@ -454,17 +475,19 @@ export function zmapStock(
   for (let k = 0; k < heights.length; k++) removed += (zTop - heights[k]) * cell * cell;
   return {
     nx, ny, x0: stock.min[0], y0: stock.min[1], cell, zTop, zBottom, heights,
-    stockVolume: sx * sy * (zTop - zBottom), removedVolume: removed, applied, skippedTilted, skippedNoTool,
+    stockVolume: sx * sy * (zTop - zBottom), removedVolume: removed, applied, skippedTilted, approxTilted, skippedNoTool, threadMoves,
   };
 }
 
 /** Closed solid of the Z-map: cell tops, walls where neighbours differ, sides, bottom. */
-export function zmapMesh(z: ZMapStock): GeoMesh {
+export function zmapMesh(z: ZMapStock, cellClass?: Uint8Array): GeoMesh & { triClass?: Uint8Array } {
   const t: number[] = [];
+  const cls: number[] = [];
   const { nx, ny, x0, y0, cell, zBottom, heights } = z;
   const h = (i: number, j: number): number => (i < 0 || j < 0 || i >= nx || j >= ny) ? zBottom : heights[j * nx + i];
   for (let j = 0; j < ny; j++) {
     for (let i = 0; i < nx; i++) {
+      const before = t.length;
       const xa = x0 + i * cell, xb = xa + cell, ya = y0 + j * cell, yb = ya + cell;
       const top = h(i, j);
       quad(t, [xa, ya, top], [xb, ya, top], [xb, yb, top], [xa, yb, top]);
@@ -476,9 +499,82 @@ export function zmapMesh(z: ZMapStock): GeoMesh {
       if (hy !== top) quad(t, [xa, yb, Math.min(top, hy)], [xa, yb, Math.max(top, hy)], [xb, yb, Math.max(top, hy)], [xb, yb, Math.min(top, hy)]);
       if (i === 0) quad(t, [xa, ya, zBottom], [xa, ya, top], [xa, yb, top], [xa, yb, zBottom]);
       if (j === 0) quad(t, [xa, ya, zBottom], [xb, ya, zBottom], [xb, ya, top], [xa, ya, top]);
+      if (cellClass) for (let k = before; k < t.length; k += 9) cls.push(cellClass[j * nx + i]);
     }
   }
-  return makeMesh(t);
+  const mesh = makeMesh(t);
+  return cellClass ? { ...mesh, triClass: new Uint8Array(cls) } : mesh;
+}
+
+// ---------------------------------------------------------------------------
+// Target vs in-process stock
+// ---------------------------------------------------------------------------
+
+/** Per-cell class codes of compareStockToTarget. */
+export const CELL_ON_SIZE = 0;
+export const CELL_REMAINING = 1;
+export const CELL_GOUGE = 2;
+
+export interface TargetComparison {
+  /** nx*ny, row-major like the Z-map: CELL_ON_SIZE / CELL_REMAINING / CELL_GOUGE. */
+  cellClass: Uint8Array;
+  /** Highest target surface per cell (zBottom where the target has a hole or is absent). */
+  targetTop: Float32Array;
+  tolerance: number;
+  onSize: number;
+  remaining: number;
+  gouge: number;
+  /** Largest stock-above-target and stock-below-target heights. */
+  maxRemaining: number;
+  maxGouge: number;
+}
+
+/**
+ * Remaining material vs gouge, seen from the spindle (+Z): for every Z-map
+ * cell, the in-process stock height against the highest target surface over
+ * the cell centre. Stock more than `tolerance` above the target is material
+ * still to cut; stock more than `tolerance` below it is a gouge. What a
+ * vertical tool cannot see from above (side holes, undercuts) is not judged.
+ */
+export function compareStockToTarget(z: ZMapStock, target: GeoMesh, tolerance: number): TargetComparison {
+  const { nx, ny, x0, y0, cell, zBottom, heights } = z;
+  const top = new Float32Array(nx * ny).fill(-Infinity);
+  const p = target.positions;
+  for (let o = 0; o + 8 < p.length; o += 9) {
+    const ax = p[o], ay = p[o + 1], az = p[o + 2];
+    const bx = p[o + 3], by = p[o + 4], bz = p[o + 5];
+    const cx = p[o + 6], cy = p[o + 7], cz = p[o + 8];
+    const det = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
+    if (Math.abs(det) < 1e-12) continue; // vertical wall: no top surface
+    const i0 = Math.max(0, Math.floor((Math.min(ax, bx, cx) - x0) / cell - 0.5));
+    const i1 = Math.min(nx - 1, Math.ceil((Math.max(ax, bx, cx) - x0) / cell - 0.5));
+    const j0 = Math.max(0, Math.floor((Math.min(ay, by, cy) - y0) / cell - 0.5));
+    const j1 = Math.min(ny - 1, Math.ceil((Math.max(ay, by, cy) - y0) / cell - 0.5));
+    for (let j = j0; j <= j1; j++) {
+      const py = y0 + (j + 0.5) * cell;
+      for (let i = i0; i <= i1; i++) {
+        const px = x0 + (i + 0.5) * cell;
+        const l1 = ((by - cy) * (px - cx) + (cx - bx) * (py - cy)) / det;
+        const l2 = ((cy - ay) * (px - cx) + (ax - cx) * (py - cy)) / det;
+        const l3 = 1 - l1 - l2;
+        if (l1 < -1e-9 || l2 < -1e-9 || l3 < -1e-9) continue;
+        const pz = l1 * az + l2 * bz + l3 * cz;
+        const k = j * nx + i;
+        if (pz > top[k]) top[k] = pz;
+      }
+    }
+  }
+  const cellClass = new Uint8Array(nx * ny);
+  let onSize = 0, remaining = 0, gouge = 0, maxRemaining = 0, maxGouge = 0;
+  for (let k = 0; k < nx * ny; k++) {
+    const t = top[k] === -Infinity ? zBottom : Math.max(zBottom, top[k]);
+    top[k] = t;
+    const d = heights[k] - t;
+    if (d > tolerance) { cellClass[k] = CELL_REMAINING; remaining++; if (d > maxRemaining) maxRemaining = d; }
+    else if (d < -tolerance) { cellClass[k] = CELL_GOUGE; gouge++; if (-d > maxGouge) maxGouge = -d; }
+    else { cellClass[k] = CELL_ON_SIZE; onSize++; }
+  }
+  return { cellClass, targetTop: top, tolerance, onSize, remaining, gouge, maxRemaining, maxGouge };
 }
 
 // ---------------------------------------------------------------------------
@@ -494,12 +590,17 @@ export interface RevPackGeometry {
   stock: GeoMesh;
   workholding: Array<{ name: string; mesh: GeoMesh }>;
   tools: ToolSolids[];
-  inProcess?: { mesh: GeoMesh; zmap: ZMapStock };
+  inProcess?: { mesh: GeoMesh & { triClass?: Uint8Array }; zmap: ZMapStock; comparison?: TargetComparison };
 }
 
 export interface BuildGeometryOptions {
-  /** Bytes of the pack's target STL, read by the caller (fs, fetch, upload). */
+  /**
+   * Bytes of the pack's target STL (target.file for an STL target, target.stl
+   * beside a STEP/Parasolid one), read by the caller (fs, fetch, upload).
+   */
   targetStl?: ArrayBuffer | Uint8Array;
+  /** Remaining-vs-gouge tolerance, program units (default 0.002 in / 0.05 mm). */
+  compareTolerance?: number;
   /** revpackCorrelation segments, for the in-process stock. */
   segments?: CutSegmentLike[];
   zmapResolution?: number;
@@ -525,10 +626,16 @@ export function buildRevPackGeometry(pack: RevPack, options: BuildGeometryOption
     workholding,
     tools,
   };
-  if (options.targetStl && pack.target?.format === 'stl') geometry.target = loadStl(options.targetStl);
+  if (options.targetStl && targetStlFile(pack)) geometry.target = loadStl(options.targetStl);
   if (options.segments && !isCylinder(pack.stock) && (pack.machine.machineClass === 'mill' || pack.machine.machineClass === 'mill-turn')) {
     const zmap = zmapStock(pack.stock, options.segments, pack.tools, pack.machine.machineClass, options.zmapResolution);
-    geometry.inProcess = { zmap, mesh: zmapMesh(zmap) };
+    if (geometry.target) {
+      const tolerance = options.compareTolerance ?? (pack.units === 'mm' ? 0.05 : 0.002);
+      const comparison = compareStockToTarget(zmap, geometry.target, tolerance);
+      geometry.inProcess = { zmap, comparison, mesh: zmapMesh(zmap, comparison.cellClass) };
+    } else {
+      geometry.inProcess = { zmap, mesh: zmapMesh(zmap) };
+    }
   }
   return geometry;
 }
@@ -589,8 +696,17 @@ export function geometryDigest(geometry: RevPackGeometry): Record<string, unknow
       stockVolume: round(geometry.inProcess.zmap.stockVolume),
       applied: geometry.inProcess.zmap.applied,
       skippedTilted: geometry.inProcess.zmap.skippedTilted,
+      approxTilted: geometry.inProcess.zmap.approxTilted,
       skippedNoTool: geometry.inProcess.zmap.skippedNoTool,
+      threadMoves: geometry.inProcess.zmap.threadMoves,
       mesh: meshDigest(geometry.inProcess.mesh),
+      comparison: geometry.inProcess.comparison ? {
+        onSize: geometry.inProcess.comparison.onSize,
+        remaining: geometry.inProcess.comparison.remaining,
+        gouge: geometry.inProcess.comparison.gouge,
+        maxRemaining: round(geometry.inProcess.comparison.maxRemaining),
+        maxGouge: round(geometry.inProcess.comparison.maxGouge),
+      } : null,
     } : null,
   };
 }

@@ -6,13 +6,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { revPackParitySnapshot } from '../src/providers/visualizer/revpackParity';
+import { targetStlFile } from '../src/providers/visualizer/revpack';
 
 const root = path.join(__dirname, '..', 'test', 'fixtures', 'revpack-public');
 const out: Record<string, unknown> = {};
 for (const dir of fs.readdirSync(root).sort()) {
   const pack = JSON.parse(fs.readFileSync(path.join(root, dir, 'revpack.json'), 'utf8'));
   const gcode = fs.readFileSync(path.join(root, dir, pack.program.file), 'utf8');
-  const target = pack.target?.format === 'stl' ? fs.readFileSync(path.join(root, dir, pack.target.file)) : undefined;
+  const stl = targetStlFile(pack);
+  const target = stl ? fs.readFileSync(path.join(root, dir, stl)) : undefined;
   out[dir] = revPackParitySnapshot(pack, gcode, target);
 }
 fs.writeFileSync(path.join(__dirname, '..', 'test', 'fixtures', 'revpack-geometry.golden.json'), JSON.stringify(out, null, 2) + '\n');

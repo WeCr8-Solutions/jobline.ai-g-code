@@ -122,11 +122,14 @@ async function applyVisualCaseControls(Panel, visualCase, document) {
  */
 async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
   const rp = visualCase.revpack;
-  const deadline = Date.now() + 20000;
+  const deadline = Date.now() + 40000;
   let probe;
   while (Date.now() < deadline) {
     probe = await Panel.requestVisualProbe(3000);
-    if (probe && probe.revpackId === rp.id && probe.renderMode === rp.mode && probe.sharedKernel?.packId === rp.id && probe.targetLoaded) break;
+    // A STEP target arrives after OpenCascade has tessellated it.
+    const stepOk = !rp.stepTarget || probe?.activeTargetLoader === 'step-occt';
+    const modesOk = probe?.targetOnly === rp.targetOnly && probe?.compareMode === rp.compare;
+    if (probe && probe.revpackId === rp.id && probe.renderMode === rp.mode && probe.sharedKernel?.packId === rp.id && probe.targetLoaded && stepOk && modesOk) break;
     await new Promise(resolve => setTimeout(resolve, 250));
   }
   assert.equal(probe?.revpackId, rp.id, `RevPack ${rp.id} was not auto-detected for ${visualCase.id}`);
@@ -136,11 +139,38 @@ async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
   assert.equal(probe.sharedKernel.tools, rp.tools, 'tool solids from the shared kernel');
   assert.equal(probe.sharedKernel.inProcess, rp.inProcess, 'in-process stock');
   assert.equal(probe.workholdingShapes, rp.workholding);
+  // The finished part: the pack's own target, read through OpenCascade when it
+  // is STEP, cross-checked against its STL, and visibly gold on screen with the
+  // stock over it (pixels of the target hue in the composite frame).
+  assert.equal(probe.activeTargetSource, 'revpack', 'target must be the pack target');
+  if (rp.stepTarget) {
+    assert.equal(probe.activeTargetLoader, 'step-occt', 'STEP target must load through OpenCascade');
+    assert.ok(probe.targetStlCrossCheck?.ok, `STEP vs STL bounds disagree: ${JSON.stringify(probe.targetStlCrossCheck)}`);
+  }
+  const minTargetPixels = rp.mode === 'wireframe' ? 150 : 2500;
+  assert.ok(probe.targetHuePixels >= minTargetPixels,
+    `target not visibly distinguishable in ${rp.mode} for ${visualCase.id}: ${probe.targetHuePixels} gold pixels (< ${minTargetPixels})`);
+  assert.equal(probe.targetOnly, rp.targetOnly, 'Target only toggle state');
+  if (rp.compare) {
+    assert.ok(probe.compareMode && probe.comparison, 'compare colouring is on');
+    if (rp.clean) assert.equal(probe.comparison.gouge, 0, 'clean pack gouges the target');
+  }
+  if (rp.seeded) {
+    assert.equal(probe.seededBanner, 'Seeded test pack: errors are intentional', 'seeded pack banner');
+  } else {
+    assert.equal(probe.seededBanner, '', 'only a seeded pack shows the seeded banner');
+  }
 
   const layerProbe = await Panel.requestLayerProbe(15000);
   assert.ok(layerProbe && !layerProbe.error, `layer probe failed: ${layerProbe?.error}`);
   const results = {};
-  for (const layer of ['targetModel', 'stock', 'workholding', 'tool', 'path']) {
+  const layersToCheck = rp.targetOnly ? ['targetModel'] : ['targetModel', 'stock', ...(rp.workholding ? ['workholding'] : []), 'tool', 'path'];
+  if (rp.targetOnly) {
+    for (const layer of ['stock', 'workholding', 'tool', 'path']) {
+      assert.ok(!layerProbe.layers[layer]?.visible, `Target only must hide ${layer}`);
+    }
+  }
+  for (const layer of layersToCheck) {
     const entry = layerProbe.layers[layer];
     results[layer] = entry;
     assert.ok(entry && entry.present && entry.visible, `${layer} layer missing in ${rp.mode} for ${visualCase.id}`);
@@ -158,6 +188,12 @@ async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
   const errors = diagnostics.filter(item => item.severity === vscode.DiagnosticSeverity.Error);
   if (rp.clean) assert.equal(errors.length, 0, `clean pack produced RevPack errors: ${errors.map(item => item.code).join(', ')}`);
   else assert.ok(errors.length > 0, 'seeded pack produced no RevPack error diagnostics');
+  if (rp.seeded) {
+    for (const item of diagnostics) assert.match(item.message, /Seeded test pack: errors are intentional/, 'every seeded finding says it is intentional');
+  }
+  // Everything in the Problems panel for this file, every source, so a
+  // finding from the extension's own checks is not mistaken for the pack's.
+  const allDiagnostics = vscode.languages.getDiagnostics(document.uri);
   assert.equal(probe.revpackFindingsRendered, diagnostics.length, 'findings list and Problems panel disagree');
 
   let clicked = null;
@@ -181,6 +217,44 @@ async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
     id: visualCase.id, pack: rp.id, mode: rp.mode, badge: probe.revpackBadge, sharedKernel: probe.sharedKernel,
     findingsSummary: probe.revpackFindingsSummary, diagnostics: diagnostics.map(item => ({ line: item.range.start.line + 1, severity: item.severity, code: item.code, message: item.message })),
     clickToLine: clicked, layers: results,
+    target: { loader: probe.activeTargetLoader, format: probe.activeTargetFormat, bounds: probe.activeTargetBounds, stlCrossCheck: probe.targetStlCrossCheck, huePixels: probe.targetHuePixels },
+    targetOnly: probe.targetOnly, compareMode: probe.compareMode, comparison: probe.comparison, seededBanner: probe.seededBanner,
+    canvas: { width: probe.width, height: probe.height },
+    problemsPanel: allDiagnostics.map(item => ({ line: item.range.start.line + 1, severity: item.severity, source: item.source, code: typeof item.code === 'object' ? item.code.value : item.code, message: item.message })),
+  }, null, 2));
+}
+
+/** AR4 real part, imported through the STEP (OpenCascade) or STL path, in solid or wireframe. */
+async function verifyAr4Case(Panel, visualCase, artifactDir) {
+  const a = visualCase.ar4;
+  let probe;
+  const deadline = Date.now() + 40000;
+  while (Date.now() < deadline) {
+    probe = await Panel.requestVisualProbe(3000);
+    if (probe?.targetLoaded && probe.targetDisplayMode === a.mode && probe.renderMode === a.mode) break;
+    if (probe?.targetLoaded) {
+      // A slow STEP can land after the mode controls; apply them again.
+      Panel.sendControl({ type: 'setSceneRenderMode', mode: a.mode });
+      Panel.sendControl({ type: 'setTargetDisplayMode', mode: a.mode });
+    }
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  assert.ok(probe?.targetLoaded, `AR4 ${a.part} (${a.format}) did not load`);
+  assert.match(probe.activeTargetFormat || '', a.format === 'step' ? /^STEP/ : /^STL/, 'loaded through the requested path');
+  const b = probe.activeTargetBounds;
+  const want = a.golden.stl;
+  const size = Math.max(...want.max.map((v, k) => v - want.min[k]));
+  const tol = Math.max(0.05, size * 0.002);
+  const got = [b.minX, b.minY, b.minZ, b.maxX, b.maxY, b.maxZ];
+  [...want.min, ...want.max].forEach((v, k) => assert.ok(Math.abs(got[k] - v) <= tol, `${a.part} ${a.format} bound ${k}: ${got[k]} vs ${v} (mm, part orientation)`));
+  const layerProbe = await Panel.requestLayerProbe(15000);
+  const entry = layerProbe?.layers?.targetModel;
+  assert.ok(entry && entry.present && entry.litAlone > 0, `${a.part} drew nothing`);
+  if (a.mode === 'wireframe') assert.equal(entry.solidMeshes, 0, `${a.part} still shaded in wireframe`);
+  else assert.ok(entry.solidMeshes > 0, `${a.part} has no shaded solid`);
+  fs.writeFileSync(path.join(artifactDir, `${visualCase.id}.ar4.json`), JSON.stringify({
+    id: visualCase.id, part: a.part, format: probe.activeTargetFormat, mode: a.mode, bounds: b, expected: want, tolerance: tol,
+    triangles: probe.activeTargetPointCount ? probe.activeTargetPointCount / 3 : null, layer: entry,
   }, null, 2));
 }
 
@@ -286,6 +360,9 @@ suite('JobLine visualizer screenshot matrix', function () {
     await applyVisualCaseControls(ToolpathVisualizerPanel, visualCase, document);
     if (visualCase.revpack) {
       await verifyRevPackCase(ToolpathVisualizerPanel, document, visualCase, artifactDir);
+    }
+    if (visualCase.ar4) {
+      await verifyAr4Case(ToolpathVisualizerPanel, visualCase, artifactDir);
     }
     if (visualCase.id === 'revgrips-stem-50-35-pro') {
       await verifyRevgripsSetup(ToolpathVisualizerPanel, document, artifactDir);
