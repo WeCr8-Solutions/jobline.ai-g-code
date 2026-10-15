@@ -217,7 +217,26 @@ Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type **JobLine**, 
 | JobLine: Previous Alarm | `jobline.sidebar.prevAlarm` |
 | JobLine: Next Alarm | `jobline.sidebar.nextAlarm` |
 
-_69 commands, generated from package.json for v0.3.13._
+**Other**
+
+| Command | ID |
+| --- | --- |
+| JobLine: Load RevPack… | `jobline.revpack.load` |
+| JobLine: Clear RevPack | `jobline.revpack.clear` |
+| JobLine: Part to Origin / Set WCS (Origin panel) | `jobline.placement.showPanel` |
+| JobLine: Part to Origin: Preset (Top center, Top-front-left corner…) | `jobline.placement.preset` |
+| JobLine: Part to Origin: Bounding Box Point (27 points, part or stock) | `jobline.placement.boxPoint` |
+| JobLine: Part to Origin: Axis to Box Face (Top / Bottom / Left / Right / Front / Back / Center) | `jobline.placement.face` |
+| JobLine: Part to Origin: Pick Face, Bore, Edge or Points in 3D | `jobline.placement.pick` |
+| JobLine: Part to Origin: Rotate / Flip / Align Part | `jobline.placement.rotate` |
+| JobLine: Part to Origin: Numeric Offset (XYZ + rotation) | `jobline.placement.offset` |
+| JobLine: Part to Origin: Center Part in Stock | `jobline.placement.centerInStock` |
+| JobLine: Part to Origin: Undo | `jobline.placement.undo` |
+| JobLine: Part to Origin: Reset to File Origin | `jobline.placement.reset` |
+| JobLine: Part to Origin: Run Operation | `jobline.placement.run` |
+| JobLine: Part to Origin: Current State | `jobline.placement.state` |
+
+_83 commands, generated from package.json for v0.3.14._
 
 <!-- commands:end -->
 
@@ -231,7 +250,7 @@ Find these under **Settings > Extensions > JobLine G-Code**.
 | --- | --- | --- |
 | `jobline.ui.showLinks` | `true` | Show optional JobLine for shops and G-Code Academy links in the sidebar and hover cards. |
 | `jobline.controlType` | `"fanuc"` | CNC or robot control dialect for dialect-specific parsing and validation. Values: `fanuc`, `haas`, `siemens`, `mazak`, `okuma`, `fanuc-robot`, `abb`. |
-| `jobline.machineType` | `"mill"` | Machine type profile used to tailor cycle lists and axis assumptions in JobLine views. Values: `mill`, `lathe`, `mill-turn`, `grinder`. |
+| `jobline.machineType` | `"mill"` | Machine type profile used to tailor cycle lists and axis assumptions in JobLine views. Values: `mill`, `lathe`, `mill-turn`, `grinder`, `laser`. |
 | `jobline.units` | `"inch"` | Default unit system (can be overridden by G20/G21 in program). Values: `inch`, `metric`. |
 | `jobline.validation.enableSafetyChecks` | `true` | Enable crash-prevention safety rules (safe Z before tool change, spindle stop, etc.). |
 | `jobline.validation.enableArcValidation` | `true` | Validate G02/G03 arc endpoint geometry and plane correctness. |
@@ -245,8 +264,9 @@ Find these under **Settings > Extensions > JobLine G-Code**.
 | `jobline.presets.libraryPath` | `""` | Folder for your own machine presets. Empty uses `~/.jobline/machines`, the same default jobline.ai-CAM uses, so presets saved in either app appear in both. |
 | `jobline.presets.sharedFolders` | `[]` | Extra folders of `.jblmachine` files to offer, e.g. a shop network share that jobline.ai-CAM also points at. |
 | `jobline.presets.warnOnMismatch` | `true` | Offer to switch machine when a program uses features the active machine preset does not have (turning codes on a mill, rotary axes on a 3-axis, a robot program on a CNC). |
+| `jobline.revpack.autoDetect` | `true` | When a G-code program opens in the visualizer, load revpack.json from the same folder (or a parent revpack/ folder) and take stock, workholding, work offsets, tools and machine from it. Correlation findings appear in the Problems panel. |
 
-_16 settings, generated from package.json for v0.3.13._
+_17 settings, generated from package.json for v0.3.14._
 
 <!-- settings:end -->
 

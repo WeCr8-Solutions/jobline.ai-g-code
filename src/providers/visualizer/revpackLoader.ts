@@ -23,6 +23,8 @@ import { buildRevPackSimulationMessages, type SimulationSetupMessage } from './s
 import { buildRevPackGeometry, loadStl, type GeoMesh, type RevPackGeometry } from './revpackGeometry';
 import type { VisualizerHarnessData } from './fixtureHarness';
 import { tessellateSTEP } from './stepTessellator';
+import { transformPositions, type PlacementSession } from './revpackPlacement';
+import { placedPack, type PlacementTarget } from './revpackPlacementHost';
 
 export interface LoadedRevPack {
   pack: RevPack;
@@ -106,6 +108,9 @@ export interface RevPackTargetMessage {
   source: 'revpack';
   /** How the triangles were produced: the shared kernel's STL reader or OpenCascade (STEP). */
   loader: 'stl' | 'step-occt';
+  /** Placed (Origin panel): the triangles before the move, PART coordinates. */
+  partMeshVertices?: number[];
+  placed?: boolean;
   /** STEP only: its tessellation's bounds against the pack's STL of the same solid. */
   stlCrossCheck?: { maxBoundsDelta: number; ok: boolean; stlTriangles: number; stepTriangles: number };
 }
@@ -144,6 +149,20 @@ export function revPackTargetMessage(loaded: LoadedRevPack): RevPackTargetMessag
   };
 }
 
+/** A target message moved by a row-major 3x4 placement transform (triangles, bounds; the part-coordinate triangles kept for picks). */
+export function moveTargetMessage(message: RevPackTargetMessage | undefined, m: number[]): RevPackTargetMessage | undefined {
+  if (!message) return undefined;
+  const part = new Float32Array(message.meshVertices);
+  const moved = transformPositions(part, m);
+  let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+  for (let i = 0; i + 2 < moved.length; i += 3) {
+    minX = Math.min(minX, moved[i]); maxX = Math.max(maxX, moved[i]);
+    minY = Math.min(minY, moved[i + 1]); maxY = Math.max(maxY, moved[i + 1]);
+    minZ = Math.min(minZ, moved[i + 2]); maxZ = Math.max(maxZ, moved[i + 2]);
+  }
+  return { ...message, meshVertices: Array.from(moved), bounds: { minX, minY, minZ, maxX, maxY, maxZ }, partMeshVertices: message.meshVertices, placed: true };
+}
+
 /** Largest difference between two bounds, in model units. */
 export function boundsDelta(a: MsgBounds, b: MsgBounds): number {
   return Math.max(...(['minX', 'minY', 'minZ', 'maxX', 'maxY', 'maxZ'] as const).map(k => Math.abs(a[k] - b[k])));
@@ -154,12 +173,21 @@ export function boundsDelta(a: MsgBounds, b: MsgBounds): number {
  * units, cross-checked against the pack's STL of the same solid. Undefined
  * when the pack's target is not STEP or the file is missing.
  */
-export async function revPackStepTargetMessage(loaded: LoadedRevPack): Promise<RevPackTargetMessage | undefined> {
+const stepCache = new Map<string, { mtime: number; result: Awaited<ReturnType<typeof tessellateSTEP>> }>();
+
+export async function revPackStepTargetMessage(loaded: LoadedRevPack, targetTransform?: number[]): Promise<RevPackTargetMessage | undefined> {
   const target = loaded.pack.target;
   if (!target || target.format !== 'step') return undefined;
   const file = path.resolve(loaded.dir, target.file);
   if (!fs.existsSync(file)) return undefined;
-  const step = await tessellateSTEP(new Uint8Array(fs.readFileSync(file)), { linearUnit: loaded.pack.units === 'in' ? 'inch' : 'millimeter' });
+  // OpenCascade is slow; a placement change re-sends the same tessellation moved.
+  const mtime = fs.statSync(file).mtimeMs;
+  let step = stepCache.get(file)?.mtime === mtime ? stepCache.get(file)!.result : undefined;
+  if (!step) {
+    step = await tessellateSTEP(new Uint8Array(fs.readFileSync(file)), { linearUnit: loaded.pack.units === 'in' ? 'inch' : 'millimeter' });
+    stepCache.set(file, { mtime, result: step });
+  }
+  if (targetTransform) return moveTargetMessage(await revPackStepTargetMessage(loaded), targetTransform);
   const message: RevPackTargetMessage = {
     type: 'targetModel',
     id: 'revpack-target',
@@ -276,31 +304,46 @@ export interface RevPackScene {
   report: CorrelationReport;
   /** Cutter size for the swept tube: the first tool the program calls. */
   cutterSize: number;
+  /** The target as the Origin panel picks on it (STL triangles, PART coordinates). */
+  placementTarget?: PlacementTarget;
+  /** Set when the Origin panel moved the part: PART -> WORK for the STEP target too. */
+  targetTransform?: number[];
 }
 
 /** Everything the visualizer needs from a pack for one program. */
-export function buildRevPackScene(loaded: LoadedRevPack, gcode: string, harnessTools: VisualizerHarnessData['tools'] = []): RevPackScene {
-  const setup = buildRevPackSimulationMessages(loaded.pack, harnessTools);
+export function buildRevPackScene(loaded: LoadedRevPack, gcode: string, harnessTools: VisualizerHarnessData['tools'] = [], placement?: PlacementSession): RevPackScene {
+  const stl = targetStlFile(loaded.pack);
+  const targetFile = stl ? path.resolve(loaded.dir, stl) : undefined;
+  const targetStl = targetFile && fs.existsSync(targetFile) ? fs.readFileSync(targetFile) : undefined;
+  // Origin panel: the pack as placed (target transform, stock from the
+  // setup around the moved target, vise / jaws following the stock, G54
+  // moved the other way). Everything below draws and checks that pack.
+  const partTarget = targetStl ? loadStl(targetStl) : undefined;
+  const placed = placement && partTarget ? placedPack(loaded.pack, partTarget.bounds, partTarget.positions, placement) : undefined;
+  const pack = (placed?.pack as RevPack | undefined) ?? loaded.pack;
+  const setup = buildRevPackSimulationMessages(pack, harnessTools);
   for (const message of setup) {
     if (message.type === 'revpackInfo') message.source = loaded.file;
   }
-  const report = correlateProgramWithRevPack(gcode, loaded.pack);
-  const stl = targetStlFile(loaded.pack);
-  const targetFile = stl ? path.resolve(loaded.dir, stl) : undefined;
-  const geometry = buildRevPackGeometry(loaded.pack, {
-    targetStl: targetFile && fs.existsSync(targetFile) ? fs.readFileSync(targetFile) : undefined,
+  const report = correlateProgramWithRevPack(gcode, pack);
+  const geometry = buildRevPackGeometry(pack, {
+    targetStl,
     segments: report.segments,
+    targetTransform: placed?.targetTransform,
   });
   const first = report.toolsUsed[0];
-  const firstTool = loaded.pack.tools.find(tool => tool.t === first) ?? loaded.pack.tools[0];
+  const firstTool = pack.tools.find(tool => tool.t === first) ?? pack.tools[0];
+  const target = revPackTargetMessage(loaded);
   return {
     setup,
     geometry,
-    sceneMessage: revPackSceneMessage(geometry, loaded.pack),
-    target: revPackTargetMessage(loaded),
+    sceneMessage: revPackSceneMessage(geometry, pack),
+    target: placed ? moveTargetMessage(target, placed.targetTransform) : target,
     findings: revPackFindingsMessage(report),
     report,
-    cutterSize: firstTool?.diameter || (loaded.pack.units === 'mm' ? 6 : 0.25),
+    cutterSize: firstTool?.diameter || (pack.units === 'mm' ? 6 : 0.25),
+    placementTarget: partTarget ? { key: `revpack:${loaded.file}`, kind: 'revpack', name: loaded.pack.name || loaded.pack.id, units: loaded.pack.units, positions: partTarget.positions, bounds: partTarget.bounds, pack: loaded.pack } : undefined,
+    targetTransform: placed?.targetTransform,
   };
 }
 

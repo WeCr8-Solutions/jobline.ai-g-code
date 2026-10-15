@@ -3,7 +3,7 @@
  * jobline.ai-CAM and the JobLine.ai shop app (shift-handover-hub).
  *
  * Kept byte-for-byte identical in all three repositories beside revpack.ts,
- * revpackCorrelation.ts and revpackGeometry.ts. Each repository's parity test
+ * revpackCorrelation.ts, revpackGeometry.ts and revpackPlacement.ts. Each repository's parity test
  * computes this snapshot for every public pack it carries and compares it with
  * revpack-geometry.golden.json, which is also identical in all three. If one
  * product draws or checks a pack differently, its test fails.
@@ -12,6 +12,7 @@
 import type { RevPack } from './revpack';
 import { correlateProgramWithRevPack } from './revpackCorrelation';
 import { buildRevPackGeometry, geometryDigest, loadStl, meshVolume } from './revpackGeometry';
+import { placementDigest } from './revpackPlacement';
 
 const round = (n: number): number => {
   const r = Math.round(n * 1e4) / 1e4;
@@ -36,6 +37,9 @@ export function revPackParitySnapshot(pack: RevPack, gcode: string, targetStl?: 
       machineExtents: extents,
     },
     geometry: geometryDigest(geometry),
+    // Part placement / work origin (revpackPlacement.ts): the 27 box points and
+    // fixed placements applied to the pack - same origins, stock and G54 everywhere.
+    placement: placementDigest(pack, geometry.target?.bounds, geometry.target?.positions),
   };
 }
 

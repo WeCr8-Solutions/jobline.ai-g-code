@@ -619,6 +619,29 @@ export interface BuildGeometryOptions {
   /** revpackCorrelation segments, for the in-process stock. */
   segments?: CutSegmentLike[];
   zmapResolution?: number;
+  /**
+   * Row-major 3x4 [R | t] applied to the target STL after loading: the part
+   * placement (revpackPlacement.ts placementMatrix / applyPlacementToPack's
+   * targetTransform) mapping the model's PART coordinates to the program's
+   * WORK coordinates. Omitted: the model's own coordinates are work coordinates.
+   */
+  targetTransform?: number[];
+}
+
+/** A mesh moved by a row-major 3x4 transform (positions and wireframe; triangle winding kept for rotations). */
+export function transformMesh<M extends GeoMesh>(mesh: M, m: number[]): M {
+  const apply = (src: Float32Array): Float32Array => {
+    const out = new Float32Array(src.length);
+    for (let i = 0; i + 2 < src.length; i += 3) {
+      const x = src[i], y = src[i + 1], z = src[i + 2];
+      out[i] = m[0] * x + m[1] * y + m[2] * z + m[3];
+      out[i + 1] = m[4] * x + m[5] * y + m[6] * z + m[7];
+      out[i + 2] = m[8] * x + m[9] * y + m[10] * z + m[11];
+    }
+    return out;
+  };
+  const positions = apply(mesh.positions);
+  return { ...mesh, positions, edges: apply(mesh.edges), bounds: boundsOf(positions) };
 }
 
 export function buildRevPackGeometry(pack: RevPack, options: BuildGeometryOptions = {}): RevPackGeometry {
@@ -645,7 +668,10 @@ export function buildRevPackGeometry(pack: RevPack, options: BuildGeometryOption
   };
   const grip = grippedRegion(pack);
   if (grip) geometry.grip = boxSolid(grip.min, grip.max);
-  if (options.targetStl && targetStlFile(pack)) geometry.target = loadStl(options.targetStl);
+  if (options.targetStl && targetStlFile(pack)) {
+    const loaded = loadStl(options.targetStl);
+    geometry.target = options.targetTransform ? transformMesh(loaded, options.targetTransform) : loaded;
+  }
   if (options.segments && !isCylinder(pack.stock) && (pack.machine.machineClass === 'mill' || pack.machine.machineClass === 'mill-turn')) {
     const zmap = zmapStock(pack.stock, options.segments, pack.tools, pack.machine.machineClass, options.zmapResolution);
     if (geometry.target) {

@@ -98,6 +98,8 @@ export class ToolpathVisualizerPanel {
     /** Workholding solids drawn red because an error finding names them. */
     hitSolids?: string[];
     packSetup?: { partZero: string; gripDepth?: number; recommendedGripDepth?: number; vise?: string } | null;
+    /** Origin panel: open, pick mode, WCS label, triad / highlight drawn, target bounds as drawn (WORK). */
+    placement?: { open: boolean; active: boolean; pickMode: string; label: string; anchor: string; wcsShown: boolean; highlightTriangles: number; hoverShown: boolean; featureKind: string; viewNormal: boolean; targetBounds: { min: number[]; max: number[] } | null; readout: string } | null;
     error?: string;
     at: number;
   } | undefined;
@@ -293,6 +295,7 @@ export class ToolpathVisualizerPanel {
           gripShown: Boolean(msg.gripShown),
           hitSolids: Array.isArray(msg.hitSolids) ? msg.hitSolids.map(String) : [],
           packSetup: msg.packSetup ?? null,
+          placement: msg.placement ?? null,
           error: typeof msg.error === 'string' ? msg.error : undefined,
           at: Date.now(),
         };

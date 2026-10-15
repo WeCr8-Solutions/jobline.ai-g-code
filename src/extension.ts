@@ -28,6 +28,8 @@ import { buildAutoSimulationMessages } from './providers/visualizer/simulationSe
 import { buildRevPackScene, clearRevPackMessages, findRevPackForProgram, readRevPack, revPackStepTargetMessage, type LoadedRevPack } from './providers/visualizer/revpackLoader';
 import { isSeededTestPack, SEEDED_TEST_PACK_LABEL } from './providers/visualizer/revpack';
 import type { CorrelationFinding } from './providers/visualizer/revpackCorrelation';
+import { PlacementSessions, parseOffsetInput, placedUploadMessage, placementPanelMessage, type PlacementPanelMessage, type PlacementTarget } from './providers/visualizer/revpackPlacementHost';
+import { BOX_POINTS, PLACEMENT_PRESETS, type PlacementOp } from './providers/visualizer/revpackPlacement';
 import type { ToolpathPoint } from './providers/visualizer/toolpathParser';
 import { reviewGCodeProgram } from './providers/visualizer/programReview';
 import { loadStlMesh } from './providers/visualizer/stlMeshLoader';
@@ -57,6 +59,15 @@ export function activate(context: vscode.ExtensionContext): void {
         // findings in the Problems panel.
         const pinnedRevPacks = new Map<string, string>();
         const activeRevPacks = new Map<string, string>();
+        // Part placement / work origin (Origin panel + jobline.placement.*):
+        // one session per RevPack target or uploaded part, all maths in the
+        // shared kernel (revpackPlacement.ts).
+        const placementSessions = new PlacementSessions();
+        /** Uploaded target parts (no pack): their message as imported, PART coordinates. */
+        const uploadTargets = new Map<string, { message: { meshVertices?: number[]; bounds: Bounds3D } & Record<string, unknown>; positions: Float32Array }>();
+        /** STEP targets' tessellations, PART coordinates, per pack (picks use the triangles on screen). */
+        const stepPartPositions = new Map<string, Float32Array>();
+        let placementExtra: { feature?: PlacementPanelMessage['feature']; error?: string; view?: 'normal' } = {};
         const revpackDiagnostics = vscode.languages.createDiagnosticCollection('jobline-revpack');
         context.subscriptions.push(revpackDiagnostics);
         context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(closed => revpackDiagnostics.delete(closed.uri)));
@@ -236,7 +247,8 @@ export function activate(context: vscode.ExtensionContext): void {
           const harness = buildVisualizerHarnessData(text, controlType);
           const loaded = revPackForDocument(doc);
           if (loaded) {
-            const scene = buildRevPackScene(loaded, text, harness.tools);
+            const placementKey = `revpack:${loaded.file}`;
+            const scene = buildRevPackScene(loaded, text, harness.tools, placementSessions.has(placementKey) ? placementSessions.session(placementKey) : undefined);
             playback.cutterSize = scene.cutterSize;
             updateMachineStatusBar(`${loaded.pack.machine.name} (RevPack)`);
             // Shared-kernel solids first, so stock/workholding/tool build from them.
@@ -248,10 +260,24 @@ export function activate(context: vscode.ExtensionContext): void {
             activeRevPacks.set(doc.uri.toString(), loaded.file);
             // A STEP target replaces the STL one once OpenCascade has
             // tessellated it (same id), unless the program moved on meanwhile.
+            // Picks land on the triangles on screen: the STEP tessellation once it has arrived.
+            const stepPositions = stepPartPositions.get(placementKey);
+            placementSessions.current = scene.placementTarget && stepPositions ? { ...scene.placementTarget, positions: stepPositions } : scene.placementTarget;
+            sendPlacementPanel();
             if (loaded.pack.target?.format === 'step') {
               const key = doc.uri.toString();
-              revPackStepTargetMessage(loaded).then(message => {
-                if (message && activeRevPacks.get(key) === loaded.file) ToolpathVisualizerPanel.queueMessage(message);
+              revPackStepTargetMessage(loaded, scene.targetTransform).then(message => {
+                if (message && activeRevPacks.get(key) === loaded.file) {
+                  ToolpathVisualizerPanel.queueMessage(message);
+                  // Picks now land on the STEP tessellation's triangles.
+                  const current = placementSessions.current;
+                  const positions = stepPartPositions.get(placementKey) ?? new Float32Array(message.partMeshVertices ?? message.meshVertices);
+                  stepPartPositions.set(placementKey, positions);
+                  if (current?.key === placementKey && current.positions !== positions) {
+                    placementSessions.current = { ...current, positions };
+                    sendPlacementPanel();
+                  }
+                }
               }, err => {
                 console.warn('JobLine RevPack: STEP target could not be read, keeping its STL:', err);
               });
@@ -270,9 +296,145 @@ export function activate(context: vscode.ExtensionContext): void {
             }
             revpackDiagnostics.delete(doc.uri);
             activeRevPacks.delete(doc.uri.toString());
+            if (placementSessions.current?.kind === 'revpack') {
+              // Back to the last uploaded part, if one is open.
+              const last = [...uploadTargets.entries()].pop();
+              placementSessions.current = last ? uploadPlacementTarget(last[0], last[1].message, last[1].positions) : undefined;
+            }
+            sendPlacementPanel();
           }
           ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(text, controlType) });
         }
+
+        function sendPlacementPanel(): PlacementPanelMessage {
+          const target = placementSessions.current;
+          const message = placementPanelMessage(target, target ? placementSessions.session(target.key) : undefined, placementExtra);
+          placementExtra = {};
+          ToolpathVisualizerPanel.queueMessage(message);
+          return message;
+        }
+
+        /** An uploaded part, moved by its session (if any), back to the webview. */
+        function resendUploadTarget(id: string, upload: { message: { meshVertices?: number[]; bounds: Bounds3D } & Record<string, unknown>; positions: Float32Array }): void {
+          const key = `upload:${id}`;
+          const message = placementSessions.has(key) ? placedUploadMessage(upload.message, upload.positions, placementSessions.session(key)) : { ...upload.message, placementUpdate: true };
+          ToolpathVisualizerPanel.queueMessage(message);
+        }
+
+        function registerUploadTarget(id: string, message: { meshVertices?: number[]; bounds: Bounds3D; name?: unknown } & Record<string, unknown>): void {
+          if (!message.meshVertices || message.meshVertices.length < 9) return;
+          const positions = new Float32Array(message.meshVertices);
+          uploadTargets.set(id, { message, positions });
+          // A new upload starts from its file origin.
+          placementSessions.clear(`upload:${id}`);
+          if (placementSessions.current?.kind !== 'revpack') {
+            placementSessions.current = uploadPlacementTarget(id, message, positions);
+            sendPlacementPanel();
+          }
+        }
+
+        function uploadPlacementTarget(id: string, message: { bounds: Bounds3D; name?: unknown }, positions: Float32Array): PlacementTarget {
+          const b = message.bounds;
+          return {
+            key: `upload:${id}`, kind: 'upload', name: String(message.name ?? id), units: playback.units,
+            positions, bounds: { min: [b.minX, b.minY, b.minZ], max: [b.maxX, b.maxY, b.maxZ] },
+          };
+        }
+
+        /**
+         * Run one Origin / WCS operation on the current target (RevPack
+         * target or uploaded part) and redraw. Returns the panel state, so
+         * tests and the webview see the same answer.
+         */
+        async function runPlacement(arg: (PlacementOp & { view?: 'normal' }) | undefined): Promise<PlacementPanelMessage | undefined> {
+          const target: PlacementTarget | undefined = placementSessions.current;
+          if (!arg || typeof arg !== 'object' || !('op' in arg)) return undefined;
+          if (!target) {
+            vscode.window.showWarningMessage('JobLine: open a program with a RevPack, or import a target part, before setting the work origin.');
+            return undefined;
+          }
+          const { view, ...op } = arg;
+          const result = placementSessions.run(target, op as PlacementOp);
+          placementExtra = { feature: result.feature, error: result.error, view };
+          if (result.error) vscode.window.setStatusBarMessage(`JobLine Origin: ${result.error}`, 4000);
+          if (!result.changed) return sendPlacementPanel();
+          if (target.kind === 'revpack') {
+            const doc = getPreferredGCodeDoc();
+            if (doc) sendSimulationSetup(doc);
+            else sendPlacementPanel();
+          } else {
+            const id = target.key.slice('upload:'.length);
+            const upload = uploadTargets.get(id);
+            if (upload) resendUploadTarget(id, upload);
+            sendPlacementPanel();
+          }
+          return placementPanelMessage(target, placementSessions.session(target.key), { feature: result.feature, error: result.error });
+        }
+
+        context.subscriptions.push(
+          vscode.commands.registerCommand('jobline.placement.run', (arg?: PlacementOp & { view?: 'normal' }) => runPlacement(arg)),
+          vscode.commands.registerCommand('jobline.placement.state', () => {
+            const target = placementSessions.current;
+            return placementPanelMessage(target, target ? placementSessions.session(target.key) : undefined);
+          }),
+          vscode.commands.registerCommand('jobline.placement.showPanel', async () => {
+            if (!ToolpathVisualizerPanel.currentPanel) await vscode.commands.executeCommand('jobline.gcode.showVisualizer');
+            ToolpathVisualizerPanel.sendControl({ type: 'showOriginPanel', open: true });
+            sendPlacementPanel();
+          }),
+          vscode.commands.registerCommand('jobline.placement.boxPoint', async () => {
+            const ref = await vscode.window.showQuickPick([{ label: 'Part box', ref: 'part' as const }, { label: 'Stock box', ref: 'stock' as const }], { title: 'Work origin on the bounding box of…' });
+            if (!ref) return undefined;
+            const point = await vscode.window.showQuickPick(BOX_POINTS.map(bp => ({ label: bp.label, description: bp.kind, bp })), { title: 'Work origin at (27 box points)' });
+            if (!point) return undefined;
+            return runPlacement({ op: 'boxPoint', sel: point.bp.sel, ref: ref.ref });
+          }),
+          vscode.commands.registerCommand('jobline.placement.preset', async () => {
+            const items = PLACEMENT_PRESETS.flatMap(p => [
+              { label: `${p.label} of the part`, op: { op: 'preset', id: p.id, ref: 'part' } as PlacementOp },
+              { label: `${p.label} of the stock`, op: { op: 'preset', id: p.id, ref: 'stock' } as PlacementOp },
+            ]);
+            const pick = await vscode.window.showQuickPick(items, { title: 'Part to origin: preset' });
+            return pick ? runPlacement(pick.op) : undefined;
+          }),
+          vscode.commands.registerCommand('jobline.placement.face', async () => {
+            const faces = ['top', 'bottom', 'left', 'right', 'front', 'back', 'center'] as const;
+            const pick = await vscode.window.showQuickPick(faces.map(face => ({ label: face[0].toUpperCase() + face.slice(1), face })), { title: 'Move one axis to a face of the part box (Top = Z0 on the top face)' });
+            return pick ? runPlacement({ op: 'face', face: pick.face }) : undefined;
+          }),
+          vscode.commands.registerCommand('jobline.placement.rotate', async () => {
+            const items: Array<{ label: string; op: PlacementOp }> = [];
+            for (const [axis, name] of [[0, 'X'], [1, 'Y'], [2, 'Z']] as const) {
+              items.push({ label: `Rotate +90° about ${name}`, op: { op: 'rotate', axis, turns: 1 } });
+              items.push({ label: `Rotate -90° about ${name}`, op: { op: 'rotate', axis, turns: -1 } });
+            }
+            items.push({ label: 'Flip (180° about X, op 2)', op: { op: 'flip', axis: 0 } }, { label: 'Flip (180° about Y)', op: { op: 'flip', axis: 1 } });
+            items.push({ label: 'Align part +X to Z', op: { op: 'alignAxis', from: '+X', to: '+Z' } }, { label: 'Align part +Y to Z', op: { op: 'alignAxis', from: '+Y', to: '+Z' } });
+            const pick = await vscode.window.showQuickPick(items, { title: 'Re-orient the part about the work origin' });
+            return pick ? runPlacement(pick.op) : undefined;
+          }),
+          vscode.commands.registerCommand('jobline.placement.offset', async () => {
+            const text = await vscode.window.showInputBox({ title: 'Shift the work origin', prompt: 'dX dY dZ [rotate about Z, degrees] in program units, e.g. "0.5 0 -0.02 90"', validateInput: v => parseOffsetInput(v) ? undefined : 'Enter 1 to 4 numbers' });
+            const parsed = text ? parseOffsetInput(text) : undefined;
+            return parsed ? runPlacement({ op: 'offset', d: parsed.d, rotZ: parsed.rotZ }) : undefined;
+          }),
+          vscode.commands.registerCommand('jobline.placement.centerInStock', () => runPlacement({ op: 'centerInStock', axes: 'xy' })),
+          vscode.commands.registerCommand('jobline.placement.pick', async () => {
+            const modes = [
+              { label: 'Face: set axis to face', mode: 'face-axis' }, { label: 'Face: origin at face centre', mode: 'face-origin' },
+              { label: 'Face: align to top', mode: 'face-top' }, { label: 'Face: align to bottom', mode: 'face-bottom' },
+              { label: 'Bore / boss: centre on axis', mode: 'bore' }, { label: 'Bore / boss: centre and turn axis to Z', mode: 'bore-z' },
+              { label: 'Vertex / edge point', mode: 'point' }, { label: 'Two-point midpoint', mode: 'mid2' },
+              { label: 'Three-point circle centre', mode: 'circle3' }, { label: 'View normal to a face', mode: 'view-normal' },
+            ];
+            const pick = await vscode.window.showQuickPick(modes, { title: 'Pick on the part in the 3D view' });
+            if (!pick) return;
+            if (!ToolpathVisualizerPanel.currentPanel) await vscode.commands.executeCommand('jobline.gcode.showVisualizer');
+            ToolpathVisualizerPanel.sendControl({ type: 'showOriginPanel', open: true, pickMode: pick.mode });
+          }),
+          vscode.commands.registerCommand('jobline.placement.undo', () => runPlacement({ op: 'undo' })),
+          vscode.commands.registerCommand('jobline.placement.reset', () => runPlacement({ op: 'reset' })),
+        );
 
         const loadRevPackCmd = vscode.commands.registerCommand('jobline.revpack.load', async (arg?: vscode.Uri | string) => {
           const doc = getPreferredGCodeDoc();
@@ -566,7 +728,7 @@ export function activate(context: vscode.ExtensionContext): void {
                 format = 'Parasolid text';
                 pointCount = parsed.pointCount;
               }
-              ToolpathVisualizerPanel.queueMessage({
+              const targetMessage = {
                 type: 'targetModel',
                 id: uris.length === 1 ? targetId : `${targetId}-${index + 1}`,
                 targetId: uris.length === 1 ? targetId : `${targetId}-${index + 1}`,
@@ -579,7 +741,10 @@ export function activate(context: vscode.ExtensionContext): void {
                 meshVertices,
                 bounds,
                 offset: { x: 0, y: 0, z: 0 },
-              });
+              };
+              ToolpathVisualizerPanel.queueMessage(targetMessage);
+              // A part opened on its own can be placed with the Origin panel.
+              if (role === 'target-part') registerUploadTarget(targetMessage.id, targetMessage);
               loaded += 1;
             } catch (err) {
               vscode.window.showErrorMessage('JobLine: Could not import scene model: ' + String(err));

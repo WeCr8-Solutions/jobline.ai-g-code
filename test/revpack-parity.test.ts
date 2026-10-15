@@ -38,7 +38,7 @@ describe('RevPack parity snapshot', () => {
   });
 });
 
-const SHARED = ['revpack.ts', 'revpackCorrelation.ts', 'revpackGeometry.ts', 'revpackParity.ts'];
+const SHARED = ['revpack.ts', 'revpackCorrelation.ts', 'revpackGeometry.ts', 'revpackParity.ts', 'revpackPlacement.ts'];
 const mine = (file: string) => path.join(repo, 'src', 'providers', 'visualizer', file);
 const siblings: Array<{ name: string; roots: string[]; kernel: string; golden: string; packs: string }> = [
   {

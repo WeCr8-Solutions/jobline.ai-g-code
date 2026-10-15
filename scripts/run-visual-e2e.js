@@ -207,6 +207,46 @@ for (const rp of revpackCases) {
 }
 for (const extra of revpackExtras) visualCases.push(revpackCase(revpackCases.find(rp => rp.id === extra.base), extra.mode, extra));
 
+// Part to origin / Set WCS (Origin panel): the shared placement kernel run
+// through jobline.placement.run on the UMC-750 and VF-2 packs and on an AR4
+// part uploaded on its own - top-front-left corner, top centre, bore centre
+// and a face turned to the top with the view normal to it. Each case checks
+// where the target is drawn, that it stays inside the stock, and the WCS
+// triad / feature highlight on screen.
+const ORIGIN_OPS = {
+  corner: () => ({ ops: [{ op: 'preset', id: 'top-front-left' }], expect: { corner: true, label: /top-front-left corner of the part/ } }),
+  'top-center': () => ({ ops: [{ op: 'preset', id: 'top-center' }], expect: { topCenter: true, label: /top face center of the part/ } }),
+};
+const originPackCases = [
+  { pack: 'haas-umc750-5axis', id: 'umc750', bore: { point: [-1.280193 + 0.15, 0.5 + 0.1005, -0.75], align: true }, face: { point: [0, -1, -0.8] } },
+  { pack: 'haas-vf2-vise', id: 'vf2', bore: { point: [1.25 + 0.1005, 0.75, -0.385], align: false }, face: { point: [0, -1.5, -0.4] } },
+];
+for (const oc of originPackCases) {
+  const packJson = JSON.parse(fs.readFileSync(path.join(root, 'test', 'fixtures', 'revpack-public', oc.pack, 'revpack.json'), 'utf8'));
+  const modes = {
+    ...ORIGIN_OPS,
+    'bore-center': () => ({ ops: [{ op: 'preset', id: 'top-center' }, { op: 'pickCylinder', pick: { tri: -1, point: oc.bore.point }, align: oc.bore.align }], expect: { feature: 'cylinder', label: /bore axis/ } }),
+    'face-align': () => ({ ops: [{ op: 'preset', id: 'top-center' }, { op: 'pickFace', pick: { tri: -1, point: oc.face.point }, action: 'alignTop', view: 'normal' }], expect: { feature: 'plane', viewNormal: true, featureNormal: [0, 0, 1], hover: true } }),
+  };
+  for (const [mode, make] of Object.entries(modes)) {
+    const spec = make();
+    visualCases.push({
+      id: `origin-${oc.id}-${mode}`,
+      fixture: `test/fixtures/revpack-public/${oc.pack}/${packJson.program.file}`,
+      expectedPoints: null,
+      captureAreas: ['visualizer'],
+      controls: [
+        { type: 'setPresetView', view: 'iso' },
+        { type: 'setLayerVisible', layer: 'sweptTube', visible: false },
+        { type: 'setSceneRenderMode', mode: 'solid' },
+        // Looking straight down a face, the tool parked over the part would hide it.
+        ...(mode === 'face-align' ? [{ type: 'setLayerVisible', layer: 'tool', visible: false }, { type: 'setLayerVisible', layer: 'toolHolder', visible: false }] : []),
+      ],
+      origin: { pack: packJson.id, packName: packJson.name, stepTarget: packJson.target?.format === 'step', mode, ops: spec.ops, expect: { ...spec.expect, label: spec.expect.label ? spec.expect.label.source : '' } },
+    });
+  }
+}
+
 // AR4 real parts (local only - the Annin licence forbids redistributing the
 // files; see test/ar4Parts.ts). Each part is imported through the STEP
 // (OpenCascade) path and the STL path, in solid and wireframe, and its bounds
@@ -243,6 +283,34 @@ if (fs.existsSync(ar4GoldenFile) && AR4_VISUAL_PARTS.every(part => fs.existsSync
         });
       }
     }
+  }
+}
+
+// An AR4 part uploaded on its own (no pack), placed with the Origin panel.
+if (fs.existsSync(path.join(ar4Root, 'AR4_SG1_gear.STL'))) {
+  for (const [mode, ops, expect] of [
+    ['corner', [{ op: 'preset', id: 'top-front-left' }], { corner: true, label: 'top-front-left corner of the part' }],
+    ['top-center', [{ op: 'preset', id: 'top-center' }], { topCenter: true, label: 'top face center of the part' }],
+    ['bore-center', [{ op: 'preset', id: 'top-center' }, { op: 'pickCylinder', pick: { tri: -1, point: 'gear-bore' }, align: true }], { feature: 'cylinder', label: 'axis' }],
+    ['face-align', [{ op: 'preset', id: 'top-center' }, { op: 'pickFace', pick: { tri: -1, point: 'side-face' }, action: 'alignTop', view: 'normal' }], { feature: 'plane', viewNormal: true, featureNormal: [0, 0, 1], hover: true }],
+  ]) {
+    visualCases.push({
+      id: `origin-ar4-gear-${mode}`,
+      fixture: 'test/fixtures/scene/visual-import-only.nc',
+      expectedPoints: 1,
+      importOnly: true,
+      targetFile: path.join(ar4Root, 'AR4_SG1_gear.STL'),
+      targetModel: 'ar4-sg1-gear',
+      captureAreas: ['visualizer'],
+      controls: [
+        { type: 'setPresetView', view: 'iso' },
+        { type: 'setSceneRenderMode', mode: 'solid' },
+        { type: 'setTargetDisplayMode', mode: 'solid' },
+        ...(mode === 'face-align' ? [{ type: 'setLayerVisible', layer: 'tool', visible: false }, { type: 'setLayerVisible', layer: 'toolHolder', visible: false }] : []),
+      ],
+      origin: { upload: true, mode, ops, expect },
+      expect: { targetLoaded: true },
+    });
   }
 }
 
@@ -307,7 +375,10 @@ if (fs.existsSync(revgripsProgram) && fs.existsSync(revgripsTarget)) {
 }
 
 if (process.env.JOBLINE_VISUAL_REVPACK_ONLY) {
-  visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.revpack || (process.env.JOBLINE_VISUAL_AR4 !== '0' && item.ar4)));
+  visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.revpack || item.origin || (process.env.JOBLINE_VISUAL_AR4 !== '0' && item.ar4)));
+}
+if (process.env.JOBLINE_VISUAL_ORIGIN_ONLY) {
+  visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.origin));
 }
 if (process.env.JOBLINE_VISUAL_AR4_ONLY) {
   visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.ar4));

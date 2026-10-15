@@ -22,7 +22,7 @@ async function waitForFile(file, timeoutMs) {
 async function applyVisualCaseControls(Panel, visualCase, document) {
   Panel.sendControl({ type: 'resetVisualScene' });
   await new Promise(resolve => setTimeout(resolve, 300));
-  if (visualCase.revpack) {
+  if (visualCase.revpack || visualCase.origin?.pack) {
     // Give the visualizer the room a user would: no Explorer, even split.
     await vscode.commands.executeCommand('workbench.action.closeSidebar');
     await vscode.commands.executeCommand('workbench.action.evenEditorWidths');
@@ -341,6 +341,120 @@ async function verifyAr4Case(Panel, visualCase, artifactDir) {
   }, null, 2));
 }
 
+/** Resolve the AR4 upload's symbolic picks ('gear-bore', 'side-face') on its own triangles with the shared kernel. */
+function resolveUploadPick(extensionPath, targetFile, what) {
+  const kernel = require(path.join(extensionPath, 'out', 'src', 'providers', 'visualizer', 'revpackPlacement.js'));
+  const geo = require(path.join(extensionPath, 'out', 'src', 'providers', 'visualizer', 'revpackGeometry.js'));
+  const mesh = geo.loadStl(fs.readFileSync(targetFile));
+  const p = mesh.positions, n = mesh.triangleCount;
+  const adjacency = kernel.triangleAdjacency(p);
+  if (what === 'side-face') {
+    let best = -1, bestArea = 0;
+    for (let t = 0; t < n; t++) {
+      const tn = kernel.triangleNormal(p, t);
+      if (Math.abs(tn.normal[2]) < 0.05 && tn.area > bestArea) { bestArea = tn.area; best = t; }
+    }
+    return { tri: best };
+  }
+  // The central bore: walk the triangles nearest the part's centre until one fits a bore.
+  const c = [0, 1, 2].map(k => (mesh.bounds.min[k] + mesh.bounds.max[k]) / 2);
+  const order = Array.from({ length: n }, (_, t) => t).map(t => {
+    const ct = kernel.triangleNormal(p, t).centroid;
+    return [t, Math.hypot(ct[0] - c[0], ct[1] - c[1], ct[2] - c[2])];
+  }).sort((a, b) => a[1] - b[1]);
+  for (const [t] of order.slice(0, 4000)) {
+    const f = kernel.pickFeature(p, t, { adjacency });
+    if (f && f.kind === 'cylinder' && f.bore) return { tri: t };
+  }
+  throw new Error('no bore found on the uploaded part');
+}
+
+/**
+ * Part to origin (Origin panel): run the operations through the shared
+ * kernel (jobline.placement.run), then check where the target is drawn, that
+ * it is inside the stock, and that the WCS triad / feature highlight / view
+ * normal are on screen.
+ */
+async function verifyOriginCase(Panel, visualCase, artifactDir, extensionPath) {
+  const o = visualCase.origin;
+  let probe;
+  const deadline = Date.now() + 40000;
+  while (Date.now() < deadline) {
+    probe = await Panel.requestVisualProbe(3000);
+    const ready = o.pack
+      ? probe?.revpackId === o.pack && probe.targetLoaded && (!o.stepTarget || probe.activeTargetLoader === 'step-occt')
+      : probe?.targetLoaded;
+    if (ready) break;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  assert.ok(probe?.targetLoaded, `origin ${visualCase.id}: target not loaded`);
+  // Every case starts from the file origin (sessions outlive a case).
+  await vscode.commands.executeCommand('jobline.placement.run', { op: 'reset' });
+  await vscode.commands.executeCommand('jobline.placement.showPanel');
+  let state;
+  for (const raw of o.ops) {
+    const op = JSON.parse(JSON.stringify(raw));
+    if (op.pick && typeof op.pick.point === 'string') op.pick = resolveUploadPick(extensionPath, visualCase.targetFile, op.pick.point);
+    state = await vscode.commands.executeCommand('jobline.placement.run', op);
+    assert.ok(state, `origin ${visualCase.id}: ${op.op} returned no state`);
+    assert.ok(!state.error, `origin ${visualCase.id}: ${op.op} failed: ${state.error}`);
+    await new Promise(resolve => setTimeout(resolve, 900));
+  }
+  const e = o.expect;
+  // Wait for the moved target (and a STEP re-send) to be drawn.
+  const until = Date.now() + 30000;
+  const pb = state.partBox;
+  while (Date.now() < until) {
+    probe = await Panel.requestVisualProbe(3000);
+    const b = probe?.activeTargetBounds;
+    const drawn = b && Math.abs(b.maxZ - pb.max[2]) < 0.02 * Math.max(1, pb.max[2] - pb.min[2]) && Math.abs(b.minX - pb.min[0]) < 0.02 * Math.max(1, pb.max[0] - pb.min[0]);
+    const stepOk = !o.stepTarget || probe?.activeTargetLoader === 'step-occt';
+    if (drawn && stepOk && probe.placement?.wcsShown && (!e.feature || probe.placement.highlightTriangles > 0)) break;
+    await new Promise(resolve => setTimeout(resolve, 300));
+  }
+  if (e.hover && state.feature?.triangles?.length) {
+    Panel.sendControl({ type: 'placementHover', tri: state.feature.triangles[0] });
+    await new Promise(resolve => setTimeout(resolve, 300));
+    probe = await Panel.requestVisualProbe(3000);
+  }
+  const b = probe.activeTargetBounds;
+  const size = Math.max(b.maxX - b.minX, b.maxY - b.minY, b.maxZ - b.minZ);
+  const tol = Math.max(size * 0.003, 1e-4);
+  const at0 = (v, what) => assert.ok(Math.abs(v) <= tol, `origin ${visualCase.id}: ${what} = ${v}, expected 0 (tol ${tol})`);
+  if (e.label) assert.match(state.label, new RegExp(e.label), `origin ${visualCase.id}: WCS label`);
+  if (e.corner) { at0(b.minX, 'target min X'); at0(b.minY, 'target min Y'); at0(b.maxZ, 'target top Z'); }
+  if (e.topCenter) { at0((b.minX + b.maxX) / 2, 'target centre X'); at0((b.minY + b.maxY) / 2, 'target centre Y'); at0(b.maxZ, 'target top Z'); }
+  if (e.feature) {
+    assert.equal(state.feature?.kind, e.feature, `origin ${visualCase.id}: picked feature`);
+    assert.ok(probe.placement.highlightTriangles > 0, `origin ${visualCase.id}: picked feature not highlighted`);
+    assert.equal(probe.placement.featureKind, e.feature);
+  }
+  if (e.feature === 'cylinder') { at0(state.feature.point[0], 'bore axis X'); at0(state.feature.point[1], 'bore axis Y'); }
+  if (e.featureNormal) for (let k = 0; k < 3; k++) assert.ok(Math.abs(state.feature.normal[k] - e.featureNormal[k]) < 1e-6, `origin ${visualCase.id}: face normal ${state.feature.normal}`);
+  if (e.viewNormal) assert.ok(probe.placement.viewNormal, `origin ${visualCase.id}: view not normal to the face`);
+  if (e.hover) assert.ok(probe.placement.hoverShown, `origin ${visualCase.id}: hover highlight not drawn`);
+  assert.ok(probe.placement.open && probe.placement.active, `origin ${visualCase.id}: Origin panel not open / active`);
+  assert.ok(probe.placement.wcsShown, `origin ${visualCase.id}: WCS triad not drawn`);
+  // The target stays inside the stock, as the setup places it.
+  assert.equal(state.insideStock, true, `origin ${visualCase.id}: target outside the stock`);
+  const sb = probe.stockBounds;
+  if (sb) for (let k = 0; k < 3; k++) {
+    const lo = [b.minX, b.minY, b.minZ][k], hi = [b.maxX, b.maxY, b.maxZ][k];
+    assert.ok(lo >= sb.min[k] - tol && hi <= sb.max[k] + tol, `origin ${visualCase.id}: target axis ${k} ${lo}..${hi} outside drawn stock ${sb.min[k]}..${sb.max[k]}`);
+  }
+  if (o.pack) {
+    assert.ok(probe.sharedKernel?.workholding > 0, `origin ${visualCase.id}: vise solids missing after the move`);
+    assert.match(probe.packSetup?.partZero || '', /placed in JobLine/, `origin ${visualCase.id}: setup part zero not updated`);
+    assert.deepEqual(probe.objectStyles?.stock, { visible: true, mode: 'transparent', opacity: 0.5 }, 'stock stays 50% transparent after a move');
+  }
+  fs.writeFileSync(path.join(artifactDir, `${visualCase.id}.origin.json`), JSON.stringify({
+    id: visualCase.id, mode: o.mode, ops: o.ops, label: state.label, anchor: state.anchor, origin: state.origin, rotation: state.rotation,
+    readout: state.readout, workOffset: state.workOffset, partBox: state.partBox, stockBox: state.stockBox, insideStock: state.insideStock,
+    feature: state.feature ? { kind: state.feature.kind, label: state.feature.label, point: state.feature.point, normal: state.feature.normal, axisDir: state.feature.axisDir, radius: state.feature.radius, triangles: state.feature.triangles.length } : null,
+    drawn: { targetBounds: b, stockBounds: sb, loader: probe.activeTargetLoader, placement: probe.placement, packSetup: probe.packSetup, workholding: probe.sharedKernel?.workholding },
+  }, null, 2));
+}
+
 async function verifyRevgripsSetup(Panel, document, artifactDir) {
   const steps = [];
   // G54 identifies the work coordinate system; its measured machine datum is
@@ -447,6 +561,9 @@ suite('JobLine visualizer screenshot matrix', function () {
     if (visualCase.ar4) {
       await verifyAr4Case(ToolpathVisualizerPanel, visualCase, artifactDir);
     }
+    if (visualCase.origin) {
+      await verifyOriginCase(ToolpathVisualizerPanel, visualCase, artifactDir, extension.extensionPath);
+    }
     if (visualCase.id === 'revgrips-stem-50-35-pro') {
       await verifyRevgripsSetup(ToolpathVisualizerPanel, document, artifactDir);
     }
@@ -464,7 +581,7 @@ suite('JobLine visualizer screenshot matrix', function () {
       probe.litRatio > 0.005,
       `Visualizer drew a blank scene for ${visualCase.id}: only ${probe.litPixels} of ${probe.sampledPixels} sampled pixels differ from the clear colour (${(probe.litRatio * 100).toFixed(3)}%)`
     );
-    if (!visualCase.revpack && !visualCase.targetModel && !visualCase.targetFile && !visualCase.targetFiles?.length && !visualCase.externalTargetFile) {
+    if (!visualCase.revpack && !visualCase.origin && !visualCase.targetModel && !visualCase.targetFile && !visualCase.targetFiles?.length && !visualCase.externalTargetFile) {
       assert.equal(probe.targetLoaded, false, `G-code-only case ${visualCase.id} retained an unrelated target model`);
     }
     const commands = await vscode.commands.getCommands(true);
@@ -533,6 +650,13 @@ suite('JobLine visualizer screenshot matrix', function () {
       const screenshot = path.join(artifactDir, `${visualCase.id}-${area}.png`);
       assert.ok(fs.existsSync(screenshot), `Targeted ${area} screenshot should be retained as an artifact`);
       assert.ok(fs.statSync(screenshot).size > 500, `Targeted ${area} screenshot should contain rendered UI`);
+    }
+    if (visualCase.origin) {
+      // Leave the next case the pack as authored and the tool on screen.
+      await vscode.commands.executeCommand('jobline.placement.run', { op: 'reset' });
+      ToolpathVisualizerPanel.sendControl({ type: 'setLayerVisible', layer: 'tool', visible: true });
+      ToolpathVisualizerPanel.sendControl({ type: 'setLayerVisible', layer: 'toolHolder', visible: true });
+      ToolpathVisualizerPanel.sendControl({ type: 'showOriginPanel', open: false });
     }
   }
 });
