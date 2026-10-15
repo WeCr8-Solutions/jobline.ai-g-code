@@ -736,7 +736,13 @@ export function projectPoint(view: ViewName, x: number, y: number, z: number): [
   }
 }
 
-export interface ProjectedTriangle { pts: [number, number, number, number, number, number]; depth: number; shade: number }
+export interface ProjectedTriangle {
+  pts: [number, number, number, number, number, number];
+  depth: number;
+  shade: number;
+  /** Index of the source triangle, so per-triangle data (e.g. zmapMesh triClass) survives the depth sort. */
+  index: number;
+}
 
 /**
  * Triangles projected for a view, back to front, each with a 0..1 shade from
@@ -753,7 +759,7 @@ export function projectTriangles(view: ViewName, positions: Float32Array, offset
     const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
     const len = Math.hypot(nx, ny, nz) || 1;
     const shade = Math.min(1, 0.35 + 0.65 * Math.abs((nx * 0.3 + ny * 0.6 + nz * 0.74) / len));
-    out.push({ pts: [a[0], a[1], b[0], b[1], c[0], c[1]], depth: (a[2] + b[2] + c[2]) / 3, shade });
+    out.push({ pts: [a[0], a[1], b[0], b[1], c[0], c[1]], depth: (a[2] + b[2] + c[2]) / 3, shade, index: i / 9 });
   }
   out.sort((p, q) => p.depth - q.depth);
   return out;

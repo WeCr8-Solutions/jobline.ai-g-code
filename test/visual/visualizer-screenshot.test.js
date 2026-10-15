@@ -242,11 +242,18 @@ async function verifyAr4Case(Panel, visualCase, artifactDir) {
   assert.ok(probe?.targetLoaded, `AR4 ${a.part} (${a.format}) did not load`);
   assert.match(probe.activeTargetFormat || '', a.format === 'step' ? /^STEP/ : /^STL/, 'loaded through the requested path');
   const b = probe.activeTargetBounds;
-  const want = a.golden.stl;
-  const size = Math.max(...want.max.map((v, k) => v - want.min[k]));
+  // STL bounds as the shared kernel reads them; STEP at its own design origin
+  // (Annin's STLs are moved to positive space), same extents either way.
+  const want = a.format === 'step' ? a.golden.step : a.golden.stl;
+  const stl = a.golden.stl;
+  const size = Math.max(...stl.max.map((v, k) => v - stl.min[k]));
   const tol = Math.max(0.05, size * 0.002);
   const got = [b.minX, b.minY, b.minZ, b.maxX, b.maxY, b.maxZ];
   [...want.min, ...want.max].forEach((v, k) => assert.ok(Math.abs(got[k] - v) <= tol, `${a.part} ${a.format} bound ${k}: ${got[k]} vs ${v} (mm, part orientation)`));
+  for (let k = 0; k < 3; k++) {
+    const extent = got[k + 3] - got[k];
+    assert.ok(Math.abs(extent - (stl.max[k] - stl.min[k])) <= tol, `${a.part} ${a.format} extent axis ${k}: ${extent} vs STL ${stl.max[k] - stl.min[k]}`);
+  }
   const layerProbe = await Panel.requestLayerProbe(15000);
   const entry = layerProbe?.layers?.targetModel;
   assert.ok(entry && entry.present && entry.litAlone > 0, `${a.part} drew nothing`);
