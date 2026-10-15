@@ -22,13 +22,13 @@
         "manufacturer": { "type": "string" },
         "model": { "type": "string" },
         "machineClass": {
-          "enum": ["mill", "lathe", "mill-turn", "grinder"],
+          "enum": ["mill", "lathe", "mill-turn", "grinder", "laser"],
           "description": "Broad profile: drives cycle lists and lathe T-word decoding."
         },
         "machineKind": {
           "type": "string",
           "description": "Detailed kind.",
-          "examples": ["3-Axis Vertical Mill", "4-Axis Mill", "5-Axis Mill (Trunnion)", "5-Axis Mill (Rotary Table)", "Turn Center (2-Axis)", "5-Axis Mill-Turn", "Multi-Spindle Transfer", "Grinding Center"]
+          "examples": ["3-Axis Vertical Mill", "4-Axis Mill", "5-Axis Mill (Trunnion)", "5-Axis Mill (Rotary Table)", "Turn Center (2-Axis)", "5-Axis Mill-Turn", "Multi-Axis Mill-Turn (B-Axis, Sub-Spindle)", "Multi-Spindle Transfer", "Grinding Center", "CNC Laser Cutting System (2D Flatbed)"]
         },
         "control": {
           "type": "object",

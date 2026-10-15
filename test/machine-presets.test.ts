@@ -139,6 +139,54 @@ describe('.jblmachine codec', () => {
     assert.equal(machineClassForKind('Horizontal Mill'), 'mill');
     assert.equal(machineClassForKind('Grinding Center'), 'grinder');
     assert.equal(machineClassForKind('4-Axis Mill'), 'mill');
+    // Oct 2026 platform defaults.
+    assert.equal(machineClassForKind('Multi-Axis Mill-Turn (B-Axis, Sub-Spindle)'), 'mill-turn');
+    assert.equal(machineClassForKind('Multitasking Lathe'), 'mill-turn');
+    assert.equal(machineClassForKind('CNC Laser Cutting System (2D Flatbed)'), 'laser');
+    assert.equal(machineClassForKind('Laser'), 'laser');
+    assert.equal(machineClassForKind('Fiber Laser'), 'laser');
+  });
+
+  it('ships the Oct 2026 platform defaults, each usable without a 3D machine model', () => {
+    const byId = (id: string) => {
+      const found = BUILTIN_PRESETS.find(entry => entry.id === id);
+      assert.ok(found, `missing built-in preset ${id}`);
+      return found!;
+    };
+    const umc = byId('builtin-haas-umc-750');
+    assert.equal(umc.control.family, 'haas');
+    assert.equal(umc.control.model, 'NGC');
+    assert.equal(umc.machineClass, 'mill');
+    assert.deepEqual(umc.axes.map(axis => axis.name), ['X', 'Y', 'Z', 'B', 'C']);
+    assert.deepEqual(umc.axes.find(axis => axis.name === 'B'), { name: 'B', min: -35, max: 120 });
+    assert.ok(umc.capabilities.fiveAxisSimultaneous);
+
+    const lb = byId('builtin-okuma-lb3000-ex2');
+    assert.equal(lb.manufacturer, 'Okuma');
+    assert.equal(lb.control.family, 'okuma');
+    assert.equal(lb.control.model, 'OSP-P300LA');
+    assert.equal(lb.machineClass, 'lathe');
+    assert.equal(lb.workholding, 'chuck');
+    assert.match(lb.name, /Spaceturn LB3000/);
+
+    const multus = byId('builtin-okuma-multus-b300ii');
+    assert.equal(multus.machineClass, 'mill-turn');
+    assert.equal(multus.control.model, 'OSP-P300SA');
+    assert.ok(multus.capabilities.subSpindle && multus.capabilities.liveTooling && multus.capabilities.yAxisTurn);
+    assert.deepEqual(multus.axes.find(axis => axis.name === 'B'), { name: 'B', min: -30, max: 195 });
+
+    const laser = byId('builtin-trumpf-trulaser-3030');
+    assert.equal(laser.machineClass, 'laser');
+    assert.equal(laser.workholding, 'none');
+    assert.equal(laser.units, 'metric');
+    assert.deepEqual(laser.axes.map(axis => [axis.name, axis.max]), [['X', 3000], ['Y', 1500], ['Z', 115]]);
+
+    // Every built-in round-trips through the shared .jblmachine codec.
+    for (const entry of BUILTIN_PRESETS) {
+      const again = parseJblMachine(serializeJblMachine(entry));
+      assert.ok(again.ok, `${entry.id} did not round-trip`);
+      if (again.ok) assert.deepEqual(again.preset, entry);
+    }
   });
 
   it('makes ids that are safe file names', () => {

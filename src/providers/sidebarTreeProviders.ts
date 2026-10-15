@@ -83,6 +83,8 @@ const MACHINE_CYCLE_CATALOG: Record<MachineType, number[]> = {
   lathe: [74, 76, 81, 83, 84, 85, 86],
   'mill-turn': [73, 74, 76, 81, 82, 83, 84, 85, 86, 88, 89],
   grinder: [81, 82],
+  // Lasers run no drilling/tapping canned cycles.
+  laser: [],
 };
 
 function isGCodeDocument(document: vscode.TextDocument | undefined): boolean {
@@ -91,7 +93,7 @@ function isGCodeDocument(document: vscode.TextDocument | undefined): boolean {
 
 function getCurrentMachineType(): MachineType {
   const machineType = vscode.workspace.getConfiguration().get<string>('jobline.machineType', 'mill');
-  if (machineType === 'lathe' || machineType === 'mill-turn' || machineType === 'grinder') {
+  if (machineType === 'lathe' || machineType === 'mill-turn' || machineType === 'grinder' || machineType === 'laser') {
     return machineType;
   }
   return 'mill';

@@ -1,0 +1,155 @@
+{
+  "schema": "jobline.revpack/2",
+  "id": "haas-vf2-vise-plate",
+  "name": "VF-2 vise plate with tapped holes (public sample)",
+  "units": "in",
+  "program": {
+    "file": "O01001.nc",
+    "dialect": "haas"
+  },
+  "target": {
+    "file": "target.stl",
+    "format": "stl"
+  },
+  "stock": {
+    "name": "6061 plate 4.0 x 3.0 x 0.75",
+    "min": [
+      -2.0,
+      -1.5,
+      -0.75
+    ],
+    "max": [
+      2.0,
+      1.5,
+      0.0
+    ]
+  },
+  "workholding": [
+    {
+      "name": "Fixed vise jaw",
+      "min": [
+        -3.0,
+        1.5,
+        -2.0
+      ],
+      "max": [
+        3.0,
+        2.25,
+        -0.25
+      ]
+    },
+    {
+      "name": "Moving vise jaw",
+      "min": [
+        -3.0,
+        -2.25,
+        -2.0
+      ],
+      "max": [
+        3.0,
+        -1.5,
+        -0.25
+      ]
+    },
+    {
+      "name": "Front parallel",
+      "min": [
+        -2.5,
+        -1.5,
+        -2.0
+      ],
+      "max": [
+        2.5,
+        -1.1,
+        -0.75
+      ]
+    },
+    {
+      "name": "Rear parallel",
+      "min": [
+        -2.5,
+        1.1,
+        -2.0
+      ],
+      "max": [
+        2.5,
+        1.5,
+        -0.75
+      ]
+    }
+  ],
+  "workOffsets": {
+    "G54": {
+      "x": -15.0,
+      "y": -8.0,
+      "z": -15.5
+    }
+  },
+  "tools": [
+    {
+      "t": 1,
+      "type": "Face Mill",
+      "diameter": 2.0,
+      "gaugeLength": 4.0,
+      "fluteLength": 0.25,
+      "maxRpm": 10000,
+      "description": "2.0 FACE MILL"
+    },
+    {
+      "t": 5,
+      "type": "Spot Drill",
+      "diameter": 0.375,
+      "gaugeLength": 3.75,
+      "fluteLength": 0.5,
+      "description": "3/8 90DEG SPOT DRILL"
+    },
+    {
+      "t": 7,
+      "type": "Drill",
+      "diameter": 0.201,
+      "gaugeLength": 4.6,
+      "fluteLength": 1.25,
+      "description": "#7 (.201) DRILL FOR 1/4-20"
+    },
+    {
+      "t": 12,
+      "type": "Tap",
+      "diameter": 0.25,
+      "gaugeLength": 4.4,
+      "fluteLength": 0.75,
+      "maxRpm": 2000,
+      "description": "1/4-20 SPIRAL POINT TAP"
+    }
+  ],
+  "machine": {
+    "presetId": "builtin-haas-vf-mill",
+    "name": "Haas VF-2 (NGC)",
+    "dialect": "haas",
+    "controlModel": "NGC",
+    "machineClass": "mill",
+    "axes": [
+      {
+        "name": "X",
+        "min": -30,
+        "max": 0
+      },
+      {
+        "name": "Y",
+        "min": -16,
+        "max": 0
+      },
+      {
+        "name": "Z",
+        "min": -20,
+        "max": 0
+      }
+    ],
+    "kinematics": "3-axis vertical (no rotaries)",
+    "spindleMaxRpm": 8100,
+    "toolChangeZ": 0
+  },
+  "clearance": 0.1,
+  "expect": {
+    "clean": true
+  }
+}

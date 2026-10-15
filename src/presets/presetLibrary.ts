@@ -81,6 +81,54 @@ export const BUILTIN_PRESETS: readonly JobLineMachinePreset[] = [
     ],
     capabilities: { ...DEFAULT_CAPABILITIES, fourthAxis: true, fiveAxisSimultaneous: true, probing: true },
   }),
+  // Oct 2026 platform defaults (Zach's review): a 5-axis Haas, the Okuma
+  // Spaceturn LB3000 on OSP, a multi-axis B-axis mill-turn and a laser. Travels
+  // are the builders' published specs; check them against the machine on the
+  // floor, since bed length and options change them. None of these needs a 3D
+  // machine model: the visualizer and the RevPack check use the axes below.
+  builtin({
+    // Haas UMC-750 spec sheet: X 30, Y 20, Z 20 in; B -35..+120 deg (older
+    // manuals say +110); C 360 continuous; 8100 rpm; 40+1 tools; table/table,
+    // C mounted on B. NGC control, TCPC is G234 and DWO is G254.
+    id: 'builtin-haas-umc-750', name: 'Haas UMC-750 (5-Axis)', manufacturer: 'Haas', model: 'UMC-750',
+    machineKind: '5-Axis Mill (Trunnion)', control: { family: 'haas', model: 'NGC' }, units: 'inch',
+    spindleMaxRpm: 8100, toolCapacity: 41,
+    axes: [
+      { name: 'X', min: -30, max: 0 }, { name: 'Y', min: -20, max: 0 }, { name: 'Z', min: -20, max: 0 },
+      { name: 'B', min: -35, max: 120 }, { name: 'C', min: -99999, max: 99999 },
+    ],
+    capabilities: { ...DEFAULT_CAPABILITIES, fourthAxis: true, fiveAxisSimultaneous: true, probing: true, throughSpindleCoolant: true },
+  }),
+  builtin({
+    // Okuma Spaceturn LB3000 EX II (C500 bed): X 10.24 in (260 mm) radial,
+    // Z 22.24 in; max turning dia 16.14 in (410 mm); 5000 rpm (A2-6);
+    // V12 turret. OSP-P300LA control. MY/MYW versions add Y, C and live tools.
+    id: 'builtin-okuma-lb3000-ex2', name: 'Okuma Spaceturn LB3000 EX II (OSP-P300LA)', manufacturer: 'Okuma',
+    model: 'LB3000 EX II', machineKind: 'Turn Center (2-Axis)', control: { family: 'okuma', model: 'OSP-P300LA' },
+    units: 'inch', spindleMaxRpm: 5000, toolCapacity: 12, workholding: 'chuck',
+    axes: [{ name: 'X', min: -0.5, max: 20 }, { name: 'Z', min: -22.24, max: 0 }],
+  }),
+  builtin({
+    // Okuma MULTUS B300 II: X 580, Y 160 (+/-80), Z 935 mm; B -30..195 deg;
+    // C 360; 5000 rpm main spindle; 20-tool ATC (40/60 optional); sub-spindle
+    // on W versions. OSP-P300SA control (OSP-P500 on current builds).
+    id: 'builtin-okuma-multus-b300ii', name: 'Okuma MULTUS B300 II Mill-Turn (OSP-P300SA)', manufacturer: 'Okuma',
+    model: 'MULTUS B300 II', machineKind: 'Multi-Axis Mill-Turn (B-Axis, Sub-Spindle)',
+    control: { family: 'okuma', model: 'OSP-P300SA' }, units: 'metric', spindleMaxRpm: 5000, toolCapacity: 20,
+    axes: [
+      { name: 'X', min: -50, max: 530 }, { name: 'Y', min: -80, max: 80 }, { name: 'Z', min: -935, max: 0 },
+      { name: 'B', min: -30, max: 195 }, { name: 'C', min: -99999, max: 99999 },
+    ],
+    capabilities: { ...DEFAULT_CAPABILITIES, fourthAxis: true, fiveAxisSimultaneous: true, liveTooling: true, yAxisTurn: true, subSpindle: true },
+  }),
+  builtin({
+    // TRUMPF TruLaser 3030 fiber: working range X 3000, Y 1500, Z 115 mm.
+    // Siemens SINUMERIK 840D sl on the long-running builds.
+    id: 'builtin-trumpf-trulaser-3030', name: 'TRUMPF TruLaser 3030 fiber (CNC Laser)', manufacturer: 'Trumpf',
+    model: 'TruLaser 3030 fiber', machineKind: 'CNC Laser Cutting System (2D Flatbed)',
+    control: { family: 'siemens', model: 'SINUMERIK 840D sl' }, units: 'metric', workholding: 'none',
+    axes: [{ name: 'X', min: 0, max: 3000 }, { name: 'Y', min: 0, max: 1500 }, { name: 'Z', min: 0, max: 115 }],
+  }),
   builtin({
     id: 'builtin-fanuc-robot', name: 'Fanuc Robot Cell', machineKind: 'Robot Cell', machineClass: 'mill',
     control: { family: 'fanuc-robot', model: 'R-30iB Plus' }, units: 'metric', workholding: 'none',

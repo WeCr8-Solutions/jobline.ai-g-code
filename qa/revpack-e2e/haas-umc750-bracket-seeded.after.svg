@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1010" viewBox="0 0 1500 1010" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1500" height="1010" fill="#0f141a"/>
+<text x="40" y="44" fill="#ffffff" font-size="26" font-weight="600">UMC-750 bracket with seeded errors</text>
+<text x="40" y="78" fill="#9fb3c8" font-size="16">Haas UMC-750 (NGC) · haas NGC · table/table trunnion, C mounted on B (B about Y, C about Z) · program O05002.nc (haas) · units in</text>
+<text x="40" y="102" fill="#7d8b99" font-size="14">No 3D machine model loaded (optional). Shown: target, stock, workholding, toolpath per tool, and the machine travel the tool tip can reach.</text>
+<rect x="40" y="150" width="460" height="460" fill="#161d25" stroke="#2a3542"/>
+<text x="40" y="142" fill="#cfd8e3" font-size="15">Top (XY)</text>
+<clipPath id="c40"><rect x="40" y="150" width="460" height="460"/></clipPath><g clip-path="url(#c40)">
+<rect x="-940.0" y="-422.1" width="2382.5" height="1588.3" fill="none" stroke="#3ddc97" stroke-dasharray="10 6" stroke-width="1.5"/>
+<rect x="152.0" y="292.6" width="198.5" height="158.8" fill="#c0704f" fill-opacity="0.45" stroke="#e08a63" stroke-width="1.5"/>
+<rect x="132.2" y="292.6" width="238.3" height="158.8" fill="#4488ff" fill-opacity="0.22" stroke="#4488ff" stroke-width="1.5"/>
+<rect x="132.2" y="292.6" width="238.3" height="158.8" fill="none" stroke="#e6ecff" stroke-width="1.2" stroke-dasharray="3 3"/>
+<line x1="84.5" y1="431.6" x2="84.5" y2="431.6" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="84.5" y1="431.6" x2="84.5" y2="431.6" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="84.5" y1="431.6" x2="84.5" y2="431.6" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="84.5" y1="431.6" x2="84.5" y2="431.6" stroke="#4dabf7" stroke-width="1.6"/>
+<line x1="84.5" y1="431.6" x2="418.1" y2="431.6" stroke="#4dabf7" stroke-width="1.6"/>
+<line x1="418.1" y1="431.6" x2="418.1" y2="431.6" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="418.1" y1="431.6" x2="251.3" y2="372.1" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="251.3" y1="372.1" x2="251.3" y2="372.1" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="116.3" y1="467.4" x2="116.3" y2="467.4" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="116.3" y1="467.4" x2="116.3" y2="467.4" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="116.3" y1="467.4" x2="116.3" y2="467.4" stroke="#4dabf7" stroke-width="1.6"/>
+<line x1="116.3" y1="467.4" x2="317.7" y2="467.4" stroke="#ffa94d" stroke-width="1.6"/>
+<line x1="317.7" y1="467.4" x2="303.1" y2="467.4" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1323.3" y1="372.1" x2="1323.3" y2="372.1" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1323.3" y1="372.1" x2="455.5" y2="372.1" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="455.5" y1="372.1" x2="251.3" y2="372.1" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="251.3" y1="372.1" x2="251.3" y2="372.1" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<circle cx="84.5" cy="431.6" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="251.3" cy="372.1" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="251.3" cy="372.1" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="116.3" cy="467.4" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="116.3" cy="467.4" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="317.7" cy="467.4" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1323.3" cy="372.1" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1323.3" cy="372.1" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="455.5" cy="372.1" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="251.3" cy="372.1" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+</g>
+<text x="490" y="628" fill="#7d8b99" font-size="13" text-anchor="end">X →   Y ↑</text>
+<rect x="540" y="150" width="460" height="460" fill="#161d25" stroke="#2a3542"/>
+<text x="540" y="142" fill="#cfd8e3" font-size="15">Front (XZ)</text>
+<clipPath id="c540"><rect x="540" y="150" width="460" height="460"/></clipPath><g clip-path="url(#c540)">
+<rect x="10.2" y="-432.0" width="1496.2" height="997.5" fill="none" stroke="#3ddc97" stroke-dasharray="10 6" stroke-width="1.5"/>
+<rect x="695.9" y="353.5" width="124.7" height="212.0" fill="#c0704f" fill-opacity="0.45" stroke="#e08a63" stroke-width="1.5"/>
+<rect x="683.4" y="291.2" width="149.6" height="74.8" fill="#4488ff" fill-opacity="0.22" stroke="#4488ff" stroke-width="1.5"/>
+<rect x="683.4" y="293.7" width="149.6" height="72.3" fill="none" stroke="#e6ecff" stroke-width="1.2" stroke-dasharray="3 3"/>
+<line x1="653.5" y1="-394.6" x2="653.5" y2="-394.6" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="653.5" y1="-394.6" x2="653.5" y2="241.3" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="653.5" y1="241.3" x2="653.5" y2="286.2" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="653.5" y1="286.2" x2="653.5" y2="293.7" stroke="#4dabf7" stroke-width="1.6"/>
+<line x1="653.5" y1="293.7" x2="863.0" y2="293.7" stroke="#4dabf7" stroke-width="1.6"/>
+<line x1="863.0" y1="293.7" x2="863.0" y2="316.1" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="863.0" y1="316.1" x2="758.3" y2="316.1" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="758.3" y1="316.1" x2="758.3" y2="286.2" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="673.5" y1="248.8" x2="673.5" y2="248.8" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="673.5" y1="248.8" x2="673.5" y2="203.9" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="673.5" y1="203.9" x2="673.5" y2="256.8" stroke="#4dabf7" stroke-width="1.6"/>
+<line x1="673.5" y1="256.8" x2="800.0" y2="246.6" stroke="#ffa94d" stroke-width="1.6"/>
+<line x1="800.0" y1="246.6" x2="790.8" y2="194.5" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1431.5" y1="-361.5" x2="1431.5" y2="-361.5" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1431.5" y1="-361.5" x2="886.5" y2="288.0" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="886.5" y1="288.0" x2="758.3" y2="241.3" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="758.3" y1="241.3" x2="758.3" y2="390.9" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<circle cx="653.5" cy="-394.6" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="758.3" cy="316.1" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="758.3" cy="286.2" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="673.5" cy="248.8" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="673.5" cy="203.9" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="800.0" cy="246.6" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1431.5" cy="-361.5" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1431.5" cy="-361.5" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="886.5" cy="288.0" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="758.3" cy="390.9" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+</g>
+<text x="990" y="628" fill="#7d8b99" font-size="13" text-anchor="end">X →   Z ↑</text>
+<rect x="1020" y="150" width="460" height="460" fill="#161d25" stroke="#2a3542"/>
+<text x="1020" y="142" fill="#cfd8e3" font-size="15">Side (YZ)</text>
+<clipPath id="c1020"><rect x="1020" y="150" width="460" height="460"/></clipPath><g clip-path="url(#c1020)">
+<rect x="756.3" y="-432.0" width="997.5" height="997.5" fill="none" stroke="#3ddc97" stroke-dasharray="10 6" stroke-width="1.5"/>
+<rect x="1205.1" y="353.5" width="99.7" height="212.0" fill="#c0704f" fill-opacity="0.45" stroke="#e08a63" stroke-width="1.5"/>
+<rect x="1205.1" y="291.2" width="99.7" height="74.8" fill="#4488ff" fill-opacity="0.22" stroke="#4488ff" stroke-width="1.5"/>
+<rect x="1205.1" y="293.7" width="99.7" height="72.3" fill="none" stroke="#e6ecff" stroke-width="1.2" stroke-dasharray="3 3"/>
+<line x1="1217.6" y1="-394.6" x2="1217.6" y2="-394.6" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1217.6" y1="-394.6" x2="1217.6" y2="241.3" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1217.6" y1="241.3" x2="1217.6" y2="286.2" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1217.6" y1="286.2" x2="1217.6" y2="293.7" stroke="#4dabf7" stroke-width="1.6"/>
+<line x1="1217.6" y1="293.7" x2="1217.6" y2="293.7" stroke="#4dabf7" stroke-width="1.6"/>
+<line x1="1217.6" y1="293.7" x2="1217.6" y2="316.1" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1217.6" y1="316.1" x2="1255.0" y2="316.1" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1255.0" y1="316.1" x2="1255.0" y2="286.2" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1195.1" y1="248.8" x2="1195.1" y2="248.8" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1195.1" y1="248.8" x2="1195.1" y2="203.9" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1195.1" y1="203.9" x2="1195.1" y2="256.8" stroke="#4dabf7" stroke-width="1.6"/>
+<line x1="1195.1" y1="256.8" x2="1195.1" y2="246.6" stroke="#ffa94d" stroke-width="1.6"/>
+<line x1="1195.1" y1="246.6" x2="1195.1" y2="194.5" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1255.0" y1="-361.5" x2="1255.0" y2="-361.5" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1255.0" y1="-361.5" x2="1255.0" y2="288.0" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1255.0" y1="288.0" x2="1255.0" y2="241.3" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1255.0" y1="241.3" x2="1255.0" y2="390.9" stroke="#ff5d5d" stroke-width="1" stroke-dasharray="5 4"/>
+<circle cx="1217.6" cy="-394.6" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1255.0" cy="316.1" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1255.0" cy="286.2" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1195.1" cy="248.8" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1195.1" cy="203.9" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1195.1" cy="246.6" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1255.0" cy="-361.5" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1255.0" cy="-361.5" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1255.0" cy="288.0" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+<circle cx="1255.0" cy="390.9" r="7" fill="none" stroke="#ff3b3b" stroke-width="2.5"/>
+</g>
+<text x="1470" y="628" fill="#7d8b99" font-size="13" text-anchor="end">Y →   Z ↑</text>
+<rect x="40" y="658" width="16" height="16" fill="#4488ff"/><text x="64" y="671" fill="#cfd8e3" font-size="14">Stock (RevPack)</text>
+<rect x="340" y="658" width="16" height="16" fill="#c7d2fe"/><text x="364" y="671" fill="#cfd8e3" font-size="14">Target bounds</text>
+<rect x="640" y="658" width="16" height="16" fill="#e08a63"/><text x="664" y="671" fill="#cfd8e3" font-size="14">Workholding (RevPack)</text>
+<rect x="940" y="658" width="16" height="16" fill="#3ddc97"/><text x="964" y="671" fill="#cfd8e3" font-size="14">Machine travel reachable by tool tip</text>
+<rect x="40" y="682" width="16" height="16" fill="#4dabf7"/><text x="64" y="695" fill="#cfd8e3" font-size="14">Feed</text>
+<rect x="340" y="682" width="16" height="16" fill="#ffa94d"/><text x="364" y="695" fill="#cfd8e3" font-size="14">Feed, tool tilted (TCPC/DWO)</text>
+<rect x="640" y="682" width="16" height="16" fill="#ff5d5d"/><text x="664" y="695" fill="#cfd8e3" font-size="14">Rapid</text>
+<text x="40" y="734" fill="#ff5d5d" font-size="22" font-weight="700">FAIL: 10 errors, 0 warnings · tools T1 T2 T4 · offsets G54 G55</text>
+<text x="40" y="762" fill="#9fb3c8" font-size="14">travel ✗1 (85)   collision ✗3 (4281)   offsets ✗1 (2)   tools ✗2 (17)   spindle-feed ✗1 (6)   tool-change ✗1 (3)   five-axis ✗1 (3)   dialect ✓ (1)   program ✓ (2)</text>
+<text x="40" y="788" fill="#ff8787" font-size="14">L7 undefined-work-offset-G55: G55 is selected but the RevPack defines only G54.</text>
+<text x="40" y="809" fill="#ff8787" font-size="14">L14 rapid-into-stock: Rapid takes T1 to Z-0.5000 where uncut stock stands at Z-0.0500.</text>
+<text x="40" y="830" fill="#ff8787" font-size="14">L15 rapid-into-stock: Rapid takes T1 to Z-0.5000 where uncut stock stands at Z0.0000.</text>
+<text x="40" y="851" fill="#ff8787" font-size="14">L16 unsafe-tool-change: M06 with the spindle at machine Z-13.6500; retract to Z0 (G28 G91 Z0 or G53 Z0) first.</text>
+<text x="40" y="872" fill="#ff8787" font-size="14">L18 tool-length-mismatch-T2: T2 is in the spindle but the program applies H1 (T1's length); expected H2.</text>
+<text x="40" y="893" fill="#ff8787" font-size="14">L20 simultaneous-5x-without-tcpc: Simultaneous rotary + linear feed without TCPC (G234) active: the tool tip will not follow the programmed path.</text>
+<text x="40" y="914" fill="#ff8787" font-size="14">L24 tool-not-in-revpack-T4: T4 is called but the RevPack tool list has T1, T2, T3.</text>
+<text x="40" y="935" fill="#ff8787" font-size="14">L25 over-travel-B: B goes to -40°; Haas UMC-750 (NGC) allows -35° to 120°.</text>
+<text x="40" y="956" fill="#ff8787" font-size="14">L26 rpm-over-machine: S9000 exceeds Haas UMC-750 (NGC)'s 8100 rpm.</text>
+</svg>

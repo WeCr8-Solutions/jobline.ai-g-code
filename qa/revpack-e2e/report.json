@@ -1,0 +1,159 @@
+[
+  {
+    "id": "haas-umc750-bracket",
+    "dir": "test\\fixtures\\revpack-public\\haas-umc750-5axis",
+    "ok": true,
+    "problems": [],
+    "summary": {
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0,
+      "pass": true
+    },
+    "findings": []
+  },
+  {
+    "id": "haas-umc750-bracket-seeded",
+    "dir": "test\\fixtures\\revpack-public\\haas-umc750-5axis-seeded",
+    "ok": true,
+    "problems": [],
+    "summary": {
+      "errors": 10,
+      "warnings": 0,
+      "infos": 3,
+      "pass": false
+    },
+    "findings": [
+      {
+        "id": "revpack-tool-unused-T3",
+        "category": "tools",
+        "severity": "info",
+        "line": 1,
+        "message": "RevPack lists T3 (Drill) but the program never calls it."
+      },
+      {
+        "id": "undefined-work-offset-G55",
+        "category": "offsets",
+        "severity": "error",
+        "line": 7,
+        "message": "G55 is selected but the RevPack defines only G54."
+      },
+      {
+        "id": "rapid-into-stock",
+        "category": "collision",
+        "severity": "error",
+        "line": 14,
+        "message": "Rapid takes T1 to Z-0.5000 where uncut stock stands at Z-0.0500."
+      },
+      {
+        "id": "rapid-into-stock",
+        "category": "collision",
+        "severity": "error",
+        "line": 15,
+        "message": "Rapid takes T1 to Z-0.5000 where uncut stock stands at Z0.0000."
+      },
+      {
+        "id": "tool-change-spindle-running",
+        "category": "tool-change",
+        "severity": "info",
+        "line": 16,
+        "message": "M06 with the spindle still commanded on; the control stops it, but M05 first reads clearer."
+      },
+      {
+        "id": "unsafe-tool-change",
+        "category": "tool-change",
+        "severity": "error",
+        "line": 16,
+        "message": "M06 with the spindle at machine Z-13.6500; retract to Z0 (G28 G91 Z0 or G53 Z0) first."
+      },
+      {
+        "id": "tool-length-mismatch-T2",
+        "category": "tools",
+        "severity": "error",
+        "line": 18,
+        "message": "T2 is in the spindle but the program applies H1 (T1's length); expected H2."
+      },
+      {
+        "id": "simultaneous-5x-without-tcpc",
+        "category": "five-axis",
+        "severity": "error",
+        "line": 20,
+        "message": "Simultaneous rotary + linear feed without TCPC (G234) active: the tool tip will not follow the programmed path."
+      },
+      {
+        "id": "tool-change-spindle-running",
+        "category": "tool-change",
+        "severity": "info",
+        "line": 24,
+        "message": "M06 with the spindle still commanded on; the control stops it, but M05 first reads clearer."
+      },
+      {
+        "id": "tool-not-in-revpack-T4",
+        "category": "tools",
+        "severity": "error",
+        "line": 24,
+        "message": "T4 is called but the RevPack tool list has T1, T2, T3."
+      },
+      {
+        "id": "over-travel-B",
+        "category": "travel",
+        "severity": "error",
+        "line": 25,
+        "message": "B goes to -40°; Haas UMC-750 (NGC) allows -35° to 120°."
+      },
+      {
+        "id": "rpm-over-machine",
+        "category": "spindle-feed",
+        "severity": "error",
+        "line": 26,
+        "message": "S9000 exceeds Haas UMC-750 (NGC)'s 8100 rpm."
+      },
+      {
+        "id": "rapid-into-workholding",
+        "category": "collision",
+        "severity": "error",
+        "line": 29,
+        "message": "Rapid move puts T4 into Dovetail fixture (grips bottom 0.25) at part (0.000, 0.000, -1.260)."
+      }
+    ]
+  },
+  {
+    "id": "haas-vf2-vise-plate",
+    "dir": "test\\fixtures\\revpack-public\\haas-vf2-vise",
+    "ok": true,
+    "problems": [],
+    "summary": {
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0,
+      "pass": true
+    },
+    "findings": []
+  },
+  {
+    "id": "okuma-lb3000-shaft",
+    "dir": "test\\fixtures\\revpack-public\\okuma-lb3000-lathe",
+    "ok": true,
+    "problems": [],
+    "summary": {
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0,
+      "pass": true
+    },
+    "findings": []
+  },
+  {
+    "id": "trumpf-trulaser3030-bracket-nest",
+    "dir": "test\\fixtures\\revpack-public\\trumpf-trulaser3030",
+    "ok": true,
+    "problems": [],
+    "summary": {
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0,
+      "pass": true
+    },
+    "findings": []
+  }
+]

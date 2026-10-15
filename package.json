@@ -209,13 +209,15 @@
             "mill",
             "lathe",
             "mill-turn",
-            "grinder"
+            "grinder",
+            "laser"
           ],
           "enumDescriptions": [
             "Mill profile: drilling/spotface cycles like G81/G82/G83 plus rigid tapping.",
             "Lathe profile: turning-oriented cycles such as G74/G76 and drilling cycles.",
             "Mill-turn profile: combined mill + lathe cycle families.",
-            "Grinder profile: simplified drilling/position cycles (commonly G81/G82)."
+            "Grinder profile: simplified drilling/position cycles (commonly G81/G82).",
+            "Laser profile: 2D/tube CNC laser cutting (beam on/off, pierce, no spindle or tool length)."
           ],
           "description": "Machine type profile used to tailor cycle lists and axis assumptions in JobLine views."
         },
@@ -907,6 +909,8 @@
     "test": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/parser.test.ts');require('./test/formatter.test.ts');require('./test/tool-extraction.test.ts');require('./test/workholding.test.ts');require('./test/lathe-review.test.ts');require('./test/turning-path.test.ts');require('./test/insert-code.test.ts');require('./test/machine-presets.test.ts');require('./test/cam-bench.test.ts');require('./test/shop-reference.test.ts');\"",
     "test:diagnostics": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/diagnostics.test.ts');\"",
     "test:review": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/program-review.test.ts');\"",
+    "test:revpack": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/revpack-correlation.test.ts');\"",
+    "revpack:e2e": "node -r ts-node/register/transpile-only ./scripts/revpack-e2e.ts",
     "test:visualizer:harness": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/revpack-visualizer-harness.test.ts');\"",
     "test:verification": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/gcode-stl-comparison.test.ts');require('./test/step-tessellator.test.ts');\"",
     "test:simulation-matrix": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/simulation-matrix.test.ts');\"",
@@ -915,7 +919,7 @@
     "test:hover-cards": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/hover-cards.test.ts');\"",
     "test:feedback-matrix": "node --test test/user-feedback-motion-matrix.test.cjs",
     "test:rating": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,strict:false}});require('./test/validation-rating.test.ts');\"",
-    "test:all": "npm test && npm run test:feedback-matrix && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:simulation-matrix && npm run test:pipeline-gate && npm run test:visualizer-ui && npm run test:hover-cards && npm run test:rating",
+    "test:all": "npm test && npm run test:feedback-matrix && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:revpack && npm run test:simulation-matrix && npm run test:pipeline-gate && npm run test:visualizer-ui && npm run test:hover-cards && npm run test:rating",
     "test:smoke": "node ./scripts/run-extension-smoke.js",
     "test:e2e:visual": "npm run compile && node ./scripts/run-visual-e2e.js",
     "test:e2e:hover": "npm run compile && node ./scripts/run-hover-e2e.js",

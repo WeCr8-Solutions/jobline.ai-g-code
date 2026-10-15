@@ -50,3 +50,4 @@ tools/**
 agent-tasks/**
 agent-loop.config.json
 .agent-loop/**
+qa/**

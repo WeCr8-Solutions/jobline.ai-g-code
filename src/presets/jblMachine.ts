@@ -33,7 +33,7 @@ export const JBL_CONTROL_FAMILIES = [
 export type JblControlFamily = typeof JBL_CONTROL_FAMILIES[number];
 
 /** Broad machine profile. Matches the extension's `jobline.machineType` setting. */
-export const JBL_MACHINE_CLASSES = ['mill', 'lathe', 'mill-turn', 'grinder'] as const;
+export const JBL_MACHINE_CLASSES = ['mill', 'lathe', 'mill-turn', 'grinder', 'laser'] as const;
 export type JblMachineClass = typeof JBL_MACHINE_CLASSES[number];
 
 export type JblUnits = 'inch' | 'metric';
@@ -115,8 +115,13 @@ export const JBL_MACHINE_KINDS: ReadonlyArray<{ kind: string; machineClass: JblM
   { kind: '5-Axis Mill (Rotary Table)', machineClass: 'mill' },
   { kind: 'Turn Center (2-Axis)', machineClass: 'lathe' },
   { kind: '5-Axis Mill-Turn', machineClass: 'mill-turn' },
+  { kind: 'Multi-Axis Mill-Turn (B-Axis, Sub-Spindle)', machineClass: 'mill-turn' },
+  { kind: 'Turn/Mill (Y-Axis)', machineClass: 'mill-turn' },
+  { kind: 'Swiss', machineClass: 'mill-turn' },
   { kind: 'Multi-Spindle Transfer', machineClass: 'mill-turn' },
   { kind: 'Grinding Center', machineClass: 'grinder' },
+  { kind: 'CNC Laser Cutting System (2D Flatbed)', machineClass: 'laser' },
+  { kind: 'CNC Laser Cutting System (Tube)', machineClass: 'laser' },
 ];
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -143,7 +148,8 @@ export function machineClassForKind(kind: string): JblMachineClass {
   const known = JBL_MACHINE_KINDS.find(entry => entry.kind.toLowerCase() === kind.trim().toLowerCase());
   if (known) return known.machineClass;
   const text = kind.toLowerCase();
-  if (/mill[\s-]*turn|turn[\s/-]*mill|multi[\s-]*spindle|swiss/.test(text)) return 'mill-turn';
+  if (/laser|plasma|waterjet/.test(text)) return 'laser';
+  if (/mill[\s-]*turn|turn[\s/-]*mill|multi[\s-]*spindle|multi[\s-]*task|swiss/.test(text)) return 'mill-turn';
   if (/lathe|turn/.test(text)) return 'lathe';
   if (/grind/.test(text)) return 'grinder';
   return 'mill';
@@ -155,6 +161,7 @@ export function defaultKindForClass(machineClass: JblMachineClass): string {
     case 'lathe': return 'Turn Center (2-Axis)';
     case 'mill-turn': return '5-Axis Mill-Turn';
     case 'grinder': return 'Grinding Center';
+    case 'laser': return 'CNC Laser Cutting System (2D Flatbed)';
     default: return '3-Axis Vertical Mill';
   }
 }
@@ -182,6 +189,8 @@ export function controlFamilyFromName(name: string | undefined | null): JblContr
 }
 
 function defaultWorkholding(machineClass: JblMachineClass): JblWorkholding {
+  // A flatbed laser lays the sheet on slats: there is no vise or chuck to draw.
+  if (machineClass === 'laser') return 'none';
   return machineClass === 'lathe' || machineClass === 'mill-turn' ? 'chuck' : 'vise';
 }
 

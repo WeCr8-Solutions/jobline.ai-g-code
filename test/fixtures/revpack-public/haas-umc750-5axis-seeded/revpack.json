@@ -1,0 +1,163 @@
+{
+  "schema": "jobline.revpack/2",
+  "id": "haas-umc750-bracket-seeded",
+  "name": "UMC-750 bracket with seeded errors",
+  "units": "in",
+  "program": {
+    "file": "O05002.nc",
+    "dialect": "haas"
+  },
+  "target": {
+    "file": "../haas-umc750-5axis/target.stl",
+    "format": "stl"
+  },
+  "stock": {
+    "name": "6061 block 3.0 x 2.0 x 1.5",
+    "min": [
+      -1.5,
+      -1.0,
+      -1.5
+    ],
+    "max": [
+      1.5,
+      1.0,
+      0.0
+    ]
+  },
+  "workholding": [
+    {
+      "name": "Dovetail fixture (grips bottom 0.25)",
+      "min": [
+        -1.25,
+        -1.0,
+        -5.5
+      ],
+      "max": [
+        1.25,
+        1.0,
+        -1.25
+      ]
+    }
+  ],
+  "workOffsets": {
+    "G54": {
+      "x": -15.0,
+      "y": -10.0,
+      "z": -18.0
+    }
+  },
+  "tools": [
+    {
+      "t": 1,
+      "h": 1,
+      "d": 1,
+      "type": "End Mill",
+      "diameter": 0.5,
+      "gaugeLength": 4.25,
+      "fluteLength": 1.0,
+      "maxRpm": 12000,
+      "description": "1/2 3FL CARBIDE FLAT"
+    },
+    {
+      "t": 2,
+      "h": 2,
+      "d": 2,
+      "type": "Chamfer Mill",
+      "diameter": 0.25,
+      "gaugeLength": 3.5,
+      "fluteLength": 0.5,
+      "maxRpm": 15000,
+      "description": "1/4 90DEG CHAMFER"
+    },
+    {
+      "t": 3,
+      "h": 3,
+      "d": 3,
+      "type": "Drill",
+      "diameter": 0.201,
+      "gaugeLength": 5.0,
+      "fluteLength": 1.25,
+      "maxRpm": 8000,
+      "description": "#7 (.201) DRILL FOR 1/4-20"
+    }
+  ],
+  "machine": {
+    "presetId": "builtin-haas-umc-750",
+    "name": "Haas UMC-750 (NGC)",
+    "dialect": "haas",
+    "controlModel": "NGC",
+    "machineClass": "mill",
+    "axes": [
+      {
+        "name": "X",
+        "min": -30,
+        "max": 0
+      },
+      {
+        "name": "Y",
+        "min": -20,
+        "max": 0
+      },
+      {
+        "name": "Z",
+        "min": -20,
+        "max": 0
+      },
+      {
+        "name": "B",
+        "min": -35,
+        "max": 120
+      },
+      {
+        "name": "C",
+        "min": -99999,
+        "max": 99999
+      }
+    ],
+    "kinematics": "table/table trunnion, C mounted on B (B about Y, C about Z)",
+    "rotaries": [
+      {
+        "name": "C",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "table": true
+      },
+      {
+        "name": "B",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "table": true
+      }
+    ],
+    "rotaryCenter": [
+      -15.0,
+      -10.0,
+      -21.0
+    ],
+    "spindleMaxRpm": 8100,
+    "toolChangeZ": 0,
+    "tcpcOn": "G234",
+    "dwoOn": "G254"
+  },
+  "clearance": 0.1,
+  "expect": {
+    "clean": false,
+    "findingIds": [
+      "undefined-work-offset-G55",
+      "rapid-into-stock",
+      "unsafe-tool-change",
+      "tool-length-mismatch-T2",
+      "simultaneous-5x-without-tcpc",
+      "tool-not-in-revpack-T4",
+      "over-travel-B",
+      "rapid-into-workholding",
+      "rpm-over-machine"
+    ]
+  }
+}

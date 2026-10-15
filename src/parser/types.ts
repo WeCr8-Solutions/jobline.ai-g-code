@@ -366,7 +366,7 @@ export type ControlType =
   | 'fanuc-robot'
   | 'abb';
 
-export type MachineType = 'mill' | 'lathe' | 'mill-turn' | 'grinder';
+export type MachineType = 'mill' | 'lathe' | 'mill-turn' | 'grinder' | 'laser';
 
 // =============================================================================
 // Configuration

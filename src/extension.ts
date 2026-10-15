@@ -668,8 +668,13 @@ export function activate(context: vscode.ExtensionContext): void {
         '5-Axis Mill (Rotary Table)',
         'Turn Center (2-Axis)',
         '5-Axis Mill-Turn',
+        'Multi-Axis Mill-Turn (B-Axis, Sub-Spindle)',
+        'Turn/Mill (Y-Axis)',
+        'Swiss',
         'Multi-Spindle Transfer',
         'Grinding Center',
+        'CNC Laser Cutting System (2D Flatbed)',
+        'CNC Laser Cutting System (Tube)',
       ];
       const selected = await vscode.window.showQuickPick(machineTypes, {
         placeHolder: 'Select machine type',
