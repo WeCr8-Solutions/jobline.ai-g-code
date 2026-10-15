@@ -7,6 +7,9 @@ import { isGCodeFile } from '../utils/fileTypes';
 import { selectPreferredGCodeDocument } from '../utils/gcodeDocumentTracker';
 import { buildMacroSidebarEntries } from './visualizer/macroSidebar';
 import { getAdjacentSectionIndex, getSectionLineNumbers, SidebarSection } from './sidebarNavigation';
+import { getToolLibraryStore } from '../tooling/toolLibraryStore';
+import { checkProgramAgainstLibrary } from '../tooling/toolLibraryCheck';
+import { describeLibraryTool } from '../tooling/toolLibrary';
 
 class JobLineTreeItem extends vscode.TreeItem {
   constructor(
@@ -221,11 +224,39 @@ function buildSnapshot(): SidebarSnapshot {
     : [new JobLineTreeItem('No operations detected')];
 
   const validTools = model.tools.filter(tool => tool.toolNumber > 0);
+  // Imported tool library or linked setup sheet: show its data beside each tool
+  // and mark tools that are missing from it or disagree with it.
+  const library = doc ? getToolLibraryStore()?.libraryFor(doc.uri) : undefined;
+  const check = library && library.tools.length
+    ? checkProgramAgainstLibrary({
+        blocks: model.blocks, stateAtBlock: model.stateAtBlock, tools: model.tools, library,
+        controlType: model.dialect, lathe: model.dialect === 'okuma' || model.detectedMachineType.includes('Turn'),
+      })
+    : undefined;
   const tools: vscode.TreeItem[] = validTools.length > 0
-    ? validTools.map(tool =>
-        new ToolTreeItem(tool.toolNumber, tool.lineNumbers, `T${tool.toolNumber}`, buildToolDescription(tool))
-      )
+    ? validTools.map(tool => {
+        const item = new ToolTreeItem(tool.toolNumber, tool.lineNumbers, `T${tool.toolNumber}`, buildToolDescription(tool));
+        const st = check?.status.get(tool.toolNumber);
+        if (st && library) {
+          const lib = st.library;
+          if (lib) item.description = describeLibraryTool(lib);
+          item.iconPath = new vscode.ThemeIcon(
+            st.status === 'ok' ? 'pass' : st.status === 'missing' ? 'question' : 'warning',
+            new vscode.ThemeColor(st.status === 'ok' ? 'testing.iconPassed' : 'problemsWarningIcon.foreground'),
+          );
+          item.tooltip = new vscode.MarkdownString([
+            `**T${tool.toolNumber}** — ${st.status === 'ok' ? 'matches' : st.status === 'missing' ? 'not in' : 'differs from'} ${library.name}`,
+            lib ? `\n\nLibrary: ${describeLibraryTool(lib)}` : '',
+            tool.description ? `\n\nProgram comment: ${tool.description}` : '',
+            st.notes.length ? `\n\n- ${st.notes.join('\n- ')}` : '',
+          ].join(''));
+        }
+        return item;
+      })
     : [new JobLineTreeItem('No tools detected')];
+  if (library && validTools.length > 0) {
+    tools.push(new JobLineTreeItem(`Library: ${library.name}`, `${library.tools.length} tools`));
+  }
 
   const offsetsList = uniqueWorkOffsets(model);
   const offsets = offsetsList.length > 0
@@ -337,6 +368,9 @@ export function registerSidebarTreeProviders(context: vscode.ExtensionContext): 
     vscode.commands.registerCommand('jobline.sidebar.prevAlarm', async () => goToSectionItem('alarms', -1)),
     vscode.commands.registerCommand('jobline.sidebar.nextAlarm', async () => goToSectionItem('alarms', 1))
   );
+
+  const libraryStore = getToolLibraryStore();
+  if (libraryStore) context.subscriptions.push(libraryStore.onDidChange(() => refreshAll()));
 
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider('jobline.operationsTree', operationsProvider),

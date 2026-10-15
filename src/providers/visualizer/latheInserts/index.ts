@@ -33,24 +33,19 @@ export function getLatheInsertShape(type: LatheInsertType, size: number, noseRad
   }
 }
 
-// Placeholder for CAM software connect functions
-export function connectToEspritCAM() {
-  // TODO: Implement Esprit CAM connection
-  return 'Not implemented';
+// CAM connections live in src/cam (file-based: NC output + setup sheets).
+// These names are kept for callers of the old placeholders; each returns a
+// plain statement of what the integration does instead of "Not implemented".
+import { camSystem } from '../../../cam/camSources';
+
+function describeCam(id: Parameters<typeof camSystem>[0], fallback: string): string {
+  const info = camSystem(id);
+  return info ? `${info.label}: ${info.does} ${info.doesNot}` : fallback;
 }
-export function connectToMastercam() {
-  // TODO: Implement Mastercam connection
-  return 'Not implemented';
-}
-export function connectToGibbsCAM() {
-  // TODO: Implement GibbsCAM connection
-  return 'Not implemented';
-}
-export function connectToHexagonCAM() {
-  // TODO: Implement Hexagon connection
-  return 'Not implemented';
-}
+export function connectToEspritCAM() { return describeCam('esprit', 'ESPRIT'); }
+export function connectToMastercam() { return describeCam('mastercam', 'Mastercam'); }
+export function connectToGibbsCAM() { return describeCam('gibbscam', 'GibbsCAM'); }
+export function connectToHexagonCAM() { return describeCam('hexagon', 'Hexagon'); }
 export function connectToOtherCAM(name: string) {
-  // TODO: Implement generic CAM connection
-  return `Not implemented: ${name}`;
+  return `${name}: file-based only. Point JobLine at the folder the post writes to; it reads NC output and setup sheets. No live connection.`;
 }

@@ -1,8 +1,7 @@
-// Autodesk Fusion 360 integration stub
-import { CamConnection, CamTool } from '../camIntegration';
+// File-based integration: reads posted NC output and exported setup sheets
+// from a folder. No live link to the vendor application (see CAM_SYSTEMS).
+import { FolderCamConnection, CamFolderIO, nodeFolderIO } from '../../../cam/folderConnection';
 
-export class Fusion360Connection implements CamConnection {
-  async connect() { /* TODO: Implement Fusion 360 API connection */ return false; }
-  async getTools(): Promise<CamTool[]> { return []; }
-  async getCode(): Promise<string> { return ''; }
+export class Fusion360Connection extends FolderCamConnection {
+  constructor(folder = '', io: CamFolderIO = nodeFolderIO) { super('fusion', folder, io); }
 }

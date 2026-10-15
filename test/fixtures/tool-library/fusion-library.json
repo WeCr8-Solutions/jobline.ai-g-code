@@ -1,0 +1,33 @@
+{
+  "data": [
+    {
+      "BMC": "carbide", "GRADE": "Mill Generic", "description": "1/2 FLAT ENDMILL", "type": "flat end mill", "unit": "inches", "vendor": "JobLine test",
+      "geometry": { "DC": 0.5, "LCF": 1.0, "LB": 1.75, "OAL": 3.0, "RE": 0, "NOF": 3, "assemblyGaugeLength": 3.25 },
+      "guid": "00000000-0000-4000-8000-000000000001",
+      "post-process": { "number": 1, "length-offset": 1, "diameter-offset": 1, "comment": "", "turret": 0 }
+    },
+    {
+      "description": "#7 DRILL", "type": "drill", "unit": "inches",
+      "geometry": { "DC": 0.201, "LCF": 1.2, "LB": 2.0, "OAL": 3.5, "SIG": 118 },
+      "guid": "00000000-0000-4000-8000-000000000002",
+      "post-process": { "number": 2, "length-offset": 2, "diameter-offset": 2 }
+    },
+    {
+      "description": "1/4-20 TAP", "type": "tap right hand", "unit": "inches",
+      "geometry": { "DC": 0.25, "LCF": 0.6, "LB": 1.8, "TP": 0.05 },
+      "guid": "00000000-0000-4000-8000-000000000003",
+      "post-process": { "number": 3, "length-offset": 13, "diameter-offset": 3 }
+    },
+    {
+      "description": "Holder only", "type": "holder",
+      "guid": "00000000-0000-4000-8000-000000000004"
+    },
+    {
+      "description": "Unnumbered chamfer mill", "type": "chamfer mill", "unit": "millimeters",
+      "geometry": { "DC": 6 },
+      "guid": "00000000-0000-4000-8000-000000000005",
+      "post-process": { "number": 0, "length-offset": 0, "diameter-offset": 0 }
+    }
+  ],
+  "version": 15
+}

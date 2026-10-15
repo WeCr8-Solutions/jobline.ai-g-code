@@ -12,6 +12,8 @@ import { BlockParser } from '../parser/blockParser';
 import { ProgramModelBuilder } from '../parser/programModel';
 import { runDiagnosticEngine, DiagnosticConfig } from '../diagnostics/engine';
 import { isGCodeFile } from '../utils/fileTypes';
+import { checkProgramAgainstLibrary } from '../tooling/toolLibraryCheck';
+import { getToolLibraryStore } from '../tooling/toolLibraryStore';
 
 const tokenizer    = new Tokenizer();
 const blockParser  = new BlockParser();
@@ -36,15 +38,15 @@ export function runDiagnostics(
     enableSafetyChecks: cfg.get<boolean>('jobline.validation.enableSafetyChecks', true),
     enableArcValidation:cfg.get<boolean>('jobline.validation.enableArcValidation', true),
   };
-
   const text = document.getText();
+  if (cfg.get<boolean>('jobline.validation.controlSpecificRules', true)) engineConfig.sourceText = text;
   const lines = text.split(/\r?\n/);
 
-  let blocks; let stateAtBlock;
+  let blocks; let stateAtBlock; let model;
   try {
     const tokenized = tokenizer.tokenizeDocument(text);
     blocks = blockParser.parseDocument(tokenized);
-    const model = modelBuilder.build(blocks, engineConfig.controlType);
+    model = modelBuilder.build(blocks, engineConfig.controlType);
     stateAtBlock = model.stateAtBlock;
   } catch {
     collection.delete(document.uri);
@@ -52,6 +54,16 @@ export function runDiagnostics(
   }
 
   const engineDiags = runDiagnosticEngine(blocks, stateAtBlock, engineConfig);
+
+  // Imported tool library / linked setup sheet: T/H, T/D, missing tools, diameters.
+  const library = getToolLibraryStore()?.libraryFor(document.uri);
+  if (library && library.tools.length) {
+    const lathe = engineConfig.controlType === 'okuma' || model.detectedMachineType.includes('Turn');
+    const check = checkProgramAgainstLibrary({
+      blocks, stateAtBlock, tools: model.tools, library, controlType: engineConfig.controlType, lathe,
+    });
+    engineDiags.push(...check.diagnostics);
+  }
 
   const vsDiags = engineDiags.map(d => {
     const lineText = lines[d.line] ?? '';
@@ -61,7 +73,9 @@ export function runDiagnostics(
     );
     const severity = d.severity === 'error'
       ? vscode.DiagnosticSeverity.Error
-      : vscode.DiagnosticSeverity.Warning;
+      : d.severity === 'info'
+        ? vscode.DiagnosticSeverity.Information
+        : vscode.DiagnosticSeverity.Warning;
     const diag = new vscode.Diagnostic(range, d.message, severity);
     diag.source = 'JobLine';
     return diag;
@@ -83,6 +97,19 @@ export function registerDiagnosticsProvider(context: vscode.ExtensionContext): v
   for (const editor of vscode.window.visibleTextEditors) {
     runDiagnostics(editor.document, collection);
   }
+
+  // Re-check open programs when a tool library is imported or a setup sheet linked.
+  const store = getToolLibraryStore();
+  if (store) {
+    context.subscriptions.push(store.onDidChange(() => {
+      for (const editor of vscode.window.visibleTextEditors) runDiagnostics(editor.document, collection);
+    }));
+  }
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
+    if (e.affectsConfiguration('jobline.controlType') || e.affectsConfiguration('jobline.validation')) {
+      for (const editor of vscode.window.visibleTextEditors) runDiagnostics(editor.document, collection);
+    }
+  }));
 
   context.subscriptions.push(
     vscode.workspace.onDidOpenTextDocument(doc => {

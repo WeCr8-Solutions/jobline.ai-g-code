@@ -58,7 +58,7 @@ function findEocd(bytes: Uint8Array): number {
   throw new Error('Not a valid Fusion ZIP archive: end record not found.');
 }
 
-function readZipEntry(bytes: Uint8Array, wantedSuffix: string): Uint8Array {
+export function readZipEntry(bytes: Uint8Array, wantedSuffix: string): Uint8Array {
   if (bytes.length > MAX_ARCHIVE_BYTES) throw new Error('Fusion archive exceeds the 64 MB metadata limit.');
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const eocd = findEocd(bytes);

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SetupSheet program="LB-SHAFT" units="mm">
+  <Tools>
+    <Tool>
+      <ToolNumber>1</ToolNumber>
+      <Description>OD ROUGH CNMG432</Description>
+      <ToolType>Turning</ToolType>
+      <CornerRadius>0.8</CornerRadius>
+      <LengthOffset>1</LengthOffset>
+    </Tool>
+    <Tool>
+      <ToolNumber>2</ToolNumber>
+      <Description>OD FINISH VNMG331</Description>
+      <ToolType>Turning</ToolType>
+      <CornerRadius>0.4</CornerRadius>
+      <LengthOffset>2</LengthOffset>
+    </Tool>
+  </Tools>
+</SetupSheet>

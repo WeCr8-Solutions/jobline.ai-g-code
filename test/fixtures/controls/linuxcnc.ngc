@@ -1,0 +1,13 @@
+o100 sub
+  G0 X#1
+o100 endsub
+o<pocket> sub
+o<pocket> endsub
+o200 if [#1 GT 0]
+  o100 call [5]
+o200 else
+o200 endif
+o300 while [#2 LT 3]
+o300 endif
+o400 call
+M2
