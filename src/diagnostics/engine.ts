@@ -9,6 +9,7 @@
 
 import { GCodeBlock, ModalState } from '../parser/types';
 import type { MachineLibraryEntry } from '../types/machineLibrary';
+import { runControlRules, genericRulesApply } from './controlRules';
 
 // ── Public types ─────────────────────────────────────────────────────────────
 
@@ -34,6 +35,12 @@ export interface DiagnosticConfig {
    * If absent, travel-limit checks are silently skipped (graceful no-op).
    */
   machineProfile?: MachineLibraryEntry;
+  /**
+   * Program text. When given, the per-control rule set for `controlType`
+   * (controlRules.ts) runs as well, and programs that are not ISO G-code
+   * (Heidenhain Klartext, Mazatrol) skip the generic ISO rules below.
+   */
+  sourceText?: string;
 }
 
 export const DEFAULT_CONFIG: DiagnosticConfig = {
@@ -64,6 +71,14 @@ export function runDiagnosticEngine(
   config: DiagnosticConfig = DEFAULT_CONFIG,
 ): EngineDiagnostic[] {
   const diags: EngineDiagnostic[] = [];
+
+  if (config.sourceText !== undefined) {
+    diags.push(...runControlRules(config.sourceText, config.controlType));
+    if (!genericRulesApply(config.controlType, config.sourceText)) {
+      diags.sort((a, b) => a.line - b.line);
+      return diags;
+    }
+  }
 
   // End-of-program state tracking
   let spindleOn = false;
