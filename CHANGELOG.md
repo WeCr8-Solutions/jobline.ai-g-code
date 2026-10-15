@@ -18,6 +18,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The target draws as an opaque gold solid with the stock translucent over it (RevPack fixtures in steel grey), feature edges only in Wireframe.
 - **Target only** shows just the finished part. **Compare** colours the in-process stock against the target: on size, remaining material, gouge (seen from +Z, with the cell counts and largest values).
 - The seeded-error pack is labelled everywhere: its name, a "Seeded test pack: errors are intentional" banner on the panel, and the same text on each of its Problems entries.
+- **5-axis workholding.** The UMC-750 packs hold the part in a LANG Makro-Grip 77 5-axis self-centering vise (48120-77) on a Quick-Point 52 zero-point plate, built parametrically from LANG's published numbers (130 x 77 x 65 mm, 77 mm jaws, base body 38 mm and jaw top 62 mm above the vise bottom, 0-120 mm clamping range, 14,000 N at 60 Nm, 3 mm clamping depth on a pre-stamped blank), not from LANG CAD. The vise body, both moving jaws, the zero-point plate and the riser are separate solids with roles; the blank (now 3.0 x 2.0 x 1.65 in) sits 3 mm deep in the jaws and the gripped region is its own highlighted solid. Sources are in each pack's `workholdingSpec.sources` and in `docs/revpack-workholding.md`.
+- Collisions are named by what they hit: `rapid-into-jaw`, `feed-into-vise-body`, `rapid-into-zero-point`, `feed-into-chuck-jaw`... with the solid's name (the seeded pack's rapid now goes into the +Y jaw). New `workholding` checks: grip depth below the vise maker's recommendation (`grip-depth-below-recommended`), a feed into the gripped stock at a clamped face (`feed-into-grip-zone`), and a tilted tool whose shank or holder reaches the jaws or vise (`tilted-tool-hits-jaw`, the clearance 5-sided access needs). The clean O05001 stays at zero findings.
+- **Stock where it really sits.** A pack states its setup: part zero, stock offsets around the target, grip depth. The stock must equal the target's bounds grown by those offsets, with the target inside; every public pack is checked (and the AR4 uploads against the upload setup: 3 mm sides, 1 mm top, 3 mm grip + 1 mm below). A part opened without a pack gets its stock around it instead of a placeholder box at the origin.
+- **Per-object layer styles.** Stock, target, fixture / vise body, jaws, zero-point / riser, tool, holder and toolpath each have their own visibility and Solid / Transparent (with an opacity slider) / Wireframe style in the View panel, with **All solid**, **Inspect part** (workholding transparent) and **Workholding only** presets, remembered for the session. By default the stock is 50% transparent and the target a solid inside it; jaws draw hardened grey-blue, the vise body darker, the gripped region magenta. Solid, Wireframe, Target only and Compare work as before.
 
 ### Fixed
 
@@ -25,6 +29,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - RevPack checker: a tool with no known diameter sitting exactly on a heightmap cell corner touched no cell, so a rapid straight down through the stock went unreported.
 - In-process stock: a tap removed a full cylinder of its major diameter (shown as a gouge against the tap-drill bore); TCPC passes tilted up to 30 deg are now cut instead of skipped.
 - Visual E2E: the window is forced to 1600 x 1000 (VS Code ignored `--window-size` and captured at 1024 x 768).
+- Visualizer: the legend sat under the view cube's preset buttons; it now sits left of the cube.
+- Visualizer: a preset view (ISO, Top...) counted as the user moving the camera, so a part that loaded after it (a slow STEP) stayed framed for the empty scene and was clipped (AR4 gear, jaw1). A preset now sets the angle and new geometry is framed again at it.
 
 ## [0.3.13] - 2026-10-13
 

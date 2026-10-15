@@ -63,8 +63,10 @@
     .cube-btn:hover { background: #2a3654; border-color: #5c6f9b; }
 
     /* Legend — bottom-right */
+    /* Left of the view cube column (198 px + margins), so the legend never
+       sits under the cube's preset buttons. */
     #legend {
-      position: absolute; bottom: 8px; right: 10px;
+      position: absolute; bottom: 8px; right: 222px;
       color: #556; font-family: monospace; font-size: 10px;
       pointer-events: none; -webkit-user-select: none; user-select: none; text-align: right;
       line-height: 1.6;
@@ -104,7 +106,7 @@
     /* View panel — appearance controls, kept in the viewport so the effect of a
        slider is visible while you drag it. */
     #view-panel {
-      position: absolute; left: 10px; bottom: 112px; width: 232px;
+      position: absolute; left: 10px; bottom: 112px; width: 262px; max-height: calc(100vh - 140px); overflow: auto;
       color: #d7dde8; background: rgba(18, 22, 38, 0.94);
       border: 1px solid #39445f; border-radius: 6px; font: 11px/1.4 sans-serif;
       box-shadow: 0 4px 18px rgba(0,0,0,.35);
@@ -123,6 +125,16 @@
       text-transform: uppercase; letter-spacing: .08em; border-top: 1px solid #2b344a; padding-top: 6px;
     }
     .view-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; }
+    /* Per-object layer styles: visible, Solid / Transparent / Wireframe, opacity. */
+    #object-styles { display: grid; gap: 4px; }
+    .obj-row { display: grid; grid-template-columns: 16px 1fr 92px; grid-template-rows: auto auto; gap: 1px 5px; align-items: center; }
+    .obj-row .obj-name { color: #aeb8c9; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .obj-row .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; flex: 0 0 9px; }
+    .obj-row select { font: 10px sans-serif; background: rgba(8, 13, 25, .88); color: #d7dde8; border: 1px solid #39445f; border-radius: 5px; padding: 1px 2px; }
+    .obj-row input[type=range] { grid-column: 2 / 3; min-width: 0; accent-color: #66bb6a; height: 12px; }
+    .obj-row .view-val { grid-column: 3 / 4; flex: none; text-align: left; }
+    .obj-row.off .obj-name { opacity: .45; }
+    #layer-preset-row .play-btn { font-size: 10px; padding: 2px 6px; }
     .view-toggles label { display: flex; align-items: center; gap: 4px; color: #aeb8c9; cursor: pointer; }
     .view-toggles input { accent-color: #66bb6a; }
     .stock-transform-grid {
@@ -277,6 +289,11 @@
       <button class="play-btn toggle" id="btn-target-only" title="Show only the finished part (the RevPack target)">Target only</button>
       <button class="play-btn toggle" id="btn-compare" title="Colour the in-process stock against the target: remaining material vs gouge">Compare</button>
     </div>
+    <div class="play-row" id="layer-preset-row" aria-label="Layer style presets">
+      <button class="play-btn" data-layer-preset="all-solid" title="Every object as a shaded solid">All solid</button>
+      <button class="play-btn" data-layer-preset="inspect" title="Workholding and tool transparent, the part solid inside 50% stock">Inspect part</button>
+      <button class="play-btn" data-layer-preset="workholding" title="Only the vise body, jaws and zero-point / riser">Workholding only</button>
+    </div>
     <div id="compare-legend" aria-live="polite"></div>
     <div class="title">Simulation speed <span id="speed-readout">1x</span></div>
     <div class="play-row">
@@ -388,10 +405,8 @@
     <summary>View</summary>
     <div id="view-body">
       <div class="view-row"><label for="op-tube">Cut solid</label><input type="range" id="op-tube" min="0" max="100" value="55"><span class="view-val" id="op-tube-v">55%</span></div>
-      <div class="view-row"><label for="op-stock">Stock</label><input type="range" id="op-stock" min="0" max="100" value="55"><span class="view-val" id="op-stock-v">55%</span></div>
-      <div class="view-row"><label for="op-work">Workholding</label><input type="range" id="op-work" min="0" max="100" value="35"><span class="view-val" id="op-work-v">35%</span></div>
-      <div class="view-row"><label for="op-tool">Tool</label><input type="range" id="op-tool" min="0" max="100" value="100"><span class="view-val" id="op-tool-v">100%</span></div>
-      <div class="view-row"><label for="op-path">Toolpath</label><input type="range" id="op-path" min="0" max="100" value="100"><span class="view-val" id="op-path-v">100%</span></div>
+      <div class="view-sep">Objects · visible · style · opacity</div>
+      <div id="object-styles" aria-label="Per-object layer styles"></div>
       <div class="view-sep">Show</div>
       <div class="view-toggles">
         <label><input type="checkbox" data-layer="path" checked> Toolpath</label>
@@ -570,6 +585,57 @@
     const TOOL_DEFAULT_COLOR = '#b8c4d2';
     const COMPARE_COLORS = { 0: [0.42, 0.50, 0.60], 1: [0.21, 0.84, 1.0], 2: [1.0, 0.23, 0.23] };
     function packTargetLoaded() { return targetModels.some(item => item.source === 'revpack'); }
+
+    // Per-object layer styles. Each object the setup is made of - stock,
+    // target, fixture / vise body, jaws, zero-point plate / riser, tool,
+    // holder, toolpath - is shown or hidden and drawn Solid, Transparent (at
+    // its own opacity) or Wireframe on its own. They apply in a RevPack scene
+    // and to an imported part; the Wireframe layer mode still draws everything
+    // as wireframe. Remembered for the session (webview state).
+    const OBJECT_KEYS = ['stock', 'target', 'fixture', 'jaws', 'zeroPoint', 'tool', 'holder', 'toolpath'];
+    const OBJECT_LABELS = { stock: 'Stock', target: 'Target', fixture: 'Fixture / vise body', jaws: 'Jaws', zeroPoint: 'Zero-point / riser', tool: 'Tool', holder: 'Holder', toolpath: 'Toolpath' };
+    // Hardened jaws grey-blue, the vise body darker, the zero-point stack
+    // between; the gripped stock region is the one magenta solid.
+    const OBJECT_COLORS = { stock: '#58a6ff', target: '#ffb000', fixture: '#4a5363', jaws: '#7f97b8', zeroPoint: '#606b7b', tool: '#b8c4d2', holder: '#c9d1d9', toolpath: '#66bb6a', grip: '#e05cff' };
+    const DEFAULT_OBJECT_STYLES = {
+      stock: { visible: true, mode: 'transparent', opacity: 0.5 },
+      target: { visible: true, mode: 'solid', opacity: 1 },
+      fixture: { visible: true, mode: 'solid', opacity: 1 },
+      jaws: { visible: true, mode: 'solid', opacity: 1 },
+      zeroPoint: { visible: true, mode: 'solid', opacity: 1 },
+      tool: { visible: true, mode: 'solid', opacity: 1 },
+      holder: { visible: true, mode: 'solid', opacity: 1 },
+      toolpath: { visible: true, mode: 'solid', opacity: 1 },
+    };
+    const T = (mode, opacity, visible = true) => ({ visible, mode, opacity });
+    const LAYER_PRESETS = {
+      'all-solid': Object.fromEntries(OBJECT_KEYS.map(key => [key, T('solid', 1)])),
+      inspect: {
+        stock: T('transparent', 0.5), target: T('solid', 1), fixture: T('transparent', 0.18), jaws: T('transparent', 0.3),
+        zeroPoint: T('transparent', 0.15), tool: T('transparent', 0.35), holder: T('transparent', 0.2), toolpath: T('solid', 1),
+      },
+      workholding: {
+        stock: T('transparent', 0.5, false), target: T('solid', 1, false), fixture: T('solid', 1), jaws: T('solid', 1),
+        zeroPoint: T('solid', 1), tool: T('solid', 1, false), holder: T('solid', 1, false), toolpath: T('solid', 1, false),
+      },
+    };
+    // Stock for a part opened without a pack (an upload such as the AR4
+    // parts): the target's bounds grown by the same offsets the shared kernel's
+    // uploadSetup() uses - 3 mm sides, 1 mm top, 3 mm grip + 1 mm below.
+    const UPLOAD_STOCK_MM = { side: 3, top: 1, below: 4, grip: 3 };
+    function cloneStyles(styles) { return Object.fromEntries(OBJECT_KEYS.map(key => [key, Object.assign({}, DEFAULT_OBJECT_STYLES[key], styles && styles[key])])); }
+    let objectStyles = cloneStyles((() => { try { return (vscode.getState() || {}).objectStyles; } catch { return null; } })());
+    let layerPreset = (() => { try { return (vscode.getState() || {}).layerPreset || ''; } catch { return ''; } })();
+    function saveObjectStyles() {
+      try { vscode.setState(Object.assign({}, vscode.getState() || {}, { objectStyles, layerPreset })); } catch { /* state is best-effort */ }
+    }
+    // A workholding solid named by an error finding (rapid-into-jaw ...).
+    const HIT_COLOR = '#ff4d4f';
+    const OBJECT_LAYER = { stock: 'stock', tool: 'tool', holder: 'toolHolder', toolpath: 'path', target: 'targetModel' };
+    // G-code-coordinate bounds of the stock as drawn (pack or upload), for the probe.
+    let stockBoundsDrawn = null;
+    // Angles of the last preset view; a refit after new geometry keeps them.
+    let presetAngles = null;
     let packShapes = [];
     let revpackFindings = null;
     // Solids from the shared RevPack geometry kernel (revpackGeometry.ts, the
@@ -625,6 +691,7 @@
       if (layerMeshes[layer]) layerMeshes[layer].visible = isVisible;
       const checkbox = document.querySelector('.view-toggles input[data-layer="' + layer + '"]');
       if (checkbox) checkbox.checked = isVisible;
+      if (typeof applyObjectStyles === 'function') applyObjectStyles();
     }
 
     // -----------------------------------------------------------------------
@@ -889,9 +956,47 @@
       return group;
     }
 
+    /** Bounds of kernel positions (G-code axes) as {min, max}. */
+    function wireBounds(positions) {
+      if (!positions || positions.length < 3) return null;
+      const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+      for (let i = 0; i + 2 < positions.length; i += 3) for (let k = 0; k < 3; k++) {
+        const v = Number(positions[i + k]);
+        if (v < min[k]) min[k] = v;
+        if (v > max[k]) max[k] = v;
+      }
+      return { min, max };
+    }
+
+    /** Kernel-style box (positions + edges, G-code axes) for a stock or grip region drawn here. */
+    function boxWire(min, max) {
+      const [x0, y0, z0] = min, [x1, y1, z1] = max;
+      const c = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]];
+      const quads = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [3, 7, 6, 2], [0, 4, 7, 3], [1, 2, 6, 5]];
+      const positions = [];
+      for (const [a, b, cc, d] of quads) positions.push(...c[a], ...c[b], ...c[cc], ...c[a], ...c[cc], ...c[d]);
+      const edges = [];
+      for (const [a, b] of [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]]) edges.push(...c[a], ...c[b]);
+      return { positions, edges };
+    }
+
+    /** The gripped stock region (the bottom grip depth held in the jaws), highlighted. */
+    function gripGroup(wire) {
+      const grip = sharedMeshGroup(wire, OBJECT_COLORS.grip, 0.45, 'Gripped stock');
+      grip.userData.grip = true;
+      grip.traverse(node => { node.userData.grip = true; node.renderOrder = 3; });
+      return grip;
+    }
+
+    /** The part a stock is derived for when no pack or program states one: the first imported target part. */
+    function uploadTarget() {
+      return targetModels.find(item => item.role === 'target-part' && item.source !== 'revpack' && item.bounds) || null;
+    }
+
     function buildStock() {
       const { w, d, h, color } = stockCfg;
       const group = new THREE.Group();
+      stockBoundsDrawn = null;
 
       if (packScene && packScene.stock) {
         // RevPack: the in-process stock (Z-map after the program's 3-axis
@@ -904,6 +1009,27 @@
           const outline = sharedMeshGroup({ positions: [], edges: packScene.stock.edges }, color, 0.55, 'Raw stock outline');
           solid.add(...outline.children);
         }
+        // The pack's stock is where the setup puts it (target bounds grown by
+        // the setup's offsets, checked by the shared kernel): part coordinates,
+        // no stock home transform.
+        stockBoundsDrawn = wireBounds(packScene.stock.positions);
+        if (packScene.grip) solid.add(gripGroup(packScene.grip));
+        setLayer('stock', solid);
+        return;
+      }
+
+      // A part opened on its own (no pack, no stock in the program): the stock
+      // sits around the part, never at a placeholder box at the origin.
+      const upload = !stockIsDeclared && !isTurning ? uploadTarget() : null;
+      if (upload) {
+        const b = upload.bounds, o = upload.offset || { x: 0, y: 0, z: 0 };
+        const k = currentUnits === 'in' ? 1 / 25.4 : 1;
+        const s = UPLOAD_STOCK_MM.side * k, top = UPLOAD_STOCK_MM.top * k, below = UPLOAD_STOCK_MM.below * k;
+        const min = [Number(b.minX) + o.x - s, Number(b.minY) + o.y - s, Number(b.minZ) + o.z - below];
+        const max = [Number(b.maxX) + o.x + s, Number(b.maxY) + o.y + s, Number(b.maxZ) + o.z + top];
+        const solid = sharedMeshGroup(boxWire(min, max), color, 0.5, 'Stock (around the part)');
+        solid.add(gripGroup(boxWire(min, [max[0], max[1], min[2] + UPLOAD_STOCK_MM.grip * k])));
+        stockBoundsDrawn = { min, max };
         setLayer('stock', solid);
         return;
       }
@@ -972,8 +1098,16 @@
       group.name = 'RevPack workholding';
       if (packScene && Array.isArray(packScene.workholding) && packScene.workholding.length) {
         packScene.workholding.forEach((item, index) => {
-          const shade = col.clone().offsetHSL(0, 0, index % 2 ? 0.08 : -0.02);
-          group.add(sharedMeshGroup(item, '#' + shade.getHexString(), 0.35, item.name));
+          // Each solid in its object's colour (jaws grey-blue, body darker,
+          // zero-point / riser between); role-less fixtures alternate shades.
+          const obj = item.object || 'fixture';
+          const hit = (revpackFindings?.findings || []).some(f => f.severity === 'error' && f.object === item.name);
+          const shade = hit ? new THREE.Color(HIT_COLOR) : item.role ? new THREE.Color(OBJECT_COLORS[obj]) : col.clone().offsetHSL(0, 0, index % 2 ? 0.08 : -0.02);
+          const solid = sharedMeshGroup(item, '#' + shade.getHexString(), 0.35, item.name);
+          solid.userData.obj = obj;
+          solid.userData.role = item.role || '';
+          solid.userData.hit = hit;
+          group.add(solid);
         });
         setLayer('workholding', group);
         if (didFit && !userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
@@ -1005,10 +1139,13 @@
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.copy(pos);
         mesh.name = shape.name || `workholding ${index + 1}`;
-        group.add(mesh);
         const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat);
         edges.position.copy(pos);
-        group.add(edges);
+        const holder = new THREE.Group();
+        holder.name = mesh.name;
+        holder.userData.obj = /jaw/.test(shape.role || '') ? 'jaws' : /zero-point|riser/.test(shape.role || '') ? 'zeroPoint' : 'fixture';
+        holder.add(mesh, edges);
+        group.add(holder);
       });
       setLayer('workholding', group);
       if (didFit && !userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
@@ -1689,8 +1826,8 @@
       axisLen = maxDim * 0.15;
       orbitRadius = maxDim * fitFactor;
       orbitTarget.copy(center);
-      orbitPhi = Math.PI / 3.5;
-      orbitTheta = Math.PI / 4;
+      orbitPhi = presetAngles ? presetAngles.phi : Math.PI / 3.5;
+      orbitTheta = presetAngles ? presetAngles.theta : Math.PI / 4;
       updateCameraOrbit();
     }
 
@@ -1739,7 +1876,12 @@
       } else {
         orbitTheta = Math.PI / 4; orbitPhi = Math.PI / 3.5;
       }
-      userMovedCamera = true;
+      // A preset is an angle, not a framing: geometry that arrives later (a
+      // slow STEP part, the pack's stock) is framed again at these angles.
+      // It used to count as the user moving the camera, so a part that loaded
+      // after the ISO preset stayed framed for the empty scene - clipped AR4
+      // gear and jaw views.
+      presetAngles = { theta: orbitTheta, phi: orbitPhi };
       updateCameraOrbit();
     }
     updateCameraOrbit();
@@ -1889,7 +2031,7 @@
       if (layerProbeRequested) {
         layerProbeRequested = false;
         try {
-          vscode.postMessage({ type: 'layerProbe', renderMode: sceneRenderMode, revpackId: revpackInfo?.id || '', layers: layerReport(true) });
+          vscode.postMessage({ type: 'layerProbe', renderMode: sceneRenderMode, revpackId: revpackInfo?.id || '', layers: layerReport(true), objects: objectReport() });
         } catch (err) {
           vscode.postMessage({ type: 'layerProbe', error: String(err && err.message || err) });
         }
@@ -1948,6 +2090,20 @@
             seededBanner: document.getElementById('revpack-seeded')?.style.display === 'block' ? (document.getElementById('revpack-seeded')?.textContent || '') : '',
             sharedKernel: packScene ? { packId: packScene.packId, workholding: (packScene.workholding || []).length, tools: (packScene.tools || []).length, inProcess: !!packScene.inProcess, removedVolume: packScene.inProcess?.removedVolume ?? null } : null,
             layers: layerReport(false),
+            objectStylesActive: objectStylesActive(),
+            objectStyles: JSON.parse(JSON.stringify(objectStyles)),
+            layerPreset,
+            stockBounds: stockBoundsDrawn,
+            targetPartBounds: (() => {
+              const part = targetModels.find(isPartItem);
+              if (!part || !part.bounds) return null;
+              const o = part.offset || { x: 0, y: 0, z: 0 };
+              const b = part.bounds;
+              return { min: [b.minX + o.x, b.minY + o.y, b.minZ + o.z], max: [b.maxX + o.x, b.maxY + o.y, b.maxZ + o.z] };
+            })(),
+            gripShown: !!packScene?.grip,
+            hitSolids: (layerMeshes.workholding?.children || []).filter(child => child.userData.hit).map(child => child.name),
+            packSetup: packScene?.setup || null,
           });
         } catch (err) {
           vscode.postMessage({ type: 'visualProbe', error: String(err && err.message || err) });
@@ -2177,7 +2333,18 @@
     });
     targetDisplay?.addEventListener('change', () => {
       updateActiveTarget((active) => { active.displayMode = targetDisplay.value || 'transparent'; });
+      syncTargetStyleFromItem(getActiveTarget());
     });
+    /** The target panel edits the part item directly; keep the Target object's row in step. */
+    function syncTargetStyleFromItem(item) {
+      if (!isPartItem(item) || sceneRenderMode === 'wireframe') { reapplyViewOpacity(); return; }
+      const mode = item.displayMode === 'hidden' ? objectStyles.target.mode : item.displayMode;
+      objectStyles.target = { visible: item.displayMode !== 'hidden', mode, opacity: Number(item.opacity) || objectStyles.target.opacity };
+      layerPreset = '';
+      saveObjectStyles();
+      renderObjectStyleControls();
+      reapplyViewOpacity();
+    }
     function bindTargetOffset(axis) {
       const input = document.getElementById('target-' + axis);
       input?.addEventListener('input', () => {
@@ -2206,8 +2373,11 @@
       targetDisplayMode = sceneRenderMode === 'wireframe' ? 'wireframe' : 'solid';
       syncTargetControls();
       buildTargetModel();
+      // The Target object's own style comes back when the layers are Solid again.
+      if (objectStylesActive()) applyTargetObjectStyle();
       reapplyViewOpacity();
       applyOpacity('targetModel', viewOpacity.targetModel);
+      applyObjectStyles();
     }
     for (const btn of document.querySelectorAll('#render-mode-row [data-render-mode]')) {
       btn.addEventListener('click', () => {
@@ -2224,6 +2394,7 @@
         if (layerMeshes[key]) layerMeshes[key].visible = layerVis[key] !== false && !targetOnly;
       }
       if (layerMeshes.targetModel && targetOnly) layerMeshes.targetModel.visible = true;
+      applyObjectStyles();
       if (!userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
     }
 
@@ -2367,6 +2538,228 @@
         if (layer === 'targetModel') continue;
         applyOpacity(layer, viewOpacity[layer]);
       }
+      applyObjectStyles();
+    }
+
+    // -----------------------------------------------------------------------
+    // Per-object layer styles
+    // -----------------------------------------------------------------------
+    function objectStylesActive() {
+      return !!packScene || targetModels.some(item => item.role === 'target-part');
+    }
+
+    /** Scene nodes that make up one object. Workholding solids are children of the workholding layer. */
+    function objectRoots(key) {
+      if (OBJECT_LAYER[key]) return layerMeshes[OBJECT_LAYER[key]] ? [layerMeshes[OBJECT_LAYER[key]]] : [];
+      const wh = layerMeshes.workholding;
+      return wh ? wh.children.filter(child => (child.userData.obj || 'fixture') === key) : [];
+    }
+
+    /** Is a target scene item the finished part (styled by the Target object)? */
+    function isPartItem(item) { return item && (item.source === 'revpack' || item.role === 'target-part'); }
+
+    function styleMaterial(node, key, st) {
+      const mats = Array.isArray(node.material) ? node.material : (node.material ? [node.material] : []);
+      const isLine = node.isLine || node.isLineSegments;
+      const grip = !!node.userData.grip;
+      for (const m of mats) {
+        if (isLine) {
+          if (key === 'toolpath') {
+            const a = st.mode === 'transparent' ? st.opacity : 1;
+            m.opacity = a; m.transparent = a < 0.999 || !!m.userData?.keepTransparent;
+          } else {
+            m.opacity = st.mode === 'transparent' ? Math.min(0.9, st.opacity + 0.25) : 0.95;
+            m.transparent = true;
+          }
+          m.needsUpdate = true;
+          continue;
+        }
+        if (!node.isMesh) continue;
+        const kernelBody = typeof node.name === 'string' && node.name.endsWith(' body');
+        if (st.mode === 'wireframe') {
+          // Wireframe: a kernel solid shows its feature edges, anything else its triangulation.
+          if (kernelBody) { node.visible = false; m.wireframe = false; } else { node.visible = true; m.wireframe = true; m.opacity = 1; m.transparent = false; }
+          m.needsUpdate = true;
+          continue;
+        }
+        node.visible = true;
+        m.wireframe = false;
+        let a = st.mode === 'solid' ? 1 : st.opacity;
+        if (key === 'stock' && compareMode && !grip) a = COMPARE_STOCK_OPACITY;
+        if (grip) a = a >= 0.999 ? 1 : 0.45;
+        m.opacity = a;
+        m.transparent = a < 0.999;
+        m.depthWrite = a >= 0.999;
+        // Translucent stock draws before the part (renderOrder 2 < 6), so the
+        // finished part reads as a solid inside it.
+        if (key === 'stock' && !grip) node.renderOrder = 2;
+        m.needsUpdate = true;
+      }
+    }
+
+    /** Apply every object's style to the scene as it is now (after any rebuild). */
+    function applyObjectStyles() {
+      if (!objectStylesActive()) return;
+      const wireAll = sceneRenderMode === 'wireframe';
+      for (const key of OBJECT_KEYS) {
+        const st = objectStyles[key];
+        const layerKey = OBJECT_LAYER[key];
+        for (const root of objectRoots(key)) {
+          if (layerKey) {
+            const forcedByTargetOnly = targetOnly && key === 'target';
+            root.visible = layerVis[layerKey] !== false && !(targetOnly && TARGET_ONLY_HIDES.includes(layerKey)) && (st.visible || forcedByTargetOnly);
+          } else {
+            root.visible = st.visible;
+          }
+          if (key === 'target') { styleTargetNodes(root); continue; }
+          if (wireAll) continue; // the Wireframe layer mode owns materials
+          root.traverse?.(node => styleMaterial(node, key, st));
+        }
+      }
+    }
+
+    /**
+     * The finished part: a solid part joins the transparent pass after the
+     * translucent stock (renderOrder 6), so it draws as a solid inside the
+     * 50% stock instead of being tinted by it; its edges go over it.
+     */
+    function styleTargetNodes(root) {
+      if (sceneRenderMode === 'wireframe') return;
+      for (const group of root.children) {
+        const item = targetModels.find(entry => group.name === `${entry.role || 'scene'}: ${entry.name || 'model'}`);
+        if (!isPartItem(item) || item.displayMode !== 'solid') continue;
+        group.traverse(node => {
+          if (!node.material || node.name === 'target ghost') return;
+          const m = node.material;
+          // Pulled a hair toward the camera: where the cut stock is exactly on
+          // size (a faced top) the part wins instead of z-fighting the stock.
+          if (node.isMesh) { m.transparent = true; m.opacity = 1; m.depthWrite = true; m.polygonOffset = true; m.polygonOffsetFactor = -1; m.polygonOffsetUnits = -2; node.renderOrder = 6; }
+          else if (node.isLine || node.isLineSegments) node.renderOrder = 7;
+          m.needsUpdate = true;
+        });
+      }
+    }
+
+    /** Push the Target object's style onto the part items (they carry their own display mode). */
+    function applyTargetObjectStyle() {
+      const st = objectStyles.target;
+      let changed = false;
+      for (const item of targetModels) {
+        if (!isPartItem(item)) continue;
+        const mode = sceneRenderMode === 'wireframe' ? 'wireframe' : st.mode;
+        if (item.displayMode !== mode || Number(item.opacity) !== st.opacity) changed = true;
+        item.displayMode = mode;
+        item.opacity = st.mode === 'solid' ? 1 : st.opacity;
+      }
+      if (changed) { targetDisplayMode = getActiveTarget()?.displayMode || targetDisplayMode; syncTargetControls(); buildTargetModel(); }
+    }
+
+    function setObjectStyle(key, patch, fromPreset) {
+      if (!OBJECT_KEYS.includes(key)) return;
+      const next = Object.assign({}, objectStyles[key], patch || {});
+      if (!['solid', 'transparent', 'wireframe'].includes(next.mode)) next.mode = objectStyles[key].mode;
+      next.opacity = Math.max(0.05, Math.min(1, Number(next.opacity) || objectStyles[key].opacity));
+      next.visible = next.visible !== false;
+      objectStyles[key] = next;
+      if (!fromPreset) layerPreset = '';
+      if (key === 'target') applyTargetObjectStyle();
+      saveObjectStyles();
+      renderObjectStyleControls();
+      applyObjectStyles();
+    }
+
+    function applyLayerPreset(name) {
+      const preset = LAYER_PRESETS[name] || (name === 'default' ? DEFAULT_OBJECT_STYLES : null);
+      if (!preset) return;
+      for (const key of OBJECT_KEYS) objectStyles[key] = Object.assign({}, preset[key]);
+      layerPreset = name === 'default' ? '' : name;
+      applyTargetObjectStyle();
+      saveObjectStyles();
+      renderObjectStyleControls();
+      applyObjectStyles();
+    }
+
+    function renderObjectStyleControls() {
+      for (const btn of document.querySelectorAll('#layer-preset-row [data-layer-preset]')) {
+        btn.classList.toggle('active', btn.getAttribute('data-layer-preset') === layerPreset);
+      }
+      const host = document.getElementById('object-styles');
+      if (!host) return;
+      if (!host.children.length) {
+        for (const key of OBJECT_KEYS) {
+          const row = document.createElement('div');
+          row.className = 'obj-row';
+          row.setAttribute('data-object', key);
+          row.innerHTML = `<input type="checkbox" aria-label="Show ${OBJECT_LABELS[key]}">` +
+            `<span class="obj-name"><span class="sw" style="background:${OBJECT_COLORS[key]}"></span>${OBJECT_LABELS[key]}</span>` +
+            `<select aria-label="${OBJECT_LABELS[key]} style"><option value="solid">Solid</option><option value="transparent">Transparent</option><option value="wireframe">Wireframe</option></select>` +
+            `<input type="range" min="5" max="100" aria-label="${OBJECT_LABELS[key]} opacity"><span class="view-val"></span>`;
+          const [box, , select, range] = [row.children[0], row.children[1], row.children[2], row.children[3]];
+          box.addEventListener('change', () => setObjectStyle(key, { visible: box.checked }));
+          select.addEventListener('change', () => setObjectStyle(key, { mode: select.value }));
+          range.addEventListener('input', () => setObjectStyle(key, { opacity: Number(range.value) / 100, mode: 'transparent' }));
+          host.appendChild(row);
+        }
+      }
+      for (const row of host.children) {
+        const key = row.getAttribute('data-object');
+        const st = objectStyles[key];
+        row.classList.toggle('off', !st.visible);
+        row.children[0].checked = st.visible;
+        row.children[2].value = st.mode;
+        row.children[3].value = String(Math.round((st.mode === 'solid' ? 1 : st.opacity) * 100));
+        row.children[3].disabled = st.mode !== 'transparent';
+        row.children[4].textContent = st.mode === 'transparent' ? `${Math.round(st.opacity * 100)}%` : (st.mode === 'solid' ? '100%' : 'edges');
+      }
+    }
+
+    for (const btn of document.querySelectorAll('#layer-preset-row [data-layer-preset]')) {
+      btn.addEventListener('click', () => applyLayerPreset(btn.getAttribute('data-layer-preset')));
+    }
+    renderObjectStyleControls();
+
+    /**
+     * Each object drawn ALONE: how many pixels it covers, with its style. The
+     * visual tests use it for the jaw / body / grip checks a composite frame
+     * cannot separate.
+     */
+    function objectReport() {
+      const report = {};
+      const saved = new Map();
+      for (const name of Object.keys(layerMeshes)) if (layerMeshes[name]) saved.set(layerMeshes[name], layerMeshes[name].visible);
+      const whKids = layerMeshes.workholding ? layerMeshes.workholding.children.slice() : [];
+      for (const child of whKids) saved.set(child, child.visible);
+      const gripNodes = [];
+      layerMeshes.stock?.traverse?.(node => { if (node.userData.grip && node.isGroup) gripNodes.push(node); });
+      const gridVisible = grid.visible;
+      grid.visible = false;
+      const renderAlone = (roots, parentLayer) => {
+        for (const [node] of saved) node.visible = false;
+        if (parentLayer) parentLayer.visible = true;
+        for (const root of roots) root.visible = true;
+        renderer.render(scene, camera);
+        return readLitPixels(null, 1).lit;
+      };
+      for (const key of OBJECT_KEYS) {
+        const roots = objectRoots(key);
+        const st = objectStyles[key];
+        const visible = roots.some(root => (saved.has(root) ? saved.get(root) : root.visible));
+        const entry = { present: roots.length > 0, visible, mode: st.mode, opacity: st.opacity, styleVisible: st.visible, items: roots.length, litAlone: 0 };
+        if (entry.present && visible) entry.litAlone = renderAlone(roots, OBJECT_LAYER[key] ? null : layerMeshes.workholding);
+        report[key] = entry;
+      }
+      report.grip = { present: gripNodes.length > 0, litAlone: 0 };
+      if (gripNodes.length && layerMeshes.stock && saved.get(layerMeshes.stock)) {
+        const siblings = layerMeshes.stock.children.filter(child => !child.userData.grip);
+        const hidden = siblings.map(child => [child, child.visible]);
+        for (const child of siblings) child.visible = false;
+        report.grip.litAlone = renderAlone([layerMeshes.stock]);
+        for (const [child, v] of hidden) child.visible = v;
+      }
+      for (const [node, v] of saved) node.visible = v;
+      grid.visible = gridVisible;
+      renderer.render(scene, camera);
+      return report;
     }
 
     // -----------------------------------------------------------------------
@@ -2547,8 +2940,15 @@
           updateActiveTarget((active) => {
             active.displayMode = ['solid', 'transparent', 'wireframe', 'hidden'].includes(msg.mode) ? msg.mode : 'transparent';
           });
+          syncTargetStyleFromItem(getActiveTarget());
           break;
         }
+        case 'setObjectStyle':
+          setObjectStyle(msg.object, { visible: msg.visible, mode: msg.mode, opacity: msg.opacity });
+          break;
+        case 'applyLayerPreset':
+          applyLayerPreset(msg.preset);
+          break;
         case 'requestVisualProbe': {
           // Answered from inside the render loop, so the pixels read are the
           // ones just drawn. Used by the visual test bed to prove the scene
@@ -2609,6 +3009,9 @@
           targetDisplayMode = item.displayMode;
           syncTargetControls();
           buildTargetModel();
+          // A part opened without a pack gets its stock around it.
+          if (!packScene && !stockIsDeclared) buildStock();
+          reapplyViewOpacity();
           if (!userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
           break;
         }
@@ -2634,7 +3037,13 @@
           // 1000 mm laser sheet framing left the next part a speck).
           userMovedCamera = false;
           didFit = false;
+          presetAngles = null;
           compareMode = false;
+          // Every visual case starts from the default object styles.
+          objectStyles = cloneStyles(null);
+          layerPreset = '';
+          saveObjectStyles();
+          renderObjectStyleControls();
           setTargetOnly(false);
           renderCompareLegend();
           renderRevPack();
@@ -2698,6 +3107,8 @@
         case 'revpackFindings':
           revpackFindings = msg.packId ? msg : null;
           renderRevPack();
+          // A solid the program crashes into is drawn red.
+          if (packScene) buildWorkholding();
           break;
 
         case 'sceneRenderMode':
@@ -2729,7 +3140,7 @@
           // through the same handler a user's click runs.
           const item = document.querySelector(`#revpack-findings .review-item[data-line="${Number(msg.line)}"]`)
             || document.querySelector('#revpack-findings .review-item');
-          if (item) item.click();
+          if (item) { item.scrollIntoView({ block: 'nearest' }); item.click(); }
           break;
         }
 

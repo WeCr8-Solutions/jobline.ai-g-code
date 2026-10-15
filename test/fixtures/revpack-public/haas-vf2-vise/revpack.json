@@ -37,7 +37,8 @@
         3.0,
         2.25,
         -0.25
-      ]
+      ],
+      "role": "fixed-jaw"
     },
     {
       "name": "Moving vise jaw",
@@ -50,7 +51,8 @@
         3.0,
         -1.5,
         -0.25
-      ]
+      ],
+      "role": "moving-jaw"
     },
     {
       "name": "Front parallel",
@@ -63,7 +65,8 @@
         2.5,
         -1.1,
         -0.75
-      ]
+      ],
+      "role": "parallel"
     },
     {
       "name": "Rear parallel",
@@ -76,9 +79,23 @@
         2.5,
         1.5,
         -0.75
-      ]
+      ],
+      "role": "parallel"
     }
   ],
+  "setup": {
+    "partZero": "G54 X0 Y0 on the plate centre, Z0 on the stock top face",
+    "stockOffsets": {
+      "xMin": 0,
+      "xMax": 0,
+      "yMin": 0,
+      "yMax": 0,
+      "zMin": 0,
+      "zMax": 0.02
+    },
+    "gripDepth": 0.5,
+    "clampAxis": "Y"
+  },
   "workOffsets": {
     "G54": {
       "x": -15.0,

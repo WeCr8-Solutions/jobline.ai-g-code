@@ -26,6 +26,17 @@
     ]
   },
   "workholding": [],
+  "setup": {
+    "partZero": "G54 X0 Y0 at the sheet's front-left corner, Z0 on the sheet top",
+    "stockOffsets": {
+      "xMin": 50.1,
+      "xMax": 250.1,
+      "yMin": 50.1,
+      "yMax": 150.1,
+      "zMin": 0,
+      "zMax": 0
+    }
+  },
   "workOffsets": {
     "G54": {
       "x": 100,

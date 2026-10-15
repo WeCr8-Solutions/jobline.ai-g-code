@@ -7,7 +7,12 @@
  *   travel        every axis stays inside the machine's travel limits
  *                 (spindle gauge line for X/Y/Z, degrees for rotaries)
  *   collision     no rapid into remaining stock; no move of any kind into
- *                 workholding (tool body checked along its axis)
+ *                 workholding (tool body checked along its axis), named by
+ *                 the solid's role: rapid-into-jaw, feed-into-vise-body ...
+ *   workholding   grip depth at least the vise maker's recommendation; no
+ *                 feed into the gripped stock region; with the tool tilted,
+ *                 the shank and holder clear the jaws and vise (the reach a
+ *                 5-sided setup needs)
  *   offsets       only work offsets the RevPack defines; one is active
  *                 before the first move
  *   tools         every T is in the RevPack; the length register matches
@@ -34,11 +39,12 @@
  *   - No 3D machine model is used, and none is needed.
  */
 
-import { isCylinder, type RevPack, type RevPackBox, type RevPackCylinder, type RevPackTool, type Vec3 } from './revpack';
+import { grippedRegion, isCylinder, type RevPack, type RevPackBox, type RevPackCylinder, type RevPackTool, type Vec3, type WorkholdingRole } from './revpack';
+import { toolEnvelope } from './revpackGeometry';
 
 export type CorrelationSeverity = 'error' | 'warning' | 'info';
 export type CorrelationCategory =
-  | 'travel' | 'collision' | 'offsets' | 'tools' | 'spindle-feed' | 'tool-change' | 'five-axis' | 'dialect' | 'program';
+  | 'travel' | 'collision' | 'offsets' | 'tools' | 'spindle-feed' | 'tool-change' | 'five-axis' | 'dialect' | 'program' | 'workholding';
 
 export interface CorrelationFinding {
   id: string;
@@ -47,6 +53,8 @@ export interface CorrelationFinding {
   /** 1-based program line. */
   line: number;
   message: string;
+  /** The workholding solid a collision or clearance finding is about. */
+  object?: string;
 }
 
 export interface CorrelationSegment {
@@ -263,6 +271,18 @@ function insideCylinder(p: Vec3, cyl: RevPackCylinder, grow: number): boolean {
 
 const TOL = 1e-4;
 
+/** Finding-id word for a workholding role (rapid-into-jaw, feed-into-vise-body, ...). */
+function roleSlug(role: WorkholdingRole | undefined): string {
+  if (!role) return 'workholding';
+  if (role === 'fixed-jaw' || role === 'moving-jaw' || role === 'jaw') return 'jaw';
+  return role;
+}
+
+const ROLE_WORDS: Record<WorkholdingRole, string> = {
+  'vise-body': 'vise body', jaw: 'jaw', 'fixed-jaw': 'fixed jaw', 'moving-jaw': 'moving jaw', 'zero-point': 'zero-point plate',
+  riser: 'riser', parallel: 'parallel', fixture: 'fixture', 'chuck-jaw': 'chuck jaw', clamp: 'clamp',
+};
+
 export function correlateProgramWithRevPack(gcode: string, pack: RevPack): CorrelationReport {
   const machine = pack.machine;
   const turning = machine.machineClass === 'lathe';
@@ -270,16 +290,16 @@ export function correlateProgramWithRevPack(gcode: string, pack: RevPack): Corre
   const findings: CorrelationFinding[] = [];
   const segments: CorrelationSegment[] = [];
   const checks = Object.fromEntries(
-    (['travel', 'collision', 'offsets', 'tools', 'spindle-feed', 'tool-change', 'five-axis', 'dialect', 'program'] as CorrelationCategory[])
+    (['travel', 'collision', 'offsets', 'tools', 'spindle-feed', 'tool-change', 'five-axis', 'dialect', 'program', 'workholding'] as CorrelationCategory[])
       .map(category => [category, { checked: 0, failed: 0 }]),
   ) as CorrelationReport['checks'];
   const seen = new Set<string>();
-  const report = (category: CorrelationCategory, severity: CorrelationSeverity, id: string, line: number, message: string, once = true) => {
+  const report = (category: CorrelationCategory, severity: CorrelationSeverity, id: string, line: number, message: string, once = true, object?: string) => {
     const key = once ? id : `${id}@${line}`;
     if (seen.has(key)) return;
     seen.add(key);
     if (severity !== 'info') checks[category].failed++;
-    findings.push({ id, category, severity, line, message });
+    findings.push(object ? { id, category, severity, line, message, object } : { id, category, severity, line, message });
   };
   const check = (category: CorrelationCategory) => { checks[category].checked++; };
 
@@ -298,6 +318,20 @@ export function correlateProgramWithRevPack(gcode: string, pack: RevPack): Corre
     report('dialect', 'error', 'dialect-mismatch', 1,
       `Program is posted for "${pack.program.dialect}" but the RevPack machine ${machine.name} runs "${machine.dialect}"${machine.controlModel ? ` (${machine.controlModel})` : ''}.`);
   }
+
+  // Grip: the stock must sit at least as deep in the jaws as the vise maker
+  // recommends (LANG Makro-Grip: 3 mm, form-fit on a pre-stamped blank).
+  const recommendedGrip = pack.workholdingSpec?.recommendedGripDepth;
+  const gripDepth = pack.setup?.gripDepth;
+  if (recommendedGrip !== undefined && gripDepth !== undefined) {
+    check('workholding');
+    if (gripDepth < recommendedGrip - TOL) {
+      const spec = pack.workholdingSpec!;
+      report('workholding', 'warning', 'grip-depth-below-recommended', 1,
+        `The stock sits ${gripDepth} ${pack.units} deep in the jaws; ${spec.manufacturer} ${spec.model} recommends at least ${recommendedGrip} ${pack.units}${spec.gripMethod === 'form-fit-stamped' ? ' (form-fit on a pre-stamped blank)' : ''}.`);
+    }
+  }
+  const grip = grippedRegion(pack);
 
   // Material models.
   const stockBox = isCylinder(pack.stock) ? null : pack.stock;
@@ -446,6 +480,14 @@ export function correlateProgramWithRevPack(gcode: string, pack: RevPack): Corre
   };
 
   const toolRadius = () => (loadedTool()?.diameter ?? 0) / 2;
+  const envelopeOf = new Map<number, ReturnType<typeof toolEnvelope>>();
+  const loadedEnvelope = () => {
+    const tool = loadedTool();
+    if (!tool) return undefined;
+    if (!envelopeOf.has(tool.t)) envelopeOf.set(tool.t, toolEnvelope(tool, machine.machineClass, pack.units));
+    return envelopeOf.get(tool.t);
+  };
+  const rotaryText = () => (['A', 'B', 'C'] as const).filter(name => axisLimit.has(name)).map(name => `${name}${rot[name]}`).join(' ');
   const cuttingLength = () => {
     const tool = loadedTool();
     return tool ? (tool.fluteLength ?? tool.diameter * 3) : 0;
@@ -468,7 +510,8 @@ export function correlateProgramWithRevPack(gcode: string, pack: RevPack): Corre
       const p = add(from, scale(sub(to, from), k / steps));
       if (stockHit && heightMap && vertical) heightMap.cut(p[0], p[1], p[2], radius);
       if (stockHit && profile) profile.cut(Math.abs(p[0]), p[2]);
-      // Workholding: tip and body, every move.
+      // Workholding: tip and body, every move. Each solid is reported by its
+      // role, so a rapid into a jaw reads differently from one into the body.
       for (const holder of pack.workholding) {
         check('collision');
         const bodySamples = [0, 0.5, 1].map(f => add(p, scale(axisPart, f * cuttingLength())));
@@ -476,9 +519,48 @@ export function correlateProgramWithRevPack(gcode: string, pack: RevPack): Corre
           ? insideCylinder(sample, holder, radius)
           : cutterInBox(sample, holder, radius, vertical));
         if (hit) {
-          report('collision', 'error', `${rapid ? 'rapid' : 'feed'}-into-workholding`, line,
-            `${rapid ? 'Rapid' : 'Feed'} move puts T${loaded ?? '?'} into ${holder.name} at part (${p.map(v => v.toFixed(3)).join(', ')}).`, false);
+          const slug = roleSlug(holder.role);
+          report('collision', 'error', `${rapid ? 'rapid' : 'feed'}-into-${slug}`, line,
+            `${rapid ? 'Rapid' : 'Feed'} move puts T${loaded ?? '?'} into ${holder.name}${holder.role ? ` (${ROLE_WORDS[holder.role]})` : ''} at part (${p.map(v => v.toFixed(3)).join(', ')}).`, false, holder.name);
           return;
+        }
+      }
+      // A feed into the gripped stock cuts the material the jaws hold: the
+      // bottom gripDepth of the stock, within gripDepth of a clamped face (a
+      // through-hole in the middle of a plate is not in the jaws).
+      if (grip && !rapid) {
+        check('workholding');
+        const k = pack.setup?.clampAxis === 'X' ? 0 : 1;
+        const band = (pack.setup?.gripDepth ?? 0) + radius;
+        const nearFace = p[k] - grip.min[k] < band || grip.max[k] - p[k] < band;
+        if (nearFace && cutterInBox(p, grip, radius, vertical)) {
+          report('workholding', 'warning', 'feed-into-grip-zone', line,
+            `Feed move takes T${loaded ?? '?'} into the gripped stock (the bottom ${pack.setup?.gripDepth} ${pack.units} held in the jaws) at part (${p.map(v => v.toFixed(3)).join(', ')}).`, false);
+        }
+      }
+      // Tilted tool: the shank and holder above the flutes must clear the
+      // jaws and vise body - the reach a 5-sided setup needs.
+      if (!vertical && !turning) {
+        const env = loadedEnvelope();
+        if (env) {
+          const from = cuttingLength();
+          const span = env.gaugeLength - from;
+          const n = Math.max(1, Math.ceil(span / (0.05 * unitScale)));
+          for (const holder of pack.workholding) {
+            if (isCylinder(holder)) continue;
+            check('workholding');
+            let reach = -1;
+            for (let i = 0; i <= n && reach < 0; i++) {
+              const along = from + (span * i) / n;
+              const r = along <= env.stickOut ? radius : env.holderDiameter / 2;
+              if (insideBox(add(p, scale(axisPart, along)), holder, r - TOL)) reach = along;
+            }
+            if (reach >= 0) {
+              const part = reach <= env.stickOut ? 'shank' : `holder (Ø${env.holderDiameter})`;
+              report('workholding', 'warning', `tilted-tool-hits-${roleSlug(holder.role)}`, line,
+                `With the tool tilted (${rotaryText()}), T${loaded ?? '?'}'s ${part} ${reach.toFixed(3)} ${pack.units} up from the tip reaches into ${holder.name}; 5-sided access needs more stick-out than ${env.stickOut.toFixed(3)} ${pack.units}, less tilt, or a taller riser.`, false, holder.name);
+            }
+          }
         }
       }
       if (stockHit) continue;

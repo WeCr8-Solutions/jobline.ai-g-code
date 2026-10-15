@@ -72,7 +72,7 @@ describe('Haas UMC-750 5-axis correlation', () => {
     const { pack, gcode } = load('haas-umc750-5axis-seeded');
     const found = ids(correlateProgramWithRevPack(gcode, pack));
     for (const id of ['undefined-work-offset-G55', 'rapid-into-stock', 'unsafe-tool-change', 'tool-length-mismatch-T2',
-      'simultaneous-5x-without-tcpc', 'tool-not-in-revpack-T4', 'over-travel-B', 'rpm-over-machine', 'rapid-into-workholding']) {
+      'simultaneous-5x-without-tcpc', 'tool-not-in-revpack-T4', 'over-travel-B', 'rpm-over-machine', 'rapid-into-jaw']) {
       assert.ok(found.includes(id), `missing ${id}: ${found.join(', ')}`);
     }
   });
@@ -117,7 +117,7 @@ describe('Okuma Spaceturn LB3000 EX II (OSP) correlation', () => {
   it('flags the turret running into the chuck jaws', () => {
     const { pack, gcode } = load('okuma-lb3000-lathe');
     const bad = gcode.replace('G01 Z-60. F0.25', 'G01 Z-95. F0.25');
-    assert.ok(ids(correlateProgramWithRevPack(bad, pack)).includes('feed-into-workholding'));
+    assert.ok(ids(correlateProgramWithRevPack(bad, pack)).includes('feed-into-chuck-jaw'));
   });
 });
 

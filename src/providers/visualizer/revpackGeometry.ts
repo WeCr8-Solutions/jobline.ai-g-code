@@ -24,7 +24,9 @@
  *   toolSolids         cutter + holder from a RevPack tool (gauge length)
  *   zmapStock          in-process stock for 3-axis cuts (Z-map removal)
  *   compareStockToTarget   remaining material vs gouge, per Z-map cell
- *   buildRevPackGeometry   every layer for one pack
+ *   toolEnvelope       stick-out and holder size (also the correlation's reach check)
+ *   buildRevPackGeometry   every layer for one pack: target, stock, each
+ *                      workholding solid with its role, the gripped region
  *   geometryDigest     rounded numbers two implementations must agree on
  *
  * Coordinates are always the program's PART (work) coordinates, G-code axes:
@@ -37,9 +39,9 @@
  * Parasolid B-rep is not read (only a bounds envelope).
  */
 
-import { isCylinder, targetStlFile, type RevPack, type RevPackTool, type Vec3 } from './revpack';
+import { grippedRegion, isCylinder, targetStlFile, workholdingObject, type RevPack, type RevPackTool, type Vec3, type WorkholdingObject, type WorkholdingRole } from './revpack';
 
-export const REVPACK_GEOMETRY_VERSION = '1.1';
+export const REVPACK_GEOMETRY_VERSION = '1.2';
 
 export interface GeoBounds { min: Vec3; max: Vec3 }
 
@@ -311,6 +313,18 @@ function toolKind(tool: RevPackTool, machineClass: string): ToolSolids['kind'] {
 }
 
 /**
+ * Stick-out (tip to holder nose) and holder diameter of a milling tool: the
+ * numbers toolSolids draws and the correlation's tilted-reach check uses.
+ */
+export function toolEnvelope(tool: RevPackTool, machineClass: RevPack['machine']['machineClass'], units: 'in' | 'mm'): { stickOut: number; holderDiameter: number; gaugeLength: number } {
+  const d = Math.max(tool.diameter, 1e-6);
+  if (machineClass === 'laser' || machineClass === 'lathe') return { stickOut: tool.gaugeLength, holderDiameter: d, gaugeLength: tool.gaugeLength };
+  const flute = Math.max(tool.fluteLength ?? d * 3, d * 0.5);
+  const stickOut = Math.min(Math.max(flute * 1.5, d * 4), tool.gaugeLength * 0.75);
+  return { stickOut, holderDiameter: Math.max(d * 2, units === 'mm' ? 32 : 1.25), gaugeLength: tool.gaugeLength };
+}
+
+/**
  * Cutter and holder from a RevPack tool: the cutter's flute and shank run to
  * the stick-out, the holder from there to the gauge line, so the assembly is
  * exactly `gaugeLength` long - the number the correlation checks against.
@@ -342,8 +356,7 @@ export function toolSolids(tool: RevPackTool, machineClass: RevPack['machine']['
     }
     return { t: tool.t, kind, stickOut: 2 * half, gaugeLength: tool.gaugeLength, cutter: makeMesh(t) };
   }
-  const flute = Math.max(tool.fluteLength ?? d * 3, d * 0.5);
-  const stickOut = Math.min(Math.max(flute * 1.5, d * 4), tool.gaugeLength * 0.75);
+  const { stickOut, holderDiameter: holderD } = toolEnvelope(tool, machineClass, units);
   const tipLen = kind === 'drill' ? r / Math.tan((59 * Math.PI) / 180) : kind === 'chamfer' ? r : 0;
   const parts: GeoMesh[] = [];
   if (tipLen > 0) parts.push(frustumSolid(0, r, 0, tipLen));
@@ -351,7 +364,6 @@ export function toolSolids(tool: RevPackTool, machineClass: RevPack['machine']['
   const cutter = mergeMeshes(parts);
   let holder: GeoMesh | undefined;
   if (tool.gaugeLength > stickOut) {
-    const holderD = Math.max(d * 2, units === 'mm' ? 32 : 1.25);
     const nose = Math.min((tool.gaugeLength - stickOut) * 0.35, holderD);
     holder = mergeMeshes([
       frustumSolid(Math.max(d * 0.75, holderD * 0.3), holderD / 2, stickOut, stickOut + nose),
@@ -588,7 +600,10 @@ export interface RevPackGeometry {
   machineClass: RevPack['machine']['machineClass'];
   target?: GeoMesh;
   stock: GeoMesh;
-  workholding: Array<{ name: string; mesh: GeoMesh }>;
+  /** Each workholding solid with its role and the viewer object it belongs to. */
+  workholding: Array<{ name: string; role?: WorkholdingRole; object: WorkholdingObject; mesh: GeoMesh }>;
+  /** The gripped stock region (bottom gripDepth of the stock), when the setup states one. */
+  grip?: GeoMesh;
   tools: ToolSolids[];
   inProcess?: { mesh: GeoMesh & { triClass?: Uint8Array }; zmap: ZMapStock; comparison?: TargetComparison };
 }
@@ -612,6 +627,8 @@ export function buildRevPackGeometry(pack: RevPack, options: BuildGeometryOption
     : boxSolid(pack.stock.min, pack.stock.max);
   const workholding = pack.workholding.map(shape => ({
     name: shape.name,
+    ...(shape.role ? { role: shape.role } : {}),
+    object: workholdingObject(shape.role),
     mesh: isCylinder(shape)
       ? cylinderSolid(shape.diameter, shape.zMin, shape.zMax, shape.innerDiameter ?? 0)
       : boxSolid(shape.min, shape.max),
@@ -626,6 +643,8 @@ export function buildRevPackGeometry(pack: RevPack, options: BuildGeometryOption
     workholding,
     tools,
   };
+  const grip = grippedRegion(pack);
+  if (grip) geometry.grip = boxSolid(grip.min, grip.max);
   if (options.targetStl && targetStlFile(pack)) geometry.target = loadStl(options.targetStl);
   if (options.segments && !isCylinder(pack.stock) && (pack.machine.machineClass === 'mill' || pack.machine.machineClass === 'mill-turn')) {
     const zmap = zmapStock(pack.stock, options.segments, pack.tools, pack.machine.machineClass, options.zmapResolution);
@@ -680,7 +699,8 @@ export function geometryDigest(geometry: RevPackGeometry): Record<string, unknow
     units: geometry.units,
     target: geometry.target ? meshDigest(geometry.target) : null,
     stock: meshDigest(geometry.stock),
-    workholding: geometry.workholding.map(item => ({ name: item.name, ...meshDigest(item.mesh) })),
+    workholding: geometry.workholding.map(item => ({ name: item.name, role: item.role ?? null, object: item.object, ...meshDigest(item.mesh) })),
+    grip: geometry.grip ? meshDigest(geometry.grip) : null,
     tools: geometry.tools.map(tool => ({
       t: tool.t,
       kind: tool.kind,

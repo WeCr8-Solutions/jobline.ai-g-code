@@ -87,12 +87,28 @@ export class ToolpathVisualizerPanel {
     seededBanner?: string;
     fusionPreviewVisible?: boolean;
     fusionReferenceVisible?: boolean;
+    /** Per-object layer styles (stock, target, fixture, jaws, zeroPoint, tool, holder, toolpath). */
+    objectStylesActive?: boolean;
+    objectStyles?: Record<string, { visible: boolean; mode: string; opacity: number }>;
+    layerPreset?: string;
+    /** Stock as drawn and the part inside it, G-code coordinates. */
+    stockBounds?: { min: number[]; max: number[] } | null;
+    targetPartBounds?: { min: number[]; max: number[] } | null;
+    gripShown?: boolean;
+    /** Workholding solids drawn red because an error finding names them. */
+    hitSolids?: string[];
+    packSetup?: { partZero: string; gripDepth?: number; recommendedGripDepth?: number; vise?: string } | null;
     error?: string;
     at: number;
   } | undefined;
 
   /** Last answer to 'requestLayerProbe': each layer drawn alone. */
-  public static lastLayerProbe: { renderMode: string; revpackId: string; layers: Record<string, LayerProbeEntry>; error?: string; at: number } | undefined;
+  public static lastLayerProbe: {
+    renderMode: string; revpackId: string; layers: Record<string, LayerProbeEntry>;
+    /** Each object drawn alone, with its style. */
+    objects?: Record<string, { present: boolean; visible?: boolean; mode?: string; opacity?: number; litAlone: number }>;
+    error?: string; at: number;
+  } | undefined;
 
   public static async requestLayerProbe(timeoutMs = 8000): Promise<typeof ToolpathVisualizerPanel.lastLayerProbe> {
     const panel = ToolpathVisualizerPanel.currentPanel;
@@ -269,6 +285,14 @@ export class ToolpathVisualizerPanel {
           seededBanner: typeof msg.seededBanner === 'string' ? msg.seededBanner : '',
           fusionPreviewVisible: Boolean(msg.fusionPreviewVisible),
           fusionReferenceVisible: Boolean(msg.fusionReferenceVisible),
+          objectStylesActive: Boolean(msg.objectStylesActive),
+          objectStyles: msg.objectStyles ?? undefined,
+          layerPreset: typeof msg.layerPreset === 'string' ? msg.layerPreset : '',
+          stockBounds: msg.stockBounds ?? null,
+          targetPartBounds: msg.targetPartBounds ?? null,
+          gripShown: Boolean(msg.gripShown),
+          hitSolids: Array.isArray(msg.hitSolids) ? msg.hitSolids.map(String) : [],
+          packSetup: msg.packSetup ?? null,
           error: typeof msg.error === 'string' ? msg.error : undefined,
           at: Date.now(),
         };
@@ -277,6 +301,7 @@ export class ToolpathVisualizerPanel {
           renderMode: String(msg.renderMode || ''),
           revpackId: String(msg.revpackId || ''),
           layers: msg.layers ?? {},
+          objects: msg.objects ?? undefined,
           error: typeof msg.error === 'string' ? msg.error : undefined,
           at: Date.now(),
         };

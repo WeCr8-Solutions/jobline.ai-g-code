@@ -149,6 +149,20 @@ const revpackExtras = revpackCases.flatMap(rp => [
   // the panel disables the Compare button for them).
   ...(rp.inProcess ? [{ pack: rp.pack, id: `${rp.id}-compare`, base: rp.id, mode: 'solid', controls: [{ type: 'setCompareMode', on: true }], compare: true }] : []),
 ]);
+// The Makro-Grip vise on the UMC-750: each layer preset, plus the seeded
+// rapid into the +Y jaw shown with the workholding see-through.
+revpackExtras.push(
+  { pack: 'haas-umc750-5axis', id: 'umc750-vise-allsolid', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'applyLayerPreset', preset: 'all-solid' }], preset: 'all-solid' },
+  { pack: 'haas-umc750-5axis', id: 'umc750-vise-inspect', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'applyLayerPreset', preset: 'inspect' }], preset: 'inspect' },
+  { pack: 'haas-umc750-5axis', id: 'umc750-vise-workholding', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'applyLayerPreset', preset: 'workholding' }], preset: 'workholding' },
+  { pack: 'haas-umc750-5axis', id: 'umc750-vise-jaws-wire', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'setObjectStyle', object: 'jaws', mode: 'wireframe' }, { type: 'setObjectStyle', object: 'fixture', mode: 'transparent', opacity: 0.3 }], objectModes: { jaws: 'wireframe', fixture: 'transparent' } },
+  { pack: 'haas-umc750-5axis-seeded', id: 'umc750-seeded-jawhit', base: 'umc750-seeded', mode: 'solid', controls: [{ type: 'applyLayerPreset', preset: 'inspect' }, { type: 'setPresetView', view: 'right' }], preset: 'inspect', jawHit: true },
+);
+/** Stock bounds the shared kernel draws for a pack (a bar is its bounding box). */
+function packStockBounds(stock) {
+  if (typeof stock.diameter === 'number') { const r = stock.diameter / 2; return { min: [-r, -r, stock.zMin], max: [r, r, stock.zMax] }; }
+  return { min: stock.min, max: stock.max };
+}
 function revpackCase(rp, mode, extra) {
   const packJson = JSON.parse(fs.readFileSync(path.join(root, 'test', 'fixtures', 'revpack-public', rp.pack, 'revpack.json'), 'utf8'));
   return {
@@ -173,10 +187,17 @@ function revpackCase(rp, mode, extra) {
       workholding: packJson.workholding.length,
       tools: packJson.tools.length,
       inProcess: rp.inProcess,
-      showProblems: !!rp.problems && !extra,
       stepTarget: packJson.target?.format === 'step',
       targetOnly: !!extra?.targetOnly,
       compare: !!extra?.compare,
+      preset: extra?.preset || '',
+      objectModes: extra?.objectModes || null,
+      jawHit: !!extra?.jawHit,
+      showProblems: !!rp.problems && (!extra || !!extra.jawHit),
+      // The stock exactly where the setup puts it, with the target inside.
+      stockBounds: packStockBounds(packJson.stock),
+      vise: !!packJson.workholdingSpec,
+      grip: !!packJson.setup?.gripDepth && typeof packJson.stock.diameter !== 'number',
     },
     expect: { targetLoaded: true },
   };

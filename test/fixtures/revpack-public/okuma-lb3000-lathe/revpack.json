@@ -24,9 +24,19 @@
       "diameter": 160,
       "innerDiameter": 80,
       "zMin": -120,
-      "zMax": -85
+      "zMax": -85,
+      "role": "chuck-jaw"
     }
   ],
+  "setup": {
+    "partZero": "Z0 on the finished face, X0 on the spindle centreline (ZERO SET)",
+    "barOffsets": {
+      "radial": 0,
+      "zMin": 0,
+      "zMax": 1
+    },
+    "gripDepth": 35
+  },
   "workOffsets": {
     "ZERO-SET": {
       "x": 0,

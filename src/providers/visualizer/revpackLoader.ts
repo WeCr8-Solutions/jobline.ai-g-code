@@ -221,11 +221,16 @@ export interface RevPackSceneMessage {
     triClass?: number[];
     comparison?: { onSize: number; remaining: number; gouge: number; maxRemaining: number; maxGouge: number; tolerance: number };
   };
-  workholding: Array<{ name: string } & WireMesh>;
+  /** Each workholding solid with its role and viewer object (jaws, fixture, zeroPoint). */
+  workholding: Array<{ name: string; role?: string; object: string } & WireMesh>;
+  /** The gripped stock region (bottom grip depth of the stock), when the setup states one. */
+  grip?: WireMesh;
+  /** Stock placement from the setup, for the panel. */
+  setup?: { partZero: string; gripDepth?: number; recommendedGripDepth?: number; vise?: string };
   tools: Array<{ t: number; kind: string; gaugeLength: number; stickOut: number; cutter: WireMesh; holder?: WireMesh }>;
 }
 
-export function revPackSceneMessage(geometry: RevPackGeometry): RevPackSceneMessage {
+export function revPackSceneMessage(geometry: RevPackGeometry, pack?: RevPack): RevPackSceneMessage {
   return {
     type: 'revpackScene',
     packId: geometry.packId,
@@ -247,7 +252,14 @@ export function revPackSceneMessage(geometry: RevPackGeometry): RevPackSceneMess
         tolerance: geometry.inProcess.comparison.tolerance,
       } : undefined,
     } : undefined,
-    workholding: geometry.workholding.map(item => ({ name: item.name, ...wire(item.mesh) })),
+    workholding: geometry.workholding.map(item => ({ name: item.name, role: item.role, object: item.object, ...wire(item.mesh) })),
+    grip: geometry.grip ? wire(geometry.grip) : undefined,
+    setup: pack?.setup ? {
+      partZero: pack.setup.partZero,
+      gripDepth: pack.setup.gripDepth,
+      recommendedGripDepth: pack.workholdingSpec?.recommendedGripDepth,
+      vise: pack.workholdingSpec ? `${pack.workholdingSpec.manufacturer} ${pack.workholdingSpec.model}${pack.workholdingSpec.itemNo ? ` (${pack.workholdingSpec.itemNo})` : ''}` : undefined,
+    } : undefined,
     tools: geometry.tools.map(tool => ({
       t: tool.t, kind: tool.kind, gaugeLength: tool.gaugeLength, stickOut: tool.stickOut,
       cutter: wire(tool.cutter), holder: tool.holder ? wire(tool.holder) : undefined,
@@ -284,7 +296,7 @@ export function buildRevPackScene(loaded: LoadedRevPack, gcode: string, harnessT
   return {
     setup,
     geometry,
-    sceneMessage: revPackSceneMessage(geometry),
+    sceneMessage: revPackSceneMessage(geometry, loaded.pack),
     target: revPackTargetMessage(loaded),
     findings: revPackFindingsMessage(report),
     report,

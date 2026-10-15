@@ -42,7 +42,7 @@
       }
     },
     "geometry": {
-      "version": "1.1",
+      "version": "1.2",
       "packId": "haas-umc750-bracket",
       "units": "in",
       "target": {
@@ -66,33 +66,122 @@
         "min": [
           -1.5,
           -1,
-          -1.5
+          -1.65
         ],
         "max": [
           1.5,
           1,
           0
         ],
-        "volume": 9
+        "volume": 9.9
       },
       "workholding": [
         {
-          "name": "Dovetail fixture (grips bottom 0.25)",
+          "name": "Quick-Point 52 single plate 150x116x27 (zero-point)",
+          "role": "zero-point",
+          "object": "zeroPoint",
           "triangles": 12,
           "edges": 12,
           "min": [
-            -1.25,
-            -1,
+            -2.2835,
+            -2.9528,
+            -5.0358
+          ],
+          "max": [
+            2.2835,
+            2.9528,
+            -3.9728
+          ],
+          "volume": 28.67
+        },
+        {
+          "name": "Riser to the C-table (modelled)",
+          "role": "riser",
+          "object": "zeroPoint",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -2.2835,
+            -2.9528,
             -5.5
           ],
           "max": [
-            1.25,
-            1,
-            -1.25
+            2.2835,
+            2.9528,
+            -5.0358
           ],
-          "volume": 21.25
+          "volume": 12.5199
+        },
+        {
+          "name": "Makro-Grip 77 base body 130x77x38",
+          "role": "vise-body",
+          "object": "fixture",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            -2.5591,
+            -3.9728
+          ],
+          "max": [
+            1.5157,
+            2.5591,
+            -2.4767
+          ],
+          "volume": 23.2125
+        },
+        {
+          "name": "Makro-Grip 77 jaw +Y (moves, serrated)",
+          "role": "moving-jaw",
+          "object": "jaws",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            1,
+            -2.4767
+          ],
+          "max": [
+            1.5157,
+            1.4724,
+            -1.5319
+          ],
+          "volume": 1.353
+        },
+        {
+          "name": "Makro-Grip 77 jaw -Y (moves, serrated)",
+          "role": "moving-jaw",
+          "object": "jaws",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            -1.4724,
+            -2.4767
+          ],
+          "max": [
+            1.5157,
+            -1,
+            -1.5319
+          ],
+          "volume": 1.353
         }
       ],
+      "grip": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -1.5,
+          -1,
+          -1.65
+        ],
+        "max": [
+          1.5,
+          1,
+          -1.5319
+        ],
+        "volume": 0.7086
+      },
       "tools": [
         {
           "t": 1,
@@ -207,7 +296,7 @@
         "nx": 96,
         "ny": 64,
         "removedVolume": 0.4586,
-        "stockVolume": 9,
+        "stockVolume": 9.9,
         "applied": 13,
         "skippedTilted": 2,
         "approxTilted": 2,
@@ -215,18 +304,18 @@
         "threadMoves": 0,
         "mesh": {
           "triangles": 27296,
-          "edges": 3116,
+          "edges": 3089,
           "min": [
             -1.5,
             -1,
-            -1.5
+            -1.65
           ],
           "max": [
             1.5,
             1,
             -0.05
           ],
-          "volume": 8.4957
+          "volume": 9.3957
         },
         "comparison": {
           "onSize": 6144,
@@ -242,7 +331,7 @@
     "packId": "haas-umc750-bracket-seeded",
     "correlation": {
       "summary": {
-        "errors": 10,
+        "errors": 9,
         "warnings": 0,
         "infos": 3,
         "pass": false
@@ -259,8 +348,7 @@
         "24:error:tool-not-in-revpack-T4",
         "25:error:over-travel-B",
         "26:error:rpm-over-machine",
-        "29:error:rapid-into-stock",
-        "29:error:rapid-into-workholding"
+        "30:error:rapid-into-jaw"
       ],
       "toolsUsed": [
         1,
@@ -271,7 +359,7 @@
         "G54",
         "G55"
       ],
-      "segments": 17,
+      "segments": 18,
       "machineExtents": {
         "B": {
           "min": -40,
@@ -287,16 +375,16 @@
         },
         "Y": {
           "min": -11.2,
-          "max": -10
+          "max": -8.75
         },
         "Z": {
-          "min": -20,
+          "min": -19.6,
           "max": 0
         }
       }
     },
     "geometry": {
-      "version": "1.1",
+      "version": "1.2",
       "packId": "haas-umc750-bracket-seeded",
       "units": "in",
       "target": {
@@ -320,33 +408,122 @@
         "min": [
           -1.5,
           -1,
-          -1.5
+          -1.65
         ],
         "max": [
           1.5,
           1,
           0
         ],
-        "volume": 9
+        "volume": 9.9
       },
       "workholding": [
         {
-          "name": "Dovetail fixture (grips bottom 0.25)",
+          "name": "Quick-Point 52 single plate 150x116x27 (zero-point)",
+          "role": "zero-point",
+          "object": "zeroPoint",
           "triangles": 12,
           "edges": 12,
           "min": [
-            -1.25,
-            -1,
+            -2.2835,
+            -2.9528,
+            -5.0358
+          ],
+          "max": [
+            2.2835,
+            2.9528,
+            -3.9728
+          ],
+          "volume": 28.67
+        },
+        {
+          "name": "Riser to the C-table (modelled)",
+          "role": "riser",
+          "object": "zeroPoint",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -2.2835,
+            -2.9528,
             -5.5
           ],
           "max": [
-            1.25,
-            1,
-            -1.25
+            2.2835,
+            2.9528,
+            -5.0358
           ],
-          "volume": 21.25
+          "volume": 12.5199
+        },
+        {
+          "name": "Makro-Grip 77 base body 130x77x38",
+          "role": "vise-body",
+          "object": "fixture",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            -2.5591,
+            -3.9728
+          ],
+          "max": [
+            1.5157,
+            2.5591,
+            -2.4767
+          ],
+          "volume": 23.2125
+        },
+        {
+          "name": "Makro-Grip 77 jaw +Y (moves, serrated)",
+          "role": "moving-jaw",
+          "object": "jaws",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            1,
+            -2.4767
+          ],
+          "max": [
+            1.5157,
+            1.4724,
+            -1.5319
+          ],
+          "volume": 1.353
+        },
+        {
+          "name": "Makro-Grip 77 jaw -Y (moves, serrated)",
+          "role": "moving-jaw",
+          "object": "jaws",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            -1.4724,
+            -2.4767
+          ],
+          "max": [
+            1.5157,
+            -1,
+            -1.5319
+          ],
+          "volume": 1.353
         }
       ],
+      "grip": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -1.5,
+          -1,
+          -1.65
+        ],
+        "max": [
+          1.5,
+          1,
+          -1.5319
+        ],
+        "volume": 0.7086
+      },
       "tools": [
         {
           "t": 1,
@@ -461,7 +638,7 @@
         "nx": 96,
         "ny": 64,
         "removedVolume": 0.075,
-        "stockVolume": 9,
+        "stockVolume": 9.9,
         "applied": 1,
         "skippedTilted": 0,
         "approxTilted": 1,
@@ -473,14 +650,14 @@
           "min": [
             -1.5,
             -1,
-            -1.5
+            -1.65
           ],
           "max": [
             1.5,
             1,
             0
           ],
-          "volume": 8.875
+          "volume": 9.775
         },
         "comparison": {
           "onSize": 1209,
@@ -528,7 +705,7 @@
       }
     },
     "geometry": {
-      "version": "1.1",
+      "version": "1.2",
       "packId": "haas-vf2-vise-plate",
       "units": "in",
       "target": {
@@ -564,6 +741,8 @@
       "workholding": [
         {
           "name": "Fixed vise jaw",
+          "role": "fixed-jaw",
+          "object": "jaws",
           "triangles": 12,
           "edges": 12,
           "min": [
@@ -580,6 +759,8 @@
         },
         {
           "name": "Moving vise jaw",
+          "role": "moving-jaw",
+          "object": "jaws",
           "triangles": 12,
           "edges": 12,
           "min": [
@@ -596,6 +777,8 @@
         },
         {
           "name": "Front parallel",
+          "role": "parallel",
+          "object": "fixture",
           "triangles": 12,
           "edges": 12,
           "min": [
@@ -612,6 +795,8 @@
         },
         {
           "name": "Rear parallel",
+          "role": "parallel",
+          "object": "fixture",
           "triangles": 12,
           "edges": 12,
           "min": [
@@ -627,6 +812,21 @@
           "volume": 2.5
         }
       ],
+      "grip": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -2,
+          -1.5,
+          -0.75
+        ],
+        "max": [
+          2,
+          1.5,
+          -0.25
+        ],
+        "volume": 6
+      },
       "tools": [
         {
           "t": 1,
@@ -837,7 +1037,7 @@
       }
     },
     "geometry": {
-      "version": "1.1",
+      "version": "1.2",
       "packId": "okuma-lb3000-shaft",
       "units": "mm",
       "target": {
@@ -873,6 +1073,8 @@
       "workholding": [
         {
           "name": "8in chuck jaws",
+          "role": "chuck-jaw",
+          "object": "jaws",
           "triangles": 384,
           "edges": 196,
           "min": [
@@ -888,6 +1090,7 @@
           "volume": 526281.6048
         }
       ],
+      "grip": null,
       "tools": [
         {
           "t": 1,
@@ -992,7 +1195,7 @@
       }
     },
     "geometry": {
-      "version": "1.1",
+      "version": "1.2",
       "packId": "trumpf-trulaser3030-bracket-nest",
       "units": "mm",
       "target": {
@@ -1026,6 +1229,7 @@
         "volume": 1800000
       },
       "workholding": [],
+      "grip": null,
       "tools": [
         {
           "t": 1,

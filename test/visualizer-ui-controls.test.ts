@@ -127,3 +127,50 @@ test('visual screenshot matrix captures targeted regions, not full workbench scr
   assert.match(visualTest, /type: 'resetVisualScene'/);
   assert.doesNotMatch(runner, /jobline\.ai-CAM/);
 });
+
+test('per-object layer styles: every setup object, three styles, opacity, presets, session state', () => {
+  const keys = html.match(/const OBJECT_KEYS = \[([^\]]+)\]/);
+  assert.ok(keys, 'OBJECT_KEYS missing');
+  assert.deepEqual(keys![1].split(',').map(k => k.trim().replace(/'/g, '')), ['stock', 'target', 'fixture', 'jaws', 'zeroPoint', 'tool', 'holder', 'toolpath']);
+  for (const mode of ['Solid', 'Transparent', 'Wireframe']) assert.match(html, new RegExp(`<option value="${mode.toLowerCase()}">${mode}</option>`));
+  assert.match(html, /<input type="range" min="5" max="100" aria-label="\$\{OBJECT_LABELS\[key\]\} opacity">/);
+  for (const preset of ['all-solid', 'inspect', 'workholding']) assert.match(html, new RegExp(`data-layer-preset="${preset}"`));
+  assert.match(html, />All solid</);
+  assert.match(html, />Inspect part</);
+  assert.match(html, />Workholding only</);
+  // Defaults: stock 50% transparent, target solid inside it.
+  assert.match(html, /stock: \{ visible: true, mode: 'transparent', opacity: 0\.5 \}/);
+  assert.match(html, /target: \{ visible: true, mode: 'solid', opacity: 1 \}/);
+  // Hardened jaws grey-blue, body darker, gripped region highlighted.
+  assert.match(html, /fixture: '#4a5363', jaws: '#7f97b8'/);
+  assert.match(html, /grip: '#e05cff'/);
+  // Remembered for the session through the webview state.
+  assert.match(html, /vscode\.setState\(Object\.assign\(\{\}, vscode\.getState\(\) \|\| \{\}, \{ objectStyles, layerPreset \}\)\)/);
+  assert.match(html, /case 'setObjectStyle'/);
+  assert.match(html, /case 'applyLayerPreset'/);
+  // Existing modes stay: Solid / Wireframe / Target only / Compare.
+  for (const id of ['btn-target-only', 'btn-compare']) assert.match(html, new RegExp(`id="${id}"`));
+  assert.match(html, /data-render-mode="solid"/);
+  assert.match(html, /data-render-mode="wireframe"/);
+});
+
+test('an uploaded part gets its stock from the shared kernel\'s upload setup, around the part', async () => {
+  const { uploadSetup } = await import('../src/providers/visualizer/revpack');
+  const setup = uploadSetup('mm');
+  const m = html.match(/const UPLOAD_STOCK_MM = \{ side: ([\d.]+), top: ([\d.]+), below: ([\d.]+), grip: ([\d.]+) \}/);
+  assert.ok(m, 'UPLOAD_STOCK_MM missing');
+  const [side, top, below, grip] = m!.slice(1).map(Number);
+  const o = setup.stockOffsets!;
+  assert.deepEqual([o.xMin, o.xMax, o.yMin, o.yMax], [side, side, side, side]);
+  assert.equal(o.zMax, top);
+  assert.equal(o.zMin, below);
+  assert.equal(setup.gripDepth, grip);
+  assert.match(html, /const upload = !stockIsDeclared && !isTurning \? uploadTarget\(\) : null;/);
+});
+
+test('the legend sits left of the view cube, not under its buttons', () => {
+  const legend = html.match(/#legend \{\s*position: absolute; bottom: 8px; right: (\d+)px;/);
+  const cube = html.match(/#view-cube \{\s*position: absolute; right: (\d+)px; bottom: \d+px; width: (\d+)px;/);
+  assert.ok(legend && cube);
+  assert.ok(Number(legend![1]) >= Number(cube![1]) + Number(cube![2]) + 8, 'legend overlaps the view cube column');
+});

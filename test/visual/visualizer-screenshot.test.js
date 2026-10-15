@@ -128,7 +128,7 @@ async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
     probe = await Panel.requestVisualProbe(3000);
     // A STEP target arrives after OpenCascade has tessellated it.
     const stepOk = !rp.stepTarget || probe?.activeTargetLoader === 'step-occt';
-    const modesOk = probe?.targetOnly === rp.targetOnly && probe?.compareMode === rp.compare;
+    const modesOk = probe?.targetOnly === rp.targetOnly && probe?.compareMode === rp.compare && (probe?.layerPreset || '') === rp.preset;
     if (probe && probe.revpackId === rp.id && probe.renderMode === rp.mode && probe.sharedKernel?.packId === rp.id && probe.targetLoaded && stepOk && modesOk) break;
     await new Promise(resolve => setTimeout(resolve, 250));
   }
@@ -147,9 +147,36 @@ async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
     assert.equal(probe.activeTargetLoader, 'step-occt', 'STEP target must load through OpenCascade');
     assert.ok(probe.targetStlCrossCheck?.ok, `STEP vs STL bounds disagree: ${JSON.stringify(probe.targetStlCrossCheck)}`);
   }
-  const minTargetPixels = rp.mode === 'wireframe' ? 150 : 2500;
+  // The part is gold inside the 50% stock; "All solid" buries it in solid
+  // stock and "Workholding only" hides it, so those two only check it is not drawn over.
+  const partShown = rp.preset !== 'all-solid' && rp.preset !== 'workholding';
+  const minTargetPixels = !partShown ? 0 : rp.mode === 'wireframe' ? 150 : 2500;
   assert.ok(probe.targetHuePixels >= minTargetPixels,
     `target not visibly distinguishable in ${rp.mode} for ${visualCase.id}: ${probe.targetHuePixels} gold pixels (< ${minTargetPixels})`);
+  if (rp.preset === 'workholding') assert.ok(probe.targetHuePixels < 200, `Workholding only still shows the part: ${probe.targetHuePixels} gold pixels`);
+
+  // Stock exactly where the setup puts it (the pack's stock = target bounds
+  // grown by the setup offsets, proven by the kernel test), with the part inside.
+  assert.ok(probe.stockBounds, `stock bounds not reported for ${visualCase.id}`);
+  const sb = probe.stockBounds;
+  const ext = Math.max(...rp.stockBounds.max.map((v, k) => v - rp.stockBounds.min[k]));
+  const tolStock = Math.max(ext * 0.002, 1e-4);
+  for (let k = 0; k < 3; k++) {
+    assert.ok(Math.abs(sb.min[k] - rp.stockBounds.min[k]) <= tolStock && Math.abs(sb.max[k] - rp.stockBounds.max[k]) <= tolStock,
+      `stock axis ${k} drawn at ${sb.min[k]}..${sb.max[k]}, setup says ${rp.stockBounds.min[k]}..${rp.stockBounds.max[k]} (${visualCase.id})`);
+  }
+  const tb = probe.targetPartBounds;
+  assert.ok(tb, 'target bounds reported');
+  for (let k = 0; k < 3; k++) {
+    assert.ok(tb.min[k] >= sb.min[k] - tolStock && tb.max[k] <= sb.max[k] + tolStock, `target axis ${k} ${tb.min[k]}..${tb.max[k]} outside the stock ${sb.min[k]}..${sb.max[k]} (${visualCase.id})`);
+  }
+  assert.equal(probe.gripShown, rp.grip, 'gripped stock region shown exactly when the setup states a grip on box stock');
+  // Default object styles: stock 50% transparent, the target solid inside it.
+  assert.ok(probe.objectStylesActive, 'per-object styles active for a pack');
+  if (!rp.preset && !rp.objectModes) {
+    assert.deepEqual(probe.objectStyles.stock, { visible: true, mode: 'transparent', opacity: 0.5 }, 'stock defaults to 50% transparent');
+    assert.deepEqual(probe.objectStyles.target, { visible: true, mode: 'solid', opacity: 1 }, 'target defaults to solid');
+  }
   assert.equal(probe.targetOnly, rp.targetOnly, 'Target only toggle state');
   if (rp.compare) {
     assert.ok(probe.compareMode && probe.comparison, 'compare colouring is on');
@@ -163,8 +190,31 @@ async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
 
   const layerProbe = await Panel.requestLayerProbe(15000);
   assert.ok(layerProbe && !layerProbe.error, `layer probe failed: ${layerProbe?.error}`);
+  const objects = layerProbe.objects || {};
+  // The vise: jaws, body and zero-point stack each draw on their own.
+  if (rp.vise && !rp.targetOnly) {
+    for (const key of ['jaws', 'fixture', 'zeroPoint']) {
+      assert.ok(objects[key]?.present, `${key} object missing (${visualCase.id})`);
+      assert.ok(objects[key].litAlone > 0, `${key} drew nothing on its own (${visualCase.id})`);
+    }
+    if (rp.grip && rp.preset !== 'workholding' && !rp.targetOnly && rp.mode === 'solid') assert.ok(objects.grip?.litAlone > 0, `gripped stock region not drawn (${visualCase.id})`);
+  }
+  if (rp.preset) {
+    const want = { 'all-solid': { jaws: 'solid', fixture: 'solid', zeroPoint: 'solid', stock: 'solid', target: 'solid' }, inspect: { jaws: 'transparent', fixture: 'transparent', zeroPoint: 'transparent', stock: 'transparent', target: 'solid' }, workholding: { jaws: 'solid', fixture: 'solid', zeroPoint: 'solid' } }[rp.preset];
+    for (const [key, mode] of Object.entries(want)) assert.equal(probe.objectStyles[key].mode, mode, `${rp.preset}: ${key} style`);
+    if (rp.preset === 'workholding') {
+      for (const key of ['stock', 'target', 'tool', 'holder', 'toolpath']) assert.ok(!objects[key]?.visible, `Workholding only must hide ${key}`);
+    }
+  }
+  if (rp.objectModes) {
+    for (const [key, mode] of Object.entries(rp.objectModes)) {
+      assert.equal(probe.objectStyles[key].mode, mode, `${key} style`);
+      assert.ok(objects[key].litAlone > 0, `${key} in ${mode} drew nothing`);
+    }
+  }
   const results = {};
-  const layersToCheck = rp.targetOnly ? ['targetModel'] : ['targetModel', 'stock', ...(rp.workholding ? ['workholding'] : []), 'tool', 'path'];
+  const presetHides = rp.preset === 'workholding';
+  const layersToCheck = rp.targetOnly ? ['targetModel'] : presetHides ? ['workholding'] : ['targetModel', 'stock', ...(rp.workholding ? ['workholding'] : []), 'tool', 'path'];
   if (rp.targetOnly) {
     for (const layer of ['stock', 'workholding', 'tool', 'path']) {
       assert.ok(!layerProbe.layers[layer]?.visible, `Target only must hide ${layer}`);
@@ -176,6 +226,7 @@ async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
     assert.ok(entry && entry.present && entry.visible, `${layer} layer missing in ${rp.mode} for ${visualCase.id}`);
     assert.ok(entry.litAlone > 0, `${layer} layer drew nothing on its own in ${rp.mode} for ${visualCase.id}`);
     if (layer === 'path') continue;
+    if (rp.objectModes && layer === 'workholding') continue; // mixed per-object styles, checked above
     if (rp.mode === 'wireframe') {
       assert.equal(entry.solidMeshes, 0, `${layer} still has shaded solids in wireframe mode (${visualCase.id})`);
       assert.ok(entry.lines > 0 || entry.wireframeMeshes > 0, `${layer} has no wireframe in ${visualCase.id}`);
@@ -196,9 +247,17 @@ async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
   const allDiagnostics = vscode.languages.getDiagnostics(document.uri);
   assert.equal(probe.revpackFindingsRendered, diagnostics.length, 'findings list and Problems panel disagree');
 
+  let jaw = null;
+  if (rp.jawHit) {
+    jaw = diagnostics.find(item => (typeof item.code === 'object' ? item.code.value : item.code) === 'rapid-into-jaw');
+    assert.ok(jaw, `the seeded rapid into the jaw is not in the Problems panel: ${diagnostics.map(d => d.code).join(', ')}`);
+    assert.match(jaw.message, /jaw \+Y/, 'the jaw finding names the jaw');
+    assert.deepEqual(probe.hitSolids, ['Makro-Grip 77 jaw +Y (moves, serrated)'], 'the jaw the program crashes into is drawn red');
+  }
   let clicked = null;
   if (diagnostics.length) {
-    const first = diagnostics.find(item => item.severity === vscode.DiagnosticSeverity.Error) || diagnostics[0];
+    // The jaw case clicks the jaw finding, so it is the one in view for the screenshot.
+    const first = jaw || diagnostics.find(item => item.severity === vscode.DiagnosticSeverity.Error) || diagnostics[0];
     const line1 = first.range.start.line + 1;
     Panel.sendControl({ type: 'clickRevPackFinding', line: line1 });
     const until = Date.now() + 5000;
@@ -219,6 +278,8 @@ async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
     clickToLine: clicked, layers: results,
     target: { loader: probe.activeTargetLoader, format: probe.activeTargetFormat, bounds: probe.activeTargetBounds, stlCrossCheck: probe.targetStlCrossCheck, huePixels: probe.targetHuePixels },
     targetOnly: probe.targetOnly, compareMode: probe.compareMode, comparison: probe.comparison, seededBanner: probe.seededBanner,
+    hitSolids: probe.hitSolids, stockBounds: probe.stockBounds, targetPartBounds: probe.targetPartBounds, gripShown: probe.gripShown, packSetup: probe.packSetup,
+    objectStyles: probe.objectStyles, layerPreset: probe.layerPreset, objects,
     canvas: { width: probe.width, height: probe.height },
     problemsPanel: allDiagnostics.map(item => ({ line: item.range.start.line + 1, severity: item.severity, source: item.source, code: typeof item.code === 'object' ? item.code.value : item.code, message: item.message })),
   }, null, 2));
@@ -263,9 +324,20 @@ async function verifyAr4Case(Panel, visualCase, artifactDir) {
   // previous program's stock.
   const minGold = a.mode === 'wireframe' ? 150 : 2500;
   assert.ok(probe.targetHuePixels >= minGold, `${a.part} ${a.format} not visibly gold in ${a.mode}: ${probe.targetHuePixels} gold pixels (< ${minGold})`);
+  // An uploaded part's stock sits around it: 3 mm sides, 1 mm top, 3 mm grip + 1 mm below
+  // (the shared kernel's uploadSetup), never a placeholder box at the origin.
+  const sb = probe.stockBounds;
+  const tb = probe.targetPartBounds;
+  assert.ok(sb && tb, `${a.part}: stock / part bounds not reported`);
+  const grow = { min: [3, 3, 4], max: [3, 3, 1] };
+  for (let k = 0; k < 3; k++) {
+    assert.ok(Math.abs(sb.min[k] - (tb.min[k] - grow.min[k])) < 1e-3 && Math.abs(sb.max[k] - (tb.max[k] + grow.max[k])) < 1e-3,
+      `${a.part}: stock axis ${k} ${sb.min[k]}..${sb.max[k]} is not the part ${tb.min[k]}..${tb.max[k]} grown by the upload setup`);
+  }
   fs.writeFileSync(path.join(artifactDir, `${visualCase.id}.ar4.json`), JSON.stringify({
     id: visualCase.id, part: a.part, format: probe.activeTargetFormat, mode: a.mode, bounds: b, expected: want, tolerance: tol,
     triangles: probe.activeTargetPointCount ? probe.activeTargetPointCount / 3 : null, layer: entry, huePixels: probe.targetHuePixels,
+    stockBounds: sb, targetPartBounds: tb,
   }, null, 2));
 }
 

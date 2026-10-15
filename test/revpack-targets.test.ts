@@ -193,8 +193,7 @@ describe('Seeded test pack (UMC-750, O05002.nc)', () => {
       ['tool-not-in-revpack-T4', 24, /T4 M06/],
       ['over-travel-B', 25, /B-40\./],                      // UMC-750 B is -35..+120
       ['rpm-over-machine', 26, /S9000/],                    // UMC-750 spindle 8100 rpm
-      ['rapid-into-stock', 29, /G00 Z-2\.0/],               // rapid down through the part...
-      ['rapid-into-workholding', 29, /G00 Z-2\.0/],         // ...and into the dovetail fixture
+      ['rapid-into-jaw', 30, /G00 Z-1\.6/],                 // beside the part, rapid down into the Makro-Grip +Y jaw
     ];
     const errors = report.findings.filter(f => f.severity === 'error');
     assert.deepEqual(errors.map(f => `${f.line}:${f.id}`), expected.map(([id, line]) => `${line}:${id}`));
