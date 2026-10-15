@@ -14,7 +14,35 @@ export type SimulationSetupMessage =
       color: string;
     }
   | { type: 'toolData'; data: VisualizerHarnessData['tools'][number] }
-  | { type: 'toolLibrary'; tools: VisualizerHarnessData['tools'] };
+  | { type: 'toolLibrary'; tools: VisualizerHarnessData['tools'] }
+  | {
+      /**
+       * Every workholding shape in the pack, in WORK coordinates. The legacy
+       * workholdingSettings message can only describe one vise/chuck jaw pair
+       * derived from the stock; a pack can hold jaws + parallels + a fixture
+       * plate, so the webview draws these instead whenever they are present.
+       */
+      type: 'revpackWorkholding';
+      units: 'in' | 'mm';
+      shapes: Array<
+        | { kind: 'box'; name: string; min: [number, number, number]; max: [number, number, number] }
+        | { kind: 'cylinder'; name: string; diameter: number; innerDiameter?: number; zMin: number; zMax: number }
+      >;
+    }
+  | {
+      /** Badge + machine summary for the panel. Not geometry. */
+      type: 'revpackInfo';
+      id: string;
+      name: string;
+      units: 'in' | 'mm';
+      machine: string;
+      dialect: string;
+      kinematics: string;
+      presetId?: string;
+      workOffsets: Record<string, { x: number; y?: number; z: number }>;
+      tools: Array<{ t: number; h?: number; type: string; diameter: number; gaugeLength: number; description?: string }>;
+      source?: string;
+    };
 
 /**
  * Which workholding a program implies.
@@ -104,7 +132,10 @@ export function buildRevPackSimulationMessages(pack: RevPack, tools: VisualizerH
   const stock = pack.stock;
   if (isCylinder(stock)) {
     messages.push({ type: 'stockSettings', w: stock.diameter, d: stock.diameter, h: stock.zMax - stock.zMin, unit: pack.units, color: '#4488ff' });
-    messages.push({ type: 'stockOrigin', xOff: 0, yOff: 0, zOff: stock.zMin });
+    // The webview draws a turned bar BACK from its face (Three -Y from the
+    // origin), so the origin is the face: zMax. Sending zMin put the bar a
+    // whole bar-length behind the chuck.
+    messages.push({ type: 'stockOrigin', xOff: 0, yOff: 0, zOff: stock.zMax });
   } else {
     messages.push({
       type: 'stockSettings',
@@ -131,6 +162,13 @@ export function buildRevPackSimulationMessages(pack: RevPack, tools: VisualizerH
   } else {
     messages.push({ type: 'workholdingSettings', mode: 'none', jawHeight: 0, jawThickness: 0, gripDepth: 0, color: '#c0704f' });
   }
+  messages.push({
+    type: 'revpackWorkholding',
+    units: pack.units,
+    shapes: pack.workholding.map(shape => isCylinder(shape)
+      ? { kind: 'cylinder' as const, name: shape.name, diameter: shape.diameter, innerDiameter: shape.innerDiameter, zMin: shape.zMin, zMax: shape.zMax }
+      : { kind: 'box' as const, name: shape.name, min: [...shape.min] as [number, number, number], max: [...shape.max] as [number, number, number] }),
+  });
   const library: VisualizerHarnessData['tools'] = pack.tools.map(tool => {
     const fromProgram = tools.find(entry => entry.toolNumber === tool.t);
     return {
@@ -149,5 +187,22 @@ export function buildRevPackSimulationMessages(pack: RevPack, tools: VisualizerH
     messages.push({ type: 'toolLibrary', tools: library });
     messages.push({ type: 'toolData', data: library[0] });
   }
+  messages.push(revPackInfoMessage(pack));
   return messages;
+}
+
+export function revPackInfoMessage(pack: RevPack, source?: string): Extract<SimulationSetupMessage, { type: 'revpackInfo' }> {
+  return {
+    type: 'revpackInfo',
+    id: pack.id,
+    name: pack.name || pack.id,
+    units: pack.units,
+    machine: pack.machine.name,
+    dialect: pack.machine.dialect,
+    kinematics: pack.machine.kinematics,
+    presetId: pack.machine.presetId,
+    workOffsets: pack.workOffsets,
+    tools: pack.tools.map(tool => ({ t: tool.t, h: tool.h, type: tool.type, diameter: tool.diameter, gaugeLength: tool.gaugeLength, description: tool.description })),
+    source,
+  };
 }

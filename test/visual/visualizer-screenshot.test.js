@@ -19,9 +19,18 @@ async function waitForFile(file, timeoutMs) {
   throw new Error(`Timed out waiting for screenshot capture: ${file}`);
 }
 
-async function applyVisualCaseControls(Panel, visualCase) {
+async function applyVisualCaseControls(Panel, visualCase, document) {
   Panel.sendControl({ type: 'resetVisualScene' });
   await new Promise(resolve => setTimeout(resolve, 300));
+  if (visualCase.revpack) {
+    // Give the visualizer the room a user would: no Explorer, even split.
+    await vscode.commands.executeCommand('workbench.action.closeSidebar');
+    await vscode.commands.executeCommand('workbench.action.evenEditorWidths');
+    // The reset cleared the previous case's scene; re-open the program so the
+    // extension auto-detects its RevPack again, exactly as a user opening it.
+    await vscode.commands.executeCommand('jobline.gcode.openProgramInVisualizer', document.uri.toString());
+    await new Promise(resolve => setTimeout(resolve, 1500));
+  }
   if (visualCase.externalTargetFile) {
     const archive = fs.readFileSync(visualCase.externalTargetFile);
     assert.ok(archive.length > 4, 'Justin Fusion archive must not be empty');
@@ -104,6 +113,77 @@ async function applyVisualCaseControls(Panel, visualCase) {
   }
 }
 
+/**
+ * RevPack checks, run in the real extension host: the pack beside the program
+ * was auto-detected, its badge is on the panel, every layer renders from the
+ * pack in the requested mode (each layer drawn ALONE must light pixels), the
+ * correlation reached the Problems panel and the findings list, and clicking a
+ * finding moves the editor to that line.
+ */
+async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
+  const rp = visualCase.revpack;
+  const deadline = Date.now() + 20000;
+  let probe;
+  while (Date.now() < deadline) {
+    probe = await Panel.requestVisualProbe(3000);
+    if (probe && probe.revpackId === rp.id && probe.renderMode === rp.mode && probe.sharedKernel?.packId === rp.id && probe.targetLoaded) break;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  assert.equal(probe?.revpackId, rp.id, `RevPack ${rp.id} was not auto-detected for ${visualCase.id}`);
+  assert.equal(probe.revpackBadge, `RevPack: ${rp.name}`, 'RevPack badge is not shown on the panel');
+  assert.equal(probe.renderMode, rp.mode, 'layer render mode did not apply');
+  assert.equal(probe.sharedKernel.workholding, rp.workholding, 'every workholding solid must come from the shared kernel');
+  assert.equal(probe.sharedKernel.tools, rp.tools, 'tool solids from the shared kernel');
+  assert.equal(probe.sharedKernel.inProcess, rp.inProcess, 'in-process stock');
+  assert.equal(probe.workholdingShapes, rp.workholding);
+
+  const layerProbe = await Panel.requestLayerProbe(15000);
+  assert.ok(layerProbe && !layerProbe.error, `layer probe failed: ${layerProbe?.error}`);
+  const results = {};
+  for (const layer of ['targetModel', 'stock', 'workholding', 'tool', 'path']) {
+    const entry = layerProbe.layers[layer];
+    results[layer] = entry;
+    assert.ok(entry && entry.present && entry.visible, `${layer} layer missing in ${rp.mode} for ${visualCase.id}`);
+    assert.ok(entry.litAlone > 0, `${layer} layer drew nothing on its own in ${rp.mode} for ${visualCase.id}`);
+    if (layer === 'path') continue;
+    if (rp.mode === 'wireframe') {
+      assert.equal(entry.solidMeshes, 0, `${layer} still has shaded solids in wireframe mode (${visualCase.id})`);
+      assert.ok(entry.lines > 0 || entry.wireframeMeshes > 0, `${layer} has no wireframe in ${visualCase.id}`);
+    } else {
+      assert.ok(entry.solidMeshes > 0, `${layer} has no shaded solid in solid mode (${visualCase.id})`);
+    }
+  }
+
+  const diagnostics = vscode.languages.getDiagnostics(document.uri).filter(item => item.source === 'JobLine RevPack');
+  const errors = diagnostics.filter(item => item.severity === vscode.DiagnosticSeverity.Error);
+  if (rp.clean) assert.equal(errors.length, 0, `clean pack produced RevPack errors: ${errors.map(item => item.code).join(', ')}`);
+  else assert.ok(errors.length > 0, 'seeded pack produced no RevPack error diagnostics');
+  assert.equal(probe.revpackFindingsRendered, diagnostics.length, 'findings list and Problems panel disagree');
+
+  let clicked = null;
+  if (diagnostics.length) {
+    const first = diagnostics.find(item => item.severity === vscode.DiagnosticSeverity.Error) || diagnostics[0];
+    const line1 = first.range.start.line + 1;
+    Panel.sendControl({ type: 'clickRevPackFinding', line: line1 });
+    const until = Date.now() + 5000;
+    while (Date.now() < until) {
+      const editor = vscode.window.visibleTextEditors.find(item => item.document.uri.toString() === document.uri.toString());
+      if (editor && editor.selection.active.line === first.range.start.line) { clicked = line1; break; }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    assert.equal(clicked, line1, 'clicking a RevPack finding did not reveal its line');
+  }
+  if (rp.showProblems) {
+    await vscode.commands.executeCommand('workbench.actions.view.problems');
+    await new Promise(resolve => setTimeout(resolve, 600));
+  }
+  fs.writeFileSync(path.join(artifactDir, `${visualCase.id}.revpack.json`), JSON.stringify({
+    id: visualCase.id, pack: rp.id, mode: rp.mode, badge: probe.revpackBadge, sharedKernel: probe.sharedKernel,
+    findingsSummary: probe.revpackFindingsSummary, diagnostics: diagnostics.map(item => ({ line: item.range.start.line + 1, severity: item.severity, code: item.code, message: item.message })),
+    clickToLine: clicked, layers: results,
+  }, null, 2));
+}
+
 async function verifyRevgripsSetup(Panel, document, artifactDir) {
   const steps = [];
   // G54 identifies the work coordinate system; its measured machine datum is
@@ -141,6 +221,18 @@ suite('JobLine visualizer screenshot matrix', function () {
 
   const visualCases = JSON.parse(process.env.JOBLINE_VISUAL_CASES || '[]');
   for (const visualCase of visualCases) test(`renders ${visualCase.id}`, async () => {
+    try {
+      await renderCase(visualCase);
+    } catch (error) {
+      // Tell the capture side this case will never be ready, with the reason,
+      // so the runner reports it instead of timing out on the screenshot.
+      const dir = process.env.JOBLINE_VISUAL_ARTIFACT_DIR;
+      if (dir) fs.writeFileSync(path.join(dir, `${visualCase.id}.error`), String(error && error.stack || error));
+      throw error;
+    }
+  });
+
+  async function renderCase(visualCase) {
     const artifactDir = process.env.JOBLINE_VISUAL_ARTIFACT_DIR;
     assert.ok(artifactDir, 'JOBLINE_VISUAL_ARTIFACT_DIR must be supplied by the visual runner');
 
@@ -191,7 +283,10 @@ suite('JobLine visualizer screenshot matrix', function () {
     }
     assert.ok(ToolpathVisualizerPanel.renderStatus.reviewRendered, 'Program review must render before capture');
 
-    await applyVisualCaseControls(ToolpathVisualizerPanel, visualCase);
+    await applyVisualCaseControls(ToolpathVisualizerPanel, visualCase, document);
+    if (visualCase.revpack) {
+      await verifyRevPackCase(ToolpathVisualizerPanel, document, visualCase, artifactDir);
+    }
     if (visualCase.id === 'revgrips-stem-50-35-pro') {
       await verifyRevgripsSetup(ToolpathVisualizerPanel, document, artifactDir);
     }
@@ -209,7 +304,7 @@ suite('JobLine visualizer screenshot matrix', function () {
       probe.litRatio > 0.005,
       `Visualizer drew a blank scene for ${visualCase.id}: only ${probe.litPixels} of ${probe.sampledPixels} sampled pixels differ from the clear colour (${(probe.litRatio * 100).toFixed(3)}%)`
     );
-    if (!visualCase.targetModel && !visualCase.targetFile && !visualCase.targetFiles?.length && !visualCase.externalTargetFile) {
+    if (!visualCase.revpack && !visualCase.targetModel && !visualCase.targetFile && !visualCase.targetFiles?.length && !visualCase.externalTargetFile) {
       assert.equal(probe.targetLoaded, false, `G-code-only case ${visualCase.id} retained an unrelated target model`);
     }
     const commands = await vscode.commands.getCommands(true);
@@ -279,5 +374,5 @@ suite('JobLine visualizer screenshot matrix', function () {
       assert.ok(fs.existsSync(screenshot), `Targeted ${area} screenshot should be retained as an artifact`);
       assert.ok(fs.statSync(screenshot).size > 500, `Targeted ${area} screenshot should contain rendered UI`);
     }
-  });
+  }
 });

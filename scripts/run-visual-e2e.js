@@ -122,6 +122,48 @@ const visualCases = [
   },
 ];
 
+// RevPack cases: the program is opened from its pack folder, so the extension
+// must AUTO-DETECT revpack.json and draw the pack's target, stock (in-process
+// where the shared kernel cuts it), every workholding solid and the tool, in
+// both Solid and Wireframe layer modes. Each layer is also rendered alone to
+// prove it is on screen, and the correlation findings must reach the Problems
+// panel and the visualizer list.
+const revpackCases = [
+  { pack: 'haas-umc750-5axis', id: 'umc750-clean', clean: true, inProcess: true },
+  { pack: 'haas-umc750-5axis-seeded', id: 'umc750-seeded', clean: false, inProcess: true, problems: true },
+  { pack: 'haas-vf2-vise', id: 'vf2-vise', clean: true, inProcess: true },
+  { pack: 'okuma-lb3000-lathe', id: 'lb3000', clean: true, inProcess: false },
+];
+for (const rp of revpackCases) {
+  const packJson = JSON.parse(fs.readFileSync(path.join(root, 'test', 'fixtures', 'revpack-public', rp.pack, 'revpack.json'), 'utf8'));
+  for (const mode of ['solid', 'wireframe']) {
+    visualCases.push({
+      id: `revpack-${rp.id}-${mode}`,
+      fixture: `test/fixtures/revpack-public/${rp.pack}/${packJson.program.file}`,
+      expectedPoints: null,
+      captureAreas: ['visualizer', 'workbench'],
+      controls: [
+        { type: 'setPresetView', view: 'iso' },
+        // The cut solid would sit over the pack's in-process stock; the
+        // screenshots are about the pack's target, stock, fixture and tool.
+        { type: 'setLayerVisible', layer: 'sweptTube', visible: false },
+        { type: 'setSceneRenderMode', mode },
+      ],
+      revpack: {
+        id: packJson.id,
+        name: packJson.name,
+        mode,
+        clean: rp.clean,
+        workholding: packJson.workholding.length,
+        tools: packJson.tools.length,
+        inProcess: rp.inProcess,
+        showProblems: !!rp.problems,
+      },
+      expect: { targetLoaded: true },
+    });
+  }
+}
+
 const justinFusionArchive = process.env.JOBLINE_JUSTIN_F3D || 'C:/Users/zach/Downloads/Drawing1.f3d';
 if (fs.existsSync(justinFusionArchive)) {
   visualCases.push({
@@ -182,6 +224,9 @@ if (fs.existsSync(revgripsProgram) && fs.existsSync(revgripsTarget)) {
   });
 }
 
+if (process.env.JOBLINE_VISUAL_REVPACK_ONLY) {
+  visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.revpack));
+}
 if (process.env.JOBLINE_VISUAL_CASE) {
   const selected = visualCases.filter(item => item.id === process.env.JOBLINE_VISUAL_CASE);
   if (!selected.length) throw new Error('Unknown JOBLINE_VISUAL_CASE');
@@ -329,7 +374,16 @@ async function captureWhenReady() {
   for (const visualCase of visualCases) {
     const readyFile = path.join(artifactDir, `${visualCase.id}.ready`);
     const capturedFile = path.join(artifactDir, `${visualCase.id}.captured`);
-    await waitForFile(readyFile, 90000);
+    const errorFile = path.join(artifactDir, `${visualCase.id}.error`);
+    const deadline = Date.now() + 90000;
+    while (!fs.existsSync(readyFile) && !fs.existsSync(errorFile) && Date.now() < deadline) await delay(100);
+    if (fs.existsSync(errorFile)) {
+      const reason = fs.readFileSync(errorFile, 'utf8');
+      console.error(`Visual case ${visualCase.id} FAILED in the extension host:\n${reason}`);
+      results.push({ ...visualCase, failed: reason.split('\n')[0], screenshots: [] });
+      continue;
+    }
+    if (!fs.existsSync(readyFile)) throw new Error(`Timed out waiting for ${path.basename(readyFile)}`);
     // Allow the WebGL render loop two frames after the fixture signals readiness.
     await delay(1000);
     const target = await findWorkbenchTarget(30000);
@@ -359,6 +413,7 @@ async function main() {
   const protocolFiles = visualCases.flatMap(visualCase => [
     path.join(artifactDir, `${visualCase.id}.ready`),
     path.join(artifactDir, `${visualCase.id}.captured`),
+    path.join(artifactDir, `${visualCase.id}.error`),
     path.join(artifactDir, visualCase.id + '.png'),
   ]);
   for (const file of [...protocolFiles, path.join(artifactDir, 'visual-matrix.json')]) {

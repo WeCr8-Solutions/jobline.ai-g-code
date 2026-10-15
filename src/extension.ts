@@ -9,6 +9,7 @@ import { ToolPreviewPanel } from './providers/toolPreviewPanel';
  */
 
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { loadConfig } from './config';
 import { getHoverMarkdown } from './providers/hoverProvider';
 import { registerSidebarTreeProviders, registerToolsCommands, getLastGCodeDoc } from './providers/sidebarTreeProviders';
@@ -24,6 +25,8 @@ import { registerFormatter } from './providers/formatterProvider';
 import { registerSubprogramProvider } from './providers/subprogramProvider';
 import { buildVisualizerHarnessData } from './providers/visualizer/fixtureHarness';
 import { buildAutoSimulationMessages } from './providers/visualizer/simulationSetup';
+import { buildRevPackScene, clearRevPackMessages, findRevPackForProgram, readRevPack, type LoadedRevPack } from './providers/visualizer/revpackLoader';
+import type { CorrelationFinding } from './providers/visualizer/revpackCorrelation';
 import type { ToolpathPoint } from './providers/visualizer/toolpathParser';
 import { reviewGCodeProgram } from './providers/visualizer/programReview';
 import { loadStlMesh } from './providers/visualizer/stlMeshLoader';
@@ -47,6 +50,15 @@ export function activate(context: vscode.ExtensionContext): void {
         registerPresetCommands(context, presetStore);
         registerMachineSetupTree(context, presetStore);
         void presetStore.reload();
+
+        // RevPack state: packs the user pinned with "Load RevPack…", the pack
+        // each open program is currently drawn from, and its correlation
+        // findings in the Problems panel.
+        const pinnedRevPacks = new Map<string, string>();
+        const activeRevPacks = new Map<string, string>();
+        const revpackDiagnostics = vscode.languages.createDiagnosticCollection('jobline-revpack');
+        context.subscriptions.push(revpackDiagnostics);
+        context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(closed => revpackDiagnostics.delete(closed.uri)));
 
         /** What the active preset says about the machine, for the simulation. */
         function presetSimulationOverrides(): { workholding?: string; machineType?: string } {
@@ -170,21 +182,127 @@ export function activate(context: vscode.ExtensionContext): void {
         function loadSimulationSetupFromDocument(doc: vscode.TextDocument): boolean {
           if (!doc) return false;
           try {
-            const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
-            const harness = buildVisualizerHarnessData(doc.getText(), controlType);
-            playback.cutterSize = harness.tools[0]?.diameter || (harness.unit === 'mm' ? 6 : 0.25);
-            updateMachineStatusBar(harness.setup.machineType);
-            const overrides = presetSimulationOverrides();
-            for (const message of buildAutoSimulationMessages(harness, overrides.workholding, overrides.machineType)) {
-              ToolpathVisualizerPanel.queueMessage(message);
-            }
-            ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(doc.getText(), controlType) });
+            sendSimulationSetup(doc);
             return true;
           } catch (err) {
             vscode.window.showWarningMessage('JobLine: Unable to auto-load stock/tool setup: ' + String(err));
             return false;
           }
         }
+
+        /**
+         * The pack for a program: one the user picked with "Load RevPack…"
+         * wins, then a revpack.json beside the program (or in a parent
+         * revpack/ folder). Undefined means "guess the setup from the program".
+         */
+        function revPackForDocument(doc: vscode.TextDocument): LoadedRevPack | undefined {
+          if (doc.uri.scheme !== 'file') return undefined;
+          const key = doc.uri.toString();
+          const pinned = pinnedRevPacks.get(key);
+          if (pinned) {
+            try { return readRevPack(pinned); } catch (err) {
+              pinnedRevPacks.delete(key);
+              vscode.window.showWarningMessage('JobLine: RevPack could not be re-read: ' + String(err));
+            }
+          }
+          if (!vscode.workspace.getConfiguration('jobline').get<boolean>('revpack.autoDetect', true)) return undefined;
+          const folder = vscode.workspace.getWorkspaceFolder(doc.uri)?.uri.fsPath;
+          return findRevPackForProgram(doc.uri.fsPath, folder);
+        }
+
+        function publishRevPackDiagnostics(doc: vscode.TextDocument, findings: CorrelationFinding[], packName: string): void {
+          const diagnostics = findings.map(finding => {
+            const line = Math.max(0, Math.min(doc.lineCount - 1, finding.line - 1));
+            const range = doc.lineAt(line).range;
+            const severity = finding.severity === 'error' ? vscode.DiagnosticSeverity.Error
+              : finding.severity === 'warning' ? vscode.DiagnosticSeverity.Warning
+                : vscode.DiagnosticSeverity.Information;
+            const diagnostic = new vscode.Diagnostic(range, `${finding.message} [RevPack: ${packName}]`, severity);
+            diagnostic.source = 'JobLine RevPack';
+            diagnostic.code = finding.id;
+            return diagnostic;
+          });
+          revpackDiagnostics.set(doc.uri, diagnostics);
+        }
+
+        /** Stock, workholding, tools, machine and review for one program: from its RevPack when it has one. */
+        function sendSimulationSetup(doc: vscode.TextDocument): void {
+          const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
+          const text = doc.getText();
+          const harness = buildVisualizerHarnessData(text, controlType);
+          const loaded = revPackForDocument(doc);
+          if (loaded) {
+            const scene = buildRevPackScene(loaded, text, harness.tools);
+            playback.cutterSize = scene.cutterSize;
+            updateMachineStatusBar(`${loaded.pack.machine.name} (RevPack)`);
+            // Shared-kernel solids first, so stock/workholding/tool build from them.
+            ToolpathVisualizerPanel.queueMessage(scene.sceneMessage);
+            for (const message of scene.setup) ToolpathVisualizerPanel.queueMessage(message);
+            if (scene.target) ToolpathVisualizerPanel.queueMessage(scene.target);
+            ToolpathVisualizerPanel.queueMessage(scene.findings);
+            publishRevPackDiagnostics(doc, scene.report.findings, loaded.pack.name || loaded.pack.id);
+            activeRevPacks.set(doc.uri.toString(), loaded.file);
+          } else {
+            playback.cutterSize = harness.tools[0]?.diameter || (harness.unit === 'mm' ? 6 : 0.25);
+            updateMachineStatusBar(harness.setup.machineType);
+            const overrides = presetSimulationOverrides();
+            // A previous program's pack must not leave its target, fixture or
+            // badge behind. User-imported targets are left alone.
+            ToolpathVisualizerPanel.forgetMessage('targetModel:revpack-target');
+            ToolpathVisualizerPanel.sendControl({ type: 'removeTargetModel', id: 'revpack-target' });
+            for (const message of clearRevPackMessages()) ToolpathVisualizerPanel.queueMessage(message);
+            for (const message of buildAutoSimulationMessages(harness, overrides.workholding, overrides.machineType)) {
+              ToolpathVisualizerPanel.queueMessage(message);
+            }
+            revpackDiagnostics.delete(doc.uri);
+            activeRevPacks.delete(doc.uri.toString());
+          }
+          ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(text, controlType) });
+        }
+
+        const loadRevPackCmd = vscode.commands.registerCommand('jobline.revpack.load', async (arg?: vscode.Uri | string) => {
+          const doc = getPreferredGCodeDoc();
+          if (!doc) {
+            vscode.window.showWarningMessage('JobLine: open a G-code program first, then load its RevPack.');
+            return undefined;
+          }
+          let file: string | undefined = typeof arg === 'string' ? arg : arg instanceof vscode.Uri ? arg.fsPath : undefined;
+          if (!file) {
+            const picked = await vscode.window.showOpenDialog({
+              canSelectMany: false,
+              openLabel: 'Load RevPack',
+              defaultUri: vscode.Uri.file(path.dirname(doc.uri.fsPath)),
+              filters: { 'RevPack': ['json'] },
+            });
+            file = picked?.[0]?.fsPath;
+          }
+          if (!file) return undefined;
+          let loaded: LoadedRevPack;
+          try {
+            loaded = readRevPack(file);
+          } catch (err) {
+            vscode.window.showErrorMessage('JobLine: ' + String(err instanceof Error ? err.message : err));
+            return undefined;
+          }
+          pinnedRevPacks.set(doc.uri.toString(), loaded.file);
+          if (!ToolpathVisualizerPanel.currentPanel) {
+            await vscode.commands.executeCommand('jobline.gcode.showVisualizer');
+          } else {
+            refreshVisualizerForDocument(doc, true);
+          }
+          vscode.window.setStatusBarMessage(`JobLine: RevPack "${loaded.pack.name}" loaded for ${path.basename(doc.uri.fsPath)}`, 5000);
+          return loaded.pack.id;
+        });
+        context.subscriptions.push(loadRevPackCmd);
+
+        const clearRevPackCmd = vscode.commands.registerCommand('jobline.revpack.clear', () => {
+          const doc = getPreferredGCodeDoc();
+          if (!doc) return;
+          pinnedRevPacks.delete(doc.uri.toString());
+          revpackDiagnostics.delete(doc.uri);
+          refreshVisualizerForDocument(doc, false);
+        });
+        context.subscriptions.push(clearRevPackCmd);
 
         function refreshVisualizerForDocument(doc: vscode.TextDocument, resetPosition = true): boolean {
           if (!isGCodeFile(doc) || !ToolpathVisualizerPanel.currentPanel) return false;
@@ -808,12 +926,9 @@ export function activate(context: vscode.ExtensionContext): void {
           playback.sourceVersion = e.document.version;
           playback.idx = Math.min(playback.idx, Math.max(0, result.path.length - 1));
           sendToolpathUpdate(result.path, playback.cutterSize, playback.idx, result.units);
-          const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
-          const overrides = presetSimulationOverrides();
-          for (const message of buildAutoSimulationMessages(buildVisualizerHarnessData(e.document.getText(), controlType), overrides.workholding, overrides.machineType)) {
-            ToolpathVisualizerPanel.queueMessage(message);
-          }
-          ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(e.document.getText(), controlType) });
+          // Same path as opening the program, so an edit re-runs the RevPack
+          // correlation and the diagnostics follow the text.
+          sendSimulationSetup(e.document);
         } catch (err) {
           // Silently ignore parse errors during auto-reload
         }

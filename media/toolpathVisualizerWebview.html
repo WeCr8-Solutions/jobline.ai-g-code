@@ -168,6 +168,26 @@
     }
     .target-btn:hover { background: #382b58; }
 
+    /* RevPack badge + correlation findings. Top-left under the HUD so the
+       badge is visible without opening anything. */
+    #revpack-panel {
+      position: absolute; top: 64px; left: 10px; width: min(330px, 40vw); max-height: 38vh;
+      overflow: auto; background: rgba(20, 26, 42, 0.94); color: #d7dde8;
+      border: 1px solid #b084ff; border-radius: 10px; font: 11px/1.4 sans-serif; display: none; z-index: 6;
+    }
+    #revpack-panel summary { padding: 6px 10px; cursor: pointer; }
+    #revpack-badge {
+      display: inline-block; background: #3b2a66; color: #f3ecff; border: 1px solid #b084ff;
+      border-radius: 10px; padding: 2px 9px; font-weight: 700; max-width: 92%;
+      white-space: normal; overflow-wrap: anywhere; vertical-align: middle;
+    }
+    #revpack-status { margin-left: 6px; font-weight: 700; }
+    #revpack-status.pass { color: #71d995; }
+    #revpack-status.fail { color: #ff7b72; }
+    #revpack-meta { padding: 0 10px 6px; color: #aeb8c8; }
+    #revpack-findings .review-item { padding: 6px 10px; }
+    #render-mode-row .play-btn.active { background: #3b2a66; border-color: #b084ff; color: #fff; }
+
     /* JobLine polish pass: small, low-risk visual overrides. */
     #hud, #playback-panel, #review-panel, #view-panel, #target-panel, #view-cube {
       backdrop-filter: blur(10px);
@@ -228,12 +248,23 @@
     <div id="stat-units"></div>
   </div>
 
+  <details id="revpack-panel" open aria-label="RevPack setup and correlation findings">
+    <summary><span id="revpack-badge">RevPack: none</span><span id="revpack-status"></span></summary>
+    <div id="revpack-meta"></div>
+    <div id="revpack-findings"></div>
+  </details>
+
   <div id="playback-panel" aria-label="Simulation playback controls">
     <div class="title">Program</div>
     <div class="play-row">
       <select id="program-select" title="Switch between open G-code programs">
         <option value="">Open a G-code tab...</option>
       </select>
+    </div>
+    <div class="title">Layers</div>
+    <div class="play-row" id="render-mode-row" aria-label="Layer render mode">
+      <button class="play-btn active" data-render-mode="solid" title="Stock, workholding, target and tool as shaded solids">Solid</button>
+      <button class="play-btn" data-render-mode="wireframe" title="Stock, workholding, target and tool as wireframes">Wireframe</button>
     </div>
     <div class="title">Simulation speed <span id="speed-readout">1x</span></div>
     <div class="play-row">
@@ -506,6 +537,20 @@
     // "Cannot access 'viewOpacity' before initialization", killing the whole
     // script: no toolpath, no renderReady, a silent blank viewport.
     const viewOpacity = { sweptTube: 0.55, stock: 0.55, workholding: 0.35, targetModel: 0.35, tool: 1, path: 1 };
+    // 'solid' | 'wireframe' for every solid layer (stock, workholding, target,
+    // tool, holder, cut solid). Declared here for the same TDZ reason as
+    // viewOpacity: setLayer() reapplies it on the very first build.
+    let sceneRenderMode = 'solid';
+    // RevPack state. packShapes replaces the single derived jaw pair whenever
+    // a pack says what actually holds the part.
+    let revpackInfo = null;
+    let packShapes = [];
+    let revpackFindings = null;
+    // Solids from the shared RevPack geometry kernel (revpackGeometry.ts, the
+    // same file CAM and the hub use). When set, stock, workholding and the
+    // milling tool are drawn from these arrays instead of local primitives.
+    let packScene = null;
+    const RENDER_MODE_LAYERS = ['stock', 'workholding', 'targetModel', 'tool', 'toolHolder', 'sweptTube'];
 
     const layerMeshes = {
       tool: null,
@@ -765,9 +810,54 @@
     // jaw form, so both are rebuilt when it arrives.
     let isTurning = false;
 
+    /** Shared-kernel arrays (part coords, G-code axes) -> lit mesh + edge lines. */
+    function sharedMeshGroup(wireMesh, color, opacity, name) {
+      const group = new THREE.Group();
+      group.name = name || 'RevPack solid';
+      if (!wireMesh) return group;
+      const src = wireMesh.positions || [];
+      const pos = new Float32Array(src.length);
+      for (let i = 0; i + 2 < src.length; i += 3) {
+        pos[i] = src[i]; pos[i + 1] = src[i + 2]; pos[i + 2] = -src[i + 1];
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.computeVertexNormals();
+      const col = new THREE.Color(color);
+      const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+        color: col, opacity, transparent: opacity < 0.999, side: THREE.DoubleSide, shininess: 30,
+      }));
+      mesh.name = (name || 'solid') + ' body';
+      group.add(mesh);
+      const e = wireMesh.edges || [];
+      if (e.length) {
+        const ep = new Float32Array(e.length);
+        for (let i = 0; i + 2 < e.length; i += 3) { ep[i] = e[i]; ep[i + 1] = e[i + 2]; ep[i + 2] = -e[i + 1]; }
+        const eg = new THREE.BufferGeometry();
+        eg.setAttribute('position', new THREE.BufferAttribute(ep, 3));
+        const lines = new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ color: col.clone().offsetHSL(0, 0, 0.15), opacity: 0.95, transparent: true }));
+        lines.name = (name || 'solid') + ' edges';
+        group.add(lines);
+      }
+      return group;
+    }
+
     function buildStock() {
       const { w, d, h, color } = stockCfg;
       const group = new THREE.Group();
+
+      if (packScene && packScene.stock) {
+        // RevPack: the in-process stock (Z-map after the program's 3-axis
+        // cuts) when the kernel produced one, with the raw blank's outline;
+        // otherwise the raw blank solid. Part coordinates - no stock transform.
+        const solid = sharedMeshGroup(packScene.inProcess || packScene.stock, color, 0.55, packScene.inProcess ? 'In-process stock' : 'Stock');
+        if (packScene.inProcess) {
+          const outline = sharedMeshGroup({ positions: [], edges: packScene.stock.edges }, color, 0.55, 'Raw stock outline');
+          solid.add(...outline.children);
+        }
+        setLayer('stock', solid);
+        return;
+      }
 
       if (isTurning) {
         // A turned blank is a BAR on the spindle axis, not a block. G-code Z is
@@ -794,12 +884,19 @@
       }
 
       // In Three.js coords: X=w, Y=h (G-code Z), Z=d (G-code Y depth)
+      // A filled body so Solid mode actually shows a solid block (the stock
+      // used to be edges only, so it looked identical in both modes), plus
+      // the edges so the outline reads in either mode.
       const geo = new THREE.BoxGeometry(w, h, d);
+      const body = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+        color: new THREE.Color(color), opacity: 0.55, transparent: true, side: THREE.DoubleSide, shininess: 20,
+      }));
+      body.position.set(w / 2, h / 2, -d / 2);
+      group.add(body);
       const edges = new THREE.EdgesGeometry(geo);
-      geo.dispose();
       const mat = new THREE.LineBasicMaterial({
         color: new THREE.Color(color),
-        opacity: 0.55,
+        opacity: 0.9,
         transparent: true
       });
       const box = new THREE.LineSegments(edges, mat);
@@ -817,7 +914,57 @@
     // default - 'none' - so nothing appears until a setup is actually declared.
     let workCfg = { mode: 'none', jawHeight: 1.0, jawThickness: 0.75, gripDepth: 0.5, color: '#c0704f' };
 
+    /** Every RevPack workholding solid, from the shared kernel (part coords). */
+    function buildPackWorkholding() {
+      const col = new THREE.Color(workCfg.color || '#c0704f');
+      const group = new THREE.Group();
+      group.name = 'RevPack workholding';
+      if (packScene && Array.isArray(packScene.workholding) && packScene.workholding.length) {
+        packScene.workholding.forEach((item, index) => {
+          const shade = col.clone().offsetHSL(0, 0, index % 2 ? 0.08 : -0.02);
+          group.add(sharedMeshGroup(item, '#' + shade.getHexString(), 0.35, item.name));
+        });
+        setLayer('workholding', group);
+        if (didFit && !userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
+        return;
+      }
+      packShapes.forEach((shape, index) => {
+        // Alternate shades so neighbouring jaws / parallels read apart.
+        const shade = col.clone().offsetHSL(0, 0, index % 2 ? 0.08 : -0.02);
+        const mat = new THREE.MeshPhongMaterial({ color: shade, opacity: 0.35, transparent: true, side: THREE.DoubleSide, shininess: 30 });
+        const edgeMat = new THREE.LineBasicMaterial({ color: shade, opacity: 0.9, transparent: true });
+        let geo;
+        let pos;
+        if (shape.kind === 'cylinder') {
+          const ro = Math.max(Number(shape.diameter) / 2, 0.0001);
+          const ri = Math.max(0, Math.min(ro * 0.999, Number(shape.innerDiameter || 0) / 2));
+          const z0 = Number(shape.zMin), z1 = Number(shape.zMax);
+          // Annulus revolved about Three Y, which is G-code Z (the spindle).
+          const profile = ri > 0
+            ? [new THREE.Vector2(ri, z0), new THREE.Vector2(ro, z0), new THREE.Vector2(ro, z1), new THREE.Vector2(ri, z1), new THREE.Vector2(ri, z0)]
+            : [new THREE.Vector2(0, z0), new THREE.Vector2(ro, z0), new THREE.Vector2(ro, z1), new THREE.Vector2(0, z1)];
+          geo = new THREE.LatheGeometry(profile, 48);
+          pos = new THREE.Vector3(0, 0, 0);
+        } else {
+          const [x0, y0, z0] = shape.min.map(Number);
+          const [x1, y1, z1] = shape.max.map(Number);
+          geo = new THREE.BoxGeometry(Math.max(x1 - x0, 0.0001), Math.max(z1 - z0, 0.0001), Math.max(y1 - y0, 0.0001));
+          pos = gc3((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+        }
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.copy(pos);
+        mesh.name = shape.name || `workholding ${index + 1}`;
+        group.add(mesh);
+        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat);
+        edges.position.copy(pos);
+        group.add(edges);
+      });
+      setLayer('workholding', group);
+      if (didFit && !userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
+    }
+
     function buildWorkholding() {
+      if (packShapes.length) { buildPackWorkholding(); return; }
       if (workCfg.mode === 'none') { setLayer('workholding', null); return; }
 
       const { w, d, h } = stockCfg;
@@ -1165,6 +1312,26 @@
       if (isTurning || activeToolData?.insertCode) {
         setLayer('tool', buildTurningInsertTool(activeToolData, tip, diameter, stickOut, totalLength));
         setLayer('toolHolder', null);
+        return;
+      }
+
+      // RevPack milling tool: cutter + holder solids from the shared kernel,
+      // tip at the live position, so the assembly is exactly the pack's gauge
+      // length.
+      const packTool = packScene && Array.isArray(packScene.tools)
+        ? packScene.tools.find(entry => entry.t === Number(tipPoint.toolNumber ?? activeToolData?.toolNumber))
+        : null;
+      if (packTool && (packTool.kind === 'mill' || packTool.kind === 'drill' || packTool.kind === 'chamfer')) {
+        const cutter = sharedMeshGroup(packTool.cutter, activeToolData?.color || '#f6c85f', 1, `T${packTool.t} cutter`);
+        cutter.position.copy(tip);
+        setLayer('tool', cutter);
+        if (packTool.holder) {
+          const holder = sharedMeshGroup(packTool.holder, '#c9d1d9', 1, `T${packTool.t} holder`);
+          holder.position.copy(tip);
+          setLayer('toolHolder', holder);
+        } else {
+          setLayer('toolHolder', null);
+        }
         return;
       }
 
@@ -1518,9 +1685,10 @@
     // viewport. This is the only check that distinguishes "rendered" from
     // "rendered nothing".
     let probeRequested = false;
+    let layerProbeRequested = false;
     const CLEAR_RGB = [0x1a, 0x1a, 0x2e];
 
-    function readLitPixels(beforeOverlay) {
+    function readLitPixels(beforeOverlay, stride = 16) {
       const gl = renderer.getContext();
       const w = renderer.domElement.width;
       const h = renderer.domElement.height;
@@ -1547,7 +1715,7 @@
       let gnomonTotal = 0;
       // Step across the buffer rather than every pixel; a real toolpath covers
       // far more than one sample in 16.
-      for (let i = 0; i < buf.length; i += 16 * 4) {
+      for (let i = 0; i < buf.length; i += stride * 4) {
         const p = i / 4;
         const x = p % w;
         const y = Math.floor(p / w);   // readPixels origin is bottom-left
@@ -1582,6 +1750,14 @@
         gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, beforeOverlay);
       }
       renderGnomon();
+      if (layerProbeRequested) {
+        layerProbeRequested = false;
+        try {
+          vscode.postMessage({ type: 'layerProbe', renderMode: sceneRenderMode, revpackId: revpackInfo?.id || '', layers: layerReport(true) });
+        } catch (err) {
+          vscode.postMessage({ type: 'layerProbe', error: String(err && err.message || err) });
+        }
+      }
       if (probeRequested) {
         probeRequested = false;
         try {
@@ -1617,6 +1793,15 @@
             playbackSpeed,
             opacity: Object.assign({}, viewOpacity),
             orbit: { theta: orbitTheta, phi: orbitPhi },
+            renderMode: sceneRenderMode,
+            revpackId: revpackInfo?.id || '',
+            revpackName: revpackInfo?.name || '',
+            revpackBadge: document.getElementById('revpack-panel')?.style.display === 'block' ? (document.getElementById('revpack-badge')?.textContent || '') : '',
+            revpackFindingsRendered: document.querySelectorAll('#revpack-findings .review-item').length,
+            revpackFindingsSummary: revpackFindings?.summary || null,
+            workholdingShapes: packShapes.length,
+            sharedKernel: packScene ? { packId: packScene.packId, workholding: (packScene.workholding || []).length, tools: (packScene.tools || []).length, inProcess: !!packScene.inProcess, removedVolume: packScene.inProcess?.removedVolume ?? null } : null,
+            layers: layerReport(false),
           });
         } catch (err) {
           vscode.postMessage({ type: 'visualProbe', error: String(err && err.message || err) });
@@ -1652,7 +1837,18 @@
             m.opacity = forceSolid ? 1 : value;
             m.transparent = !forceSolid && value < 0.999;
             m.depthWrite = forceSolid || value >= 0.999;
-            if (typeof m.wireframe === 'boolean') m.wireframe = forceWire;
+            // Wireframe follows the Layers toggle for every solid layer, and the
+            // target's own display mode on top of it. Line work has no
+            // wireframe flag and is left alone.
+            const wireMode = RENDER_MODE_LAYERS.includes(name) && sceneRenderMode === 'wireframe';
+            if (node.isMesh && typeof node.name === 'string' && node.name.endsWith(' body')) {
+              // Shared-kernel solid: Wireframe shows its feature edges (the
+              // kernel's wireframe), not the triangulation.
+              node.visible = !wireMode;
+              m.wireframe = false;
+            } else if (typeof m.wireframe === 'boolean' && node.isMesh) {
+              m.wireframe = layer === 'targetModel' ? forceWire : wireMode;
+            }
             m.needsUpdate = true;
           }
         });
@@ -1843,6 +2039,107 @@
 
     // Re-apply after anything rebuilds geometry, or a fresh mesh comes back at
     // its constructor opacity and the panel silently stops describing the view.
+    function setSceneRenderMode(mode) {
+      sceneRenderMode = mode === 'wireframe' ? 'wireframe' : 'solid';
+      for (const btn of document.querySelectorAll('#render-mode-row [data-render-mode]')) {
+        btn.classList.toggle('active', btn.getAttribute('data-render-mode') === sceneRenderMode);
+      }
+      // Targets carry their own display mode; the Layers toggle sets all of them.
+      for (const item of targetModels) item.displayMode = sceneRenderMode === 'wireframe' ? 'wireframe' : 'solid';
+      targetDisplayMode = sceneRenderMode === 'wireframe' ? 'wireframe' : 'solid';
+      syncTargetControls();
+      buildTargetModel();
+      reapplyViewOpacity();
+      applyOpacity('targetModel', viewOpacity.targetModel);
+    }
+    for (const btn of document.querySelectorAll('#render-mode-row [data-render-mode]')) {
+      btn.addEventListener('click', () => {
+        setSceneRenderMode(btn.getAttribute('data-render-mode'));
+        vscode.postMessage({ type: 'sceneRenderMode', mode: sceneRenderMode });
+      });
+    }
+
+    /**
+     * What each layer holds and whether it draws, for the visual test bed:
+     * meshes vs line work, how many meshes are wireframe, and how many pixels
+     * the layer covers when it is drawn ALONE. Rendering a layer alone is the
+     * only way to prove that layer (not its neighbours) is on screen.
+     */
+    function layerReport(withPixels) {
+      const names = ['targetModel', 'stock', 'workholding', 'tool', 'toolHolder', 'path', 'sweptTube'];
+      const report = {};
+      const saved = {};
+      for (const name of Object.keys(layerMeshes)) saved[name] = layerMeshes[name] ? layerMeshes[name].visible : null;
+      const gridVisible = grid.visible;
+      for (const name of names) {
+        const root = layerMeshes[name];
+        const entry = { present: !!root, visible: !!(root && saved[name]), meshes: 0, lines: 0, wireframeMeshes: 0, solidMeshes: 0, litAlone: 0 };
+        root?.traverse?.((node) => {
+          if (node.isMesh) {
+            entry.meshes++;
+            const mats = Array.isArray(node.material) ? node.material : [node.material];
+            const edgeOnlyBody = typeof node.name === 'string' && node.name.endsWith(' body') && !node.visible;
+            if (edgeOnlyBody || mats.some(m => m && m.wireframe)) entry.wireframeMeshes++; else entry.solidMeshes++;
+          } else if (node.isLine || node.isLineSegments) {
+            entry.lines++;
+          }
+        });
+        if (withPixels && root && saved[name]) {
+          for (const other of Object.keys(layerMeshes)) if (layerMeshes[other]) layerMeshes[other].visible = other === name;
+          grid.visible = false;
+          renderer.render(scene, camera);
+          // Every pixel: a thin toolpath or a small cutter can fall between
+          // the 1-in-16 samples the whole-scene probe uses.
+          entry.litAlone = readLitPixels(null, 1).lit;
+        }
+        report[name] = entry;
+      }
+      for (const name of Object.keys(layerMeshes)) if (layerMeshes[name] && saved[name] !== null) layerMeshes[name].visible = saved[name];
+      grid.visible = gridVisible;
+      if (withPixels) renderer.render(scene, camera);
+      return report;
+    }
+
+    function renderRevPack() {
+      const panel = document.getElementById('revpack-panel');
+      if (!panel) return;
+      const active = !!(revpackInfo && revpackInfo.id);
+      panel.style.display = active ? 'block' : 'none';
+      if (!active) return;
+      document.getElementById('revpack-badge').textContent = `RevPack: ${revpackInfo.name || revpackInfo.id}`;
+      document.getElementById('revpack-badge').title = revpackInfo.source || revpackInfo.id;
+      const offsets = Object.entries(revpackInfo.workOffsets || {})
+        .map(([code, o]) => `${code} X${o.x} Y${o.y ?? 0} Z${o.z}`).join(' · ');
+      const tools = (revpackInfo.tools || []).map(t => `T${t.t} Ø${t.diameter} GL${t.gaugeLength}`).join(' · ');
+      document.getElementById('revpack-meta').textContent =
+        `${revpackInfo.machine} (${revpackInfo.dialect}) · ${revpackInfo.kinematics}` +
+        (offsets ? `\nOffsets: ${offsets}` : '') + (tools ? `\nTools: ${tools}` : '') +
+        `\nWorkholding: ${packShapes.length} shape(s)`;
+      document.getElementById('revpack-meta').style.whiteSpace = 'pre-line';
+      const status = document.getElementById('revpack-status');
+      const list = document.getElementById('revpack-findings');
+      list.replaceChildren();
+      const findings = Array.isArray(revpackFindings?.findings) ? revpackFindings.findings : [];
+      const sum = revpackFindings?.summary || { errors: 0, warnings: 0, infos: 0, pass: true };
+      status.textContent = revpackFindings ? (sum.errors ? `${sum.errors} errors, ${sum.warnings} warnings` : `pass · ${sum.warnings} warnings`) : '';
+      status.className = sum.errors ? 'fail' : 'pass';
+      for (const finding of findings) {
+        const item = document.createElement('div');
+        item.className = `review-item ${finding.severity || 'info'}`;
+        item.title = 'Click to reveal this line in the G-code editor';
+        item.setAttribute('data-line', String(finding.line));
+        const meta = document.createElement('div');
+        meta.className = 'review-meta';
+        meta.textContent = `${finding.severity} · ${finding.category} · line ${finding.line}`;
+        const message = document.createElement('div');
+        message.textContent = finding.message;
+        item.append(meta, message);
+        // Correlation lines are 1-based; revealLine takes a 0-based line.
+        item.addEventListener('click', () => vscode.postMessage({ command: 'jobline.gcode.revealLine', arg: Math.max(0, (finding.line || 1) - 1) }));
+        list.appendChild(item);
+      }
+    }
+
     function reapplyViewOpacity() {
       for (const layer of Object.keys(viewOpacity)) {
         if (layer === 'targetModel') continue;
@@ -2081,6 +2378,7 @@
 
         case 'targetModel': {
           const item = normalizeTargetItem(msg);
+          if (msg.source === 'revpack') item.displayMode = sceneRenderMode === 'wireframe' ? 'wireframe' : (msg.displayMode || 'transparent');
           const idx = targetModels.findIndex(existing => existing.id === item.id);
           if (idx >= 0) targetModels[idx] = item;
           else targetModels.push(item);
@@ -2106,6 +2404,8 @@
           currentToolData = null;
           stockIsDeclared = false;
           fusionSetup = null;
+          revpackInfo = null; packShapes = []; revpackFindings = null; packScene = null;
+          renderRevPack();
           for (const layer of ['targetModel', 'stock', 'workholding', 'tool', 'fusionReference']) {
             setLayer(layer, null);
           }
@@ -2132,6 +2432,67 @@
 
         case 'review':
           renderReview(msg.review);
+          break;
+
+        case 'revpackScene': {
+          const newPack = !!msg.packId && msg.packId !== (packScene && packScene.packId);
+          packScene = msg.packId ? msg : null;
+          buildStock();
+          buildWorkholding();
+          buildToolLayer(currentToolData);
+          // A different pack is a different setup (a 160 mm chuck after a 4 in
+          // vise plate): frame it, or the camera can sit inside the new parts.
+          if (newPack) {
+            stockIsDeclared = true;
+            userMovedCamera = false;
+            if (currentPath && currentPath.length) { fitCamera(currentPath); didFit = true; buildOrigin(); }
+          }
+          break;
+        }
+
+        case 'revpackInfo':
+          revpackInfo = msg.id ? msg : null;
+          renderRevPack();
+          break;
+
+        case 'revpackWorkholding':
+          packShapes = Array.isArray(msg.shapes) ? msg.shapes : [];
+          buildWorkholding();
+          renderRevPack();
+          break;
+
+        case 'revpackFindings':
+          revpackFindings = msg.packId ? msg : null;
+          renderRevPack();
+          break;
+
+        case 'sceneRenderMode':
+        case 'setSceneRenderMode':
+          setSceneRenderMode(msg.mode);
+          break;
+
+        case 'removeTargetModel': {
+          const before = targetModels.length;
+          targetModels = targetModels.filter(item => item.id !== msg.id);
+          if (targetModels.length !== before) {
+            if (!targetModels.some(item => item.id === activeTargetId)) activeTargetId = targetModels[0]?.id || '';
+            syncTargetControls();
+            buildTargetModel();
+          }
+          break;
+        }
+
+        case 'clickRevPackFinding': {
+          // Test hook: clicks the real list item, so click-to-line is proven
+          // through the same handler a user's click runs.
+          const item = document.querySelector(`#revpack-findings .review-item[data-line="${Number(msg.line)}"]`)
+            || document.querySelector('#revpack-findings .review-item');
+          if (item) item.click();
+          break;
+        }
+
+        case 'requestLayerProbe':
+          layerProbeRequested = true;
           break;
       }
     });

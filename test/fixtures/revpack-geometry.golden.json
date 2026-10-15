@@ -1,0 +1,992 @@
+{
+  "haas-umc750-5axis": {
+    "packId": "haas-umc750-bracket",
+    "correlation": {
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 0,
+        "pass": true
+      },
+      "findings": [],
+      "toolsUsed": [
+        1,
+        2,
+        3
+      ],
+      "workOffsetsUsed": [
+        "G54"
+      ],
+      "segments": 42,
+      "machineExtents": {
+        "B": {
+          "min": 0,
+          "max": 90
+        },
+        "C": {
+          "min": 0,
+          "max": 30
+        },
+        "X": {
+          "min": -17.1,
+          "max": -12.6175
+        },
+        "Y": {
+          "min": -11.2,
+          "max": -8.284
+        },
+        "Z": {
+          "min": -15,
+          "max": 0
+        }
+      }
+    },
+    "geometry": {
+      "version": "1.0",
+      "packId": "haas-umc750-bracket",
+      "units": "in",
+      "target": {
+        "triangles": 28,
+        "edges": 36,
+        "min": [
+          -1.5,
+          -1,
+          -1.5
+        ],
+        "max": [
+          1.5,
+          1,
+          -0.05
+        ],
+        "volume": 8.67
+      },
+      "stock": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -1.5,
+          -1,
+          -1.5
+        ],
+        "max": [
+          1.5,
+          1,
+          0
+        ],
+        "volume": 9
+      },
+      "workholding": [
+        {
+          "name": "Dovetail fixture (grips bottom 0.25)",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.25,
+            -1,
+            -5.5
+          ],
+          "max": [
+            1.25,
+            1,
+            -1.25
+          ],
+          "volume": 21.25
+        }
+      ],
+      "tools": [
+        {
+          "t": 1,
+          "kind": "mill",
+          "gaugeLength": 4.25,
+          "stickOut": 2,
+          "cutter": {
+            "triangles": 128,
+            "edges": 68,
+            "min": [
+              -0.25,
+              -0.25,
+              0
+            ],
+            "max": [
+              0.25,
+              0.25,
+              2
+            ],
+            "volume": 0.3902
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              2
+            ],
+            "max": [
+              0.625,
+              0.625,
+              4.25
+            ],
+            "volume": 2.4106
+          }
+        },
+        {
+          "t": 2,
+          "kind": "chamfer",
+          "gaugeLength": 3.5,
+          "stickOut": 1,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.125,
+              -0.125,
+              0
+            ],
+            "max": [
+              0.125,
+              0.125,
+              1
+            ],
+            "volume": 0.0447
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1
+            ],
+            "max": [
+              0.625,
+              0.625,
+              3.5
+            ],
+            "volume": 2.6784
+          }
+        },
+        {
+          "t": 3,
+          "kind": "drill",
+          "gaugeLength": 5,
+          "stickOut": 1.875,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.1005,
+              -0.1005,
+              0
+            ],
+            "max": [
+              0.1005,
+              0.1005,
+              1.875
+            ],
+            "volume": 0.0578
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1.875
+            ],
+            "max": [
+              0.625,
+              0.625,
+              5
+            ],
+            "volume": 3.348
+          }
+        }
+      ],
+      "inProcess": {
+        "nx": 96,
+        "ny": 64,
+        "removedVolume": 0.4387,
+        "stockVolume": 9,
+        "applied": 11,
+        "skippedTilted": 4,
+        "skippedNoTool": 0,
+        "mesh": {
+          "triangles": 25424,
+          "edges": 896,
+          "min": [
+            -1.5,
+            -1,
+            -1.5
+          ],
+          "max": [
+            1.5,
+            1,
+            -0.05
+          ],
+          "volume": 8.6538
+        }
+      }
+    }
+  },
+  "haas-umc750-5axis-seeded": {
+    "packId": "haas-umc750-bracket-seeded",
+    "correlation": {
+      "summary": {
+        "errors": 10,
+        "warnings": 0,
+        "infos": 3,
+        "pass": false
+      },
+      "findings": [
+        "1:info:revpack-tool-unused-T3",
+        "7:error:undefined-work-offset-G55",
+        "14:error:rapid-into-stock",
+        "15:error:rapid-into-stock",
+        "16:info:tool-change-spindle-running",
+        "16:error:unsafe-tool-change",
+        "18:error:tool-length-mismatch-T2",
+        "20:error:simultaneous-5x-without-tcpc",
+        "24:info:tool-change-spindle-running",
+        "24:error:tool-not-in-revpack-T4",
+        "25:error:over-travel-B",
+        "26:error:rpm-over-machine",
+        "29:error:rapid-into-workholding"
+      ],
+      "toolsUsed": [
+        1,
+        2,
+        4
+      ],
+      "workOffsetsUsed": [
+        "G54",
+        "G55"
+      ],
+      "segments": 17,
+      "machineExtents": {
+        "B": {
+          "min": -40,
+          "max": 10
+        },
+        "C": {
+          "min": 0,
+          "max": 0
+        },
+        "X": {
+          "min": -17.1,
+          "max": -12.9
+        },
+        "Y": {
+          "min": -11.2,
+          "max": -10
+        },
+        "Z": {
+          "min": -20,
+          "max": 0
+        }
+      }
+    },
+    "geometry": {
+      "version": "1.0",
+      "packId": "haas-umc750-bracket-seeded",
+      "units": "in",
+      "target": {
+        "triangles": 28,
+        "edges": 36,
+        "min": [
+          -1.5,
+          -1,
+          -1.5
+        ],
+        "max": [
+          1.5,
+          1,
+          -0.05
+        ],
+        "volume": 8.67
+      },
+      "stock": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -1.5,
+          -1,
+          -1.5
+        ],
+        "max": [
+          1.5,
+          1,
+          0
+        ],
+        "volume": 9
+      },
+      "workholding": [
+        {
+          "name": "Dovetail fixture (grips bottom 0.25)",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.25,
+            -1,
+            -5.5
+          ],
+          "max": [
+            1.25,
+            1,
+            -1.25
+          ],
+          "volume": 21.25
+        }
+      ],
+      "tools": [
+        {
+          "t": 1,
+          "kind": "mill",
+          "gaugeLength": 4.25,
+          "stickOut": 2,
+          "cutter": {
+            "triangles": 128,
+            "edges": 68,
+            "min": [
+              -0.25,
+              -0.25,
+              0
+            ],
+            "max": [
+              0.25,
+              0.25,
+              2
+            ],
+            "volume": 0.3902
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              2
+            ],
+            "max": [
+              0.625,
+              0.625,
+              4.25
+            ],
+            "volume": 2.4106
+          }
+        },
+        {
+          "t": 2,
+          "kind": "chamfer",
+          "gaugeLength": 3.5,
+          "stickOut": 1,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.125,
+              -0.125,
+              0
+            ],
+            "max": [
+              0.125,
+              0.125,
+              1
+            ],
+            "volume": 0.0447
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1
+            ],
+            "max": [
+              0.625,
+              0.625,
+              3.5
+            ],
+            "volume": 2.6784
+          }
+        },
+        {
+          "t": 3,
+          "kind": "drill",
+          "gaugeLength": 5,
+          "stickOut": 1.875,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.1005,
+              -0.1005,
+              0
+            ],
+            "max": [
+              0.1005,
+              0.1005,
+              1.875
+            ],
+            "volume": 0.0578
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1.875
+            ],
+            "max": [
+              0.625,
+              0.625,
+              5
+            ],
+            "volume": 3.348
+          }
+        }
+      ],
+      "inProcess": {
+        "nx": 96,
+        "ny": 64,
+        "removedVolume": 0.075,
+        "stockVolume": 9,
+        "applied": 1,
+        "skippedTilted": 1,
+        "skippedNoTool": 0,
+        "mesh": {
+          "triangles": 25408,
+          "edges": 842,
+          "min": [
+            -1.5,
+            -1,
+            -1.5
+          ],
+          "max": [
+            1.5,
+            1,
+            0
+          ],
+          "volume": 8.875
+        }
+      }
+    }
+  },
+  "haas-vf2-vise": {
+    "packId": "haas-vf2-vise-plate",
+    "correlation": {
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 0,
+        "pass": true
+      },
+      "findings": [],
+      "toolsUsed": [
+        1,
+        5,
+        7,
+        12
+      ],
+      "workOffsetsUsed": [
+        "G54"
+      ],
+      "segments": 62,
+      "machineExtents": {
+        "X": {
+          "min": -18.2,
+          "max": -11.8
+        },
+        "Y": {
+          "min": -8.75,
+          "max": -7.25
+        },
+        "Z": {
+          "min": -11.87,
+          "max": 0
+        }
+      }
+    },
+    "geometry": {
+      "version": "1.0",
+      "packId": "haas-vf2-vise-plate",
+      "units": "in",
+      "target": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -2,
+          -1.5,
+          -0.75
+        ],
+        "max": [
+          2,
+          1.5,
+          -0.02
+        ],
+        "volume": 8.76
+      },
+      "stock": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -2,
+          -1.5,
+          -0.75
+        ],
+        "max": [
+          2,
+          1.5,
+          0
+        ],
+        "volume": 9
+      },
+      "workholding": [
+        {
+          "name": "Fixed vise jaw",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -3,
+            1.5,
+            -2
+          ],
+          "max": [
+            3,
+            2.25,
+            -0.25
+          ],
+          "volume": 7.875
+        },
+        {
+          "name": "Moving vise jaw",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -3,
+            -2.25,
+            -2
+          ],
+          "max": [
+            3,
+            -1.5,
+            -0.25
+          ],
+          "volume": 7.875
+        },
+        {
+          "name": "Front parallel",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -2.5,
+            -1.5,
+            -2
+          ],
+          "max": [
+            2.5,
+            -1.1,
+            -0.75
+          ],
+          "volume": 2.5
+        },
+        {
+          "name": "Rear parallel",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -2.5,
+            1.1,
+            -2
+          ],
+          "max": [
+            2.5,
+            1.5,
+            -0.75
+          ],
+          "volume": 2.5
+        }
+      ],
+      "tools": [
+        {
+          "t": 1,
+          "kind": "mill",
+          "gaugeLength": 4,
+          "stickOut": 3,
+          "cutter": {
+            "triangles": 128,
+            "edges": 68,
+            "min": [
+              -1,
+              -1,
+              0
+            ],
+            "max": [
+              1,
+              1,
+              3
+            ],
+            "volume": 9.3643
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -2,
+              -2,
+              3
+            ],
+            "max": [
+              2,
+              2,
+              4
+            ],
+            "volume": 11.4843
+          }
+        },
+        {
+          "t": 5,
+          "kind": "chamfer",
+          "gaugeLength": 3.75,
+          "stickOut": 1.5,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.1875,
+              -0.1875,
+              0
+            ],
+            "max": [
+              0.1875,
+              0.1875,
+              1.5
+            ],
+            "volume": 0.1509
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1.5
+            ],
+            "max": [
+              0.625,
+              0.625,
+              3.75
+            ],
+            "volume": 2.4106
+          }
+        },
+        {
+          "t": 7,
+          "kind": "drill",
+          "gaugeLength": 4.6,
+          "stickOut": 1.875,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.1005,
+              -0.1005,
+              0
+            ],
+            "max": [
+              0.1005,
+              0.1005,
+              1.875
+            ],
+            "volume": 0.0578
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1.875
+            ],
+            "max": [
+              0.625,
+              0.625,
+              4.6
+            ],
+            "volume": 2.9195
+          }
+        },
+        {
+          "t": 12,
+          "kind": "drill",
+          "gaugeLength": 4.4,
+          "stickOut": 1.125,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.125,
+              -0.125,
+              0
+            ],
+            "max": [
+              0.125,
+              0.125,
+              1.125
+            ],
+            "volume": 0.0524
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1.125
+            ],
+            "max": [
+              0.625,
+              0.625,
+              4.4
+            ],
+            "volume": 3.5087
+          }
+        }
+      ],
+      "inProcess": {
+        "nx": 96,
+        "ny": 72,
+        "removedVolume": 0.378,
+        "stockVolume": 9,
+        "applied": 14,
+        "skippedTilted": 0,
+        "skippedNoTool": 0,
+        "mesh": {
+          "triangles": 28704,
+          "edges": 1476,
+          "min": [
+            -2,
+            -1.5,
+            -0.75
+          ],
+          "max": [
+            2,
+            1.5,
+            -0.02
+          ],
+          "volume": 8.714
+        }
+      }
+    }
+  },
+  "okuma-lb3000-lathe": {
+    "packId": "okuma-lb3000-shaft",
+    "correlation": {
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 0,
+        "pass": true
+      },
+      "findings": [],
+      "toolsUsed": [
+        1,
+        3
+      ],
+      "workOffsetsUsed": [],
+      "segments": 29,
+      "machineExtents": {
+        "X": {
+          "min": -1.6,
+          "max": 400
+        },
+        "Z": {
+          "min": -360,
+          "max": -100
+        }
+      }
+    },
+    "geometry": {
+      "version": "1.0",
+      "packId": "okuma-lb3000-shaft",
+      "units": "mm",
+      "target": {
+        "triangles": 576,
+        "edges": 288,
+        "min": [
+          -40,
+          -40,
+          -120
+        ],
+        "max": [
+          40,
+          40,
+          0
+        ],
+        "volume": 274105.0021
+      },
+      "stock": {
+        "triangles": 192,
+        "edges": 100,
+        "min": [
+          -40,
+          -40,
+          -120
+        ],
+        "max": [
+          40,
+          40,
+          1
+        ],
+        "volume": 606476.8969
+      },
+      "workholding": [
+        {
+          "name": "8in chuck jaws",
+          "triangles": 384,
+          "edges": 196,
+          "min": [
+            -80,
+            -80,
+            -120
+          ],
+          "max": [
+            80,
+            80,
+            -85
+          ],
+          "volume": 526281.6048
+        }
+      ],
+      "tools": [
+        {
+          "t": 1,
+          "kind": "turning",
+          "gaugeLength": 1,
+          "stickOut": 19.7577,
+          "cutter": {
+            "triangles": 12,
+            "edges": 12,
+            "min": [
+              0,
+              -2.3495,
+              -6.349
+            ],
+            "max": [
+              15.1369,
+              2.3495,
+              6.349
+            ],
+            "volume": 451.595
+          },
+          "holder": null
+        },
+        {
+          "t": 3,
+          "kind": "turning",
+          "gaugeLength": 1,
+          "stickOut": 14.8183,
+          "cutter": {
+            "triangles": 12,
+            "edges": 12,
+            "min": [
+              0,
+              -1.7621,
+              -4.7618
+            ],
+            "max": [
+              11.3527,
+              1.7621,
+              4.7618
+            ],
+            "volume": 190.5167
+          },
+          "holder": null
+        }
+      ],
+      "inProcess": null
+    }
+  },
+  "trumpf-trulaser3030": {
+    "packId": "trumpf-trulaser3030-bracket-nest",
+    "correlation": {
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 0,
+        "pass": true
+      },
+      "findings": [],
+      "toolsUsed": [
+        1
+      ],
+      "workOffsetsUsed": [
+        "G54"
+      ],
+      "segments": 31,
+      "machineExtents": {
+        "X": {
+          "min": 150,
+          "max": 1050
+        },
+        "Y": {
+          "min": 150,
+          "max": 650
+        },
+        "Z": {
+          "min": 115,
+          "max": 115
+        }
+      }
+    },
+    "geometry": {
+      "version": "1.0",
+      "packId": "trumpf-trulaser3030-bracket-nest",
+      "units": "mm",
+      "target": null,
+      "stock": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          0,
+          0,
+          -3
+        ],
+        "max": [
+          1000,
+          600,
+          0
+        ],
+        "volume": 1800000
+      },
+      "workholding": [],
+      "tools": [
+        {
+          "t": 1,
+          "kind": "laser",
+          "gaugeLength": 12,
+          "stickOut": 12,
+          "cutter": {
+            "triangles": 128,
+            "edges": 68,
+            "min": [
+              -6,
+              -6,
+              0
+            ],
+            "max": [
+              6,
+              6,
+              12
+            ],
+            "volume": 498.9318
+          },
+          "holder": null
+        }
+      ],
+      "inProcess": null
+    }
+  }
+}

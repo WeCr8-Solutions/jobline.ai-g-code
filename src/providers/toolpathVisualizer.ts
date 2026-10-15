@@ -15,7 +15,23 @@ const VISUALIZER_STATE_MESSAGE_TYPES = new Set([
   'fusionSetup',
   'review',
   'update',
+  'revpackScene',
+  'revpackInfo',
+  'revpackWorkholding',
+  'revpackFindings',
+  'sceneRenderMode',
 ]);
+
+export interface LayerProbeEntry {
+  present: boolean;
+  visible: boolean;
+  meshes: number;
+  lines: number;
+  wireframeMeshes: number;
+  solidMeshes: number;
+  /** Lit pixels with ONLY this layer drawn (layer probe only). */
+  litAlone: number;
+}
 
 export class ToolpathVisualizerPanel {
   public static currentPanel: ToolpathVisualizerPanel | undefined;
@@ -47,9 +63,38 @@ export class ToolpathVisualizerPanel {
     playbackSpeed?: number;
     opacity: Record<string, number>;
     orbit: { theta: number; phi: number };
+    renderMode?: string;
+    revpackId?: string;
+    revpackName?: string;
+    revpackBadge?: string;
+    revpackFindingsRendered?: number;
+    revpackFindingsSummary?: { errors: number; warnings: number; infos: number; pass: boolean } | null;
+    workholdingShapes?: number;
+    sharedKernel?: { packId: string; workholding: number; tools: number; inProcess: boolean; removedVolume: number | null } | null;
+    layers?: Record<string, LayerProbeEntry>;
+    activeToolNumber?: number | null;
+    toolDiameter?: number | null;
+    toolVisible?: boolean;
     error?: string;
     at: number;
   } | undefined;
+
+  /** Last answer to 'requestLayerProbe': each layer drawn alone. */
+  public static lastLayerProbe: { renderMode: string; revpackId: string; layers: Record<string, LayerProbeEntry>; error?: string; at: number } | undefined;
+
+  public static async requestLayerProbe(timeoutMs = 8000): Promise<typeof ToolpathVisualizerPanel.lastLayerProbe> {
+    const panel = ToolpathVisualizerPanel.currentPanel;
+    if (!panel) return undefined;
+    const before = ToolpathVisualizerPanel.lastLayerProbe?.at ?? 0;
+    panel._panel.webview.postMessage({ type: 'requestLayerProbe' });
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const probe = ToolpathVisualizerPanel.lastLayerProbe;
+      if (probe && probe.at > before) return probe;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    return undefined;
+  }
 
   /**
    * Ask the webview to measure what it actually drew, and wait for the answer.
@@ -120,6 +165,11 @@ export class ToolpathVisualizerPanel {
     ToolpathVisualizerPanel.currentPanel?.postMessage(msg);
   }
 
+  /** Drop a replayed state message, e.g. a previous program's RevPack target. */
+  public static forgetMessage(key: string): void {
+    ToolpathVisualizerPanel._stateMessages.delete(key);
+  }
+
   public postMessage(msg: unknown) {
     const typed = msg as { type?: string } | undefined;
     if (typed?.type) {
@@ -181,6 +231,26 @@ export class ToolpathVisualizerPanel {
           playbackSpeed: Number(msg.playbackSpeed) || 0,
           opacity: (msg.opacity ?? {}) as Record<string, number>,
           orbit: (msg.orbit ?? { theta: 0, phi: 0 }) as { theta: number; phi: number },
+          renderMode: typeof msg.renderMode === 'string' ? msg.renderMode : '',
+          revpackId: typeof msg.revpackId === 'string' ? msg.revpackId : '',
+          revpackName: typeof msg.revpackName === 'string' ? msg.revpackName : '',
+          revpackBadge: typeof msg.revpackBadge === 'string' ? msg.revpackBadge : '',
+          revpackFindingsRendered: Number(msg.revpackFindingsRendered) || 0,
+          revpackFindingsSummary: msg.revpackFindingsSummary ?? null,
+          workholdingShapes: Number(msg.workholdingShapes) || 0,
+          sharedKernel: msg.sharedKernel ?? null,
+          layers: msg.layers ?? {},
+          activeToolNumber: Number(msg.activeToolNumber) || null,
+          toolDiameter: Number(msg.toolDiameter) || null,
+          toolVisible: Boolean(msg.toolVisible),
+          error: typeof msg.error === 'string' ? msg.error : undefined,
+          at: Date.now(),
+        };
+      } else if (msg?.type === 'layerProbe') {
+        ToolpathVisualizerPanel.lastLayerProbe = {
+          renderMode: String(msg.renderMode || ''),
+          revpackId: String(msg.revpackId || ''),
+          layers: msg.layers ?? {},
           error: typeof msg.error === 'string' ? msg.error : undefined,
           at: Date.now(),
         };
