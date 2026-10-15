@@ -142,12 +142,13 @@ const revpackCases = [
 ];
 // Extra views of one mode: Target only (every other layer hidden) and the
 // remaining-material vs gouge colouring of the in-process stock.
-const revpackExtras = [
-  { pack: 'haas-umc750-5axis', id: 'umc750-clean-targetonly', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'setTargetOnly', on: true }], targetOnly: true },
-  { pack: 'haas-umc750-5axis', id: 'umc750-clean-compare', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'setCompareMode', on: true }], compare: true },
-  { pack: 'haas-umc750-5axis-seeded', id: 'umc750-seeded-compare', base: 'umc750-seeded', mode: 'solid', controls: [{ type: 'setCompareMode', on: true }], compare: true },
-  { pack: 'haas-vf2-vise', id: 'vf2-vise-compare', base: 'vf2-vise', mode: 'solid', controls: [{ type: 'setCompareMode', on: true }], compare: true },
-];
+const revpackExtras = revpackCases.flatMap(rp => [
+  { pack: rp.pack, id: `${rp.id}-targetonly`, base: rp.id, mode: 'solid', controls: [{ type: 'setTargetOnly', on: true }], targetOnly: true },
+  // Compare colours the in-process stock cell by cell, so it needs a pack the
+  // shared kernel cuts (the lathe and laser packs have no in-process stock and
+  // the panel disables the Compare button for them).
+  ...(rp.inProcess ? [{ pack: rp.pack, id: `${rp.id}-compare`, base: rp.id, mode: 'solid', controls: [{ type: 'setCompareMode', on: true }], compare: true }] : []),
+]);
 function revpackCase(rp, mode, extra) {
   const packJson = JSON.parse(fs.readFileSync(path.join(root, 'test', 'fixtures', 'revpack-public', rp.pack, 'revpack.json'), 'utf8'));
   return {
@@ -291,7 +292,8 @@ if (process.env.JOBLINE_VISUAL_AR4_ONLY) {
   visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.ar4));
 }
 if (process.env.JOBLINE_VISUAL_CASE) {
-  const selected = visualCases.filter(item => item.id === process.env.JOBLINE_VISUAL_CASE);
+  const wanted = process.env.JOBLINE_VISUAL_CASE.split(',').map(id => id.trim());
+  const selected = visualCases.filter(item => wanted.includes(item.id));
   if (!selected.length) throw new Error('Unknown JOBLINE_VISUAL_CASE');
   visualCases.splice(0, visualCases.length, ...selected);
 }

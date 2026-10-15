@@ -220,6 +220,9 @@
       border-radius: 7px;
       background: rgba(8, 13, 25, .88);
     }
+    /* The 3D view cube is drawn in the WebGL canvas underneath this panel, so a
+       backdrop blur here smeared the cube itself. Keep the panel crisp. */
+    #view-cube { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(18, 22, 38, 0.10); }
     @media (max-width: 760px) {
       #target-panel { display: none; }
       #playback-panel { width: min(360px, calc(100vw - 20px)); }
@@ -560,7 +563,11 @@
     // The finished part draws as an opaque gold solid; the stock over it is
     // kept this translucent so the part reads through it.
     const STOCK_OVER_TARGET = 0.18;
+    // Compare colours the stock by cell; kept see-through so the part stays gold.
+    const COMPARE_STOCK_OPACITY = 0.4;
     const REVPACK_TARGET_COLOR = 0xffb000;
+    // A cutter with no colour of its own draws steel: gold is the finished part's alone.
+    const TOOL_DEFAULT_COLOR = '#b8c4d2';
     const COMPARE_COLORS = { 0: [0.42, 0.50, 0.60], 1: [0.21, 0.84, 1.0], 2: [1.0, 0.23, 0.23] };
     function packTargetLoaded() { return targetModels.some(item => item.source === 'revpack'); }
     let packShapes = [];
@@ -710,17 +717,28 @@
     const gnomonCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
     gnomonCamera.position.set(0, 0, 3.2);
 
+    // View-cube labels are drawn large and mip-mapped so they stay sharp when
+    // the cube is minified on HiDPI screens instead of a blurry 64-128px stretch.
+    function sharpenTexture(tex) {
+      tex.generateMipmaps = true;
+      tex.minFilter = THREE.LinearMipmapLinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      tex.needsUpdate = true;
+      return tex;
+    }
+
     function axisLabelSprite(text, color) {
       const cv = document.createElement('canvas');
-      cv.width = 64; cv.height = 64;
+      cv.width = 256; cv.height = 256;
       const ctx = cv.getContext('2d');
       ctx.fillStyle = color;
-      ctx.font = 'bold 44px monospace';
+      ctx.font = 'bold 176px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(text, 32, 34);
+      ctx.fillText(text, 128, 136);
       const tex = new THREE.CanvasTexture(cv);
-      tex.needsUpdate = true;
+      sharpenTexture(tex);
       const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
       sprite.scale.set(0.62, 0.62, 0.62);
       return sprite;
@@ -728,23 +746,23 @@
 
     function faceLabelTexture(text) {
       const cv = document.createElement('canvas');
-      cv.width = 128; cv.height = 128;
+      cv.width = 512; cv.height = 512;
       const ctx = cv.getContext('2d');
-      const grad = ctx.createLinearGradient(0, 0, 128, 128);
+      const grad = ctx.createLinearGradient(0, 0, 512, 512);
       grad.addColorStop(0, '#f2edbc');
       grad.addColorStop(1, '#a7a16e');
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 128, 128);
+      ctx.fillRect(0, 0, 512, 512);
       ctx.strokeStyle = '#5e5a40';
-      ctx.lineWidth = 5;
-      ctx.strokeRect(3, 3, 122, 122);
+      ctx.lineWidth = 20;
+      ctx.strokeRect(10, 10, 492, 492);
       ctx.fillStyle = '#1f2430';
-      ctx.font = '900 26px sans-serif';
+      ctx.font = '900 104px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(text, 64, 64);
+      ctx.fillText(text, 256, 260);
       const tex = new THREE.CanvasTexture(cv);
-      tex.needsUpdate = true;
+      sharpenTexture(tex);
       return tex;
     }
 
@@ -1223,7 +1241,7 @@
       shape.closePath();
       const insert = new THREE.Mesh(
         new THREE.ExtrudeGeometry(shape, { depth: Math.max(Number(toolData?.insertThickness) || diameter * 0.16, 0.04), bevelEnabled: true, bevelSize: Math.max(diameter * 0.015, 0.004), bevelThickness: Math.max(diameter * 0.015, 0.004), bevelSegments: 1 }),
-        new THREE.MeshPhongMaterial({ color: toolData?.color || '#f6c85f', shininess: 90 })
+        new THREE.MeshPhongMaterial({ color: toolData?.color || TOOL_DEFAULT_COLOR, shininess: 90 })
       );
       insert.position.set(0, holderHeight * 0.62, -Math.max(diameter * 0.08, 0.02));
       insert.rotation.x = -Math.PI / 2;
@@ -1340,7 +1358,7 @@
       const stickOut = Math.max(Number(activeToolData?.stickOut) || diameter * 3, diameter * 1.2);
       const totalLength = Math.max(Number(activeToolData?.length) || stickOut * 1.8, stickOut);
       const holderType = activeToolData?.holder || 'CAT40';
-      const toolColor = new THREE.Color(activeToolData?.color || '#f6c85f');
+      const toolColor = new THREE.Color(activeToolData?.color || TOOL_DEFAULT_COLOR);
 
       if (isTurning || activeToolData?.insertCode) {
         setLayer('tool', buildTurningInsertTool(activeToolData, tip, diameter, stickOut, totalLength));
@@ -1355,7 +1373,7 @@
         ? packScene.tools.find(entry => entry.t === Number(tipPoint.toolNumber ?? activeToolData?.toolNumber))
         : null;
       if (packTool && (packTool.kind === 'mill' || packTool.kind === 'drill' || packTool.kind === 'chamfer')) {
-        const cutter = sharedMeshGroup(packTool.cutter, activeToolData?.color || '#f6c85f', 1, `T${packTool.t} cutter`);
+        const cutter = sharedMeshGroup(packTool.cutter, activeToolData?.color || TOOL_DEFAULT_COLOR, 1, `T${packTool.t} cutter`);
         cutter.position.copy(tip);
         setLayer('tool', cutter);
         if (packTool.holder) {
@@ -1365,6 +1383,23 @@
         } else {
           setLayer('toolHolder', null);
         }
+        return;
+      }
+
+      // RevPack laser head: the kernel's nozzle, drawn at a readable size (a
+      // 1.7 mm nozzle over a 1000 mm sheet is under a pixel), tip on the beam.
+      if (packTool && packTool.kind === 'laser') {
+        const head = sharedMeshGroup(packTool.cutter, '#c9d1d9', 1, `T${packTool.t} laser head`);
+        let s = 1;
+        if (layerMeshes.stock) {
+          const size = new THREE.Box3().setFromObject(layerMeshes.stock).getSize(new THREE.Vector3());
+          const nozzleH = Math.max(Number(packTool.stickOut) || 0, 1e-6);
+          s = Math.max(1, (Math.max(size.x, size.z) * 0.06) / nozzleH);
+        }
+        head.scale.setScalar(s);
+        head.position.copy(tip);
+        setLayer('tool', head);
+        setLayer('toolHolder', null);
         return;
       }
 
@@ -1394,7 +1429,9 @@
 
     function targetColor(role) {
       return {
-        'target-part': 0xb084ff,
+        // The finished part is gold everywhere (RevPack or imported), the
+        // only warm solid on screen.
+        'target-part': 0xffb000,
         fixture: 0x9aa7b8,
         stock: 0x58a6ff,
         jaws: 0xffb454,
@@ -1442,13 +1479,26 @@
         mesh.name = 'target body';
         mesh.renderOrder = 1;
         mesh.visible = !isHidden && !isWireframe;
+        // In Wireframe the part's gold edges draw last and over the stock's
+        // line work (the in-process stock's Z-map edges sit on the same
+        // faces and used to paint the part blue), with a faint gold fill so
+        // the part still reads as one gold body.
         const edges = new THREE.LineSegments(
           new THREE.EdgesGeometry(geo, 20),
-          new THREE.LineBasicMaterial({ color: isWireframe ? 0xffc640 : 0x4a2c00, transparent: !isWireframe, opacity: isWireframe ? 1 : 0.6 })
+          new THREE.LineBasicMaterial({ color: isWireframe ? 0xffc640 : 0x4a2c00, transparent: true, opacity: isWireframe ? 1 : 0.6, depthTest: !isWireframe })
         );
         edges.name = 'target edges';
         edges.visible = !isHidden;
+        if (isWireframe) edges.renderOrder = 12;
         group.add(mesh, edges);
+        if (isWireframe && !isHidden) {
+          const ghost = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+            color: REVPACK_TARGET_COLOR, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide,
+          }));
+          ghost.name = 'target ghost';
+          ghost.renderOrder = 11;
+          group.add(ghost);
+        }
       } else if (Array.isArray(item.meshVertices) && item.meshVertices.length >= 9) {
         const pos = [];
         for (let i = 0; i + 2 < item.meshVertices.length; i += 3) {
@@ -1477,7 +1527,8 @@
         mesh.visible = !isHidden;
         const edges = new THREE.LineSegments(
           new THREE.EdgesGeometry(geo),
-          new THREE.LineBasicMaterial({ color: 0xe8d7ff, transparent: true, opacity: isWireframe ? 0.95 : 0.35 })
+          // A finished part's edges stay gold, so it reads as the target in Wireframe too.
+          new THREE.LineBasicMaterial({ color: color === REVPACK_TARGET_COLOR ? 0xffc640 : 0xe8d7ff, transparent: true, opacity: isWireframe ? 0.95 : 0.35 })
         );
         edges.visible = !isHidden && !isSolid;
         group.add(mesh, edges);
@@ -1605,13 +1656,38 @@
         }
       }
 
+      // A RevPack's subject is the part: frame its stock and finished part
+      // (only the part in Target only). Rapids to a lathe's turret home or a
+      // tall trunnion pedestal used to shrink the gold target to a speck.
+      let fitFactor = 2.2;
+      if (packScene && packTargetLoaded()) {
+        const partBox = new THREE.Box3();
+        for (const name of targetOnly ? ['targetModel'] : ['stock', 'targetModel']) {
+          const obj = layerMeshes[name];
+          if (obj) partBox.expandByObject(obj);
+        }
+        if (!partBox.isEmpty() && !targetOnly) {
+          // Keep the cutting moves and a nearby tool in frame; a tool parked
+          // at a far home position is left out.
+          for (let i = 1; i < path.length; i++) if (!path[i].isRapid) partBox.expandByPoint(gc3(path[i].x, path[i].y, path[i].z));
+          const toolObj = layerMeshes.tool;
+          if (toolObj) {
+            const toolBox = new THREE.Box3().setFromObject(toolObj);
+            const pc = partBox.getCenter(new THREE.Vector3());
+            const ps = partBox.getSize(new THREE.Vector3()).length();
+            if (!toolBox.isEmpty() && toolBox.getCenter(new THREE.Vector3()).distanceTo(pc) < ps * 1.25) partBox.union(toolBox);
+          }
+        }
+        if (!partBox.isEmpty()) { bbox.copy(partBox); fitFactor = targetOnly ? 2.6 : 2.9; }
+      }
+
       const center = new THREE.Vector3();
       bbox.getCenter(center);
       const size = new THREE.Vector3();
       bbox.getSize(size);
       const maxDim = Math.max(size.x, size.y, size.z, 0.01);
       axisLen = maxDim * 0.15;
-      orbitRadius = maxDim * 2.2;
+      orbitRadius = maxDim * fitFactor;
       orbitTarget.copy(center);
       orbitPhi = Math.PI / 3.5;
       orbitTheta = Math.PI / 4;
@@ -1907,8 +1983,9 @@
             // The stock over a RevPack's finished part stays see-through so
             // the part reads through it (Compare draws the stock coloured).
             let eff = value;
-            if (name === 'stock' && packTargetLoaded() && !compareMode) {
-              eff = (node.isLine || node.isLineSegments) ? Math.min(value, 0.6) : Math.min(value, STOCK_OVER_TARGET);
+            if (node.name === 'target ghost') { m.needsUpdate = true; continue; }
+            if (name === 'stock' && packTargetLoaded()) {
+              eff = (node.isLine || node.isLineSegments) ? Math.min(value, 0.6) : Math.min(value, compareMode ? COMPARE_STOCK_OPACITY : STOCK_OVER_TARGET);
             }
             if (forceSolid && (node.isLine || node.isLineSegments) && packTargetLoaded()) {
               m.needsUpdate = true;
@@ -2147,6 +2224,7 @@
         if (layerMeshes[key]) layerMeshes[key].visible = layerVis[key] !== false && !targetOnly;
       }
       if (layerMeshes.targetModel && targetOnly) layerMeshes.targetModel.visible = true;
+      if (!userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
     }
 
     function comparisonSummary() {
@@ -2208,6 +2286,8 @@
         const root = layerMeshes[name];
         const entry = { present: !!root, visible: !!(root && saved[name]), meshes: 0, lines: 0, wireframeMeshes: 0, solidMeshes: 0, litAlone: 0 };
         root?.traverse?.((node) => {
+          // The Wireframe target's faint gold tint is not a shaded solid.
+          if (node.name === 'target ghost') { entry.ghostFill = node.visible; return; }
           if (node.isMesh) {
             entry.meshes++;
             const mats = Array.isArray(node.material) ? node.material : [node.material];
@@ -2547,11 +2627,18 @@
           stockIsDeclared = false;
           fusionSetup = null;
           revpackInfo = null; packShapes = []; revpackFindings = null; packScene = null;
+          // The previous program's stock (a 1000 x 600 laser sheet) must not
+          // carry over to the next one.
+          stockCfg = { w: 4, d: 4, h: 2, unit: 'in', color: '#4488ff' };
+          // A new scene gets framed again (the last one's preset view or a
+          // 1000 mm laser sheet framing left the next part a speck).
+          userMovedCamera = false;
+          didFit = false;
           compareMode = false;
           setTargetOnly(false);
           renderCompareLegend();
           renderRevPack();
-          for (const layer of ['targetModel', 'stock', 'workholding', 'tool', 'fusionReference']) {
+          for (const layer of ['targetModel', 'stock', 'workholding', 'tool', 'toolHolder', 'sweptTube', 'fusionReference']) {
             setLayer(layer, null);
           }
           syncTargetControls();

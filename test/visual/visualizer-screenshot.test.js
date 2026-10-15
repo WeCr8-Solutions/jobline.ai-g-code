@@ -259,9 +259,13 @@ async function verifyAr4Case(Panel, visualCase, artifactDir) {
   assert.ok(entry && entry.present && entry.litAlone > 0, `${a.part} drew nothing`);
   if (a.mode === 'wireframe') assert.equal(entry.solidMeshes, 0, `${a.part} still shaded in wireframe`);
   else assert.ok(entry.solidMeshes > 0, `${a.part} has no shaded solid`);
+  // The part must read as the gold target on screen, not a speck beside a
+  // previous program's stock.
+  const minGold = a.mode === 'wireframe' ? 150 : 2500;
+  assert.ok(probe.targetHuePixels >= minGold, `${a.part} ${a.format} not visibly gold in ${a.mode}: ${probe.targetHuePixels} gold pixels (< ${minGold})`);
   fs.writeFileSync(path.join(artifactDir, `${visualCase.id}.ar4.json`), JSON.stringify({
     id: visualCase.id, part: a.part, format: probe.activeTargetFormat, mode: a.mode, bounds: b, expected: want, tolerance: tol,
-    triangles: probe.activeTargetPointCount ? probe.activeTargetPointCount / 3 : null, layer: entry,
+    triangles: probe.activeTargetPointCount ? probe.activeTargetPointCount / 3 : null, layer: entry, huePixels: probe.targetHuePixels,
   }, null, 2));
 }
 

@@ -75,6 +75,18 @@ export class ToolpathVisualizerPanel {
     activeToolNumber?: number | null;
     toolDiameter?: number | null;
     toolVisible?: boolean;
+    activeTargetSource?: string;
+    activeTargetLoader?: string;
+    activeTargetFormat?: string;
+    activeTargetPointCount?: number;
+    targetStlCrossCheck?: unknown;
+    targetHuePixels?: number;
+    targetOnly?: boolean;
+    compareMode?: boolean;
+    comparison?: { onSize: number; remaining: number; gouge: number; maxRemaining: number; maxGouge: number } | null;
+    seededBanner?: string;
+    fusionPreviewVisible?: boolean;
+    fusionReferenceVisible?: boolean;
     error?: string;
     at: number;
   } | undefined;
@@ -243,6 +255,20 @@ export class ToolpathVisualizerPanel {
           activeToolNumber: Number(msg.activeToolNumber) || null,
           toolDiameter: Number(msg.toolDiameter) || null,
           toolVisible: Boolean(msg.toolVisible),
+          // Target / RevPack view state the visual gate asserts on (STEP loader,
+          // STL cross-check, gold pixels, Target only, Compare, seeded banner).
+          activeTargetSource: typeof msg.activeTargetSource === 'string' ? msg.activeTargetSource : '',
+          activeTargetLoader: typeof msg.activeTargetLoader === 'string' ? msg.activeTargetLoader : '',
+          activeTargetFormat: typeof msg.activeTargetFormat === 'string' ? msg.activeTargetFormat : '',
+          activeTargetPointCount: Number(msg.activeTargetPointCount) || 0,
+          targetStlCrossCheck: msg.targetStlCrossCheck ?? null,
+          targetHuePixels: Number(msg.targetHuePixels) || 0,
+          targetOnly: Boolean(msg.targetOnly),
+          compareMode: Boolean(msg.compareMode),
+          comparison: msg.comparison ?? null,
+          seededBanner: typeof msg.seededBanner === 'string' ? msg.seededBanner : '',
+          fusionPreviewVisible: Boolean(msg.fusionPreviewVisible),
+          fusionReferenceVisible: Boolean(msg.fusionReferenceVisible),
           error: typeof msg.error === 'string' ? msg.error : undefined,
           at: Date.now(),
         };
