@@ -13,6 +13,12 @@
  * A pack whose program.file names a DIFFERENT program is skipped, so a
  * folder of several programs never borrows the wrong setup. Discovery stops
  * at the workspace root (or 6 levels up) so it never scans the whole disk.
+ *
+ * "Load RevPack…" also opens a `.jbl` job file written by jobline.ai-CAM
+ * (revpackPlacement.ts buildJbl): the pack as imported, the Setup / WCS made
+ * on it and the target STL in one file. The pack is drawn through the same
+ * Origin-panel session the setup describes, so VS Code shows CAM's origin,
+ * G54 and stock.
  */
 
 import * as fs from 'fs';
@@ -23,14 +29,18 @@ import { buildRevPackSimulationMessages, type SimulationSetupMessage } from './s
 import { buildRevPackGeometry, loadStl, type GeoMesh, type RevPackGeometry } from './revpackGeometry';
 import type { VisualizerHarnessData } from './fixtureHarness';
 import { tessellateSTEP } from './stepTessellator';
-import { transformPositions, type PlacementSession } from './revpackPlacement';
+import { jblSession, jblTargetStl, parseJbl, transformPositions, type JblJob, type PlacementSession } from './revpackPlacement';
 import { placedPack, type PlacementTarget } from './revpackPlacementHost';
 
 export interface LoadedRevPack {
   pack: RevPack;
-  /** Absolute path of the revpack.json. */
+  /** Absolute path of the revpack.json (or the .jbl). */
   file: string;
   dir: string;
+  /** A .jbl: the job file, its target STL bytes and the setup session it carries. */
+  jbl?: JblJob;
+  targetStl?: Uint8Array;
+  placement?: PlacementSession;
 }
 
 const MAX_PARENT_LEVELS = 6;
@@ -42,12 +52,34 @@ function programMatches(pack: RevPack, programPath: string): boolean {
 }
 
 export function readRevPack(file: string): LoadedRevPack {
+  if (file.toLowerCase().endsWith('.jbl')) return readJbl(file);
   const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
   const validation = validateRevPack(raw);
   if (!validation.ok) {
     throw new Error(`${path.basename(file)} is not a valid RevPack: ${validation.errors.join('; ')}`);
   }
   return { pack: raw as RevPack, file: path.resolve(file), dir: path.dirname(path.resolve(file)) };
+}
+
+/** A .jbl job file from jobline.ai-CAM: its pack, target STL and Setup / WCS session. */
+export function readJbl(file: string): LoadedRevPack {
+  const parsed = parseJbl(fs.readFileSync(file, 'utf8'));
+  if (!parsed.ok) throw new Error(`${path.basename(file)} is not a JobLine .jbl: ${parsed.errors.join('; ')}`);
+  const jbl = parsed.jbl;
+  if (!jbl.pack) throw new Error(`${path.basename(file)} holds a part set up on its own (no RevPack): open its program with a RevPack, or upload the part in the visualizer`);
+  const validation = validateRevPack(jbl.pack);
+  if (!validation.ok) throw new Error(`${path.basename(file)} carries an invalid RevPack: ${validation.errors.join('; ')}`);
+  return { pack: jbl.pack, file: path.resolve(file), dir: path.dirname(path.resolve(file)), jbl, targetStl: jblTargetStl(jbl), placement: jblSession(jbl) };
+}
+
+/** The pack's target STL: inside a .jbl, or the file the pack names. */
+function targetStlBytes(loaded: LoadedRevPack): { bytes: Uint8Array; name: string } | undefined {
+  if (loaded.targetStl) return { bytes: loaded.targetStl, name: loaded.jbl?.target?.file ?? 'target.stl' };
+  const stl = targetStlFile(loaded.pack);
+  if (!stl) return undefined;
+  const file = path.resolve(loaded.dir, stl);
+  if (!fs.existsSync(file)) return undefined;
+  return { bytes: fs.readFileSync(file), name: path.basename(file) };
 }
 
 function tryRead(file: string, programPath: string): LoadedRevPack | undefined {
@@ -125,12 +157,10 @@ const toMsgBounds = (b: { min: number[]; max: number[] }): MsgBounds =>
  * solid: the stock goes translucent over it.
  */
 export function revPackTargetMessage(loaded: LoadedRevPack): RevPackTargetMessage | undefined {
-  const stl = targetStlFile(loaded.pack);
+  const stl = targetStlBytes(loaded);
   if (!stl) return undefined;
-  const file = path.resolve(loaded.dir, stl);
-  if (!fs.existsSync(file)) return undefined;
   // The shared kernel's STL reader - the same triangles CAM and the hub draw.
-  const mesh = loadStl(fs.readFileSync(file));
+  const mesh = loadStl(stl.bytes);
   return {
     type: 'targetModel',
     id: 'revpack-target',
@@ -138,7 +168,7 @@ export function revPackTargetMessage(loaded: LoadedRevPack): RevPackTargetMessag
     role: 'target-part',
     displayMode: 'solid',
     opacity: 1,
-    name: `${path.basename(file)} (RevPack target)`,
+    name: `${stl.name} (RevPack target)`,
     format: `STL ${mesh.format}`,
     pointCount: mesh.triangleCount * 3,
     meshVertices: Array.from(mesh.positions),
@@ -312,9 +342,7 @@ export interface RevPackScene {
 
 /** Everything the visualizer needs from a pack for one program. */
 export function buildRevPackScene(loaded: LoadedRevPack, gcode: string, harnessTools: VisualizerHarnessData['tools'] = [], placement?: PlacementSession): RevPackScene {
-  const stl = targetStlFile(loaded.pack);
-  const targetFile = stl ? path.resolve(loaded.dir, stl) : undefined;
-  const targetStl = targetFile && fs.existsSync(targetFile) ? fs.readFileSync(targetFile) : undefined;
+  const targetStl = targetStlBytes(loaded)?.bytes;
   // Origin panel: the pack as placed (target transform, stock from the
   // setup around the moved target, vise / jaws following the stock, G54
   // moved the other way). Everything below draws and checks that pack.

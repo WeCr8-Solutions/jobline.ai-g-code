@@ -76,6 +76,11 @@ export class PlacementSessions {
     return !!s && (!isIdentityPlacement(s.placement) || !!s.stockOffsets || s.history.length > 0);
   }
 
+  /** Start a target from a saved setup (a .jbl from jobline.ai-CAM). */
+  seed(key: string, session: PlacementSession): void {
+    this.sessions.set(key, session);
+  }
+
   clear(key: string): void {
     this.sessions.delete(key);
     this.adjacency.delete(key);

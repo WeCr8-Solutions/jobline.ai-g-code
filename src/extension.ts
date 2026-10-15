@@ -448,7 +448,7 @@ export function activate(context: vscode.ExtensionContext): void {
               canSelectMany: false,
               openLabel: 'Load RevPack',
               defaultUri: vscode.Uri.file(path.dirname(doc.uri.fsPath)),
-              filters: { 'RevPack': ['json'] },
+              filters: { 'RevPack or JobLine job': ['json', 'jbl'] },
             });
             file = picked?.[0]?.fsPath;
           }
@@ -461,6 +461,8 @@ export function activate(context: vscode.ExtensionContext): void {
             return undefined;
           }
           pinnedRevPacks.set(doc.uri.toString(), loaded.file);
+          // A .jbl from jobline.ai-CAM carries its Setup / WCS: start the Origin panel there.
+          if (loaded.placement) placementSessions.seed(`revpack:${loaded.file}`, loaded.placement);
           if (!ToolpathVisualizerPanel.currentPanel) {
             await vscode.commands.executeCommand('jobline.gcode.showVisualizer');
           } else {

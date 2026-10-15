@@ -33,6 +33,10 @@
  *   applyPlacementToPack    the pack after a move: target transform, stock
  *                           from the setup, workholding following the stock,
  *                           G54 moved by the same amount, part-zero text
+ *   buildJbl / parseJbl     the .jbl job file: the pack, the setup made on it
+ *                           and the target STL in one file, re-applied the
+ *                           same way by every host; setupDigest / needsRepost
+ *                           say when the program must be re-posted
  *
  * Frame: PART coordinates are the model's own (as the pack / file states
  * them). A Placement maps them to WORK (program) coordinates:
@@ -1225,4 +1229,196 @@ export function runPlacementOp(session: PlacementSession, input: PlacementInput,
 export function targetInsideStock(target: PBounds, stock: PBounds, tol = 1e-6): boolean {
   for (let k = 0; k < 3; k++) if (target.min[k] < stock.min[k] - tol || target.max[k] > stock.max[k] + tol) return false;
   return true;
+}
+
+// ─── the .jbl job file ───────────────────────────────────────────────────────
+
+/**
+ * `.jbl`: a JobLine job as one file - the RevPack as imported, the setup made
+ * on it (placement, stock offsets) and the target STL inside, so a part set up
+ * in jobline.ai-CAM opens with the same origin in the VS Code extension and
+ * the hub. Every host re-applies `setup.placement` to `pack` with
+ * applyPlacementToPack (this kernel), so the stock, vise / jaws, G54 and
+ * part-zero text are recomputed the same way everywhere; `placedPack` and the
+ * readout are written too, for a person or a host without the kernel, and are
+ * what the round-trip tests compare against.
+ *
+ * `post` says whether the program still matches the setup: a placement other
+ * than the one the program was posted for means the program must be RE-POSTED
+ * (re-checking the old program against the moved setup is not enough).
+ */
+export const JBL_SCHEMA = 'jobline.jbl/1';
+export const JBL_EXTENSION = '.jbl';
+
+export interface JblJob {
+  schema: typeof JBL_SCHEMA;
+  extension: '.jbl';
+  name: string;
+  units: 'in' | 'mm';
+  createdBy?: string;
+  /** The RevPack as imported, before this setup's move. Absent for a part uploaded on its own. */
+  pack?: RevPack;
+  setup: {
+    placement: Placement;
+    /** Stock offsets after a centre-in-stock (absent: the pack's / upload setup's own). */
+    stockOffsets?: StockOffsets;
+    /** Results of the placement, as computed by the host that wrote the file. */
+    partZero: string;
+    workOffset?: { name: string; x: number; y: number; z: number };
+    /** Row-major 3x4 PART -> WORK for the target. */
+    targetTransform: number[];
+    partBox: PBounds;
+    stockBox: PBounds;
+    readout: ReturnType<typeof originReadout>;
+  };
+  /** The pack after the move: stock, workholding, work offsets and setup (partZero, stockOffsets). */
+  placedPack?: RevPack;
+  /** The target in PART coordinates (STL bytes, base64). */
+  target?: { file: string; format: 'stl'; base64: string };
+  post: {
+    /** setupDigest of this setup. */
+    setupDigest: string;
+    /** setupDigest the program was posted for (absent: nothing posted yet). */
+    postedDigest?: string;
+    needsRepost: boolean;
+    program?: string;
+  };
+}
+
+/** A stable id of the WCS / orientation a program is posted for (rotation + origin, rounded). */
+export function setupDigest(placement: Placement): string {
+  const r = (v: number) => clean(v, 6);
+  return `R${placement.rotation.map(r).join(',')};O${placement.origin.map(r).join(',')}`;
+}
+
+/** Whether a program posted for `postedDigest` must be re-posted for `placement`. */
+export function needsRepost(placement: Placement, postedDigest: string | undefined): boolean {
+  return postedDigest !== undefined && postedDigest !== setupDigest(placement);
+}
+
+const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+export function base64Encode(bytes: ArrayLike<number>): string {
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i], b = i + 1 < bytes.length ? bytes[i + 1] : 0, c = i + 2 < bytes.length ? bytes[i + 2] : 0;
+    const n = (a << 16) | (b << 8) | c;
+    out += B64[(n >> 18) & 63] + B64[(n >> 12) & 63] + (i + 1 < bytes.length ? B64[(n >> 6) & 63] : '=') + (i + 2 < bytes.length ? B64[n & 63] : '=');
+  }
+  return out;
+}
+
+export function base64Decode(text: string): Uint8Array {
+  const clean64 = text.replace(/[^A-Za-z0-9+/]/g, '');
+  const out = new Uint8Array(Math.floor((clean64.length * 3) / 4));
+  let o = 0;
+  for (let i = 0; i < clean64.length; i += 4) {
+    const n = (B64.indexOf(clean64[i]) << 18) | (B64.indexOf(clean64[i + 1]) << 12) | ((i + 2 < clean64.length ? B64.indexOf(clean64[i + 2]) : 0) << 6) | (i + 3 < clean64.length ? B64.indexOf(clean64[i + 3]) : 0);
+    if (o < out.length) out[o++] = (n >> 16) & 255;
+    if (i + 2 < clean64.length && o < out.length) out[o++] = (n >> 8) & 255;
+    if (i + 3 < clean64.length && o < out.length) out[o++] = n & 255;
+  }
+  return out;
+}
+
+export interface JblInput {
+  name: string;
+  units: 'in' | 'mm';
+  pack?: RevPack;
+  /** Setup of a part uploaded without a pack (revpack.ts uploadSetup). */
+  uploadSetup?: Pick<RevPackSetup, 'stockOffsets' | 'barOffsets' | 'partZero'>;
+  /** Target triangles and bounds, PART coordinates. */
+  positions?: ArrayLike<number>;
+  bounds: PBounds;
+  targetStl?: ArrayLike<number>;
+  targetFile?: string;
+  session: Pick<PlacementSession, 'placement' | 'stockOffsets'>;
+  /** setupDigest the program was posted for; a pack's own program defaults to the pack as imported. */
+  postedDigest?: string;
+  createdBy?: string;
+}
+
+/** The .jbl for a target and its setup session. */
+export function buildJbl(input: JblInput): JblJob {
+  const p = input.session.placement;
+  const geometry: PartGeometry = { positions: input.positions, bounds: input.bounds };
+  const posted = input.postedDigest ?? (input.pack?.program?.file ? setupDigest(identityPlacement()) : undefined);
+  const placementOut: Placement = { rotation: [...p.rotation] as PMat3, origin: [...p.origin] as PVec3, ...(p.anchor ? { anchor: p.anchor } : {}), ...(p.label ? { label: p.label } : {}) };
+  let setup: JblJob['setup'];
+  let placedPackOut: RevPack | undefined;
+  if (input.pack) {
+    const pack = input.session.stockOffsets && input.pack.setup ? { ...input.pack, setup: { ...input.pack.setup, stockOffsets: input.session.stockOffsets } } : input.pack;
+    const placed = applyPlacementToPack(pack, input.bounds, p, { positions: input.positions });
+    const w = placed.workOffset ? placed.pack.workOffsets[placed.workOffset] : undefined;
+    const workOffset = w && placed.workOffset ? { name: placed.workOffset, x: w.x, y: w.y ?? 0, z: w.z } : undefined;
+    placedPackOut = placed.pack;
+    setup = {
+      placement: placementOut,
+      ...(input.session.stockOffsets ? { stockOffsets: input.session.stockOffsets } : {}),
+      partZero: placed.pack.setup?.partZero ?? (p.label ?? 'part file origin'),
+      ...(workOffset ? { workOffset } : {}),
+      targetTransform: placed.targetTransform,
+      partBox: placed.targetBounds,
+      stockBox: placed.stockBounds,
+      readout: originReadout(geometry, p, workOffset),
+    };
+  } else {
+    const partBox = placedBounds(geometry, p);
+    const offsets = input.session.stockOffsets ?? input.uploadSetup?.stockOffsets;
+    const stockBox = setupStockBounds(offsets ? { stockOffsets: offsets } : undefined, partBox) ?? partBox;
+    setup = {
+      placement: placementOut,
+      ...(input.session.stockOffsets ? { stockOffsets: input.session.stockOffsets } : {}),
+      partZero: isIdentityPlacement(p) ? (input.uploadSetup?.partZero ?? 'part file origin') : `WCS on the ${p.label ?? 'part, re-oriented'} (placed in JobLine)`,
+      targetTransform: placementMatrix(p),
+      partBox: { min: cleanV(partBox.min, 7), max: cleanV(partBox.max, 7) },
+      stockBox: { min: cleanV(stockBox.min, 7), max: cleanV(stockBox.max, 7) },
+      readout: originReadout(geometry, p),
+    };
+  }
+  const digest = setupDigest(p);
+  return {
+    schema: JBL_SCHEMA,
+    extension: '.jbl',
+    name: input.name,
+    units: input.units,
+    ...(input.createdBy ? { createdBy: input.createdBy } : {}),
+    ...(input.pack ? { pack: input.pack } : {}),
+    setup,
+    ...(placedPackOut ? { placedPack: placedPackOut } : {}),
+    ...(input.targetStl ? { target: { file: input.targetFile ?? 'target.stl', format: 'stl' as const, base64: base64Encode(input.targetStl) } } : {}),
+    post: { setupDigest: digest, ...(posted ? { postedDigest: posted } : {}), needsRepost: needsRepost(p, posted), ...(input.pack?.program?.file ? { program: input.pack.program.file } : {}) },
+  };
+}
+
+/** Text of a .jbl file. */
+export function serializeJbl(jbl: JblJob): string {
+  return JSON.stringify(jbl, null, 1) + '\n';
+}
+
+/** Read a .jbl file's text. */
+export function parseJbl(text: string): { ok: true; jbl: JblJob } | { ok: false; errors: string[] } {
+  let raw: unknown;
+  try { raw = JSON.parse(text); } catch (err) { return { ok: false, errors: [`not JSON: ${(err as Error).message}`] }; }
+  const errors: string[] = [];
+  const j = raw as Partial<JblJob>;
+  if (!j || typeof j !== 'object') return { ok: false, errors: ['not an object'] };
+  if (j.schema !== JBL_SCHEMA) errors.push(`schema must be "${JBL_SCHEMA}"`);
+  if (j.units !== 'in' && j.units !== 'mm') errors.push('units must be "in" or "mm"');
+  const pl = j.setup?.placement;
+  if (!pl || !Array.isArray(pl.rotation) || pl.rotation.length !== 9 || !Array.isArray(pl.origin) || pl.origin.length !== 3 || [...pl.rotation, ...pl.origin].some(v => typeof v !== 'number' || !Number.isFinite(v))) errors.push('setup.placement needs rotation[9] and origin[3]');
+  if (j.target && (j.target.format !== 'stl' || typeof j.target.base64 !== 'string')) errors.push('target must be { format: "stl", base64 }');
+  if (j.pack && (typeof j.pack !== 'object' || !j.pack.stock || !j.pack.workOffsets)) errors.push('pack is not a RevPack');
+  return errors.length ? { ok: false, errors } : { ok: true, jbl: j as JblJob };
+}
+
+/** The setup session a .jbl carries (no undo history). */
+export function jblSession(jbl: JblJob): PlacementSession {
+  const p = jbl.setup.placement;
+  return { placement: { rotation: [...p.rotation] as PMat3, origin: [...p.origin] as PVec3, ...(p.anchor ? { anchor: p.anchor } : {}), ...(p.label ? { label: p.label } : {}) }, ...(jbl.setup.stockOffsets ? { stockOffsets: jbl.setup.stockOffsets } : {}), history: [] };
+}
+
+/** The target STL bytes inside a .jbl, or undefined. */
+export function jblTargetStl(jbl: JblJob): Uint8Array | undefined {
+  return jbl.target ? base64Decode(jbl.target.base64) : undefined;
 }

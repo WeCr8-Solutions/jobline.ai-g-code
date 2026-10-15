@@ -30,6 +30,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - The pack is redrawn and re-checked as placed: target moved, stock rebuilt from the setup around it (the target always inside), vise / jaw / zero-point solids following the stock (same grip depth, same collision solids, stock still 50% transparent), the active work offset (G54) moved the other way, `setup.partZero` updated. Lathe / bar stock keeps X0 on the spindle axis.
   - Views: **View normal to face**, a WCS triad at the work origin, and a readout of the origin against the part box and on the machine (G54).
   - All maths is in the new framework-free `revpackPlacement.ts`, byte-identical in jobline.ai-CAM and the JobLine.ai hub and proven by the shared parity golden (each pack's `placement` key: 27 box points, fixed placements, first bore centred and turned to Z, a face turned up, centre in stock). New `test/revpack-placement.test.ts` covers every mode; the visual E2E adds corner, top-center, bore-center and face-align cases on the UMC-750, VF-2 and an uploaded AR4 gear.
+- **Open a `.jbl` from jobline.ai-CAM.** **JobLine: Load RevPack…** also opens a `.jbl` job file: the pack, the Setup / WCS made on it in CAM and the target STL in one file. The Origin panel starts on CAM's setup, so the origin, readout, G54, part zero and stock match what CAM showed (shared `revpackPlacement.ts` `buildJbl` / `parseJbl`, proven by a CAM-exported fixture in `test:revpack`). The file also says when the program must be re-posted after the move.
 
 ### Fixed
 
