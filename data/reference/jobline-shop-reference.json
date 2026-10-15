@@ -1,13 +1,13 @@
 {
   "format": "jobline-shop-reference",
-  "version": "1.0",
+  "version": "1.2.1",
   "publishedAt": "https://jobline.ai/reference/jobline-shop-reference.json",
   "sources": {
     "tapDrills": "Machinery's Handbook, 31st ed.; ASME B1.1 (Unified), ASME B1.13M (metric)",
     "rollTapDrills": "Form tap formula at 65% thread (OSG / Emuge form tap guidance); supplier tables are authoritative",
     "drillSizes": "ASME B94.11M number and letter drill sizes; fractions exact",
-    "npt": "ASME B1.20.1; tap drills without reaming per Machinery's Handbook",
-    "cuttingSpeeds": "HSS bands: https://littlemachineshop.com/pages/cutting-speeds; carbide and feeds are conservative JobLine starting estimates, not manufacturer limits"
+    "npt": "ASME B1.20.1 sizes; tap drills without reaming per Tapco pipe tap chart (OSG agrees)",
+    "cuttingSpeeds": "HSS bands: https://littlemachineshop.com/pages/cutting-speeds; carbide milling SFM and chip loads: https://www.lakeshorecarbide.com/pdf/GENERAL%20PURPOSE%20EM%20SPECS.pdf; turning carbide: Sandvik Coromant turning recommendations by CMC group (https://static.brw.ch/pdf/SandvikDrehen_Schnittdaten.pdf), first coated grade, window = heavy-feed to light-feed speed (machining-core 1.1.0)"
   },
   "tapDrills": [
     {
@@ -21,8 +21,8 @@
       "units": "in",
       "tapDrill75": "#53",
       "tapDrill75Dec": 0.0595,
-      "tapDrill50": "#52",
-      "tapDrill50Dec": 0.0635,
+      "tapDrill50": "1/16\"",
+      "tapDrill50Dec": 0.0625,
       "stiTapDrill": "#43",
       "stiTapDrillDec": 0.089,
       "stiInsertSize": "#1-64×1D"
@@ -89,8 +89,8 @@
       "units": "in",
       "tapDrill75": "#38",
       "tapDrill75Dec": 0.1015,
-      "tapDrill50": "#36",
-      "tapDrill50Dec": 0.1065,
+      "tapDrill50": "7/64\"",
+      "tapDrill50Dec": 0.1094,
       "stiTapDrill": "#29",
       "stiTapDrillDec": 0.136,
       "stiInsertSize": "#5-40×1D"
@@ -147,23 +147,6 @@
       "stiInsertSize": "#10-24×1D"
     },
     {
-      "thread": "#10-32",
-      "series": "UNC",
-      "tpi": 32,
-      "pitchMm": 0.7938,
-      "basicMajor": 0.19,
-      "basicPitch": 0.1697,
-      "basicMinor": 0.1517,
-      "units": "in",
-      "tapDrill75": "#21",
-      "tapDrill75Dec": 0.159,
-      "tapDrill50": "#16",
-      "tapDrill50Dec": 0.177,
-      "stiTapDrill": "#3",
-      "stiTapDrillDec": 0.213,
-      "stiInsertSize": "#10-32×1D"
-    },
-    {
       "thread": "1/4-20",
       "series": "UNC",
       "tpi": 20,
@@ -191,8 +174,8 @@
       "units": "in",
       "tapDrill75": "F",
       "tapDrill75Dec": 0.257,
-      "tapDrill50": "G",
-      "tapDrill50Dec": 0.261,
+      "tapDrill50": "J",
+      "tapDrill50Dec": 0.277,
       "stiTapDrill": "Q",
       "stiTapDrillDec": 0.332,
       "stiInsertSize": "5/16-18×1D"
@@ -412,8 +395,8 @@
       "units": "in",
       "tapDrill75": "#29",
       "tapDrill75Dec": 0.136,
-      "tapDrill50": "#27",
-      "tapDrill50Dec": 0.144,
+      "tapDrill50": "#26",
+      "tapDrill50Dec": 0.147,
       "stiTapDrill": "#13",
       "stiTapDrillDec": 0.185,
       "stiInsertSize": "#8-36×1D"
@@ -429,8 +412,8 @@
       "units": "in",
       "tapDrill75": "#21",
       "tapDrill75Dec": 0.159,
-      "tapDrill50": "#16",
-      "tapDrill50Dec": 0.177,
+      "tapDrill50": "#18",
+      "tapDrill50Dec": 0.1695,
       "stiTapDrill": "#3",
       "stiTapDrillDec": 0.213,
       "stiInsertSize": "#10-32×1D"
@@ -446,8 +429,8 @@
       "units": "in",
       "tapDrill75": "#3",
       "tapDrill75Dec": 0.213,
-      "tapDrill50": "7/32\"",
-      "tapDrill50Dec": 0.2188,
+      "tapDrill50": "#1",
+      "tapDrill50Dec": 0.228,
       "stiTapDrill": "H",
       "stiTapDrillDec": 0.266,
       "stiInsertSize": "1/4-28×1D"
@@ -463,8 +446,8 @@
       "units": "in",
       "tapDrill75": "I",
       "tapDrill75Dec": 0.272,
-      "tapDrill50": "J",
-      "tapDrill50Dec": 0.277,
+      "tapDrill50": "9/32\"",
+      "tapDrill50Dec": 0.2812,
       "stiTapDrill": "S",
       "stiTapDrillDec": 0.348,
       "stiInsertSize": "5/16-24×1D"
@@ -495,10 +478,10 @@
       "basicPitch": 0.405,
       "basicMinor": 0.3762,
       "units": "in",
-      "tapDrill75": "W",
-      "tapDrill75Dec": 0.386,
-      "tapDrill50": "X",
-      "tapDrill50Dec": 0.397,
+      "tapDrill75": "25/64\"",
+      "tapDrill75Dec": 0.3906,
+      "tapDrill50": "Y",
+      "tapDrill50Dec": 0.404,
       "stiTapDrill": "31/64\"",
       "stiTapDrillDec": 0.4844,
       "stiInsertSize": "7/16-20×1D"
@@ -564,8 +547,8 @@
       "units": "mm",
       "tapDrill75": "2.5mm",
       "tapDrill75Dec": 2.5,
-      "tapDrill50": "2.6mm",
-      "tapDrill50Dec": 2.6,
+      "tapDrill50": "2.7mm",
+      "tapDrill50Dec": 2.7,
       "stiTapDrill": "3.4mm",
       "stiTapDrillDec": 3.4,
       "stiInsertSize": "M3×0.5×1D"
@@ -596,8 +579,8 @@
       "units": "mm",
       "tapDrill75": "4.2mm",
       "tapDrill75Dec": 4.2,
-      "tapDrill50": "4.4mm",
-      "tapDrill50Dec": 4.4,
+      "tapDrill50": "4.5mm",
+      "tapDrill50Dec": 4.5,
       "stiTapDrill": "5.6mm",
       "stiTapDrillDec": 5.6,
       "stiInsertSize": "M5×0.8×1D"
@@ -612,8 +595,8 @@
       "units": "mm",
       "tapDrill75": "5.0mm",
       "tapDrill75Dec": 5,
-      "tapDrill50": "5.2mm",
-      "tapDrill50Dec": 5.2,
+      "tapDrill50": "5.4mm",
+      "tapDrill50Dec": 5.4,
       "stiTapDrill": "6.7mm",
       "stiTapDrillDec": 6.7,
       "stiInsertSize": "M6×1.0×1D"
@@ -628,8 +611,8 @@
       "units": "mm",
       "tapDrill75": "6.8mm",
       "tapDrill75Dec": 6.8,
-      "tapDrill50": "7.1mm",
-      "tapDrill50Dec": 7.1,
+      "tapDrill50": "7.2mm",
+      "tapDrill50Dec": 7.2,
       "stiTapDrill": "9.0mm",
       "stiTapDrillDec": 9,
       "stiInsertSize": "M8×1.25×1D"
@@ -644,8 +627,8 @@
       "units": "mm",
       "tapDrill75": "8.5mm",
       "tapDrill75Dec": 8.5,
-      "tapDrill50": "8.8mm",
-      "tapDrill50Dec": 8.8,
+      "tapDrill50": "9.0mm",
+      "tapDrill50Dec": 9,
       "stiTapDrill": "10.7mm",
       "stiTapDrillDec": 10.7,
       "stiInsertSize": "M10×1.5×1D"
@@ -660,8 +643,8 @@
       "units": "mm",
       "tapDrill75": "10.2mm",
       "tapDrill75Dec": 10.2,
-      "tapDrill50": "10.5mm",
-      "tapDrill50Dec": 10.5,
+      "tapDrill50": "10.9mm",
+      "tapDrill50Dec": 10.9,
       "stiTapDrill": "12.8mm",
       "stiTapDrillDec": 12.8,
       "stiInsertSize": "M12×1.75×1D"
@@ -676,8 +659,8 @@
       "units": "mm",
       "tapDrill75": "12.0mm",
       "tapDrill75Dec": 12,
-      "tapDrill50": "12.5mm",
-      "tapDrill50Dec": 12.5,
+      "tapDrill50": "12.7mm",
+      "tapDrill50Dec": 12.7,
       "stiTapDrill": "15.0mm",
       "stiTapDrillDec": 15,
       "stiInsertSize": "M14×2.0×1D"
@@ -692,8 +675,8 @@
       "units": "mm",
       "tapDrill75": "14.0mm",
       "tapDrill75Dec": 14,
-      "tapDrill50": "14.5mm",
-      "tapDrill50Dec": 14.5,
+      "tapDrill50": "14.75mm",
+      "tapDrill50Dec": 14.75,
       "stiTapDrill": "17.0mm",
       "stiTapDrillDec": 17,
       "stiInsertSize": "M16×2.0×1D"
@@ -708,8 +691,8 @@
       "units": "mm",
       "tapDrill75": "17.5mm",
       "tapDrill75Dec": 17.5,
-      "tapDrill50": "18.0mm",
-      "tapDrill50Dec": 18,
+      "tapDrill50": "18.5mm",
+      "tapDrill50Dec": 18.5,
       "stiTapDrill": "21.5mm",
       "stiTapDrillDec": 21.5,
       "stiInsertSize": "M20×2.5×1D"
@@ -724,8 +707,8 @@
       "units": "mm",
       "tapDrill75": "21.0mm",
       "tapDrill75Dec": 21,
-      "tapDrill50": "21.5mm",
-      "tapDrill50Dec": 21.5,
+      "tapDrill50": "22.0mm",
+      "tapDrill50Dec": 22,
       "stiTapDrill": "25.5mm",
       "stiTapDrillDec": 25.5,
       "stiInsertSize": "M24×3.0×1D"
@@ -795,14 +778,6 @@
       "drillExact": 0.1716,
       "drill": "11/64",
       "drillDec": 0.171875
-    },
-    {
-      "thread": "#10-32",
-      "series": "UNC",
-      "units": "in",
-      "drillExact": 0.1762,
-      "drill": "#16",
-      "drillDec": 0.177
     },
     {
       "thread": "1/4-20",
@@ -2111,8 +2086,8 @@
       "size": "1/8",
       "tpi": 27,
       "pipeOd": 0.405,
-      "tapDrill": "R",
-      "tapDrillInch": 0.339
+      "tapDrill": "Q",
+      "tapDrillInch": 0.332
     },
     {
       "size": "1/4",
@@ -2125,36 +2100,36 @@
       "size": "3/8",
       "tpi": 18,
       "pipeOd": 0.675,
-      "tapDrill": "37/64",
-      "tapDrillInch": 0.5781
+      "tapDrill": "9/16",
+      "tapDrillInch": 0.5625
     },
     {
       "size": "1/2",
       "tpi": 14,
       "pipeOd": 0.84,
-      "tapDrill": "23/32",
-      "tapDrillInch": 0.7188
+      "tapDrill": "45/64",
+      "tapDrillInch": 0.7031
     },
     {
       "size": "3/4",
       "tpi": 14,
       "pipeOd": 1.05,
-      "tapDrill": "59/64",
-      "tapDrillInch": 0.9219
+      "tapDrill": "29/32",
+      "tapDrillInch": 0.9062
     },
     {
       "size": "1",
       "tpi": 11.5,
       "pipeOd": 1.315,
-      "tapDrill": "1-5/32",
-      "tapDrillInch": 1.1563
+      "tapDrill": "1-9/64",
+      "tapDrillInch": 1.1406
     },
     {
       "size": "1-1/4",
       "tpi": 11.5,
       "pipeOd": 1.66,
-      "tapDrill": "1-1/2",
-      "tapDrillInch": 1.5
+      "tapDrill": "1-31/64",
+      "tapDrillInch": 1.4844
     },
     {
       "size": "1-1/2",
@@ -2167,8 +2142,8 @@
       "size": "2",
       "tpi": 11.5,
       "pipeOd": 2.375,
-      "tapDrill": "2-7/32",
-      "tapDrillInch": 2.2188
+      "tapDrill": "2-13/64",
+      "tapDrillInch": 2.2031
     }
   ],
   "cuttingSpeeds": [
@@ -2188,19 +2163,19 @@
       ],
       "millingCarbideSfm": [
         500,
-        1000
+        1100
       ],
       "turningHssSfm": [
         500,
         600
       ],
       "turningCarbideSfm": [
-        600,
-        1200
+        820,
+        6550
       ],
       "chipLoadIpt": [
-        0.002,
-        0.006
+        0.0025,
+        0.0045
       ]
     },
     {
@@ -2218,20 +2193,20 @@
         165
       ],
       "millingCarbideSfm": [
-        400,
-        800
+        500,
+        1100
       ],
       "turningHssSfm": [
         500,
         600
       ],
       "turningCarbideSfm": [
-        500,
-        1000
+        820,
+        6550
       ],
       "chipLoadIpt": [
-        0.002,
-        0.005
+        0.0025,
+        0.0045
       ]
     },
     {
@@ -2249,19 +2224,19 @@
         110
       ],
       "millingCarbideSfm": [
-        200,
-        400
+        250,
+        500
       ],
       "turningHssSfm": [
         125,
         215
       ],
       "turningCarbideSfm": [
-        250,
-        500
+        810,
+        1650
       ],
       "chipLoadIpt": [
-        0.0015,
+        0.002,
         0.004
       ]
     },
@@ -2280,20 +2255,20 @@
         100
       ],
       "millingCarbideSfm": [
-        150,
-        300
+        200,
+        400
       ],
       "turningHssSfm": [
         55,
         180
       ],
       "turningCarbideSfm": [
-        200,
-        400
+        710,
+        1500
       ],
       "chipLoadIpt": [
         0.0015,
-        0.004
+        0.0035
       ]
     },
     {
@@ -2305,22 +2280,22 @@
         170,
         240
       ],
-      "note": "Reference family includes resulfurized grades; ordinary 4140 may cut less freely. Verify tooling data.",
+      "note": "HSS reference family includes resulfurized grades; ordinary 4140 may cut less freely. Verify tooling data.",
       "millingHssSfm": [
         35,
         100
       ],
       "millingCarbideSfm": [
-        120,
-        250
+        200,
+        400
       ],
       "turningHssSfm": [
         70,
         200
       ],
       "turningCarbideSfm": [
-        180,
-        350
+        710,
+        1500
       ],
       "chipLoadIpt": [
         0.0015,
@@ -2336,26 +2311,26 @@
         260,
         340
       ],
-      "note": "Condition-specific speeds are estimates; carbide is preferred. Check actual hardness on the material certificate.",
+      "note": "Carbide is preferred. Check actual hardness on the material certificate.",
       "millingHssSfm": [
         20,
         40
       ],
       "millingCarbideSfm": [
-        80,
-        160
+        150,
+        350
       ],
       "turningHssSfm": [
         30,
         60
       ],
       "turningCarbideSfm": [
-        100,
-        220
+        455,
+        830
       ],
       "chipLoadIpt": [
         0.001,
-        0.003
+        0.002
       ]
     },
     {
@@ -2373,20 +2348,20 @@
         75
       ],
       "millingCarbideSfm": [
-        80,
-        160
+        250,
+        350
       ],
       "turningHssSfm": [
         115,
         135
       ],
       "turningCarbideSfm": [
-        100,
-        250
+        620,
+        950
       ],
       "chipLoadIpt": [
         0.001,
-        0.003
+        0.002
       ]
     },
     {
@@ -2398,26 +2373,26 @@
         145,
         215
       ],
-      "note": "Grade-specific speeds are estimates. Tough chips and work hardening demand consistent engagement.",
+      "note": "HSS speeds are estimates (316 is not in the published austenitic row). Tough chips and work hardening demand consistent engagement.",
       "millingHssSfm": [
         40,
         60
       ],
       "millingCarbideSfm": [
-        60,
-        140
+        250,
+        350
       ],
       "turningHssSfm": [
         60,
         100
       ],
       "turningCarbideSfm": [
-        80,
-        200
+        620,
+        950
       ],
       "chipLoadIpt": [
         0.001,
-        0.003
+        0.002
       ]
     },
     {
@@ -2435,20 +2410,20 @@
         50
       ],
       "millingCarbideSfm": [
-        80,
-        160
+        150,
+        400
       ],
       "turningHssSfm": [
         80,
         125
       ],
       "turningCarbideSfm": [
-        120,
-        250
+        500,
+        980
       ],
       "chipLoadIpt": [
-        0.001,
-        0.003
+        0.0012,
+        0.0025
       ]
     },
     {
@@ -2467,19 +2442,19 @@
       ],
       "millingCarbideSfm": [
         150,
-        300
+        350
       ],
       "turningHssSfm": [
         145,
         215
       ],
       "turningCarbideSfm": [
-        150,
-        300
+        990,
+        1450
       ],
       "chipLoadIpt": [
         0.002,
-        0.005
+        0.004
       ]
     },
     {
@@ -2497,7 +2472,7 @@
         200
       ],
       "millingCarbideSfm": [
-        250,
+        300,
         500
       ],
       "turningHssSfm": [
@@ -2505,13 +2480,5581 @@
         350
       ],
       "turningCarbideSfm": [
-        400,
-        600
+        205,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "12l14",
+      "material": "12L14 free-machining steel",
+      "group": "P · Steel",
+      "condition": "Cold drawn",
+      "hardnessHB": [
+        120,
+        200
+      ],
+      "note": "Lead-bearing grade; verify material certificate and chip-handling precautions.",
+      "millingHssSfm": [
+        110,
+        140
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        200,
+        260
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
       ],
       "chipLoadIpt": [
         0.002,
-        0.005
+        0.004
       ]
+    },
+    {
+      "id": "d2-annealed",
+      "material": "D2 tool steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        255
+      ],
+      "note": "High carbide content makes this abrasive; do not use annealed data for hardened stock.",
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "ductile-iron",
+      "material": "Ductile iron 65-45-12",
+      "group": "K · Cast iron",
+      "condition": "As supplied",
+      "hardnessHB": [
+        150,
+        230
+      ],
+      "note": "Nodular graphite; matrix and casting skin affect cutting behavior.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        810,
+        1200
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.003
+      ]
+    },
+    {
+      "id": "c110",
+      "material": "C110 copper",
+      "group": "N · Nonferrous",
+      "condition": "Temper varies",
+      "hardnessHB": [
+        40,
+        110
+      ],
+      "note": "Ductile chips and adhesion; confirm temper and use appropriate sharp geometry.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "cast-aluminum",
+      "material": "A356 cast aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T6",
+      "hardnessHB": [
+        60,
+        100
+      ],
+      "note": "Silicon content and casting skin affect wear and coating choice.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        400,
+        950
+      ],
+      "turningHssSfm": [
+        600,
+        750
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "ti64",
+      "material": "Ti-6Al-4V titanium · Grade 5",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        280,
+        360
+      ],
+      "note": "Low thermal conductivity and high tool-edge temperatures; titanium-specific supplier data required.",
+      "millingCarbideSfm": [
+        80,
+        220
+      ],
+      "turningCarbideSfm": [
+        170,
+        255
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "inconel718",
+      "material": "Inconel 718 nickel alloy",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        160,
+        250
+      ],
+      "note": "Age-hardened material needs separate data; work hardening and notch wear are important.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        75,
+        235
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "d2-hard",
+      "material": "D2 hardened tool steel",
+      "group": "H · Hardened steel",
+      "condition": "Hardened · typical 58–62 HRC",
+      "hardnessHB": [
+        58,
+        62
+      ],
+      "note": "HRC reference only; never converted into HB derating. Verify hardness and supplier hard-machining data."
+    },
+    {
+      "id": "1006",
+      "material": "1006 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / cold drawn",
+      "hardnessHB": [
+        90,
+        120
+      ],
+      "note": "Low-carbon steel: gummy chips and built-up edge at low speed; keep the edge sharp and the speed up.",
+      "millingHssSfm": [
+        65,
+        110
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        125,
+        215
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1008",
+      "material": "1008 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / cold drawn",
+      "hardnessHB": [
+        90,
+        125
+      ],
+      "note": "Low-carbon steel: gummy chips and built-up edge at low speed; keep the edge sharp and the speed up.",
+      "millingHssSfm": [
+        65,
+        110
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        125,
+        215
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1010",
+      "material": "1010 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / cold drawn",
+      "hardnessHB": [
+        95,
+        130
+      ],
+      "note": "Low-carbon steel: gummy chips and built-up edge at low speed; keep the edge sharp and the speed up.",
+      "millingHssSfm": [
+        65,
+        110
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        125,
+        215
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1015",
+      "material": "1015 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / cold drawn",
+      "hardnessHB": [
+        100,
+        140
+      ],
+      "note": "Low-carbon steel: gummy chips and built-up edge at low speed; keep the edge sharp and the speed up.",
+      "millingHssSfm": [
+        65,
+        110
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        125,
+        215
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1020",
+      "material": "1020 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / cold drawn",
+      "hardnessHB": [
+        110,
+        150
+      ],
+      "note": "Low-carbon steel: gummy chips and built-up edge at low speed; keep the edge sharp and the speed up.",
+      "millingHssSfm": [
+        65,
+        110
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        125,
+        215
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1022",
+      "material": "1022 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / cold drawn",
+      "hardnessHB": [
+        115,
+        155
+      ],
+      "note": "Low-carbon steel: gummy chips and built-up edge at low speed; keep the edge sharp and the speed up.",
+      "millingHssSfm": [
+        65,
+        110
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        125,
+        215
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1025",
+      "material": "1025 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled",
+      "hardnessHB": [
+        115,
+        160
+      ],
+      "note": "Low-carbon steel: gummy chips and built-up edge at low speed; keep the edge sharp and the speed up.",
+      "millingHssSfm": [
+        65,
+        110
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        125,
+        215
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "a36",
+      "material": "A36 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled plate",
+      "hardnessHB": [
+        119,
+        162
+      ],
+      "note": "Low-carbon steel: gummy chips and built-up edge at low speed; keep the edge sharp and the speed up.",
+      "millingHssSfm": [
+        65,
+        110
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        125,
+        215
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "a572-50",
+      "material": "A572 Grade 50 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled plate",
+      "hardnessHB": [
+        140,
+        180
+      ],
+      "note": "HSLA structural plate (C <= 0.23%). Low-carbon chart rows; not named in the HSS chart.",
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "a516-70",
+      "material": "A516 Grade 70 Steel",
+      "group": "P · Steel",
+      "condition": "Normalized plate",
+      "hardnessHB": [
+        140,
+        180
+      ],
+      "note": "Pressure vessel plate (C <= 0.28%). Low-carbon chart rows; not named in the HSS chart.",
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1030",
+      "material": "1030 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / normalized",
+      "hardnessHB": [
+        130,
+        180
+      ],
+      "note": "Medium-carbon steel; heat treatment changes cutting behavior a lot.",
+      "millingHssSfm": [
+        25,
+        100
+      ],
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningHssSfm": [
+        55,
+        180
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1035",
+      "material": "1035 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / normalized",
+      "hardnessHB": [
+        140,
+        190
+      ],
+      "note": "Medium-carbon steel; heat treatment changes cutting behavior a lot.",
+      "millingHssSfm": [
+        25,
+        100
+      ],
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningHssSfm": [
+        55,
+        180
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1040",
+      "material": "1040 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / normalized",
+      "hardnessHB": [
+        150,
+        200
+      ],
+      "note": "Medium-carbon steel; heat treatment changes cutting behavior a lot.",
+      "millingHssSfm": [
+        25,
+        100
+      ],
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningHssSfm": [
+        55,
+        180
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1042",
+      "material": "1042 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / normalized",
+      "hardnessHB": [
+        150,
+        205
+      ],
+      "note": "Medium-carbon steel; heat treatment changes cutting behavior a lot.",
+      "millingHssSfm": [
+        25,
+        100
+      ],
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningHssSfm": [
+        55,
+        180
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1050",
+      "material": "1050 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled / normalized",
+      "hardnessHB": [
+        170,
+        230
+      ],
+      "note": "Medium-carbon steel; heat treatment changes cutting behavior a lot.",
+      "millingHssSfm": [
+        25,
+        100
+      ],
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningHssSfm": [
+        55,
+        180
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1055",
+      "material": "1055 Steel",
+      "group": "P · Steel",
+      "condition": "Hot rolled",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "Medium-carbon steel; heat treatment changes cutting behavior a lot.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        680,
+        1400
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1060",
+      "material": "1060 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        170,
+        220
+      ],
+      "note": "High-carbon steel, annealed. Hardened stock needs ISO H data.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        680,
+        1400
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1070",
+      "material": "1070 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        175,
+        225
+      ],
+      "note": "High-carbon steel, annealed. Hardened stock needs ISO H data.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        680,
+        1400
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1080",
+      "material": "1080 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "High-carbon steel, annealed. Hardened stock needs ISO H data.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        680,
+        1400
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1095",
+      "material": "1095 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "High-carbon steel, annealed. Hardened stock needs ISO H data.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        680,
+        1400
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1117",
+      "material": "1117 Steel",
+      "group": "P · Steel",
+      "condition": "Cold drawn",
+      "hardnessHB": [
+        120,
+        170
+      ],
+      "note": "Free-machining grade: sulfur (and lead) give short chips and good finish.",
+      "millingHssSfm": [
+        115,
+        130
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        215,
+        235
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1118",
+      "material": "1118 Steel",
+      "group": "P · Steel",
+      "condition": "Cold drawn",
+      "hardnessHB": [
+        125,
+        175
+      ],
+      "note": "Free-machining grade: sulfur (and lead) give short chips and good finish.",
+      "millingHssSfm": [
+        115,
+        130
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        215,
+        235
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1137",
+      "material": "1137 Steel",
+      "group": "P · Steel",
+      "condition": "Cold drawn",
+      "hardnessHB": [
+        160,
+        210
+      ],
+      "note": "Free-machining grade: sulfur (and lead) give short chips and good finish.",
+      "millingHssSfm": [
+        35,
+        70
+      ],
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningHssSfm": [
+        70,
+        215
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1141",
+      "material": "1141 Steel",
+      "group": "P · Steel",
+      "condition": "Cold drawn",
+      "hardnessHB": [
+        165,
+        215
+      ],
+      "note": "Free-machining grade: sulfur (and lead) give short chips and good finish.",
+      "millingHssSfm": [
+        35,
+        70
+      ],
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningHssSfm": [
+        70,
+        215
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1144",
+      "material": "1144 Steel",
+      "group": "P · Steel",
+      "condition": "Cold drawn",
+      "hardnessHB": [
+        170,
+        230
+      ],
+      "note": "Free-machining grade: sulfur (and lead) give short chips and good finish.",
+      "millingHssSfm": [
+        35,
+        70
+      ],
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningHssSfm": [
+        70,
+        215
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "1144-sp",
+      "material": "1144 Stressproof Steel",
+      "group": "P · Steel",
+      "condition": "Stress relieved, cold drawn",
+      "hardnessHB": [
+        230,
+        280
+      ],
+      "note": "Free-machining grade: sulfur (and lead) give short chips and good finish.",
+      "millingHssSfm": [
+        35,
+        70
+      ],
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningHssSfm": [
+        70,
+        215
+      ],
+      "turningCarbideSfm": [
+        455,
+        830
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "1212",
+      "material": "1212 Steel",
+      "group": "P · Steel",
+      "condition": "Cold drawn",
+      "hardnessHB": [
+        140,
+        180
+      ],
+      "note": "Free-machining grade: sulfur (and lead) give short chips and good finish.",
+      "millingHssSfm": [
+        130,
+        140
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        270,
+        290
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1213",
+      "material": "1213 Steel",
+      "group": "P · Steel",
+      "condition": "Cold drawn",
+      "hardnessHB": [
+        140,
+        180
+      ],
+      "note": "Free-machining grade: sulfur (and lead) give short chips and good finish.",
+      "millingHssSfm": [
+        130,
+        140
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        270,
+        290
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1215",
+      "material": "1215 Steel",
+      "group": "P · Steel",
+      "condition": "Cold drawn",
+      "hardnessHB": [
+        140,
+        180
+      ],
+      "note": "Free-machining grade: sulfur (and lead) give short chips and good finish.",
+      "millingHssSfm": [
+        130,
+        140
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        270,
+        290
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "11l17",
+      "material": "11L17 Steel",
+      "group": "P · Steel",
+      "condition": "Cold drawn",
+      "hardnessHB": [
+        120,
+        170
+      ],
+      "note": "Free-machining grade: sulfur (and lead) give short chips and good finish.",
+      "millingHssSfm": [
+        110,
+        140
+      ],
+      "millingCarbideSfm": [
+        250,
+        500
+      ],
+      "turningHssSfm": [
+        200,
+        260
+      ],
+      "turningCarbideSfm": [
+        810,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "4130",
+      "material": "4130 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed / normalized",
+      "hardnessHB": [
+        150,
+        220
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "4142",
+      "material": "4142 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        240
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "4150",
+      "material": "4150 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        245
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingHssSfm": [
+        35,
+        100
+      ],
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningHssSfm": [
+        70,
+        200
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "4340",
+      "material": "4340 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        200,
+        250
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "4620",
+      "material": "4620 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed / hot rolled",
+      "hardnessHB": [
+        150,
+        200
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "4820",
+      "material": "4820 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        240
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "5120",
+      "material": "5120 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        200
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "5140",
+      "material": "5140 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        170,
+        230
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "52100",
+      "material": "52100 Steel",
+      "group": "P · Steel",
+      "condition": "Spheroidize annealed",
+      "hardnessHB": [
+        180,
+        220
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        620,
+        1300
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "6150",
+      "material": "6150 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "8620",
+      "material": "8620 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed / hot rolled",
+      "hardnessHB": [
+        150,
+        200
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "8640",
+      "material": "8640 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "9310",
+      "material": "9310 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        240
+      ],
+      "note": "Low-alloy steel, annealed or normalized.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "41l40",
+      "material": "41L40 Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "Leaded 4140: freer cutting than plain 4140; same chart rows (no leaded alloy row is published).",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "4130-qt",
+      "material": "4130 Steel · Q&T",
+      "group": "P · Steel",
+      "condition": "Quenched & tempered",
+      "hardnessHB": [
+        250,
+        300
+      ],
+      "note": "Quenched and tempered; check the actual hardness on the certificate.",
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningCarbideSfm": [
+        455,
+        830
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "4340-qt",
+      "material": "4340 Steel · Q&T 28-32 HRC",
+      "group": "P · Steel",
+      "condition": "Quenched & tempered",
+      "hardnessHB": [
+        270,
+        320
+      ],
+      "note": "Quenched and tempered; check the actual hardness on the certificate.",
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningCarbideSfm": [
+        455,
+        830
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "4340-qt-38",
+      "material": "4340 Steel · Q&T 36-40 HRC",
+      "group": "P · Steel",
+      "condition": "Quenched & tempered",
+      "hardnessHB": [
+        330,
+        370
+      ],
+      "note": "Quenched and tempered; check the actual hardness on the certificate.",
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningCarbideSfm": [
+        365,
+        670
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "4140-ht-350",
+      "material": "4140 Steel · Q&T 35-38 HRC",
+      "group": "P · Steel",
+      "condition": "Quenched & tempered",
+      "hardnessHB": [
+        330,
+        360
+      ],
+      "note": "Quenched and tempered; check the actual hardness on the certificate.",
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningCarbideSfm": [
+        365,
+        670
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "300m",
+      "material": "300M Steel",
+      "group": "P · Steel",
+      "condition": "Annealed for machining",
+      "hardnessHB": [
+        220,
+        270
+      ],
+      "note": "Modified 4340, usually machined annealed and hardened after.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        710,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "4150-qt",
+      "material": "4150 Steel · Q&T",
+      "group": "P · Steel",
+      "condition": "Quenched & tempered",
+      "hardnessHB": [
+        270,
+        320
+      ],
+      "note": "Quenched and tempered; check the actual hardness on the certificate.",
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningCarbideSfm": [
+        455,
+        830
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "8620-qt",
+      "material": "8620 Steel · Q&T core",
+      "group": "P · Steel",
+      "condition": "Quenched & tempered (core)",
+      "hardnessHB": [
+        240,
+        290
+      ],
+      "note": "Quenched and tempered; check the actual hardness on the certificate.",
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningCarbideSfm": [
+        455,
+        830
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "a6",
+      "material": "A6 Tool Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        200,
+        240
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingHssSfm": [
+        40,
+        50
+      ],
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningHssSfm": [
+        80,
+        125
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "d3",
+      "material": "D3 Tool Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        210,
+        250
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "o1",
+      "material": "O1 Tool Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        185,
+        215
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingHssSfm": [
+        50,
+        50
+      ],
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningHssSfm": [
+        125,
+        125
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "o2",
+      "material": "O2 Tool Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        185,
+        220
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingHssSfm": [
+        50,
+        50
+      ],
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningHssSfm": [
+        125,
+        125
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "w1",
+      "material": "W1 Tool Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        160,
+        200
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingHssSfm": [
+        85,
+        85
+      ],
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningHssSfm": [
+        180,
+        180
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "s7",
+      "material": "S7 Tool Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "h11",
+      "material": "H11 Tool Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        190,
+        230
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "h13",
+      "material": "H13 Tool Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        190,
+        230
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "m2-annealed",
+      "material": "M2 High-Speed Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        210,
+        255
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "m42-annealed",
+      "material": "M42 High-Speed Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        230,
+        270
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "l6",
+      "material": "L6 Tool Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        225
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningCarbideSfm": [
+        500,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "p20",
+      "material": "P20 Mold Steel",
+      "group": "P · Steel",
+      "condition": "Prehardened 28-32 HRC",
+      "hardnessHB": [
+        270,
+        320
+      ],
+      "note": "Prehardened mold steel; machined as supplied.",
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningCarbideSfm": [
+        455,
+        830
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "420-mold",
+      "material": "420 Mold Steel (prehard)",
+      "group": "P · Steel",
+      "condition": "Prehardened 30-34 HRC",
+      "hardnessHB": [
+        280,
+        330
+      ],
+      "note": "Annealed tool steel. Do not use these values on hardened stock.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        275,
+        475
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "wcb",
+      "material": "WCB Cast Carbon Steel",
+      "group": "P · Steel",
+      "condition": "As cast / normalized",
+      "hardnessHB": [
+        137,
+        187
+      ],
+      "note": "Cast steel: sand inclusions and scale on the skin; take the first cut below the skin.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        430,
+        790
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "lcc",
+      "material": "LCC Cast Carbon Steel",
+      "group": "P · Steel",
+      "condition": "Normalized and tempered",
+      "hardnessHB": [
+        140,
+        190
+      ],
+      "note": "Cast steel: sand inclusions and scale on the skin; take the first cut below the skin.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        430,
+        790
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "4130-cast",
+      "material": "4130 Cast Steel",
+      "group": "P · Steel",
+      "condition": "Normalized and tempered",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "Cast steel: sand inclusions and scale on the skin; take the first cut below the skin.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        330,
+        690
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "8630-cast",
+      "material": "8630 Cast Steel",
+      "group": "P · Steel",
+      "condition": "Normalized and tempered",
+      "hardnessHB": [
+        190,
+        240
+      ],
+      "note": "Cast steel: sand inclusions and scale on the skin; take the first cut below the skin.",
+      "millingCarbideSfm": [
+        200,
+        400
+      ],
+      "turningCarbideSfm": [
+        330,
+        690
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.0035
+      ]
+    },
+    {
+      "id": "high-alloy-cast",
+      "material": "High-Alloy Cast Steel",
+      "group": "P · Steel",
+      "condition": "Annealed",
+      "hardnessHB": [
+        200,
+        250
+      ],
+      "note": "High-alloy (> 5%) cast steel.",
+      "millingCarbideSfm": [
+        150,
+        400
+      ],
+      "turningCarbideSfm": [
+        295,
+        600
+      ],
+      "chipLoadIpt": [
+        0.0012,
+        0.0025
+      ]
+    },
+    {
+      "id": "303",
+      "material": "303 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        160,
+        230
+      ],
+      "note": "Free-machining austenitic stainless (sulfur added).",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "304l",
+      "material": "304L Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        140,
+        200
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingHssSfm": [
+        70,
+        75
+      ],
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningHssSfm": [
+        115,
+        135
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "302",
+      "material": "302 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        210
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingHssSfm": [
+        70,
+        75
+      ],
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningHssSfm": [
+        115,
+        135
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "301",
+      "material": "301 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        210
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingHssSfm": [
+        70,
+        75
+      ],
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningHssSfm": [
+        115,
+        135
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "201",
+      "material": "201 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        170,
+        230
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingHssSfm": [
+        70,
+        75
+      ],
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningHssSfm": [
+        115,
+        135
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "316l",
+      "material": "316L Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        140,
+        210
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "317l",
+      "material": "317L Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        215
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "321",
+      "material": "321 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        215
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingHssSfm": [
+        70,
+        75
+      ],
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningHssSfm": [
+        115,
+        135
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "347",
+      "material": "347 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        215
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingHssSfm": [
+        70,
+        75
+      ],
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningHssSfm": [
+        115,
+        135
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "309",
+      "material": "309 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        215
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "310",
+      "material": "310 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        215
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "904l",
+      "material": "904L Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        210
+      ],
+      "note": "Super-austenitic stainless: tougher than 316; lower speeds.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        325,
+        520
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "254smo",
+      "material": "254 SMO Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "6% Mo super-austenitic stainless.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        325,
+        520
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "nitronic-50",
+      "material": "Nitronic 50",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        220,
+        280
+      ],
+      "note": "High-strength nitrogen-strengthened austenitic stainless.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        325,
+        520
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "nitronic-60",
+      "material": "Nitronic 60",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        190,
+        240
+      ],
+      "note": "Galling-resistant austenitic stainless.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        325,
+        520
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "cf8",
+      "material": "CF8 Cast Stainless",
+      "group": "M · Stainless",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        140,
+        190
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        455,
+        720
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "cf8m",
+      "material": "CF8M Cast Stainless",
+      "group": "M · Stainless",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        150,
+        200
+      ],
+      "note": "Austenitic stainless work-hardens: keep a positive cut, never dwell or rub.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        455,
+        720
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "409",
+      "material": "409 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        130,
+        180
+      ],
+      "note": "Ferritic/martensitic stainless, annealed.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "430",
+      "material": "430 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        190
+      ],
+      "note": "Ferritic/martensitic stainless, annealed.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "430f",
+      "material": "430F Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        190
+      ],
+      "note": "Free-machining ferritic stainless.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "434",
+      "material": "434 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        190
+      ],
+      "note": "Ferritic/martensitic stainless, annealed.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "446",
+      "material": "446 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        160,
+        210
+      ],
+      "note": "Ferritic/martensitic stainless, annealed.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "410",
+      "material": "410 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        200
+      ],
+      "note": "Ferritic/martensitic stainless, annealed.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "416",
+      "material": "416 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        210
+      ],
+      "note": "Free-machining martensitic stainless.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "420",
+      "material": "420 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "Ferritic/martensitic stainless, annealed.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "431",
+      "material": "431 Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        200,
+        260
+      ],
+      "note": "Ferritic/martensitic stainless, annealed.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "440a",
+      "material": "440A Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        200,
+        240
+      ],
+      "note": "Ferritic/martensitic stainless, annealed.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "440c",
+      "material": "440C Stainless Steel",
+      "group": "M · Stainless",
+      "condition": "Annealed",
+      "hardnessHB": [
+        210,
+        250
+      ],
+      "note": "Ferritic/martensitic stainless, annealed.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        650,
+        850
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "ca6nm",
+      "material": "CA6NM Cast Stainless",
+      "group": "M · Stainless",
+      "condition": "Normalized and tempered",
+      "hardnessHB": [
+        220,
+        285
+      ],
+      "note": "Ferritic/martensitic stainless, annealed.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        550,
+        820
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "410-ht",
+      "material": "410 Stainless Steel · Hardened",
+      "group": "M · Stainless",
+      "condition": "Hardened and tempered",
+      "hardnessHB": [
+        280,
+        360
+      ],
+      "note": "Hardened or precipitation-hardened stainless; condition decides the data.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        275,
+        475
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "416-ht",
+      "material": "416 Stainless Steel · Hardened",
+      "group": "M · Stainless",
+      "condition": "Hardened and tempered",
+      "hardnessHB": [
+        260,
+        340
+      ],
+      "note": "Hardened or precipitation-hardened stainless; condition decides the data.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        275,
+        475
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "17-4",
+      "material": "17-4 PH stainless",
+      "group": "M · Stainless",
+      "condition": "Condition A",
+      "hardnessHB": [
+        250,
+        363
+      ],
+      "note": "Precipitation hardening changes machining behavior; H900/H1150 have their own entries.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        260,
+        425
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "17-4-h900",
+      "material": "17-4 PH Stainless · H900",
+      "group": "M · Stainless",
+      "condition": "Aged H900 (40-47 HRC)",
+      "hardnessHB": [
+        375,
+        440
+      ],
+      "note": "Fully aged; harder than the Sandvik 330 HB row, so speeds are derated for hardness.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        260,
+        425
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "17-4-h1150",
+      "material": "17-4 PH Stainless · H1150",
+      "group": "M · Stainless",
+      "condition": "Overaged H1150",
+      "hardnessHB": [
+        270,
+        320
+      ],
+      "note": "Hardened or precipitation-hardened stainless; condition decides the data.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        260,
+        425
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "15-5",
+      "material": "15-5 PH Stainless",
+      "group": "M · Stainless",
+      "condition": "Condition A",
+      "hardnessHB": [
+        280,
+        363
+      ],
+      "note": "Hardened or precipitation-hardened stainless; condition decides the data.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        260,
+        425
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "13-8",
+      "material": "13-8 Mo PH Stainless",
+      "group": "M · Stainless",
+      "condition": "Condition A",
+      "hardnessHB": [
+        280,
+        360
+      ],
+      "note": "Hardened or precipitation-hardened stainless; condition decides the data.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        260,
+        425
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "17-7",
+      "material": "17-7 PH Stainless",
+      "group": "M · Stainless",
+      "condition": "Condition A",
+      "hardnessHB": [
+        180,
+        230
+      ],
+      "note": "Condition A machines like an austenitic stainless.",
+      "millingCarbideSfm": [
+        250,
+        350
+      ],
+      "turningCarbideSfm": [
+        620,
+        950
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "2205",
+      "material": "2205 duplex stainless",
+      "group": "M · Stainless",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        200,
+        293
+      ],
+      "note": "High cutting forces and work hardening; use duplex-specific tool data.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        390,
+        620
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "2507",
+      "material": "2507 Super Duplex Stainless",
+      "group": "M · Stainless",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        240,
+        310
+      ],
+      "note": "Duplex stainless: high strength and work hardening; expect higher cutting forces than 316.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        390,
+        620
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "2101",
+      "material": "LDX 2101 Lean Duplex",
+      "group": "M · Stainless",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        210,
+        260
+      ],
+      "note": "Duplex stainless: high strength and work hardening; expect higher cutting forces than 316.",
+      "millingCarbideSfm": [
+        200,
+        300
+      ],
+      "turningCarbideSfm": [
+        470,
+        720
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "gray-class-20",
+      "material": "Gray Cast Iron · Class 20",
+      "group": "K · Cast iron",
+      "condition": "As cast",
+      "hardnessHB": [
+        150,
+        190
+      ],
+      "note": "Gray iron: short chips and abrasive dust; usually cut dry with air blast.",
+      "millingHssSfm": [
+        70,
+        100
+      ],
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningHssSfm": [
+        145,
+        215
+      ],
+      "turningCarbideSfm": [
+        990,
+        1450
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "gray-class-25",
+      "material": "Gray Cast Iron · Class 25",
+      "group": "K · Cast iron",
+      "condition": "As cast",
+      "hardnessHB": [
+        160,
+        210
+      ],
+      "note": "Gray iron: short chips and abrasive dust; usually cut dry with air blast.",
+      "millingHssSfm": [
+        70,
+        100
+      ],
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningHssSfm": [
+        145,
+        215
+      ],
+      "turningCarbideSfm": [
+        990,
+        1450
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "gray-class-35",
+      "material": "Gray Cast Iron · Class 35",
+      "group": "K · Cast iron",
+      "condition": "As cast",
+      "hardnessHB": [
+        190,
+        230
+      ],
+      "note": "Gray iron: short chips and abrasive dust; usually cut dry with air blast.",
+      "millingHssSfm": [
+        70,
+        100
+      ],
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningHssSfm": [
+        145,
+        215
+      ],
+      "turningCarbideSfm": [
+        990,
+        1450
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "gray-class-40",
+      "material": "Gray Cast Iron · Class 40",
+      "group": "K · Cast iron",
+      "condition": "As cast",
+      "hardnessHB": [
+        200,
+        240
+      ],
+      "note": "Gray iron: short chips and abrasive dust; usually cut dry with air blast.",
+      "millingHssSfm": [
+        70,
+        100
+      ],
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningHssSfm": [
+        145,
+        215
+      ],
+      "turningCarbideSfm": [
+        800,
+        1150
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.003
+      ]
+    },
+    {
+      "id": "gray-class-45",
+      "material": "Gray Cast Iron · Class 45",
+      "group": "K · Cast iron",
+      "condition": "As cast",
+      "hardnessHB": [
+        210,
+        250
+      ],
+      "note": "Gray iron: short chips and abrasive dust; usually cut dry with air blast.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        800,
+        1150
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.003
+      ]
+    },
+    {
+      "id": "gray-class-50",
+      "material": "Gray Cast Iron · Class 50",
+      "group": "K · Cast iron",
+      "condition": "As cast",
+      "hardnessHB": [
+        220,
+        260
+      ],
+      "note": "Gray iron: short chips and abrasive dust; usually cut dry with air blast.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        800,
+        1150
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.003
+      ]
+    },
+    {
+      "id": "ductile-60-40-18",
+      "material": "Ductile Iron 60-40-18",
+      "group": "K · Cast iron",
+      "condition": "Annealed / as cast ferritic",
+      "hardnessHB": [
+        140,
+        180
+      ],
+      "note": "Nodular (ductile) iron: longer chips than gray iron; matrix decides the speed.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        810,
+        1200
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.003
+      ]
+    },
+    {
+      "id": "ductile-80-55-06",
+      "material": "Ductile Iron 80-55-06",
+      "group": "K · Cast iron",
+      "condition": "As cast pearlitic",
+      "hardnessHB": [
+        190,
+        260
+      ],
+      "note": "Nodular (ductile) iron: longer chips than gray iron; matrix decides the speed.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        730,
+        1050
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.003
+      ]
+    },
+    {
+      "id": "ductile-100-70-03",
+      "material": "Ductile Iron 100-70-03",
+      "group": "K · Cast iron",
+      "condition": "Normalized pearlitic",
+      "hardnessHB": [
+        240,
+        300
+      ],
+      "note": "Nodular (ductile) iron: longer chips than gray iron; matrix decides the speed.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        730,
+        1050
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.003
+      ]
+    },
+    {
+      "id": "ductile-120-90-02",
+      "material": "Ductile Iron 120-90-02",
+      "group": "K · Cast iron",
+      "condition": "Quenched and tempered (martensitic)",
+      "hardnessHB": [
+        270,
+        380
+      ],
+      "note": "Martensitic ductile iron.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        550,
+        800
+      ],
+      "chipLoadIpt": [
+        0.0015,
+        0.003
+      ]
+    },
+    {
+      "id": "malleable-32510",
+      "material": "Malleable Iron 32510",
+      "group": "K · Cast iron",
+      "condition": "Ferritic",
+      "hardnessHB": [
+        110,
+        156
+      ],
+      "note": "Malleable iron.",
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningCarbideSfm": [
+        860,
+        1250
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "malleable-50005",
+      "material": "Pearlitic Malleable Iron 50005",
+      "group": "K · Cast iron",
+      "condition": "Pearlitic",
+      "hardnessHB": [
+        180,
+        241
+      ],
+      "note": "Malleable iron.",
+      "millingCarbideSfm": [
+        150,
+        350
+      ],
+      "turningCarbideSfm": [
+        700,
+        1050
+      ],
+      "chipLoadIpt": [
+        0.002,
+        0.004
+      ]
+    },
+    {
+      "id": "1100",
+      "material": "1100 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "O / H14",
+      "hardnessHB": [
+        23,
+        35
+      ],
+      "note": "Soft, gummy pure aluminum: sharp polished tools, high rake.",
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "3003",
+      "material": "3003 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "H14",
+      "hardnessHB": [
+        35,
+        45
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "5052",
+      "material": "5052 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "H32",
+      "hardnessHB": [
+        55,
+        65
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningHssSfm": [
+        500,
+        600
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "5083",
+      "material": "5083 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "H116 / O",
+      "hardnessHB": [
+        70,
+        85
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningHssSfm": [
+        500,
+        600
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "5086",
+      "material": "5086 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "H32",
+      "hardnessHB": [
+        65,
+        80
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningHssSfm": [
+        500,
+        600
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "2011",
+      "material": "2011 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T3",
+      "hardnessHB": [
+        90,
+        100
+      ],
+      "note": "Free-machining aluminum: small broken chips.",
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "2014",
+      "material": "2014 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T6",
+      "hardnessHB": [
+        125,
+        140
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "2024",
+      "material": "2024 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T3 / T351",
+      "hardnessHB": [
+        110,
+        130
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "6063",
+      "material": "6063 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T5 / T6",
+      "hardnessHB": [
+        60,
+        75
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningHssSfm": [
+        500,
+        600
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "6082",
+      "material": "6082 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T6",
+      "hardnessHB": [
+        90,
+        100
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningHssSfm": [
+        500,
+        600
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "7050",
+      "material": "7050 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T7451",
+      "hardnessHB": [
+        135,
+        150
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningHssSfm": [
+        500,
+        600
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "7068",
+      "material": "7068 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T6511",
+      "hardnessHB": [
+        150,
+        175
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningHssSfm": [
+        500,
+        600
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "7178",
+      "material": "7178 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T6",
+      "hardnessHB": [
+        150,
+        170
+      ],
+      "note": "Wrought aluminum: sharp polished edges, 2-3 flutes, strong chip evacuation.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningHssSfm": [
+        500,
+        600
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "mic-6",
+      "material": "MIC-6 Cast Aluminum Plate",
+      "group": "N · Nonferrous",
+      "condition": "Stress relieved cast plate",
+      "hardnessHB": [
+        60,
+        70
+      ],
+      "note": "Cast aluminum: silicon is abrasive; PCD or diamond-coated tools last far longer.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        400,
+        950
+      ],
+      "turningHssSfm": [
+        600,
+        750
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "319",
+      "material": "319 Cast Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "As cast / T6",
+      "hardnessHB": [
+        70,
+        95
+      ],
+      "note": "Cast aluminum: silicon is abrasive; PCD or diamond-coated tools last far longer.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        400,
+        950
+      ],
+      "turningHssSfm": [
+        600,
+        750
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "355",
+      "material": "355 Cast Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T6",
+      "hardnessHB": [
+        70,
+        90
+      ],
+      "note": "Cast aluminum: silicon is abrasive; PCD or diamond-coated tools last far longer.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        400,
+        950
+      ],
+      "turningHssSfm": [
+        600,
+        750
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "380",
+      "material": "A380 Die-Cast Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "As die cast",
+      "hardnessHB": [
+        75,
+        85
+      ],
+      "note": "Cast aluminum: silicon is abrasive; PCD or diamond-coated tools last far longer.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        400,
+        950
+      ],
+      "turningHssSfm": [
+        600,
+        750
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "383",
+      "material": "383 Die-Cast Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "As die cast",
+      "hardnessHB": [
+        70,
+        80
+      ],
+      "note": "Cast aluminum: silicon is abrasive; PCD or diamond-coated tools last far longer.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        400,
+        950
+      ],
+      "turningHssSfm": [
+        600,
+        750
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "413",
+      "material": "413 Die-Cast Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "As die cast",
+      "hardnessHB": [
+        75,
+        85
+      ],
+      "note": "Cast aluminum: silicon is abrasive; PCD or diamond-coated tools last far longer.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        400,
+        950
+      ],
+      "turningHssSfm": [
+        600,
+        750
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "535",
+      "material": "535 Cast Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "As cast",
+      "hardnessHB": [
+        60,
+        75
+      ],
+      "note": "Cast aluminum: silicon is abrasive; PCD or diamond-coated tools last far longer.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        400,
+        950
+      ],
+      "turningHssSfm": [
+        600,
+        750
+      ],
+      "turningCarbideSfm": [
+        820,
+        6550
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "390",
+      "material": "390 Hypereutectic Cast Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "As cast / T6",
+      "hardnessHB": [
+        110,
+        140
+      ],
+      "note": "16-22% silicon: very abrasive; PCD strongly preferred.",
+      "millingHssSfm": [
+        165,
+        165
+      ],
+      "millingCarbideSfm": [
+        400,
+        950
+      ],
+      "turningHssSfm": [
+        600,
+        750
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "4032",
+      "material": "4032 Aluminum",
+      "group": "N · Nonferrous",
+      "condition": "T6",
+      "hardnessHB": [
+        115,
+        125
+      ],
+      "note": "High-silicon forging alloy (Sandvik 13-15% Si row).",
+      "millingCarbideSfm": [
+        500,
+        1100
+      ],
+      "turningCarbideSfm": [
+        190,
+        1500
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0045
+      ]
+    },
+    {
+      "id": "c345",
+      "material": "C345 Brass",
+      "group": "N · Nonferrous",
+      "condition": "Half hard",
+      "hardnessHB": [
+        90,
+        140
+      ],
+      "note": "Free-cutting copper alloy; zero or slightly positive rake to avoid grabbing.",
+      "millingCarbideSfm": [
+        300,
+        500
+      ],
+      "turningCarbideSfm": [
+        205,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "c385",
+      "material": "C385 Architectural Bronze",
+      "group": "N · Nonferrous",
+      "condition": "As extruded",
+      "hardnessHB": [
+        90,
+        140
+      ],
+      "note": "Free-cutting copper alloy; zero or slightly positive rake to avoid grabbing.",
+      "millingCarbideSfm": [
+        300,
+        500
+      ],
+      "turningCarbideSfm": [
+        205,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "c145",
+      "material": "C145 Tellurium Copper",
+      "group": "N · Nonferrous",
+      "condition": "H02",
+      "hardnessHB": [
+        80,
+        110
+      ],
+      "note": "Free-machining copper (tellurium).",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "turningCarbideSfm": [
+        205,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "c932",
+      "material": "C932 Bearing Bronze",
+      "group": "N · Nonferrous",
+      "condition": "As cast",
+      "hardnessHB": [
+        60,
+        75
+      ],
+      "note": "Leaded bearing bronze: short chips, easy to machine.",
+      "millingCarbideSfm": [
+        250,
+        400
+      ],
+      "turningCarbideSfm": [
+        205,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.0018,
+        0.003
+      ]
+    },
+    {
+      "id": "c836",
+      "material": "C836 Leaded Red Brass",
+      "group": "N · Nonferrous",
+      "condition": "As cast",
+      "hardnessHB": [
+        55,
+        70
+      ],
+      "note": "Free-cutting copper alloy; zero or slightly positive rake to avoid grabbing.",
+      "millingCarbideSfm": [
+        250,
+        400
+      ],
+      "turningCarbideSfm": [
+        205,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.0018,
+        0.003
+      ]
+    },
+    {
+      "id": "c260",
+      "material": "C260 Cartridge Brass",
+      "group": "N · Nonferrous",
+      "condition": "Half hard",
+      "hardnessHB": [
+        100,
+        150
+      ],
+      "note": "Brass with little or no lead: stringier chips than C360.",
+      "millingCarbideSfm": [
+        300,
+        500
+      ],
+      "turningCarbideSfm": [
+        205,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "c464",
+      "material": "C464 Naval Brass",
+      "group": "N · Nonferrous",
+      "condition": "Half hard",
+      "hardnessHB": [
+        120,
+        160
+      ],
+      "note": "Brass with little or no lead: stringier chips than C360.",
+      "millingCarbideSfm": [
+        300,
+        500
+      ],
+      "turningCarbideSfm": [
+        205,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "c230",
+      "material": "C230 Red Brass",
+      "group": "N · Nonferrous",
+      "condition": "Half hard",
+      "hardnessHB": [
+        90,
+        130
+      ],
+      "note": "Brass with little or no lead: stringier chips than C360.",
+      "millingCarbideSfm": [
+        300,
+        500
+      ],
+      "turningCarbideSfm": [
+        205,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "c272",
+      "material": "C272 Yellow Brass",
+      "group": "N · Nonferrous",
+      "condition": "Half hard",
+      "hardnessHB": [
+        100,
+        140
+      ],
+      "note": "Brass with little or no lead: stringier chips than C360.",
+      "millingCarbideSfm": [
+        300,
+        500
+      ],
+      "turningCarbideSfm": [
+        205,
+        1650
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "c101",
+      "material": "C101 Oxygen-Free Copper",
+      "group": "N · Nonferrous",
+      "condition": "H02",
+      "hardnessHB": [
+        50,
+        90
+      ],
+      "note": "Pure copper is gummy: very sharp, polished, uncoated or DLC edges.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "c182",
+      "material": "C182 Chromium Copper",
+      "group": "N · Nonferrous",
+      "condition": "Precipitation hardened",
+      "hardnessHB": [
+        130,
+        170
+      ],
+      "note": "Pure copper is gummy: very sharp, polished, uncoated or DLC edges.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.0035
+      ]
+    },
+    {
+      "id": "c172",
+      "material": "C172 Beryllium Copper",
+      "group": "N · Nonferrous",
+      "condition": "Solution annealed / aged",
+      "hardnessHB": [
+        180,
+        380
+      ],
+      "note": "Beryllium copper: machining dust is toxic; use coolant and extraction.",
+      "millingCarbideSfm": [
+        250,
+        400
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0018,
+        0.003
+      ]
+    },
+    {
+      "id": "c954",
+      "material": "C954 Aluminum Bronze",
+      "group": "N · Nonferrous",
+      "condition": "As cast",
+      "hardnessHB": [
+        150,
+        190
+      ],
+      "note": "Bronze: alloy and temper vary widely; aluminum bronzes are tough on edges.",
+      "millingCarbideSfm": [
+        250,
+        400
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0018,
+        0.003
+      ]
+    },
+    {
+      "id": "c630",
+      "material": "C630 Nickel Aluminum Bronze",
+      "group": "N · Nonferrous",
+      "condition": "As extruded",
+      "hardnessHB": [
+        180,
+        220
+      ],
+      "note": "Bronze: alloy and temper vary widely; aluminum bronzes are tough on edges.",
+      "millingCarbideSfm": [
+        250,
+        400
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0018,
+        0.003
+      ]
+    },
+    {
+      "id": "c510",
+      "material": "C510 Phosphor Bronze",
+      "group": "N · Nonferrous",
+      "condition": "Half hard",
+      "hardnessHB": [
+        120,
+        170
+      ],
+      "note": "Bronze: alloy and temper vary widely; aluminum bronzes are tough on edges.",
+      "millingCarbideSfm": [
+        250,
+        400
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0018,
+        0.003
+      ]
+    },
+    {
+      "id": "c655",
+      "material": "C655 Silicon Bronze",
+      "group": "N · Nonferrous",
+      "condition": "Half hard",
+      "hardnessHB": [
+        100,
+        150
+      ],
+      "note": "Bronze: alloy and temper vary widely; aluminum bronzes are tough on edges.",
+      "millingHssSfm": [
+        30,
+        80
+      ],
+      "millingCarbideSfm": [
+        250,
+        400
+      ],
+      "turningHssSfm": [
+        200,
+        250
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0018,
+        0.003
+      ]
+    },
+    {
+      "id": "c675",
+      "material": "C675 Manganese Bronze",
+      "group": "N · Nonferrous",
+      "condition": "As extruded",
+      "hardnessHB": [
+        130,
+        180
+      ],
+      "note": "Bronze: alloy and temper vary widely; aluminum bronzes are tough on edges.",
+      "millingHssSfm": [
+        30,
+        80
+      ],
+      "millingCarbideSfm": [
+        250,
+        400
+      ],
+      "turningHssSfm": [
+        200,
+        250
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0018,
+        0.003
+      ]
+    },
+    {
+      "id": "c863",
+      "material": "C863 Manganese Bronze (cast)",
+      "group": "N · Nonferrous",
+      "condition": "As cast",
+      "hardnessHB": [
+        180,
+        225
+      ],
+      "note": "Bronze: alloy and temper vary widely; aluminum bronzes are tough on edges.",
+      "millingCarbideSfm": [
+        250,
+        400
+      ],
+      "turningCarbideSfm": [
+        125,
+        980
+      ],
+      "chipLoadIpt": [
+        0.0018,
+        0.003
+      ]
+    },
+    {
+      "id": "delrin-acetal",
+      "material": "Delrin (Acetal)",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "acetal-copolymer",
+      "material": "Acetal Copolymer",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "peek",
+      "material": "PEEK",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "peek-gf30",
+      "material": "PEEK 30% Glass-Filled",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Glass-filled: abrasive; diamond-coated tools last longer. Plastics row is for unfilled plastics, treat as a ceiling.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "uhmw",
+      "material": "UHMW Polyethylene",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "hdpe",
+      "material": "HDPE",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "nylon",
+      "material": "Nylon 6/6",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "ptfe",
+      "material": "PTFE (Teflon)",
+      "group": "N · Nonferrous",
+      "condition": "Molded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "pvc",
+      "material": "PVC",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "polycarbonate",
+      "material": "Polycarbonate",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "acrylic",
+      "material": "Acrylic",
+      "group": "N · Nonferrous",
+      "condition": "Cast / extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "abs",
+      "material": "ABS",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "polypropylene",
+      "material": "Polypropylene",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "ultem",
+      "material": "Ultem (PEI)",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "torlon",
+      "material": "Torlon (PAI)",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "pps",
+      "material": "PPS (Ryton)",
+      "group": "N · Nonferrous",
+      "condition": "Extruded",
+      "hardnessHB": [
+        0,
+        0
+      ],
+      "note": "Plastic: sharp, polished 1-2 flute tools, air blast, keep the feed up so it cuts instead of melting.",
+      "millingCarbideSfm": [
+        400,
+        1000
+      ],
+      "chipLoadIpt": [
+        0.0025,
+        0.006
+      ]
+    },
+    {
+      "id": "inconel-600",
+      "material": "Inconel 600",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        210
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        75,
+        235
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "inconel-601",
+      "material": "Inconel 601",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        150,
+        210
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        75,
+        235
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "inconel-625",
+      "material": "Inconel 625",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        180,
+        260
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        75,
+        235
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "inconel-718-aged",
+      "material": "Inconel 718 · Aged",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution treated and aged (36-44 HRC)",
+      "hardnessHB": [
+        330,
+        410
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        70,
+        215
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "inconel-x750",
+      "material": "Inconel X-750",
+      "group": "S · Titanium & superalloys",
+      "condition": "Aged",
+      "hardnessHB": [
+        280,
+        360
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        70,
+        215
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "inconel-713c",
+      "material": "Inconel 713C (cast)",
+      "group": "S · Titanium & superalloys",
+      "condition": "As cast",
+      "hardnessHB": [
+        280,
+        340
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        60,
+        190
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "inconel-738",
+      "material": "Inconel 738 (cast)",
+      "group": "S · Titanium & superalloys",
+      "condition": "Cast and aged",
+      "hardnessHB": [
+        300,
+        360
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        60,
+        190
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "hastelloy-x",
+      "material": "Hastelloy X",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        170,
+        230
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        75,
+        235
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "hastelloy-c276",
+      "material": "Hastelloy C-276",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        180,
+        240
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        75,
+        235
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "hastelloy-c22",
+      "material": "Hastelloy C-22",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        180,
+        240
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        75,
+        235
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "waspaloy",
+      "material": "Waspaloy",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution treated and aged",
+      "hardnessHB": [
+        330,
+        400
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        70,
+        215
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "rene-41",
+      "material": "René 41",
+      "group": "S · Titanium & superalloys",
+      "condition": "Aged",
+      "hardnessHB": [
+        330,
+        400
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        70,
+        215
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "nimonic-80a",
+      "material": "Nimonic 80A",
+      "group": "S · Titanium & superalloys",
+      "condition": "Aged",
+      "hardnessHB": [
+        280,
+        350
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        70,
+        215
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "monel-400",
+      "material": "Monel 400",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        110,
+        150
+      ],
+      "note": "Nickel-copper alloy: gummy, work hardens.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        75,
+        235
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "monel-k500",
+      "material": "Monel K-500",
+      "group": "S · Titanium & superalloys",
+      "condition": "Aged",
+      "hardnessHB": [
+        250,
+        320
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        70,
+        215
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "incoloy-825",
+      "material": "Incoloy 825",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        140,
+        200
+      ],
+      "note": "Nickel superalloy: work hardens, notch wear; consistent engagement and high-pressure coolant.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        75,
+        235
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "incoloy-800",
+      "material": "Incoloy 800",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        130,
+        180
+      ],
+      "note": "Iron-base superalloy.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        180,
+        395
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "incoloy-800ht",
+      "material": "Incoloy 800HT",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        120,
+        170
+      ],
+      "note": "Iron-base superalloy.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        180,
+        395
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "a286",
+      "material": "A286 Iron-Base Superalloy",
+      "group": "S · Titanium & superalloys",
+      "condition": "Aged",
+      "hardnessHB": [
+        250,
+        320
+      ],
+      "note": "Iron-base superalloy.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        155,
+        315
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "a286-annealed",
+      "material": "A286 · Solution Treated",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution treated",
+      "hardnessHB": [
+        140,
+        200
+      ],
+      "note": "Iron-base superalloy.",
+      "millingCarbideSfm": [
+        100,
+        300
+      ],
+      "turningCarbideSfm": [
+        180,
+        395
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "haynes-188",
+      "material": "Haynes 188",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        200,
+        270
+      ],
+      "note": "Cobalt-base superalloy: among the hardest to machine; low speeds.",
+      "turningCarbideSfm": [
+        95,
+        295
+      ]
+    },
+    {
+      "id": "l605",
+      "material": "L-605 (Haynes 25)",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution annealed",
+      "hardnessHB": [
+        220,
+        280
+      ],
+      "note": "Cobalt-base superalloy: among the hardest to machine; low speeds.",
+      "turningCarbideSfm": [
+        95,
+        295
+      ]
+    },
+    {
+      "id": "mp35n",
+      "material": "MP35N",
+      "group": "S · Titanium & superalloys",
+      "condition": "Work hardened and aged",
+      "hardnessHB": [
+        300,
+        400
+      ],
+      "note": "Cobalt-base superalloy: among the hardest to machine; low speeds.",
+      "turningCarbideSfm": [
+        85,
+        265
+      ]
+    },
+    {
+      "id": "stellite-6",
+      "material": "Stellite 6 (cast)",
+      "group": "S · Titanium & superalloys",
+      "condition": "As cast",
+      "hardnessHB": [
+        380,
+        440
+      ],
+      "note": "Cast cobalt-chrome: often ground; turning needs ceramic or CBN.",
+      "turningCarbideSfm": [
+        75,
+        235
+      ]
+    },
+    {
+      "id": "ti-grade-1",
+      "material": "Titanium Grade 1 (CP)",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        110,
+        130
+      ],
+      "note": "Commercially pure titanium: gummy, low thermal conductivity; sharp edges and coolant.",
+      "millingCarbideSfm": [
+        100,
+        250
+      ],
+      "turningCarbideSfm": [
+        425,
+        610
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "ti-grade-2",
+      "material": "Titanium Grade 2 (CP)",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        145,
+        175
+      ],
+      "note": "Commercially pure titanium: gummy, low thermal conductivity; sharp edges and coolant.",
+      "millingCarbideSfm": [
+        100,
+        250
+      ],
+      "turningCarbideSfm": [
+        425,
+        610
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "ti-grade-4",
+      "material": "Titanium Grade 4 (CP)",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        190,
+        220
+      ],
+      "note": "Commercially pure titanium: gummy, low thermal conductivity; sharp edges and coolant.",
+      "millingCarbideSfm": [
+        100,
+        250
+      ],
+      "turningCarbideSfm": [
+        425,
+        610
+      ],
+      "chipLoadIpt": [
+        0.001,
+        0.002
+      ]
+    },
+    {
+      "id": "ti64-sta",
+      "material": "Ti-6Al-4V · STA",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution treated and aged",
+      "hardnessHB": [
+        340,
+        380
+      ],
+      "note": "Titanium alloy: heat stays in the edge; keep speed low, feed steady, coolant high.",
+      "millingCarbideSfm": [
+        80,
+        220
+      ],
+      "turningCarbideSfm": [
+        155,
+        245
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "ti64-eli",
+      "material": "Ti-6Al-4V ELI (Grade 23)",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        300,
+        350
+      ],
+      "note": "Titanium alloy: heat stays in the edge; keep speed low, feed steady, coolant high.",
+      "millingCarbideSfm": [
+        80,
+        220
+      ],
+      "turningCarbideSfm": [
+        170,
+        255
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "ti-6242",
+      "material": "Ti-6Al-2Sn-4Zr-2Mo",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        300,
+        350
+      ],
+      "note": "Titanium alloy: heat stays in the edge; keep speed low, feed steady, coolant high.",
+      "millingCarbideSfm": [
+        80,
+        220
+      ],
+      "turningCarbideSfm": [
+        170,
+        255
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "ti-3-2.5",
+      "material": "Ti-3Al-2.5V (Grade 9)",
+      "group": "S · Titanium & superalloys",
+      "condition": "Annealed",
+      "hardnessHB": [
+        230,
+        280
+      ],
+      "note": "Titanium alloy: heat stays in the edge; keep speed low, feed steady, coolant high.",
+      "millingCarbideSfm": [
+        80,
+        220
+      ],
+      "turningCarbideSfm": [
+        170,
+        255
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "ti-5553",
+      "material": "Ti-5553 Beta Titanium",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution treated and aged",
+      "hardnessHB": [
+        360,
+        410
+      ],
+      "note": "Titanium alloy: heat stays in the edge; keep speed low, feed steady, coolant high.",
+      "millingCarbideSfm": [
+        80,
+        220
+      ],
+      "turningCarbideSfm": [
+        155,
+        245
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "ti-10-2-3",
+      "material": "Ti-10V-2Fe-3Al",
+      "group": "S · Titanium & superalloys",
+      "condition": "Solution treated and aged",
+      "hardnessHB": [
+        340,
+        400
+      ],
+      "note": "Titanium alloy: heat stays in the edge; keep speed low, feed steady, coolant high.",
+      "millingCarbideSfm": [
+        80,
+        220
+      ],
+      "turningCarbideSfm": [
+        155,
+        245
+      ],
+      "chipLoadIpt": [
+        0.0008,
+        0.0017
+      ]
+    },
+    {
+      "id": "hardened-45",
+      "material": "Hardened Steel · 45 HRC",
+      "group": "H · Hardened steel",
+      "condition": "Hardened",
+      "hardnessHB": [
+        43,
+        47
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "hardened-50",
+      "material": "Hardened Steel · 50 HRC",
+      "group": "H · Hardened steel",
+      "condition": "Hardened",
+      "hardnessHB": [
+        48,
+        52
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "hardened-55",
+      "material": "Hardened Steel · 55 HRC",
+      "group": "H · Hardened steel",
+      "condition": "Hardened",
+      "hardnessHB": [
+        53,
+        57
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "hardened-60",
+      "material": "Hardened Steel · 60 HRC",
+      "group": "H · Hardened steel",
+      "condition": "Hardened",
+      "hardnessHB": [
+        58,
+        62
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "hardened-65",
+      "material": "Hardened Steel · 65 HRC",
+      "group": "H · Hardened steel",
+      "condition": "Hardened",
+      "hardnessHB": [
+        63,
+        67
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "a2-hard",
+      "material": "A2 Tool Steel · Hardened",
+      "group": "H · Hardened steel",
+      "condition": "Hardened 57-62 HRC",
+      "hardnessHB": [
+        57,
+        62
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "h13-hard",
+      "material": "H13 Tool Steel · Hardened",
+      "group": "H · Hardened steel",
+      "condition": "Hardened 46-52 HRC",
+      "hardnessHB": [
+        46,
+        52
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "m2-hard",
+      "material": "M2 High-Speed Steel · Hardened",
+      "group": "H · Hardened steel",
+      "condition": "Hardened 62-65 HRC",
+      "hardnessHB": [
+        62,
+        66
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "o1-hard",
+      "material": "O1 Tool Steel · Hardened",
+      "group": "H · Hardened steel",
+      "condition": "Hardened 57-62 HRC",
+      "hardnessHB": [
+        57,
+        62
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "s7-hard",
+      "material": "S7 Tool Steel · Hardened",
+      "group": "H · Hardened steel",
+      "condition": "Hardened 54-58 HRC",
+      "hardnessHB": [
+        54,
+        58
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "52100-hard",
+      "material": "52100 Bearing Steel · Hardened",
+      "group": "H · Hardened steel",
+      "condition": "Hardened 58-64 HRC",
+      "hardnessHB": [
+        58,
+        64
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "4340-hard",
+      "material": "4340 Steel · Hardened",
+      "group": "H · Hardened steel",
+      "condition": "Hardened 48-53 HRC",
+      "hardnessHB": [
+        48,
+        53
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "8620-case",
+      "material": "8620 Steel · Carburized Case",
+      "group": "H · Hardened steel",
+      "condition": "Carburized and hardened case",
+      "hardnessHB": [
+        58,
+        62
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "440c-hard",
+      "material": "440C Stainless · Hardened",
+      "group": "H · Hardened steel",
+      "condition": "Hardened 56-60 HRC",
+      "hardnessHB": [
+        56,
+        60
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "hardox-400",
+      "material": "Hardox 400 Wear Plate",
+      "group": "H · Hardened steel",
+      "condition": "Quenched plate (~42 HRC)",
+      "hardnessHB": [
+        38,
+        46
+      ],
+      "note": "Abrasion-resistant plate; harder than Sandvik's 45 HRC row lists for CBN."
+    },
+    {
+      "id": "chilled-iron",
+      "material": "Chilled Cast Iron",
+      "group": "H · Hardened steel",
+      "condition": "As cast",
+      "hardnessHB": [
+        380,
+        450
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
+    },
+    {
+      "id": "ni-hard",
+      "material": "Ni-Hard White Iron",
+      "group": "H · Hardened steel",
+      "condition": "As cast",
+      "hardnessHB": [
+        550,
+        650
+      ],
+      "note": "Harder than the Sandvik 400 HB chilled-iron row: speeds derated to the limit."
+    },
+    {
+      "id": "ductile-hard-55",
+      "material": "Ductile Iron · Hardened 55 HRC",
+      "group": "H · Hardened steel",
+      "condition": "Hardened",
+      "hardnessHB": [
+        52,
+        58
+      ],
+      "note": "Hardened material: CBN or ceramic for turning; solid carbide hard-milling tools need the maker's data."
     }
   ]
 }

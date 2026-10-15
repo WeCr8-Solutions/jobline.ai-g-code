@@ -8,6 +8,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.13] - 2026-10-13
+
+### Marketplace listing
+
+- Rewrote the Marketplace README. The published 0.3.12 listing still described v0.1: it called Validate Program and Format G-Code placeholders, listed diagnostics (0.2), the formatter (0.3) and subprogram navigation as future work, and never mentioned robot languages, probing, machine presets, the Toolbox, model imports or tap drill checks. It now documents the shipped features, real known issues and the current roadmap.
+- Commands and Settings tables are generated from package.json by `scripts/gen-readme-tables.cjs` (`--check` fails when they drift).
+- README images use absolute https URLs so they render on the Marketplace.
+- New description, keywords (Fanuc TP, ABB RAPID, Macro B, machinist and others; dropped "dnc", which is not shipped), the Visualization category, a gallery banner that matches the icon, and a jobline.ai homepage link.
+- Added a free machining calculators section (jobline.ai/tools) with Marketplace UTM tags.
+- The sidebar shop link now opens jobline.ai/shops tagged `utm_source=vscode&utm_medium=extension` instead of /founding-shop.
+
 ### Added
 
 - Machine presets: save a machine (control, machine type, units, travel, options, workholding) once and reuse it for every program. Choose per workspace or set a default for all workspaces.
@@ -18,6 +29,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Synced `data/reference/jobline-shop-reference.json` to v1.2.1 from the JobLine shop app (shift-handover-hub PRs #184 and #185): corrected 50% tap drills, NPT tap drills and carbide milling SFM; a larger cutting-speed table; and #10-32 is now UNF only (75% tap drill #21), with #10-24 the only #10 UNC thread (#25). The earlier bundle also listed #10-32 under UNC.
 - The Commands view is grouped into Machine Setup, Check & Explain, Edit Program and Navigate.
 - The visualizer uses the active preset's machine type and workholding when the program text alone cannot tell (e.g. a plain G0/G1 lathe program).
 - **Select Machine Type** also sets the broad `jobline.machineType` profile, so cycle lists and lathe T-word decoding follow the pick.

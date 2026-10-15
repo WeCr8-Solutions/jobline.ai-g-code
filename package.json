@@ -1,8 +1,8 @@
 {
   "name": "jobline-gcode",
   "displayName": "JobLine G-Code Intelligence",
-  "description": "Deep G-code and robot-program intelligence for CNC machinists and automation engineers — syntax highlighting, hover tooltips, canned cycle & probing detection, Macro B evaluation, Fanuc/Haas/Siemens/Mazak/Okuma CNC dialects, Fanuc Robot TP, and ABB RAPID.",
-  "version": "0.3.12",
+  "description": "Check, explain and preview CNC G-code before it runs: hover explanations, live diagnostics, formatter, 3D toolpath visualizer, machine presets, probing, Macro B and tap drill checks for Fanuc, Haas, Siemens, Mazak and Okuma, plus Fanuc Robot TP and ABB RAPID.",
+  "version": "0.3.13",
   "publisher": "WeCr8-Solutions",
   "license": "MIT",
   "author": {
@@ -13,13 +13,13 @@
     "type": "git",
     "url": "https://github.com/WeCr8-Solutions/jobline.ai-g-code.git"
   },
-  "homepage": "https://github.com/WeCr8-Solutions/jobline.ai-g-code#readme",
+  "homepage": "https://jobline.ai/tools?utm_source=vscode&utm_medium=marketplace&utm_campaign=jobline-gcode",
   "bugs": {
     "url": "https://github.com/WeCr8-Solutions/jobline.ai-g-code/issues"
   },
   "icon": "images/icon.png",
   "galleryBanner": {
-    "color": "#161B33",
+    "color": "#0A1023",
     "theme": "dark"
   },
   "engines": {
@@ -28,28 +28,34 @@
   "categories": [
     "Programming Languages",
     "Linters",
-    "Formatters"
+    "Formatters",
+    "Visualization"
   ],
   "keywords": [
+    "CNC",
+    "G-code",
     "gcode",
-    "g-code",
-    "cnc",
-    "dnc",
-    "fanuc",
-    "fanuc robot",
-    "haas",
-    "siemens",
-    "mazak",
-    "okuma",
-    "abb",
-    "rapid",
+    "Fanuc",
+    "Haas",
+    "Siemens",
+    "Sinumerik",
+    "Mazak",
+    "Okuma",
+    "Macro B",
     "robot",
+    "ABB RAPID",
+    "Fanuc TP",
+    "machinist",
+    "CNC programming",
+    "toolpath",
+    "NC",
     "machining",
-    "nc",
     "canned cycle",
-    "macro b",
+    "probing",
     "mill",
-    "lathe"
+    "lathe",
+    "tap drill",
+    "Fusion 360"
   ],
   "main": "./out/src/extension.js",
   "contributes": {
@@ -177,7 +183,7 @@
         "jobline.ui.showLinks": {
           "type": "boolean",
           "default": true,
-          "description": "Show optional Founding Shop and G-Code Academy links in the sidebar and hover cards."
+          "description": "Show optional JobLine for shops and G-Code Academy links in the sidebar and hover cards."
         },
         "jobline.controlType": {
           "type": "string",
