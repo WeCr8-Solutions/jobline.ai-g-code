@@ -61,6 +61,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Tool-library import** (was an empty stub): Fusion `.json` / `.tools`, HSMWorks / Inventor CAM `.hsmlib` (UTF-16 XML) and CSV (`T, H, D, diameter, flute length, gauge length, description`). Imported tools feed the Tools view and new checks: tools not in the library, T/H and T/D register mismatches, comment diameter vs library diameter (unit-aware). Lathe T0101 decoding is respected; Siemens/Heidenhain skip H/D register checks.
+- **File-based CAM integrations** replace the ESPRIT, Mastercam, GibbsCAM, Hexagon, Fusion, Cura, laser and sheet-metal stubs: CAM detection from the NC header, tool lists from post header comments, setup-sheet readers (HTML column tables, per-tool key/value tables, XML, CSV), automatic linking of a same-name setup sheet, and output-folder watching. The UI says plainly that there is no live connection to the CAM application.
+- **Per-control validation rules** for Fanuc, Haas NGC, Siemens 840D, Okuma OSP, Mazak EIA/ISO, Mitsubishi M8/M80, Heidenhain TNC (Klartext and ISO), Fadal and generic/LinuxCNC. Mitsubishi, Heidenhain, Fadal and generic are now selectable controls. Klartext programs skip the ISO rules.
+- **Convert Program to Another Control**: common-code repost from ISO dialects to Haas, Mazak, Mitsubishi, Siemens 840D, Okuma OSP and Heidenhain Klartext, with every unconverted line marked `JL MANUAL`.
+
 - Machine presets: save a machine (control, machine type, units, travel, options, workholding) once and reuse it for every program. Choose per workspace or set a default for all workspaces.
 - **Machine Setup** sidebar view with the active machine, presets grouped by source, and inline use / set-default actions; status bar and Visualizer Settings pickers.
 - Preset wizard (**JobLine: New Machine Setup**), import, export, edit, duplicate and delete commands.

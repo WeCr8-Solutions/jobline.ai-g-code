@@ -155,6 +155,13 @@ The CNC controls share one ISO / Fanuc-style engine; picking a control sets the 
 
 Machine types: mill, lathe, mill-turn, and grinder. Lathe programs get diameter-mode X, T-word decoding, and turning cycle lists.
 
+## Tool libraries, CAM output and per-control checks
+
+- **JobLine: Import Tool Library** reads a Fusion tool library (`.json`, or `.tools`), an HSMWorks / Inventor CAM `.hsmlib`, or a CSV with a header row (`T, H, D, diameter, flute length, gauge length, description`; common spellings and Fusion CSV export headers are matched). The Tools view then shows the library data beside each tool and Problems lists tools that are not in the library, T/H and T/D register mismatches, and comment diameters that disagree with the library.
+- **CAM integrations are file-based.** JobLine recognises ESPRIT, Mastercam, Fusion/HSM, GibbsCAM, Hexagon, SolidCAM, NX, CAMWorks and slicer output from the program header, reads the tool list a post writes into header comments, and reads the tool table from an exported setup sheet (HTML, XML or CSV) with the same name in the same folder. **JobLine: Watch CAM Output Folder** offers to open new posts. None of them talks to a running CAM session or reads native part files; that needs each vendor's licensed SDK. **JobLine: CAM Integrations** lists what each one reads.
+- **Per-control validation.** Fanuc, Haas NGC, Siemens 840D, Okuma OSP, Mazak EIA/ISO, Mitsubishi M8/M80, Heidenhain TNC (Klartext and ISO), Fadal and generic/LinuxCNC each get their own rules on top of the shared ISO checks: G-code lists, macro / parameter syntax and ranges, loop and jump targets, subprogram calls, program-number length and M-codes per block. Unknown G-codes are information only, because options differ by machine.
+- **JobLine: Convert Program to Another Control** rewrites common codes from an ISO (Fanuc-family) program to Haas, Mazak, Mitsubishi, Siemens 840D, Okuma OSP or Heidenhain Klartext, opens the result in a new tab and lists what it changed. Anything it can't map with confidence (macros, tapping/boring cycles, reference returns on OSP) is left as a `JL MANUAL` comment. It is not a CAM post-processor.
+
 ## Free machining calculators at jobline.ai/tools
 
 The same team publishes free, no-signup shop calculators and charts:
@@ -271,6 +278,8 @@ Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type **JobLine**, 
 | JobLine: Next Macro | `jobline.sidebar.nextMacro` |
 | JobLine: Previous Alarm | `jobline.sidebar.prevAlarm` |
 | JobLine: Next Alarm | `jobline.sidebar.nextAlarm` |
+| JobLine: Import Tool Library (Fusion .json/.tools, .hsmlib, CSV) | `jobline.tools.importLibrary` |
+| JobLine: Clear Tool Library / Unlink Setup Sheet | `jobline.tools.clearLibrary` |
 
 **Other**
 
@@ -290,8 +299,12 @@ Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type **JobLine**, 
 | JobLine: Part to Origin: Reset to File Origin | `jobline.placement.reset` |
 | JobLine: Part to Origin: Run Operation | `jobline.placement.run` |
 | JobLine: Part to Origin: Current State | `jobline.placement.state` |
+| JobLine: Link CAM Setup Sheet to Program | `jobline.cam.linkSetupSheet` |
+| JobLine: Watch CAM Output Folder | `jobline.cam.addWatchFolder` |
+| JobLine: CAM Integrations (what each one reads) | `jobline.cam.showIntegrations` |
+| JobLine: Convert Program to Another Control (common codes) | `jobline.convertDialect` |
 
-_83 commands, generated from package.json for v0.3.14._
+_89 commands, generated from package.json for v0.3.14._
 
 <!-- commands:end -->
 
@@ -304,12 +317,13 @@ Find these under **Settings > Extensions > JobLine G-Code**.
 | Setting | Default | Description |
 | --- | --- | --- |
 | `jobline.ui.showLinks` | `true` | Show optional JobLine for shops and G-Code Academy links in the sidebar and hover cards. |
-| `jobline.controlType` | `"fanuc"` | CNC or robot control dialect for dialect-specific parsing and validation. Values: `fanuc`, `haas`, `siemens`, `mazak`, `okuma`, `fanuc-robot`, `abb`. |
+| `jobline.controlType` | `"fanuc"` | CNC or robot control dialect. Each CNC control has its own validation rules (codes, macro syntax, loops and jumps, limits). Values: `fanuc`, `haas`, `siemens`, `mazak`, `okuma`, `mitsubishi`, `heidenhain`, `fadal`, `generic`, `fanuc-robot`, `abb`. |
 | `jobline.machineType` | `"mill"` | Machine type profile used to tailor cycle lists and axis assumptions in JobLine views. Values: `mill`, `lathe`, `mill-turn`, `grinder`, `laser`. |
 | `jobline.units` | `"inch"` | Default unit system (can be overridden by G20/G21 in program). Values: `inch`, `metric`. |
 | `jobline.validation.enableSafetyChecks` | `true` | Enable crash-prevention safety rules (safe Z before tool change, spindle stop, etc.). |
 | `jobline.validation.enableArcValidation` | `true` | Validate G02/G03 arc endpoint geometry and plane correctness. |
 | `jobline.validation.arcTolerance` | `0.001` | Arc endpoint tolerance in current units (default 0.001 inch). |
+| `jobline.validation.controlSpecificRules` | `true` | Run the rule set for the selected control (Fanuc, Haas, Siemens, Okuma, Mazak, Mitsubishi, Heidenhain, Fadal, generic) in addition to the shared ISO checks. |
 | `jobline.formatter.wordSpacing` | `true` | Add spaces between G-code words (G01X1.5 → G01 X1.5). |
 | `jobline.formatter.decimalPlaces` | `null` | Fixed decimal places for coordinates (null = don't change). |
 | `jobline.formatter.uppercaseGM` | `true` | Uppercase G and M codes. |
@@ -320,8 +334,10 @@ Find these under **Settings > Extensions > JobLine G-Code**.
 | `jobline.presets.sharedFolders` | `[]` | Extra folders of `.jblmachine` files to offer, e.g. a shop network share that jobline.ai-CAM also points at. |
 | `jobline.presets.warnOnMismatch` | `true` | Offer to switch machine when a program uses features the active machine preset does not have (turning codes on a mill, rotary axes on a 3-axis, a robot program on a CNC). |
 | `jobline.revpack.autoDetect` | `true` | When a G-code program opens in the visualizer, load revpack.json from the same folder (or a parent revpack/ folder) and take stock, workholding, work offsets, tools and machine from it. Correlation findings appear in the Problems panel. |
+| `jobline.cam.watchFolders` | `[]` | Folders your CAM posts NC programs into. JobLine offers to open new programs and link their setup sheets. File-based only: no connection to the CAM application. |
+| `jobline.cam.autoLinkSetupSheets` | `true` | When a program opens, link a setup sheet (HTML, XML or CSV) with the same name in the same folder, so its tool list feeds the tool checks. |
 
-_17 settings, generated from package.json for v0.3.14._
+_20 settings, generated from package.json for v0.3.14._
 
 <!-- settings:end -->
 
@@ -339,6 +355,7 @@ Opened as G-code automatically: `.nc .gcode .ngc .tap .cnc .g .min .prg .mpf .sp
 - Fusion F3D import gives stock, model dimensions, and setup metadata, not a full reconstruction of the CAD solid. Parasolid targets are shown as a bounds envelope.
 - Choosing the **Okuma** control applies lathe conventions (turret T-words, turning review rules) even to Okuma mill programs. Use the Fanuc control for Okuma machining centers for now.
 - `.mod` is also used by other languages. If another extension claims it, use **Change Language Mode > ABB RAPID**.
+- Per-control rules check syntax and structure, not execution: macros and subprograms are not run, and cycle parameters are checked for presence, not machine limits. Tests use JobLine-written fixtures, not programs certified on each control.
 - Machine connectivity / DNC transfer is not included.
 
 ## Roadmap

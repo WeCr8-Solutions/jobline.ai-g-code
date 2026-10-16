@@ -42,10 +42,20 @@ import { MachinePresetStore } from './presets/presetStore';
 import { registerPresetCommands } from './presets/presetCommands';
 import { registerMachineSetupTree } from './providers/machineSetupTreeProvider';
 import { machineClassForKind } from './presets/jblMachine';
+import { ToolLibraryStore, setToolLibraryStore } from './tooling/toolLibraryStore';
+import { registerCamCommands } from './cam/camCommands';
+import { CONTROL_PROFILES } from './diagnostics/controlRules';
 
 const LANGUAGE_ID = 'gcode';
 
 export function activate(context: vscode.ExtensionContext): void {
+        // Tool library / linked setup sheets: the sidebar and diagnostics read
+        // these, so the store exists before either registers.
+        const toolLibraryStore = new ToolLibraryStore(context.workspaceState);
+        setToolLibraryStore(toolLibraryStore);
+        context.subscriptions.push(toolLibraryStore, { dispose: () => setToolLibraryStore(undefined) });
+        registerCamCommands(context, toolLibraryStore);
+
         // Machine presets come first: the sidebar, status bar and visualizer all
         // read the active machine from here.
         const presetStore = new MachinePresetStore();
@@ -866,18 +876,25 @@ export function activate(context: vscode.ExtensionContext): void {
   const selectControlCmd = vscode.commands.registerCommand(
     'jobline.selectControl',
     async () => {
+      const cnc = (id: keyof typeof CONTROL_PROFILES, label: string, description: string) =>
+        ({ label: `$(circuit-board) ${label}`, description, detail: CONTROL_PROFILES[id].summary, id });
       const controls = [
-        { label: '$(circuit-board) Fanuc CNC',    description: '0i / 30i / 31i series',           id: 'fanuc' },
-        { label: '$(circuit-board) Haas',          description: 'NGC controls',                    id: 'haas' },
-        { label: '$(circuit-board) Siemens',       description: 'Sinumerik 840D / 828D',           id: 'siemens' },
-        { label: '$(circuit-board) Mazak',         description: 'Smooth / Matrix controls',        id: 'mazak' },
-        { label: '$(circuit-board) Okuma',         description: 'OSP-P controls',                  id: 'okuma' },
+        cnc('fanuc', 'Fanuc CNC', '0i / 30i / 31i series'),
+        cnc('haas', 'Haas', 'NGC controls'),
+        cnc('siemens', 'Siemens', 'Sinumerik 840D / 828D'),
+        cnc('mazak', 'Mazak', 'Smooth / Matrix EIA/ISO'),
+        cnc('okuma', 'Okuma', 'OSP-P controls'),
+        cnc('mitsubishi', 'Mitsubishi', 'M8 / M80 (Meldas)'),
+        cnc('heidenhain', 'Heidenhain', 'TNC Klartext and ISO'),
+        cnc('fadal', 'Fadal', 'Format 2'),
+        cnc('generic', 'Generic / LinuxCNC', 'ISO G-code, LinuxCNC O-words'),
         { label: '$(robot) Fanuc Robot',           description: 'TP / LS teach-pendant programs',  id: 'fanuc-robot' },
         { label: '$(robot) ABB RAPID',             description: 'ABB robot RAPID .mod programs',   id: 'abb' },
       ];
 
       const selected = await vscode.window.showQuickPick(controls, {
-        placeHolder: 'Select CNC control type',
+        placeHolder: 'Select CNC control type — each has its own validation rules',
+        matchOnDetail: true,
       });
 
       if (selected) {

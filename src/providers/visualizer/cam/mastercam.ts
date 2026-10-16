@@ -1,8 +1,7 @@
-// Mastercam integration stub
-import { CamConnection, CamTool } from '../camIntegration';
+// File-based integration: reads posted NC output and exported setup sheets
+// from a folder. No live link to the vendor application (see CAM_SYSTEMS).
+import { FolderCamConnection, CamFolderIO, nodeFolderIO } from '../../../cam/folderConnection';
 
-export class MastercamConnection implements CamConnection {
-  async connect() { /* TODO: Implement Mastercam API connection */ return false; }
-  async getTools(): Promise<CamTool[]> { return []; }
-  async getCode(): Promise<string> { return ''; }
+export class MastercamConnection extends FolderCamConnection {
+  constructor(folder = '', io: CamFolderIO = nodeFolderIO) { super('mastercam', folder, io); }
 }

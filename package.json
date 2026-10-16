@@ -126,7 +126,7 @@
           ".CMX"
         ],
         "configuration": "./language-configuration.json",
-        "firstLine": "^\\s*(%|[Oo]\\d{3,5}\\b|:\\d{3,5}\\b|[Nn]\\d+\\s*[GgMmTt]\\d|[Gg]\\d{1,3}(\\.\\d)?\\b)"
+        "firstLine": "^\\s*(%|[Oo]\\d{3,5}\\b|:\\d{3,5}\\b|[Nn]\\d+\\s*[GgMmTt]\\d|[Gg]\\d{1,3}(\\.\\d)?\\b|\\d+\\s+BEGIN\\s+PGM\\s)"
       },
       {
         "id": "fanuc-tp",
@@ -194,6 +194,10 @@
             "siemens",
             "mazak",
             "okuma",
+            "mitsubishi",
+            "heidenhain",
+            "fadal",
+            "generic",
             "fanuc-robot",
             "abb"
           ],
@@ -201,12 +205,16 @@
             "Fanuc 0i / 30i / 31i CNC series",
             "Haas NGC controls",
             "Siemens Sinumerik 840D / 828D",
-            "Mazak Smooth / Matrix controls",
+            "Mazak Smooth / Matrix controls (EIA/ISO)",
             "Okuma OSP-P controls",
+            "Mitsubishi M8 / M80 (Meldas)",
+            "Heidenhain TNC — Klartext and ISO",
+            "Fadal Format 2",
+            "Generic ISO / LinuxCNC",
             "Fanuc Robot — TP / LS teach-pendant programs",
             "ABB Robot — RAPID .mod programs"
           ],
-          "description": "CNC or robot control dialect for dialect-specific parsing and validation."
+          "description": "CNC or robot control dialect. Each CNC control has its own validation rules (codes, macro syntax, loops and jumps, limits)."
         },
         "jobline.machineType": {
           "type": "string",
@@ -250,6 +258,11 @@
           "type": "number",
           "default": 0.001,
           "description": "Arc endpoint tolerance in current units (default 0.001 inch)."
+        },
+        "jobline.validation.controlSpecificRules": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run the rule set for the selected control (Fanuc, Haas, Siemens, Okuma, Mazak, Mitsubishi, Heidenhain, Fadal, generic) in addition to the shared ISO checks."
         },
         "jobline.formatter.wordSpacing": {
           "type": "boolean",
@@ -312,6 +325,19 @@
           "type": "boolean",
           "default": true,
           "description": "When a G-code program opens in the visualizer, load revpack.json from the same folder (or a parent revpack/ folder) and take stock, workholding, work offsets, tools and machine from it. Correlation findings appear in the Problems panel."
+        },
+        "jobline.cam.watchFolders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Folders your CAM posts NC programs into. JobLine offers to open new programs and link their setup sheets. File-based only: no connection to the CAM application."
+        },
+        "jobline.cam.autoLinkSetupSheets": {
+          "type": "boolean",
+          "default": true,
+          "description": "When a program opens, link a setup sheet (HTML, XML or CSV) with the same name in the same folder, so its tool list feeds the tool checks."
         }
       }
     },
@@ -680,6 +706,32 @@
       {
         "command": "jobline.placement.state",
         "title": "JobLine: Part to Origin: Current State"
+      },
+      {
+        "command": "jobline.tools.importLibrary",
+        "title": "JobLine: Import Tool Library (Fusion .json/.tools, .hsmlib, CSV)",
+        "icon": "$(library)"
+      },
+      {
+        "command": "jobline.tools.clearLibrary",
+        "title": "JobLine: Clear Tool Library / Unlink Setup Sheet"
+      },
+      {
+        "command": "jobline.cam.linkSetupSheet",
+        "title": "JobLine: Link CAM Setup Sheet to Program",
+        "icon": "$(link)"
+      },
+      {
+        "command": "jobline.cam.addWatchFolder",
+        "title": "JobLine: Watch CAM Output Folder"
+      },
+      {
+        "command": "jobline.cam.showIntegrations",
+        "title": "JobLine: CAM Integrations (what each one reads)"
+      },
+      {
+        "command": "jobline.convertDialect",
+        "title": "JobLine: Convert Program to Another Control (common codes)"
       }
     ],
     "menus": {
@@ -830,6 +882,26 @@
           "command": "jobline.gcode.showVisualizer",
           "when": "view == jobline.visualizerSettings",
           "group": "navigation"
+        },
+        {
+          "command": "jobline.tools.importLibrary",
+          "when": "view == jobline.toolsTree",
+          "group": "navigation@3"
+        },
+        {
+          "command": "jobline.cam.linkSetupSheet",
+          "when": "view == jobline.toolsTree",
+          "group": "navigation@4"
+        },
+        {
+          "command": "jobline.tools.clearLibrary",
+          "when": "view == jobline.toolsTree",
+          "group": "1_library"
+        },
+        {
+          "command": "jobline.cam.showIntegrations",
+          "when": "view == jobline.toolsTree",
+          "group": "1_library"
         }
       ],
       "view/item/context": [
@@ -910,6 +982,18 @@
         {
           "command": "jobline.presets.duplicate",
           "when": "false"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "jobline.tools.importLibrary",
+          "when": "resourceExtname =~ /^\\.(json|tools|hsmlib|csv)$/i",
+          "group": "jobline@1"
+        },
+        {
+          "command": "jobline.cam.linkSetupSheet",
+          "when": "resourceExtname =~ /^\\.(html?|xml|csv)$/i",
+          "group": "jobline@2"
         }
       ]
     },
@@ -996,7 +1080,11 @@
     "test:hover-cards": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/hover-cards.test.ts');\"",
     "test:feedback-matrix": "node --test test/user-feedback-motion-matrix.test.cjs",
     "test:rating": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2020',esModuleInterop:true,strict:false}});require('./test/validation-rating.test.ts');\"",
-    "test:all": "npm test && npm run test:feedback-matrix && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:revpack && npm run test:simulation-matrix && npm run test:pipeline-gate && npm run test:visualizer-ui && npm run test:hover-cards && npm run test:rating",
+    "test:tool-library": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/tool-library.test.ts');\"",
+    "test:cam-integrations": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/cam-integrations.test.ts');require('./test/contributions.test.ts');\"",
+    "test:control-rules": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/control-rules.test.ts');\"",
+    "test:dialect-convert": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/dialect-convert.test.ts');\"",
+    "test:all": "npm test && npm run test:feedback-matrix && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:revpack && npm run test:simulation-matrix && npm run test:pipeline-gate && npm run test:visualizer-ui && npm run test:hover-cards && npm run test:rating && npm run test:tool-library && npm run test:cam-integrations && npm run test:control-rules && npm run test:dialect-convert",
     "test:smoke": "node ./scripts/run-extension-smoke.js",
     "test:e2e:visual": "npm run compile && node ./scripts/run-visual-e2e.js",
     "test:e2e:hover": "npm run compile && node ./scripts/run-hover-e2e.js",
