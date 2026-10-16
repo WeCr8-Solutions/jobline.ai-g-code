@@ -197,6 +197,12 @@ async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
       assert.ok(objects[key]?.present, `${key} object missing (${visualCase.id})`);
       assert.ok(objects[key].litAlone > 0, `${key} drew nothing on its own (${visualCase.id})`);
     }
+    // Display detail on the envelopes: serrated teeth + screws on every vise
+    // jaw, spindle / rib on the body, counterbores on the zero-point plate.
+    const detail = probe.workholdingDetail || {};
+    for (const [name, count] of Object.entries(detail)) {
+      if (/jaw/i.test(name) || /base body|vise body/i.test(name) || /zero-point|Quick-Point/i.test(name)) assert.ok(count > 0, `no detail drawn on ${name} (${visualCase.id})`);
+    }
     if (rp.grip && rp.preset !== 'workholding' && !rp.targetOnly && rp.mode === 'solid') assert.ok(objects.grip?.litAlone > 0, `gripped stock region not drawn (${visualCase.id})`);
   }
   if (rp.preset) {

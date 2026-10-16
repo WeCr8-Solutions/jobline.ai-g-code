@@ -142,8 +142,18 @@ test('per-object layer styles: every setup object, three styles, opacity, preset
   assert.match(html, /stock: \{ visible: true, mode: 'transparent', opacity: 0\.5 \}/);
   assert.match(html, /target: \{ visible: true, mode: 'solid', opacity: 1 \}/);
   // Hardened jaws grey-blue, body darker, gripped region highlighted.
-  assert.match(html, /fixture: '#4a5363', jaws: '#7f97b8'/);
+  assert.match(html, /fixture: '#4b5768', jaws: '#b3c0d1'/);
   assert.match(html, /grip: '#e05cff'/);
+  // Display-only vise detail on the kernel envelopes: 6 mm-pitch serrated
+  // teeth and screws on each jaw, spindle and guide rib on the body,
+  // counterbores on the zero-point plate - added to every RevPack solid.
+  assert.match(html, /const WH_DETAIL = \{ toothPitchMm: 6, toothHeightMm: 1\.2, screwDiaMm: 10 \}/);
+  assert.match(html, /addWorkholdingDetail\(solid, item, '#' \+ shade\.getHexString\(\)\);/);
+  for (const part of ['tooth', 'screw', 'centre spindle', 'guide rib', 'spindle end', 'counterbore']) assert.match(html, new RegExp('\\$\\{item\\.name\\} ' + part));
+  // Detail meshes end in ' body' so the Wireframe style shows their edges, not their triangles.
+  assert.match(html, /mesh\.name = name \+ ' detail body';/);
+  // The riser is drawn a hair narrower so it does not z-fight the plate.
+  assert.match(html, /if \(item\.role === 'riser'\) \{/);
   // Remembered for the session through the webview state.
   assert.match(html, /vscode\.setState\(Object\.assign\(\{\}, vscode\.getState\(\) \|\| \{\}, \{ objectStyles, layerPreset \}\)\)/);
   assert.match(html, /case 'setObjectStyle'/);
@@ -166,6 +176,21 @@ test('an uploaded part gets its stock from the shared kernel\'s upload setup, ar
   assert.equal(o.zMin, below);
   assert.equal(setup.gripDepth, grip);
   assert.match(html, /const upload = !stockIsDeclared && !isTurning \? uploadTarget\(\) : null;/);
+});
+
+test('the View panel re-stacks between the playback and RevPack panels', () => {
+  assert.match(html, /function layoutSidePanels\(\)/);
+  assert.match(html, /view\.style\.bottom = bottom \+ 'px';/);
+  assert.match(html, /new ResizeObserver\(/);
+  // Never observes the View panel it resizes (a ResizeObserver loop), and a benign loop notice never shows the error banner.
+  assert.match(html, /for \(const id of \['playback-panel', 'revpack-panel'\]\) \{ const el = document\.getElementById\(id\); if \(el\) ro\.observe\(el\); \}/);
+  assert.match(html, /if \(\/ResizeObserver loop\/\.test/);
+  assert.match(html, /case 'setPanelOpen'/);
+  assert.match(html, /case 'zoomBy'/);
+  assert.match(html, /case 'panBy'/);
+  // The depth range follows the view distance (no fixed 0.0001..1e6 z-fighting).
+  assert.match(html, /const near = Math\.max\(1e-4, orbitRadius \/ 2000\);/);
+  assert.match(html, /camera\.near = near; camera\.far = far; camera\.updateProjectionMatrix\(\);/);
 });
 
 test('the legend sits left of the view cube, not under its buttons', () => {

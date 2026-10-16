@@ -1,41 +1,107 @@
 # JobLine G-Code Intelligence
 
-**Read, check, and preview CNC programs before they reach the machine.** Hover explanations, live diagnostics, a formatter, a program sidebar, and a 3D toolpath visualizer for Fanuc, Haas, Siemens, Mazak, and Okuma G-code, with machine presets, probing and Macro B awareness, and tap drill checks. Built by machinists at [JobLine.ai](https://jobline.ai/?utm_source=vscode&utm_medium=marketplace&utm_campaign=jobline-gcode).
+**Simulate and review CNC programs in VS Code before they reach the machine.** A 3D toolpath simulator with the vise, jaws, stock and finished part, and a code review that flags problems on the line that causes them: live diagnostics, setup and tool checks, collision and grip warnings that name the jaw, tap drill checks and hover explanations. Fanuc, Haas, Siemens, Mazak and Okuma G-code, plus Fanuc Robot TP and ABB RAPID. Built by machinists at [JobLine.ai](https://jobline.ai/features/vscode-gcode?utm_source=vscode&utm_medium=marketplace&utm_campaign=jobline-gcode).
 
-![JobLine sidebar, G-code editor, and 3D toolpath visualizer in VS Code](https://raw.githubusercontent.com/WeCr8-Solutions/jobline.ai-g-code/main/images/marketplace/sidebar.png)
+![A real sample program simulated on a Haas UMC-750 with a LANG Makro-Grip 5-axis vise: steel serrated jaws, the stock see-through, the finished part in gold, toolpath and tool](https://jobline.ai/vscode/gcode/hero-vise-sim.png)
 
 Runs locally. Your programs are never uploaded.
 
 ## Get started
 
-1. Install the extension (VS Code **1.85** or newer) and open an NC program: `.nc`, `.gcode`, `.ngc`, `.tap`, `.cnc`, `.mpf`, `.spf`, `.min`, `.prg`, `.eia` and [50+ more extensions](#supported-files).
+1. Install the extension (VS Code **1.85** or newer): `ext install WeCr8-Solutions.jobline-gcode`, then open an NC program: `.nc`, `.gcode`, `.ngc`, `.tap`, `.cnc`, `.mpf`, `.spf`, `.min`, `.prg`, `.eia` and [50+ more extensions](#supported-files).
 2. Click the machine in the status bar, or run **JobLine: Switch Machine**, and pick or create a machine preset. It is remembered per workspace.
-3. Open the **JobLine** icon in the Activity Bar to see operations, tools, offsets, cycles, probing, macros, and warnings for the open program.
-4. Run **Show Toolpath Visualizer** (or the eye icon in the editor title bar) to review the path in 3D.
-5. Fix what the Problems panel flags, then **JobLine: Format G-Code** to clean up spacing and case.
+3. Click the eye icon in the editor title bar (**Show Toolpath Visualizer**) to simulate the program in 3D.
+4. Fix what the Problems panel flags, then run **JobLine: Format G-Code** to clean up spacing and case.
 
-## Features
+![JobLine in VS Code: the program in the editor with the Play / Pause / Step buttons in the title bar, and the 3D simulation beside it](https://jobline.ai/vscode/gcode/workbench-editor-visualizer.png)
 
-### Hover explanations
+## Simulation
 
-Hover any G-code, M-code, or address word for a plain-language card: what it does, its parameters, and what to check. Drilling and motion codes include diagrams. Siemens `CYCLE` calls (for example `CYCLE83`, `CYCLE840`) show their positional parameters. **JobLine: Open Plain Language Explanation** narrates the whole program line by line.
+The visualizer draws the program's moves against the setup it will run in.
 
-![G83 peck-drilling hover card in the editor](https://raw.githubusercontent.com/WeCr8-Solutions/jobline.ai-g-code/main/images/marketplace/hover-g83.png)
+- **Toolpath:** G00 to G03 in G17, G18 and G19, G20 / G21, G90 / G91. Rapids and feeds are drawn differently, and the current line is highlighted in the editor as the tool moves.
+- **Play, pause, step and speed:** Play / Resume, Pause, Stop / Reset, Step - and Step +, at 0.25x, 0.5x, 1x, 2x or 4x. **Jump to Line** moves the simulation to a source line.
+- **The setup:** stock (box or bar), the cutting tool and holder (ISO insert-aware mill and lathe tools), fixtures and jaws. Import the finished part as **STL**, tessellated **STEP** (bundled OpenCascade), or **Fusion 360 F3D** setup data.
+- **RevPack setups:** load a RevPack (`revpack.json` with the program, target part, stock, tools and workholding) and JobLine draws it all. The UMC-750 sample uses a **LANG Makro-Grip 77** self-centering 5-axis vise on a Quick-Point plate and riser, with a 3 mm grip on a pre-stamped blank. The vise body, each jaw, the plate, the riser and the stock are separate solids. The jaws show their serrated gripping edge, and the gripped band of stock is highlighted.
+- **Per-object display:** set the stock, target, fixture / vise body, jaws, zero-point / riser, tool, holder and toolpath separately to **Solid**, **Transparent** (with an opacity slider) or **Wireframe**, or hide them. Presets: **All solid**, **Inspect part** (workholding see-through, part solid) and **Workholding only**. **Target only** and **Compare** (remaining stock vs gouge) are one click.
+- **Views:** Top, Front, Right and Iso, three more angled views, a ViewCube, orbit, pan and zoom.
 
-### Live diagnostics
+![Per-object display: the jaws in Wireframe, the vise body Transparent at 35%, the stock at 28%, the part Solid](https://jobline.ai/vscode/gcode/object-styles.png)
 
-Problems are underlined as you type and listed in the Problems panel. **JobLine: Validate Program** re-runs the checks and reports error and warning counts.
+### Collision and grip warnings that name the solid
 
-- Canned cycles missing Z depth or R plane, peck cycles (G73/G83) without Q or I/J/K, tapping cycles without F
-- Tool changes (M06) with no safe-Z retract (G28, G30, or G53 Z) before them
-- G02/G03 arcs whose endpoint does not match the center offset, in G17, G18, and G19 (tolerance set by `jobline.validation.arcTolerance`)
+With a RevPack loaded, every rapid and feed is checked against the stock and each workholding solid. A rapid into the jaw is reported as a rapid into **Makro-Grip 77 jaw +Y**, not "a collision". The jaw turns red in the view, and clicking the finding jumps to the line. JobLine also warns when a feed enters the gripped zone, when the grip is shallower than the vise maker recommends, and when a tilted tool reaches a jaw or the vise body.
+
+![The seeded test program rapids into the +Y jaw: the jaw is drawn red and the finding names it, with the line number](https://jobline.ai/vscode/gcode/jaw-collision.png)
+
+### Part to origin / Set WCS
+
+The **Origin / WCS** panel puts the work origin where the program expects it. Pick any of the 27 bounding-box points on the part or stock. Use the quick faces (Top, Bottom, Left, Right, Front, Back, Center) or a preset (Top center, Top-front-left corner). You can also pick on the part itself: a face, a bore or boss center, a bore axis to Z, a vertex or edge, a 2-point midpoint or a 3-point circle. Rotate or flip the part, enter an offset and Z rotation, center it in the stock, and undo or reset. The readout shows the offset from the part min and center, the part size, the machine G54 and the stock bounds.
+
+![The Origin / WCS panel with the work origin on the top face center of the part](https://jobline.ai/vscode/gcode/origin-wcs.png)
+
+## Code review with flags
+
+Problems are underlined on the line as you type and listed in the Problems panel. **JobLine: Validate Program** re-runs every check and reports the error and warning counts.
+
+![Flagged lines in the editor and the Problems panel for the seeded UMC-750 test program](https://jobline.ai/vscode/gcode/code-review-flags.png)
+
+**Always on:**
+
+- Canned cycles missing Z depth or R plane, peck cycles (G73 / G83) without Q or I/J/K, and tapping cycles without F
+- Tool changes (M06) with no safe-Z retract (G28, G30 or G53 Z) before them
+- G02 / G03 arcs whose endpoint does not match the center offset, in G17, G18 and G19
 - Spindle or coolant possibly left on at program end
-- Moves beyond the active machine's travel limits
+- Moves beyond the active machine preset's travel limits
+- **Tap drill check:** a tap with no matching tap drill earlier in the program, with the right size (75%, 50% or STI) from the JobLine shop reference
 - Macro expressions that cannot be resolved are tracked, never flagged as false errors
 
-### Formatter
+**With a RevPack loaded (the program checked against its machine, tools and setup):**
 
-**JobLine: Format G-Code** (or VS Code's **Format Document**) applies word spacing (`G01X1.5` to `G01 X1.5`), uppercase G/M codes, and optional fixed decimal places.
+- A tool that is not in the tool list (`T4 is called but the RevPack tool list has T1, T2, T3`)
+- A T/H mismatch (`T2 is in the spindle but the program applies H1`), or no length offset after a tool change
+- Spindle speed over the machine or tool limit, a feed with the spindle off, or a feed move without F
+- Rotary or linear over-travel (`B goes to -40°; Haas UMC-750 allows -35° to 120°`)
+- A work offset the setup does not define, or a move before any work offset
+- Codes from the wrong control (a dialect mismatch) and simultaneous 5-axis moves without TCPC
+- Rapids into the stock, the jaws or the vise body, and grip-zone and grip-depth warnings
+
+**Hover explanations:** hover any G-code, M-code or address word for a plain-language card covering what it does, its parameters and what to check. Drilling and motion codes include diagrams, and Siemens `CYCLE` calls show their parameters. **JobLine: Open Plain Language Explanation** narrates the whole program line by line.
+
+![G83 peck-drilling hover card in the editor](https://jobline.ai/vscode/gcode/hover-g83.png)
+
+**Formatter:** **JobLine: Format G-Code** (or **Format Document**) adds word spacing (`G01X1.5` becomes `G01 X1.5`), uppercases G/M codes and can apply fixed decimal places.
+
+## Toolbar and simulation controls
+
+![Labeled: the editor title-bar buttons and the visualizer's simulation, view, display and Origin / WCS controls](https://jobline.ai/vscode/gcode/toolbar.png)
+
+**Editor title bar** (with an NC program open):
+
+| Button | What it does |
+| --- | --- |
+| Eye: **Show Toolpath Visualizer** | Opens the 3D simulation beside the editor |
+| **G-Code: Play** / **Pause** | Starts and pauses the simulation |
+| **G-Code: Step Back** / **Step Forward** | Moves the simulation one move at a time |
+| **G-Code: Jump to Line** | Asks for a source line number and moves the simulation there |
+| Tools icon: **Open Tool Preview** | Shows the active tool and holder |
+| **Open Simulation** / **Open Simulation Full Window** | Opens the visualizer beside the editor, or in the editor's own column |
+
+**Visualizer panel:**
+
+| Control | What it does |
+| --- | --- |
+| **Play / Resume**, **Pause**, **Stop / Reset**, **Step -**, **Step +** | Playback. Stop / Reset returns to the start (also **G-Code: Stop** in the Command Palette) |
+| **0.25x 0.5x 1x 2x 4x** | Simulation speed |
+| **Solid**, **Wireframe**, **Target only**, **Compare** | Whole-scene display modes |
+| **All solid**, **Inspect part**, **Workholding only** | Per-object display presets |
+| **View** panel | Each object Solid / Transparent / Wireframe, with opacity and visibility |
+| **Top Front Right Iso XYZ ZYX YZX** and the ViewCube | Camera views |
+| **Origin / WCS · Part to origin** | Box points, quick faces, presets, picks, rotate / flip, offset, center in stock, undo and reset |
+
+**Command Palette:** **JobLine: Validate Program** (re-check and count findings), **JobLine: Format G-Code**, **JobLine: Load RevPack…**, **JobLine: Part to Origin / Set WCS**, and the full list under [Commands](#commands).
+
+## Features
 
 ### Program sidebar
 
@@ -60,17 +126,6 @@ Previous / next buttons step through operations, tools, cycles, probes, macros, 
 ### Toolbox
 
 Insert, remove, or renumber N-lines; strip comments; uppercase G/M codes; add or remove block skip (`/`); remove dwells; scale or clamp feeds and scale spindle speeds; shift X, Y, or Z; add a safety header, program end (M30 + %), safe-Z before tool changes, coolant on/off, or blank lines between operations; find the next tool change or canned cycle.
-
-### 3D toolpath visualizer
-
-![Toolpath, stock, and playback controls in the visualizer](https://raw.githubusercontent.com/WeCr8-Solutions/jobline.ai-g-code/main/images/marketplace/toolpath.png)
-
-- Linear and circular moves (G00 to G03) in G17, G18, and G19, G20/G21 units, G90/G91 coordinates; rapids and feeds drawn differently
-- Play, pause, step, seek, speed control (0.25x to 4x), and jump to the highlighted source line
-- Stock (box or cylinder), cutting tool and holder (ISO insert-aware mill and lathe tools), fixtures and jaws
-- Import target models: **STL**, tessellated **STEP** (bundled OpenCascade runtime), and **Fusion 360 F3D** setup metadata (stock, model dimensions, G54)
-- Seven camera presets and a ViewCube, per-layer visibility, opacity, and color
-- Program review panel with setup findings, including the tap drill check
 
 ### Tap drill check
 
@@ -277,7 +332,7 @@ Opened as G-code automatically: `.nc .gcode .ngc .tap .cnc .g .min .prg .mpf .sp
 ## Known issues
 
 - **Robot programs are basic.** Fanuc TP and ABB RAPID files get a language mode, highlighting from the shared G-code grammar, and control/preset checks. Hover cards, diagnostics, the sidebar, and the visualizer are built for G-code and do not model robot instructions or kinematics yet.
-- **Playback is step-based.** Smooth time-based G00/G01 interpolation is not done yet, and the visualizer draws the path; it does not simulate material removal. It is a review aid, not collision certification.
+- **Playback is step-based.** Smooth time-based G00/G01 interpolation is not done yet. Material removal is computed only for RevPack setups the shared kernel cuts (the Compare view). Collision and grip checks run against the RevPack's envelope solids; the jaw teeth, spindle and counterbores are drawn for recognition only. It is a review aid, not collision certification.
 - Reported visual bugs still open: cutting color can stay green during air rapids, and tool size may not reset when switching between large and small programs.
 - N-numbers are not maintained automatically while you type. Use the Toolbox insert / remove / renumber commands.
 - Dialect coverage varies. Controller-specific cycles, macro and subprogram execution, and rotary motion need broader coverage; generic ISO tests do not certify every control.
@@ -288,7 +343,7 @@ Opened as G-code automatically: `.nc .gcode .ngc .tap .cnc .g .min .prg .mpf .sp
 
 ## Roadmap
 
-Shipped so far: diagnostics and Validate Program (0.2), formatter (0.3), M98 subprogram navigation, the 3D visualizer with STL / STEP / Fusion imports, the Toolbox, probing and macro views, machine presets, and tap drill checks.
+Shipped so far: diagnostics and Validate Program (0.2), formatter (0.3), M98 subprogram navigation, the 3D visualizer with STL / STEP / Fusion imports, the Toolbox, probing and macro views, machine presets, tap drill checks (0.3.13), and RevPack setups with the Makro-Grip vise, per-object display, named collision / grip warnings and Part to origin / Set WCS (0.3.14).
 
 Next:
 

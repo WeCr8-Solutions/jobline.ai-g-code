@@ -13,6 +13,8 @@ const debugPort = 9333;
 // the DevTools protocol once the window is up.
 const windowWidth = Number(process.env.JOBLINE_VISUAL_WIDTH || 1600);
 const windowHeight = Number(process.env.JOBLINE_VISUAL_HEIGHT || 1000);
+// Device pixel ratio for the captures (2 gives retina-sharp listing images).
+const windowScale = Number(process.env.JOBLINE_VISUAL_SCALE || 1);
 // expectedPoints pins each case to its OWN program. The panel is reused across
 // cases, and the probe used to read whatever was still on screen: case 2
 // reported case 1's 195 points and case 3 reported case 2's 17, so only the
@@ -374,6 +376,59 @@ if (fs.existsSync(revgripsProgram) && fs.existsSync(revgripsTarget)) {
   });
 }
 
+// Marketplace / jobline.ai listing captures (JOBLINE_VISUAL_MARKETPLACE=1):
+// the real sample programs on the UMC-750 Makro-Grip pack, framed for the
+// listing. They run through the same RevPack / origin checks as every other
+// case, so a listing image is never of a scene the tests did not verify.
+const MKT_STYLES = [
+  { type: 'setObjectStyle', object: 'stock', mode: 'transparent', opacity: 0.28 },
+  { type: 'setObjectStyle', object: 'target', mode: 'solid', opacity: 1 },
+  { type: 'setObjectStyle', object: 'jaws', mode: 'solid', opacity: 1 },
+  { type: 'setObjectStyle', object: 'fixture', mode: 'solid', opacity: 1 },
+  { type: 'setObjectStyle', object: 'zeroPoint', mode: 'solid', opacity: 1 },
+  { type: 'setObjectStyle', object: 'holder', mode: 'transparent', opacity: 0.22 },
+];
+const panels = (revpack, view, review) => [
+  { type: 'setPanelOpen', id: 'revpack-panel', open: revpack },
+  { type: 'setPanelOpen', id: 'view-panel', open: view },
+  { type: 'setPanelOpen', id: 'review-panel', open: review },
+];
+const MKT_VIEW = [{ type: 'setPresetView', view: 'xyz' }, { type: 'orbitBy', dTheta: 0.35, dPhi: 0.2 }];
+const mktCase = (rp, id, controls, extra, areas) => {
+  const c = revpackCase(rp, 'solid', { id, controls, ...extra });
+  c.id = id;
+  c.captureAreas = areas;
+  c.marketplace = true;
+  return c;
+};
+const mktCases = [
+  // (a) Hero: vise body, both serrated jaws, the gripped stock see-through,
+  // the finished part solid gold, the toolpath and the tool.
+  mktCase(revpackCases[0], 'mkt-hero', [...MKT_STYLES, { type: 'setLayerVisible', layer: 'toolHolder', visible: false }, ...panels(true, false, true), ...MKT_VIEW, { type: 'zoomBy', factor: 1.5 }, { type: 'panBy', dy: -0.09 }],
+    { objectModes: { stock: 'transparent', target: 'solid', jaws: 'solid', fixture: 'solid', zeroPoint: 'solid' } }, ['visualizer', 'workbench']),
+  // (b) Per-object Solid / Transparent / Wireframe in the View panel.
+  mktCase(revpackCases[0], 'mkt-object-styles', [...MKT_STYLES, { type: 'setObjectStyle', object: 'jaws', mode: 'wireframe' }, { type: 'setObjectStyle', object: 'fixture', mode: 'transparent', opacity: 0.35 }, ...panels(false, true, false), ...MKT_VIEW, { type: 'zoomBy', factor: 1.4 }, { type: 'panBy', dy: -0.08 }],
+    { objectModes: { jaws: 'wireframe', fixture: 'transparent', stock: 'transparent' } }, ['visualizer']),
+  // (c) The seeded rapid into the +Y jaw: the jaw drawn red and the finding naming it.
+  mktCase(revpackCases[1], 'mkt-jaw-collision', [...MKT_STYLES, { type: 'setObjectStyle', object: 'tool', mode: 'transparent', opacity: 0.35 }, { type: 'setLayerVisible', layer: 'toolHolder', visible: false }, ...panels(true, false, false), ...MKT_VIEW, { type: 'zoomBy', factor: 1.4 }, { type: 'panBy', dy: -0.08 }],
+    { objectModes: { jaws: 'solid', stock: 'transparent' }, jawHit: true }, ['visualizer']),
+  // Code review: the flagged lines in the editor and the Problems panel.
+  mktCase(revpackCases[1], 'mkt-review', [...MKT_STYLES, { type: 'setLayerVisible', layer: 'toolHolder', visible: false }, ...panels(true, false, true), ...MKT_VIEW],
+    { objectModes: { jaws: 'solid' }, jawHit: true }, ['workbench']),
+];
+mktCases.find(c => c.id === 'mkt-review').revpack.showProblems = true;
+mktCases.find(c => c.id === 'mkt-jaw-collision').revpack.showProblems = false;
+{
+  // (d) Origin / WCS panel after "Top center".
+  const umc = visualCases.find(item => item.id === 'origin-umc750-top-center');
+  if (umc) mktCases.push({ ...umc, id: 'mkt-origin', controls: [...umc.controls, ...panels(false, false, false)], captureAreas: ['visualizer'], marketplace: true });
+}
+// The review case opens the Problems panel, so it runs last.
+mktCases.push(mktCases.splice(mktCases.findIndex(c => c.id === 'mkt-review'), 1)[0]);
+if (process.env.JOBLINE_VISUAL_MARKETPLACE) {
+  visualCases.splice(0, visualCases.length, ...mktCases);
+}
+
 if (process.env.JOBLINE_VISUAL_REVPACK_ONLY) {
   visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.revpack || item.origin || (process.env.JOBLINE_VISUAL_AR4 !== '0' && item.ar4)));
 }
@@ -560,8 +615,8 @@ async function forceWindowSize() {
   });
   const inner = await call('Runtime.evaluate', { returnByValue: true, expression: '[window.innerWidth, window.innerHeight]' });
   const [w, h] = inner?.result?.value || [0, 0];
-  if (w < windowWidth || h < windowHeight) {
-    await call('Emulation.setDeviceMetricsOverride', { width: windowWidth, height: windowHeight, deviceScaleFactor: 1, mobile: false });
+  if (w < windowWidth || h < windowHeight || windowScale !== 1) {
+    await call('Emulation.setDeviceMetricsOverride', { width: windowWidth, height: windowHeight, deviceScaleFactor: windowScale, mobile: false });
     console.log(`Workbench was ${w}x${h}; emulating ${windowWidth}x${windowHeight} for the captures.`);
   } else {
     sizeSession.close();
@@ -630,11 +685,31 @@ async function main() {
     process.exit(1);
   });
   const userDataDir = path.join(artifactDir, `vscode-profile-${process.pid}`);
+  if (process.env.JOBLINE_VISUAL_MARKETPLACE) {
+    // A clean listing look: Dark Modern, a readable editor font, a title that
+    // shows only the file (no folder, user or [Administrator]), no minimap.
+    fs.mkdirSync(path.join(userDataDir, 'User'), { recursive: true });
+    fs.writeFileSync(path.join(userDataDir, 'User', 'settings.json'), JSON.stringify({
+      'workbench.colorTheme': 'Default Dark Modern',
+      'editor.fontSize': 15,
+      'editor.lineHeight': 22,
+      'editor.minimap.enabled': false,
+      'window.title': '${activeEditorShort} - JobLine G-Code Intelligence',
+      'window.commandCenter': false,
+      'workbench.startupEditor': 'none',
+      'workbench.tips.enabled': false,
+      'git.enabled': false,
+      'scm.diffDecorations': 'none',
+      'chat.commandCenter.enabled': false,
+      'workbench.statusBar.visible': true,
+      'telemetry.telemetryLevel': 'off',
+    }, null, 2));
+  }
   const tests = runTests({
     version: process.env.JOBLINE_VSCODE_TEST_VERSION || '1.96.4',
     extensionDevelopmentPath: process.env.JOBLINE_EXTENSION_UNDER_TEST || root,
     extensionTestsPath: path.join(root, 'test', 'visual', 'runTest.js'),
-    launchArgs: [root, '--new-window', '--disable-updates', '--skip-welcome', '--skip-release-notes', `--window-size=${windowWidth},${windowHeight}`, '--use-gl=swiftshader', '--enable-unsafe-swiftshader', `--user-data-dir=${userDataDir}`, `--remote-debugging-port=${debugPort}`],
+    launchArgs: [...(windowScale !== 1 ? [`--force-device-scale-factor=${windowScale}`] : []), root, '--new-window', '--disable-updates', '--skip-welcome', '--skip-release-notes', `--window-size=${windowWidth},${windowHeight}`, '--use-gl=swiftshader', '--enable-unsafe-swiftshader', `--user-data-dir=${userDataDir}`, `--remote-debugging-port=${debugPort}`],
     extensionTestsEnv: {
       JOBLINE_VISUAL_ARTIFACT_DIR: artifactDir,
       JOBLINE_VISUAL_CASES: JSON.stringify(visualCases),

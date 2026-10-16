@@ -10,6 +10,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.3.14] - 2026-10-15
 
+### Visualizer and listing
+
+- Vise detail: each RevPack jaw now shows its serrated gripping edge (6 mm pitch) and jaw screws, the vise body its guide rib, centre spindle and spindle ends, and the zero-point plate its counterbores. Display only: the collision and grip checks still use the kernel's envelope solids, so CAM and the hub stay byte-identical. Jaws are bright steel and the body darker; the riser no longer z-fights the plate.
+- Fix: the View panel stacks between the playback and RevPack panels instead of sliding under the playback controls (it was fixed at 112 px from the bottom). A benign ResizeObserver notice no longer shows the "could not start" banner.
+- New webview controls for tests and captures: `setPanelOpen`, `zoomBy`, `panBy`.
+- Marketplace README: rewritten for 0.3.14, led by Simulation, Code review with flags, and Toolbar and simulation controls. New screenshots captured from the Extension Development Host (`JOBLINE_VISUAL_MARKETPLACE=1`, 2x). Images are served from jobline.ai, not raw.githubusercontent.com.
+
 ### RevPacks
 
 - New: RevPack v2 setups. A program is checked against its pack (travel, rapids into stock or workholding, offsets, tools and gauge lengths, spindle limits, TCPC/DWO) and drawn from it: auto-detected `revpack.json` beside a program, **JobLine: Load RevPack...** / **Clear RevPack**, stock, every workholding solid, tools at gauge length and the in-process stock from the shared kernel, correlation findings as diagnostics with click-to-line.

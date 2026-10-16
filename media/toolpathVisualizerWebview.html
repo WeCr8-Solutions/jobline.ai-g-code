@@ -565,6 +565,8 @@
 
     // Catch module-level errors (e.g. import rejected, three.min.js corrupted)
     window.addEventListener('error', function (ev) {
+      // Chromium's benign layout notice, not a failure of the renderer.
+      if (/ResizeObserver loop/.test(String(ev.message || ''))) return;
       const banner = document.getElementById('three-error');
       const detail = document.getElementById('three-error-detail');
       if (banner) banner.style.display = 'block';
@@ -688,9 +690,9 @@
     // as wireframe. Remembered for the session (webview state).
     const OBJECT_KEYS = ['stock', 'target', 'fixture', 'jaws', 'zeroPoint', 'tool', 'holder', 'toolpath'];
     const OBJECT_LABELS = { stock: 'Stock', target: 'Target', fixture: 'Fixture / vise body', jaws: 'Jaws', zeroPoint: 'Zero-point / riser', tool: 'Tool', holder: 'Holder', toolpath: 'Toolpath' };
-    // Hardened jaws grey-blue, the vise body darker, the zero-point stack
+    // Hardened jaws bright steel, the vise body dark, the zero-point stack
     // between; the gripped stock region is the one magenta solid.
-    const OBJECT_COLORS = { stock: '#58a6ff', target: '#ffb000', fixture: '#4a5363', jaws: '#7f97b8', zeroPoint: '#606b7b', tool: '#b8c4d2', holder: '#c9d1d9', toolpath: '#66bb6a', grip: '#e05cff' };
+    const OBJECT_COLORS = { stock: '#58a6ff', target: '#ffb000', fixture: '#4b5768', jaws: '#b3c0d1', zeroPoint: '#667386', tool: '#b8c4d2', holder: '#c9d1d9', toolpath: '#66bb6a', grip: '#e05cff' };
     const DEFAULT_OBJECT_STYLES = {
       stock: { visible: true, mode: 'transparent', opacity: 0.5 },
       target: { visible: true, mode: 'solid', opacity: 1 },
@@ -1183,6 +1185,118 @@
     // default - 'none' - so nothing appears until a setup is actually declared.
     let workCfg = { mode: 'none', jawHeight: 1.0, jawThickness: 0.75, gripDepth: 0.5, color: '#c0704f' };
 
+    // -----------------------------------------------------------------------
+    // Workholding detail (display only)
+    // -----------------------------------------------------------------------
+    // The shared kernel models each workholding solid as its envelope box,
+    // which is what the collision and grip checks use and what CAM and the hub
+    // draw byte-for-byte. On screen a plain box does not read as a vise, so the
+    // viewer adds what a machinist recognises on top of the envelope: the
+    // serrated gripping teeth along each jaw's inner edge and the jaw screws,
+    // the vise body's centre spindle, guide rib and spindle ends, and the
+    // zero-point plate's mounting counterbores. These meshes are cosmetic -
+    // they never enter a check - and they inherit the object's style
+    // (Solid / Transparent / Wireframe) through the same traversal.
+    const WH_DETAIL = { toothPitchMm: 6, toothHeightMm: 1.2, screwDiaMm: 10 };
+    function whDetailMesh(geo, color, name) {
+      const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color, side: THREE.DoubleSide, shininess: 55 }));
+      // Ends in ' body' so the Wireframe style hides the fill and shows the edges, like a kernel solid.
+      mesh.name = name + ' detail body';
+      const lines = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 25), new THREE.LineBasicMaterial({ color: new THREE.Color(color).offsetHSL(0, 0, 0.18), opacity: 0.95, transparent: true }));
+      lines.name = name + ' detail edges';
+      const g = new THREE.Group();
+      g.name = name + ' detail';
+      g.userData.detail = true;
+      g.add(mesh, lines);
+      return g;
+    }
+    /** A detail box from G-code min / max corners. */
+    function whBox(x0, y0, z0, x1, y1, z1, color, name) {
+      const g = whDetailMesh(new THREE.BoxGeometry(Math.max(x1 - x0, 1e-4), Math.max(z1 - z0, 1e-4), Math.max(y1 - y0, 1e-4)), color, name);
+      g.position.copy(gc3((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2));
+      return g;
+    }
+    /** A cylinder whose axis is G-code 'x', 'y' or 'z', centred on (x, y, z). */
+    function whCyl(axis, x, y, z, r, len, color, name, segments) {
+      const g = whDetailMesh(new THREE.CylinderGeometry(r, r, len, segments || 24), color, name);
+      g.position.copy(gc3(x, y, z));
+      // CylinderGeometry stands on Three Y, which is G-code Z.
+      if (axis === 'x') g.rotation.z = Math.PI / 2;
+      else if (axis === 'y') g.rotation.x = Math.PI / 2;
+      return g;
+    }
+    /**
+     * Detail meshes for one workholding solid, from its kernel bounds and role.
+     * Returns the meshes added (for the probe and the tests).
+     */
+    function addWorkholdingDetail(solid, item, color) {
+      const b = wireBounds(item.mesh?.positions || item.positions);
+      if (!b) return 0;
+      const [x0, y0, z0] = b.min, [x1, y1, z1] = b.max;
+      const mm = packScene && packScene.units === 'mm' ? 1 : 1 / 25.4;
+      const role = item.role || '';
+      const dark = new THREE.Color(color).offsetHSL(0, 0, -0.16).getHex();
+      const bright = new THREE.Color(color).offsetHSL(0, 0, 0.1).getHex();
+      const parts = [];
+      if (/jaw/.test(role) && role !== 'chuck-jaw') {
+        // The jaw closes across its thinner horizontal side; its gripping face
+        // is the one nearer the part centre (X0 Y0).
+        const alongX = (x1 - x0) >= (y1 - y0);
+        const pitch = WH_DETAIL.toothPitchMm * mm, th = WH_DETAIL.toothHeightMm * mm;
+        const depth = Math.min(alongX ? (y1 - y0) : (x1 - x0), 4 * mm);
+        if (alongX) {
+          const inner = Math.abs(y0) < Math.abs(y1) ? y0 : y1;
+          const dir = inner === y0 ? 1 : -1;  // into the jaw
+          const count = Math.max(2, Math.floor((x1 - x0) / pitch));
+          const start = (x0 + x1) / 2 - ((count - 1) * pitch) / 2;
+          for (let i = 0; i < count; i++) {
+            const cx = start + i * pitch;
+            // A triangular ridge (three-sided prism) across the gripping edge.
+            const t = whCyl('y', cx, inner + dir * depth / 2, z1 + th * 0.35, th, depth, bright, `${item.name} tooth ${i + 1}`, 3);
+            parts.push(t);
+          }
+          // Two jaw screws on top, toward the outer face.
+          const outer = inner === y0 ? y1 : y0;
+          const sy = outer - dir * Math.min((y1 - y0) * 0.35, 4 * mm);
+          for (const fx of [0.28, 0.72]) parts.push(whCyl('z', x0 + (x1 - x0) * fx, sy, z1 + 0.15 * mm, WH_DETAIL.screwDiaMm * mm / 2, 0.6 * mm, dark, `${item.name} screw`, 20));
+        } else {
+          const inner = Math.abs(x0) < Math.abs(x1) ? x0 : x1;
+          const dir = inner === x0 ? 1 : -1;
+          const count = Math.max(2, Math.floor((y1 - y0) / pitch));
+          const start = (y0 + y1) / 2 - ((count - 1) * pitch) / 2;
+          for (let i = 0; i < count; i++) parts.push(whCyl('x', inner + dir * depth / 2, start + i * pitch, z1 + th * 0.35, th, depth, bright, `${item.name} tooth ${i + 1}`, 3));
+          const outer = inner === x0 ? x1 : x0;
+          const sx = outer - dir * Math.min((x1 - x0) * 0.35, 4 * mm);
+          for (const fy of [0.28, 0.72]) parts.push(whCyl('z', sx, y0 + (y1 - y0) * fy, z1 + 0.15 * mm, WH_DETAIL.screwDiaMm * mm / 2, 0.6 * mm, dark, `${item.name} screw`, 20));
+        }
+      } else if (role === 'vise-body') {
+        // Centre guide rib and the clamping spindle along the long (clamp) axis,
+        // with the spindle's hex ends proud of both end faces.
+        const alongY = (y1 - y0) >= (x1 - x0);
+        const w = Math.min(x1 - x0, y1 - y0);
+        const rib = w * 0.22, ribH = 2 * mm, r = Math.min(w * 0.09, 7 * mm);
+        const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+        if (alongY) {
+          parts.push(whBox(cx - rib / 2, y0, z1, cx + rib / 2, y1, z1 + ribH, bright, `${item.name} guide rib`));
+          parts.push(whCyl('y', cx, cy, z1 + ribH + r * 0.6, r * 0.6, (y1 - y0) * 0.5, dark, `${item.name} centre spindle`, 20));
+          for (const e of [y0, y1]) parts.push(whCyl('y', cx, e + (e === y0 ? -1 : 1) * 2 * mm, (z0 + z1) / 2, r, 4 * mm, dark, `${item.name} spindle end`, 6));
+        } else {
+          parts.push(whBox(x0, cy - rib / 2, z1, x1, cy + rib / 2, z1 + ribH, bright, `${item.name} guide rib`));
+          parts.push(whCyl('x', cx, cy, z1 + ribH + r * 0.6, r * 0.6, (x1 - x0) * 0.5, dark, `${item.name} centre spindle`, 20));
+          for (const e of [x0, x1]) parts.push(whCyl('x', e + (e === x0 ? -1 : 1) * 2 * mm, cy, (z0 + z1) / 2, r, 4 * mm, dark, `${item.name} spindle end`, 6));
+        }
+      } else if (role === 'zero-point') {
+        // Mounting counterbores near the corners of the plate.
+        const inset = Math.min(x1 - x0, y1 - y0) * 0.1;
+        for (const [px, py] of [[x0 + inset, y0 + inset], [x1 - inset, y0 + inset], [x0 + inset, y1 - inset], [x1 - inset, y1 - inset]]) {
+          parts.push(whCyl('z', px, py, z1 + 0.1 * mm, 6 * mm, 0.4 * mm, dark, `${item.name} counterbore`, 24));
+        }
+      }
+      for (const p of parts) solid.add(p);
+      solid.userData.detailCount = parts.length;
+      return parts.length;
+    }
+
     /** Every RevPack workholding solid, from the shared kernel (part coords). */
     function buildPackWorkholding() {
       // Steel grey for a RevPack's fixture, so the gold target is the only
@@ -1201,6 +1315,18 @@
           solid.userData.obj = obj;
           solid.userData.role = item.role || '';
           solid.userData.hit = hit;
+          addWorkholdingDetail(solid, item, '#' + shade.getHexString());
+          if (item.role === 'riser') {
+            // The riser shares the zero-point plate's footprint, so their side
+            // faces are coplanar and z-fight into stair-steps. Draw it a hair
+            // narrower about its own centre (display only).
+            const rb = wireBounds(item.positions);
+            if (rb) {
+              const k = 0.996, c = gc3((rb.min[0] + rb.max[0]) / 2, (rb.min[1] + rb.max[1]) / 2, 0);
+              solid.scale.set(k, 1, k);
+              solid.position.set(c.x * (1 - k), 0, c.z * (1 - k));
+            }
+          }
           group.add(solid);
         });
         setLayer('workholding', group);
@@ -1948,6 +2074,15 @@
         orbitTarget.z + orbitRadius * sinP * cosT
       );
       camera.lookAt(orbitTarget);
+      // Depth range follows the view distance. A fixed 0.0001..1e6 range
+      // (10 orders of magnitude) left too little depth precision: coplanar
+      // and nearby faces z-fought into stair-steps and solid workholding
+      // looked see-through. Keep about 1e5 between near and far.
+      const near = Math.max(1e-4, orbitRadius / 2000);
+      const far = Math.max(near * 1e5, orbitRadius * 50);
+      if (Math.abs(camera.near - near) > near * 0.01 || Math.abs(camera.far - far) > far * 0.01) {
+        camera.near = near; camera.far = far; camera.updateProjectionMatrix();
+      }
     }
     function setPresetView(name) {
       const n = String(name || 'iso');
@@ -2345,7 +2480,33 @@
     // -----------------------------------------------------------------------
     // Resize
     // -----------------------------------------------------------------------
+    // The View panel stacks above the playback panel and below the RevPack
+    // panel. Both of those change height (layer presets, a long findings list,
+    // collapsing), and a fixed bottom: 112px let the View panel slide under
+    // the playback controls and over the RevPack badge. Re-stack whenever any
+    // of the three changes size.
+    function layoutSidePanels() {
+      const view = document.getElementById('view-panel');
+      const play = document.getElementById('playback-panel');
+      const rp = document.getElementById('revpack-panel');
+      if (!view || !play) return;
+      const bottom = Math.round(play.getBoundingClientRect().height + 16);
+      view.style.bottom = bottom + 'px';
+      const rpShown = rp && getComputedStyle(rp).display !== 'none';
+      const top = rpShown ? Math.round(rp.getBoundingClientRect().bottom + 8) : 64;
+      view.style.maxHeight = Math.max(120, window.innerHeight - bottom - top) + 'px';
+    }
+    if (typeof ResizeObserver === 'function') {
+      // Observes only the two panels it stacks against (never the View panel
+      // it resizes), and lays out on the next frame, so it cannot loop.
+      let pending = 0;
+      const ro = new ResizeObserver(() => { if (!pending) pending = requestAnimationFrame(() => { pending = 0; layoutSidePanels(); }); });
+      for (const id of ['playback-panel', 'revpack-panel']) { const el = document.getElementById(id); if (el) ro.observe(el); }
+    }
+    for (const id of ['revpack-panel', 'view-panel']) document.getElementById(id)?.addEventListener('toggle', layoutSidePanels);
+    layoutSidePanels();
     window.addEventListener('resize', () => {
+      layoutSidePanels();
       const w = container.clientWidth, h = container.clientHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
@@ -2504,6 +2665,7 @@
             })(),
             gripShown: !!packScene?.grip,
             hitSolids: (layerMeshes.workholding?.children || []).filter(child => child.userData.hit).map(child => child.name),
+            workholdingDetail: Object.fromEntries((layerMeshes.workholding?.children || []).map(child => [child.name, child.userData.detailCount || 0])),
             packSetup: packScene?.setup || null,
             placement: originProbe(),
           });
@@ -3309,6 +3471,25 @@
           orbitTheta += Number(msg.dTheta) || 0;
           orbitPhi = Math.max(0.05, Math.min(Math.PI - 0.05, orbitPhi + (Number(msg.dPhi) || 0)));
           updateCameraOrbit();
+          break;
+        }
+        case 'setPanelOpen': {
+          // Open or close one of the overlay panels (View, Program review,
+          // RevPack info), so a capture or a test sees the panel as a user would.
+          const panel = document.getElementById(String(msg.id || ''));
+          if (panel && panel.tagName === 'DETAILS') panel.open = msg.open !== false;
+          break;
+        }
+        case 'panBy': {
+          // Move the orbit centre up / down by a fraction of the view distance.
+          const dy = Number(msg.dy) || 0;
+          if (Math.abs(dy) < 2) { orbitTarget.y += dy * orbitRadius; userMovedCamera = true; updateCameraOrbit(); }
+          break;
+        }
+        case 'zoomBy': {
+          // Scale the orbit distance (< 1 moves in), the same as the wheel.
+          const f = Number(msg.factor);
+          if (f > 0.05 && f < 20) { orbitRadius *= f; userMovedCamera = true; updateCameraOrbit(); }
           break;
         }
         case 'setPresetView': {
