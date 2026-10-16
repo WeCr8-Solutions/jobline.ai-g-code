@@ -11,8 +11,8 @@ A VS Code extension: it runs inside the editor on your own computer and needs no
 | Memory | 1 GB for VS Code itself<sup>*</sup>\*. STEP import adds the OpenCascade WASM heap: 28.6 MB at start, grows on demand up to 2 GB<sup>†</sup> |
 | Graphics | WebGL 2 with hardware acceleration enabled in VS Code (3D toolpath visualizer and tool preview use three.js r183)<sup>‡</sup> |
 | Storage | VS Code: under 500 MB on disk<sup>*</sup>\*. Largest extension component: OpenCascade kernel `occt-import-js.wasm`, 7.6 MB |
-| Network | None required. Optional links (Marketplace review, G-Code Academy) open only when selected. In draft PR #9: CAM output-folder watching reads only the local or network folders you add (`jobline.cam.watchFolders`); nothing is uploaded |
-| Ports / devices | None. In draft PR #9 the CAM integrations are file-based: no connection to ESPRIT, Mastercam, Fusion or another CAM session, and no vendor SDK or CAM licence is needed |
+| Network | None required. Optional links (Marketplace review, G-Code Academy) open only when selected. Since 0.3.14: CAM output-folder watching reads only the local or network folders you add (`jobline.cam.watchFolders`); nothing is uploaded |
+| Ports / devices | None. Since 0.3.14 the CAM integrations are file-based: no connection to ESPRIT, Mastercam, Fusion or another CAM session, and no vendor SDK or CAM licence is needed |
 
 | Operating System Requirements |
 |---|
@@ -34,7 +34,7 @@ A VS Code extension: it runs inside the editor on your own computer and needs no
 |---|---|
 | Node.js / npm | Node.js 22 (CI `quality.yml`); QA container uses `node:20-slim`; last local check on Node 24.14.0 |
 | Build | TypeScript 5.3+, `npm run compile`; packaging with `@vscode/vsce` 2.22 |
-| Tests | Mocha + `@vscode/test-electron` (downloads a VS Code build); Playwright 1.63 for visual e2e (downloads Chromium). In draft PR #9: `test:tool-library`, `test:cam-integrations`, `test:control-rules`, `test:dialect-convert` (Node test runner, no downloads), included in `test:all` |
+| Tests | Mocha + `@vscode/test-electron` (downloads a VS Code build); Playwright 1.63 for visual e2e (downloads Chromium). Since 0.3.14: `test:tool-library`, `test:cam-integrations`, `test:control-rules`, `test:dialect-convert` (Node test runner, no downloads), included in `test:all` |
 | Optional | Docker for `docker-compose.qa.yml`; Ollama on the host for the agent QA loop |
 
 ### Notes
