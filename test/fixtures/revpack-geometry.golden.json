@@ -1,0 +1,4064 @@
+{
+  "haas-umc750-5axis": {
+    "packId": "haas-umc750-bracket",
+    "correlation": {
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 0,
+        "pass": true
+      },
+      "findings": [],
+      "toolsUsed": [
+        1,
+        2,
+        3
+      ],
+      "workOffsetsUsed": [
+        "G54"
+      ],
+      "segments": 45,
+      "machineExtents": {
+        "B": {
+          "min": 0,
+          "max": 90
+        },
+        "C": {
+          "min": 0,
+          "max": 30
+        },
+        "X": {
+          "min": -17.1,
+          "max": -12.75
+        },
+        "Y": {
+          "min": -11.03,
+          "max": -8.2391
+        },
+        "Z": {
+          "min": -15,
+          "max": 0
+        }
+      }
+    },
+    "geometry": {
+      "version": "1.2",
+      "packId": "haas-umc750-bracket",
+      "units": "in",
+      "target": {
+        "triangles": 2832,
+        "edges": 569,
+        "min": [
+          -1.5,
+          -1,
+          -1.5
+        ],
+        "max": [
+          1.5,
+          1,
+          -0.05
+        ],
+        "volume": 8.5143
+      },
+      "stock": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -1.5,
+          -1,
+          -1.65
+        ],
+        "max": [
+          1.5,
+          1,
+          0
+        ],
+        "volume": 9.9
+      },
+      "workholding": [
+        {
+          "name": "Quick-Point 52 single plate 150x116x27 (zero-point)",
+          "role": "zero-point",
+          "object": "zeroPoint",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -2.2835,
+            -2.9528,
+            -5.0358
+          ],
+          "max": [
+            2.2835,
+            2.9528,
+            -3.9728
+          ],
+          "volume": 28.67
+        },
+        {
+          "name": "Riser to the C-table (modelled)",
+          "role": "riser",
+          "object": "zeroPoint",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -2.2835,
+            -2.9528,
+            -5.5
+          ],
+          "max": [
+            2.2835,
+            2.9528,
+            -5.0358
+          ],
+          "volume": 12.5199
+        },
+        {
+          "name": "Makro-Grip 77 base body 130x77x38",
+          "role": "vise-body",
+          "object": "fixture",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            -2.5591,
+            -3.9728
+          ],
+          "max": [
+            1.5157,
+            2.5591,
+            -2.4767
+          ],
+          "volume": 23.2125
+        },
+        {
+          "name": "Makro-Grip 77 jaw +Y (moves, serrated)",
+          "role": "moving-jaw",
+          "object": "jaws",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            1,
+            -2.4767
+          ],
+          "max": [
+            1.5157,
+            1.4724,
+            -1.5319
+          ],
+          "volume": 1.353
+        },
+        {
+          "name": "Makro-Grip 77 jaw -Y (moves, serrated)",
+          "role": "moving-jaw",
+          "object": "jaws",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            -1.4724,
+            -2.4767
+          ],
+          "max": [
+            1.5157,
+            -1,
+            -1.5319
+          ],
+          "volume": 1.353
+        }
+      ],
+      "grip": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -1.5,
+          -1,
+          -1.65
+        ],
+        "max": [
+          1.5,
+          1,
+          -1.5319
+        ],
+        "volume": 0.7086
+      },
+      "tools": [
+        {
+          "t": 1,
+          "kind": "mill",
+          "gaugeLength": 4.25,
+          "stickOut": 2,
+          "cutter": {
+            "triangles": 128,
+            "edges": 68,
+            "min": [
+              -0.25,
+              -0.25,
+              0
+            ],
+            "max": [
+              0.25,
+              0.25,
+              2
+            ],
+            "volume": 0.3902
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              2
+            ],
+            "max": [
+              0.625,
+              0.625,
+              4.25
+            ],
+            "volume": 2.4106
+          }
+        },
+        {
+          "t": 2,
+          "kind": "chamfer",
+          "gaugeLength": 3.5,
+          "stickOut": 1,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.125,
+              -0.125,
+              0
+            ],
+            "max": [
+              0.125,
+              0.125,
+              1
+            ],
+            "volume": 0.0447
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1
+            ],
+            "max": [
+              0.625,
+              0.625,
+              3.5
+            ],
+            "volume": 2.6784
+          }
+        },
+        {
+          "t": 3,
+          "kind": "drill",
+          "gaugeLength": 5,
+          "stickOut": 1.875,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.1005,
+              -0.1005,
+              0
+            ],
+            "max": [
+              0.1005,
+              0.1005,
+              1.875
+            ],
+            "volume": 0.0578
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1.875
+            ],
+            "max": [
+              0.625,
+              0.625,
+              5
+            ],
+            "volume": 3.348
+          }
+        }
+      ],
+      "inProcess": {
+        "nx": 96,
+        "ny": 64,
+        "removedVolume": 0.4586,
+        "stockVolume": 9.9,
+        "applied": 13,
+        "skippedTilted": 2,
+        "approxTilted": 2,
+        "skippedNoTool": 0,
+        "threadMoves": 0,
+        "mesh": {
+          "triangles": 27296,
+          "edges": 3089,
+          "min": [
+            -1.5,
+            -1,
+            -1.65
+          ],
+          "max": [
+            1.5,
+            1,
+            -0.05
+          ],
+          "volume": 9.3957
+        },
+        "comparison": {
+          "onSize": 6144,
+          "remaining": 0,
+          "gouge": 0,
+          "maxRemaining": 0,
+          "maxGouge": 0
+        }
+      }
+    },
+    "placement": {
+      "version": "1.0",
+      "partBox": {
+        "min": [
+          -1.5,
+          -1,
+          -1.5
+        ],
+        "max": [
+          1.5,
+          1,
+          -0.05
+        ]
+      },
+      "stockBox": {
+        "min": [
+          -1.5,
+          -1,
+          -1.65
+        ],
+        "max": [
+          1.5,
+          1,
+          0
+        ]
+      },
+      "points": {
+        "npp": [
+          -1.5,
+          1,
+          -0.05
+        ],
+        "0pp": [
+          0,
+          1,
+          -0.05
+        ],
+        "ppp": [
+          1.5,
+          1,
+          -0.05
+        ],
+        "n0p": [
+          -1.5,
+          0,
+          -0.05
+        ],
+        "00p": [
+          0,
+          0,
+          -0.05
+        ],
+        "p0p": [
+          1.5,
+          0,
+          -0.05
+        ],
+        "nnp": [
+          -1.5,
+          -1,
+          -0.05
+        ],
+        "0np": [
+          0,
+          -1,
+          -0.05
+        ],
+        "pnp": [
+          1.5,
+          -1,
+          -0.05
+        ],
+        "np0": [
+          -1.5,
+          1,
+          -0.775
+        ],
+        "0p0": [
+          0,
+          1,
+          -0.775
+        ],
+        "pp0": [
+          1.5,
+          1,
+          -0.775
+        ],
+        "n00": [
+          -1.5,
+          0,
+          -0.775
+        ],
+        "000": [
+          0,
+          0,
+          -0.775
+        ],
+        "p00": [
+          1.5,
+          0,
+          -0.775
+        ],
+        "nn0": [
+          -1.5,
+          -1,
+          -0.775
+        ],
+        "0n0": [
+          0,
+          -1,
+          -0.775
+        ],
+        "pn0": [
+          1.5,
+          -1,
+          -0.775
+        ],
+        "npn": [
+          -1.5,
+          1,
+          -1.5
+        ],
+        "0pn": [
+          0,
+          1,
+          -1.5
+        ],
+        "ppn": [
+          1.5,
+          1,
+          -1.5
+        ],
+        "n0n": [
+          -1.5,
+          0,
+          -1.5
+        ],
+        "00n": [
+          0,
+          0,
+          -1.5
+        ],
+        "p0n": [
+          1.5,
+          0,
+          -1.5
+        ],
+        "nnn": [
+          -1.5,
+          -1,
+          -1.5
+        ],
+        "0nn": [
+          0,
+          -1,
+          -1.5
+        ],
+        "pnn": [
+          1.5,
+          -1,
+          -1.5
+        ]
+      },
+      "cases": {
+        "top-center": {
+          "origin": [
+            0,
+            0,
+            -0.05
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -1.5,
+              -1,
+              -1.45
+            ],
+            "max": [
+              1.5,
+              1,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -1.5,
+              -1,
+              -1.6
+            ],
+            "max": [
+              1.5,
+              1,
+              0.05
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0.05
+          ],
+          "workOffset": [
+            -15,
+            -10,
+            -18.05
+          ]
+        },
+        "top-front-left": {
+          "origin": [
+            -1.5,
+            -1,
+            -0.05
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              0,
+              0,
+              -1.45
+            ],
+            "max": [
+              3,
+              2,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              0,
+              0,
+              -1.6
+            ],
+            "max": [
+              3,
+              2,
+              0.05
+            ]
+          },
+          "workholdingShift": [
+            1.5,
+            1,
+            0.05
+          ],
+          "workOffset": [
+            -16.5,
+            -11,
+            -18.05
+          ]
+        },
+        "stock-top-front-left": {
+          "origin": [
+            -1.5,
+            -1,
+            0
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              0,
+              0,
+              -1.5
+            ],
+            "max": [
+              3,
+              2,
+              -0.05
+            ]
+          },
+          "stock": {
+            "min": [
+              0,
+              0,
+              -1.65
+            ],
+            "max": [
+              3,
+              2,
+              0
+            ]
+          },
+          "workholdingShift": [
+            1.5,
+            1,
+            0
+          ],
+          "workOffset": [
+            -16.5,
+            -11,
+            -18
+          ]
+        },
+        "rotZ90-top-center": {
+          "origin": [
+            0,
+            0,
+            -0.05
+          ],
+          "rotation": [
+            0,
+            -1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -1,
+              -1.5,
+              -1.45
+            ],
+            "max": [
+              1,
+              1.5,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -1,
+              -1.5,
+              -1.6
+            ],
+            "max": [
+              1,
+              1.5,
+              0.05
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0.05
+          ],
+          "workOffset": [
+            -15,
+            -10,
+            -18.05
+          ]
+        },
+        "flip-top-center": {
+          "origin": [
+            0,
+            0,
+            1.5
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            -1,
+            0,
+            0,
+            0,
+            -1
+          ],
+          "target": {
+            "min": [
+              -1.5,
+              -1,
+              -1.45
+            ],
+            "max": [
+              1.5,
+              1,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -1.5,
+              -1,
+              -1.6
+            ],
+            "max": [
+              1.5,
+              1,
+              0.05
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0.05
+          ],
+          "workOffset": [
+            -15,
+            -10,
+            -18.05
+          ]
+        },
+        "bore-center-align": {
+          "origin": [
+            0.75,
+            0.5,
+            1.5
+          ],
+          "rotation": [
+            0,
+            0,
+            -1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0
+          ],
+          "target": {
+            "min": [
+              -0.7,
+              -1.5,
+              -3
+            ],
+            "max": [
+              0.75,
+              0.5,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -0.7,
+              -1.5,
+              -3.15
+            ],
+            "max": [
+              0.75,
+              0.5,
+              0.05
+            ]
+          },
+          "workholdingShift": [
+            0.025,
+            -0.5,
+            -1.5
+          ],
+          "workOffset": [
+            -15.025,
+            -9.5,
+            -16.5
+          ]
+        },
+        "tri0-face-align-top": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            -1,
+            0,
+            0
+          ],
+          "target": {
+            "min": [
+              -1.5,
+              -1,
+              -1.5
+            ],
+            "max": [
+              -0.05,
+              1,
+              1.5
+            ]
+          },
+          "stock": {
+            "min": [
+              -1.5,
+              -1,
+              -1.65
+            ],
+            "max": [
+              -0.05,
+              1,
+              1.55
+            ]
+          },
+          "workholdingShift": [
+            -0.775,
+            0,
+            0
+          ],
+          "workOffset": [
+            -14.225,
+            -10,
+            -18
+          ]
+        }
+      },
+      "features": {
+        "cylinder": {
+          "tri": 292,
+          "axisPoint": [
+            -1.2802,
+            0.5,
+            -0.75
+          ],
+          "axisDir": [
+            1,
+            0,
+            0
+          ],
+          "radius": 0.1005,
+          "bore": true,
+          "triangles": 172
+        },
+        "tri0Face": {
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "triangles": 175
+        },
+        "centerInStock": {
+          "offsets": {
+            "xMin": 0,
+            "xMax": 0,
+            "yMin": 0,
+            "yMax": 0,
+            "zMin": 0.15,
+            "zMax": 0.05
+          },
+          "stock": {
+            "min": [
+              -1.5,
+              -1,
+              -1.65
+            ],
+            "max": [
+              1.5,
+              1,
+              0
+            ]
+          },
+          "inside": true
+        }
+      }
+    }
+  },
+  "haas-umc750-5axis-seeded": {
+    "packId": "haas-umc750-bracket-seeded",
+    "correlation": {
+      "summary": {
+        "errors": 9,
+        "warnings": 0,
+        "infos": 3,
+        "pass": false
+      },
+      "findings": [
+        "1:info:revpack-tool-unused-T3",
+        "7:error:undefined-work-offset-G55",
+        "14:error:rapid-into-stock",
+        "16:info:tool-change-spindle-running",
+        "16:error:unsafe-tool-change",
+        "18:error:tool-length-mismatch-T2",
+        "20:error:simultaneous-5x-without-tcpc",
+        "24:info:tool-change-spindle-running",
+        "24:error:tool-not-in-revpack-T4",
+        "25:error:over-travel-B",
+        "26:error:rpm-over-machine",
+        "30:error:rapid-into-jaw"
+      ],
+      "toolsUsed": [
+        1,
+        2,
+        4
+      ],
+      "workOffsetsUsed": [
+        "G54",
+        "G55"
+      ],
+      "segments": 18,
+      "machineExtents": {
+        "B": {
+          "min": -40,
+          "max": 10
+        },
+        "C": {
+          "min": 0,
+          "max": 0
+        },
+        "X": {
+          "min": -17.1,
+          "max": -12.9
+        },
+        "Y": {
+          "min": -11.2,
+          "max": -8.75
+        },
+        "Z": {
+          "min": -19.6,
+          "max": 0
+        }
+      }
+    },
+    "geometry": {
+      "version": "1.2",
+      "packId": "haas-umc750-bracket-seeded",
+      "units": "in",
+      "target": {
+        "triangles": 2832,
+        "edges": 569,
+        "min": [
+          -1.5,
+          -1,
+          -1.5
+        ],
+        "max": [
+          1.5,
+          1,
+          -0.05
+        ],
+        "volume": 8.5143
+      },
+      "stock": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -1.5,
+          -1,
+          -1.65
+        ],
+        "max": [
+          1.5,
+          1,
+          0
+        ],
+        "volume": 9.9
+      },
+      "workholding": [
+        {
+          "name": "Quick-Point 52 single plate 150x116x27 (zero-point)",
+          "role": "zero-point",
+          "object": "zeroPoint",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -2.2835,
+            -2.9528,
+            -5.0358
+          ],
+          "max": [
+            2.2835,
+            2.9528,
+            -3.9728
+          ],
+          "volume": 28.67
+        },
+        {
+          "name": "Riser to the C-table (modelled)",
+          "role": "riser",
+          "object": "zeroPoint",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -2.2835,
+            -2.9528,
+            -5.5
+          ],
+          "max": [
+            2.2835,
+            2.9528,
+            -5.0358
+          ],
+          "volume": 12.5199
+        },
+        {
+          "name": "Makro-Grip 77 base body 130x77x38",
+          "role": "vise-body",
+          "object": "fixture",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            -2.5591,
+            -3.9728
+          ],
+          "max": [
+            1.5157,
+            2.5591,
+            -2.4767
+          ],
+          "volume": 23.2125
+        },
+        {
+          "name": "Makro-Grip 77 jaw +Y (moves, serrated)",
+          "role": "moving-jaw",
+          "object": "jaws",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            1,
+            -2.4767
+          ],
+          "max": [
+            1.5157,
+            1.4724,
+            -1.5319
+          ],
+          "volume": 1.353
+        },
+        {
+          "name": "Makro-Grip 77 jaw -Y (moves, serrated)",
+          "role": "moving-jaw",
+          "object": "jaws",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -1.5157,
+            -1.4724,
+            -2.4767
+          ],
+          "max": [
+            1.5157,
+            -1,
+            -1.5319
+          ],
+          "volume": 1.353
+        }
+      ],
+      "grip": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -1.5,
+          -1,
+          -1.65
+        ],
+        "max": [
+          1.5,
+          1,
+          -1.5319
+        ],
+        "volume": 0.7086
+      },
+      "tools": [
+        {
+          "t": 1,
+          "kind": "mill",
+          "gaugeLength": 4.25,
+          "stickOut": 2,
+          "cutter": {
+            "triangles": 128,
+            "edges": 68,
+            "min": [
+              -0.25,
+              -0.25,
+              0
+            ],
+            "max": [
+              0.25,
+              0.25,
+              2
+            ],
+            "volume": 0.3902
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              2
+            ],
+            "max": [
+              0.625,
+              0.625,
+              4.25
+            ],
+            "volume": 2.4106
+          }
+        },
+        {
+          "t": 2,
+          "kind": "chamfer",
+          "gaugeLength": 3.5,
+          "stickOut": 1,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.125,
+              -0.125,
+              0
+            ],
+            "max": [
+              0.125,
+              0.125,
+              1
+            ],
+            "volume": 0.0447
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1
+            ],
+            "max": [
+              0.625,
+              0.625,
+              3.5
+            ],
+            "volume": 2.6784
+          }
+        },
+        {
+          "t": 3,
+          "kind": "drill",
+          "gaugeLength": 5,
+          "stickOut": 1.875,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.1005,
+              -0.1005,
+              0
+            ],
+            "max": [
+              0.1005,
+              0.1005,
+              1.875
+            ],
+            "volume": 0.0578
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1.875
+            ],
+            "max": [
+              0.625,
+              0.625,
+              5
+            ],
+            "volume": 3.348
+          }
+        }
+      ],
+      "inProcess": {
+        "nx": 96,
+        "ny": 64,
+        "removedVolume": 0.075,
+        "stockVolume": 9.9,
+        "applied": 1,
+        "skippedTilted": 0,
+        "approxTilted": 1,
+        "skippedNoTool": 0,
+        "threadMoves": 0,
+        "mesh": {
+          "triangles": 25408,
+          "edges": 842,
+          "min": [
+            -1.5,
+            -1,
+            -1.65
+          ],
+          "max": [
+            1.5,
+            1,
+            0
+          ],
+          "volume": 9.775
+        },
+        "comparison": {
+          "onSize": 1209,
+          "remaining": 4935,
+          "gouge": 0,
+          "maxRemaining": 0.3,
+          "maxGouge": 0
+        }
+      }
+    },
+    "placement": {
+      "version": "1.0",
+      "partBox": {
+        "min": [
+          -1.5,
+          -1,
+          -1.5
+        ],
+        "max": [
+          1.5,
+          1,
+          -0.05
+        ]
+      },
+      "stockBox": {
+        "min": [
+          -1.5,
+          -1,
+          -1.65
+        ],
+        "max": [
+          1.5,
+          1,
+          0
+        ]
+      },
+      "points": {
+        "npp": [
+          -1.5,
+          1,
+          -0.05
+        ],
+        "0pp": [
+          0,
+          1,
+          -0.05
+        ],
+        "ppp": [
+          1.5,
+          1,
+          -0.05
+        ],
+        "n0p": [
+          -1.5,
+          0,
+          -0.05
+        ],
+        "00p": [
+          0,
+          0,
+          -0.05
+        ],
+        "p0p": [
+          1.5,
+          0,
+          -0.05
+        ],
+        "nnp": [
+          -1.5,
+          -1,
+          -0.05
+        ],
+        "0np": [
+          0,
+          -1,
+          -0.05
+        ],
+        "pnp": [
+          1.5,
+          -1,
+          -0.05
+        ],
+        "np0": [
+          -1.5,
+          1,
+          -0.775
+        ],
+        "0p0": [
+          0,
+          1,
+          -0.775
+        ],
+        "pp0": [
+          1.5,
+          1,
+          -0.775
+        ],
+        "n00": [
+          -1.5,
+          0,
+          -0.775
+        ],
+        "000": [
+          0,
+          0,
+          -0.775
+        ],
+        "p00": [
+          1.5,
+          0,
+          -0.775
+        ],
+        "nn0": [
+          -1.5,
+          -1,
+          -0.775
+        ],
+        "0n0": [
+          0,
+          -1,
+          -0.775
+        ],
+        "pn0": [
+          1.5,
+          -1,
+          -0.775
+        ],
+        "npn": [
+          -1.5,
+          1,
+          -1.5
+        ],
+        "0pn": [
+          0,
+          1,
+          -1.5
+        ],
+        "ppn": [
+          1.5,
+          1,
+          -1.5
+        ],
+        "n0n": [
+          -1.5,
+          0,
+          -1.5
+        ],
+        "00n": [
+          0,
+          0,
+          -1.5
+        ],
+        "p0n": [
+          1.5,
+          0,
+          -1.5
+        ],
+        "nnn": [
+          -1.5,
+          -1,
+          -1.5
+        ],
+        "0nn": [
+          0,
+          -1,
+          -1.5
+        ],
+        "pnn": [
+          1.5,
+          -1,
+          -1.5
+        ]
+      },
+      "cases": {
+        "top-center": {
+          "origin": [
+            0,
+            0,
+            -0.05
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -1.5,
+              -1,
+              -1.45
+            ],
+            "max": [
+              1.5,
+              1,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -1.5,
+              -1,
+              -1.6
+            ],
+            "max": [
+              1.5,
+              1,
+              0.05
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0.05
+          ],
+          "workOffset": [
+            -15,
+            -10,
+            -18.05
+          ]
+        },
+        "top-front-left": {
+          "origin": [
+            -1.5,
+            -1,
+            -0.05
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              0,
+              0,
+              -1.45
+            ],
+            "max": [
+              3,
+              2,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              0,
+              0,
+              -1.6
+            ],
+            "max": [
+              3,
+              2,
+              0.05
+            ]
+          },
+          "workholdingShift": [
+            1.5,
+            1,
+            0.05
+          ],
+          "workOffset": [
+            -16.5,
+            -11,
+            -18.05
+          ]
+        },
+        "stock-top-front-left": {
+          "origin": [
+            -1.5,
+            -1,
+            0
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              0,
+              0,
+              -1.5
+            ],
+            "max": [
+              3,
+              2,
+              -0.05
+            ]
+          },
+          "stock": {
+            "min": [
+              0,
+              0,
+              -1.65
+            ],
+            "max": [
+              3,
+              2,
+              0
+            ]
+          },
+          "workholdingShift": [
+            1.5,
+            1,
+            0
+          ],
+          "workOffset": [
+            -16.5,
+            -11,
+            -18
+          ]
+        },
+        "rotZ90-top-center": {
+          "origin": [
+            0,
+            0,
+            -0.05
+          ],
+          "rotation": [
+            0,
+            -1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -1,
+              -1.5,
+              -1.45
+            ],
+            "max": [
+              1,
+              1.5,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -1,
+              -1.5,
+              -1.6
+            ],
+            "max": [
+              1,
+              1.5,
+              0.05
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0.05
+          ],
+          "workOffset": [
+            -15,
+            -10,
+            -18.05
+          ]
+        },
+        "flip-top-center": {
+          "origin": [
+            0,
+            0,
+            1.5
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            -1,
+            0,
+            0,
+            0,
+            -1
+          ],
+          "target": {
+            "min": [
+              -1.5,
+              -1,
+              -1.45
+            ],
+            "max": [
+              1.5,
+              1,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -1.5,
+              -1,
+              -1.6
+            ],
+            "max": [
+              1.5,
+              1,
+              0.05
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0.05
+          ],
+          "workOffset": [
+            -15,
+            -10,
+            -18.05
+          ]
+        },
+        "bore-center-align": {
+          "origin": [
+            0.75,
+            0.5,
+            1.5
+          ],
+          "rotation": [
+            0,
+            0,
+            -1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0
+          ],
+          "target": {
+            "min": [
+              -0.7,
+              -1.5,
+              -3
+            ],
+            "max": [
+              0.75,
+              0.5,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -0.7,
+              -1.5,
+              -3.15
+            ],
+            "max": [
+              0.75,
+              0.5,
+              0.05
+            ]
+          },
+          "workholdingShift": [
+            0.025,
+            -0.5,
+            -1.5
+          ],
+          "workOffset": [
+            -15.025,
+            -9.5,
+            -16.5
+          ]
+        },
+        "tri0-face-align-top": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            -1,
+            0,
+            0
+          ],
+          "target": {
+            "min": [
+              -1.5,
+              -1,
+              -1.5
+            ],
+            "max": [
+              -0.05,
+              1,
+              1.5
+            ]
+          },
+          "stock": {
+            "min": [
+              -1.5,
+              -1,
+              -1.65
+            ],
+            "max": [
+              -0.05,
+              1,
+              1.55
+            ]
+          },
+          "workholdingShift": [
+            -0.775,
+            0,
+            0
+          ],
+          "workOffset": [
+            -14.225,
+            -10,
+            -18
+          ]
+        }
+      },
+      "features": {
+        "cylinder": {
+          "tri": 292,
+          "axisPoint": [
+            -1.2802,
+            0.5,
+            -0.75
+          ],
+          "axisDir": [
+            1,
+            0,
+            0
+          ],
+          "radius": 0.1005,
+          "bore": true,
+          "triangles": 172
+        },
+        "tri0Face": {
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "triangles": 175
+        },
+        "centerInStock": {
+          "offsets": {
+            "xMin": 0,
+            "xMax": 0,
+            "yMin": 0,
+            "yMax": 0,
+            "zMin": 0.15,
+            "zMax": 0.05
+          },
+          "stock": {
+            "min": [
+              -1.5,
+              -1,
+              -1.65
+            ],
+            "max": [
+              1.5,
+              1,
+              0
+            ]
+          },
+          "inside": true
+        }
+      }
+    }
+  },
+  "haas-vf2-vise": {
+    "packId": "haas-vf2-vise-plate",
+    "correlation": {
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 0,
+        "pass": true
+      },
+      "findings": [],
+      "toolsUsed": [
+        1,
+        5,
+        7,
+        12
+      ],
+      "workOffsetsUsed": [
+        "G54"
+      ],
+      "segments": 62,
+      "machineExtents": {
+        "X": {
+          "min": -18.2,
+          "max": -11.8
+        },
+        "Y": {
+          "min": -8.75,
+          "max": -7.25
+        },
+        "Z": {
+          "min": -11.87,
+          "max": 0
+        }
+      }
+    },
+    "geometry": {
+      "version": "1.2",
+      "packId": "haas-vf2-vise-plate",
+      "units": "in",
+      "target": {
+        "triangles": 1372,
+        "edges": 684,
+        "min": [
+          -2,
+          -1.5,
+          -0.75
+        ],
+        "max": [
+          2,
+          1.5,
+          -0.02
+        ],
+        "volume": 8.6674
+      },
+      "stock": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -2,
+          -1.5,
+          -0.75
+        ],
+        "max": [
+          2,
+          1.5,
+          0
+        ],
+        "volume": 9
+      },
+      "workholding": [
+        {
+          "name": "Fixed vise jaw",
+          "role": "fixed-jaw",
+          "object": "jaws",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -3,
+            1.5,
+            -2
+          ],
+          "max": [
+            3,
+            2.25,
+            -0.25
+          ],
+          "volume": 7.875
+        },
+        {
+          "name": "Moving vise jaw",
+          "role": "moving-jaw",
+          "object": "jaws",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -3,
+            -2.25,
+            -2
+          ],
+          "max": [
+            3,
+            -1.5,
+            -0.25
+          ],
+          "volume": 7.875
+        },
+        {
+          "name": "Front parallel",
+          "role": "parallel",
+          "object": "fixture",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -2.5,
+            -1.5,
+            -2
+          ],
+          "max": [
+            2.5,
+            -1.1,
+            -0.75
+          ],
+          "volume": 2.5
+        },
+        {
+          "name": "Rear parallel",
+          "role": "parallel",
+          "object": "fixture",
+          "triangles": 12,
+          "edges": 12,
+          "min": [
+            -2.5,
+            1.1,
+            -2
+          ],
+          "max": [
+            2.5,
+            1.5,
+            -0.75
+          ],
+          "volume": 2.5
+        }
+      ],
+      "grip": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          -2,
+          -1.5,
+          -0.75
+        ],
+        "max": [
+          2,
+          1.5,
+          -0.25
+        ],
+        "volume": 6
+      },
+      "tools": [
+        {
+          "t": 1,
+          "kind": "mill",
+          "gaugeLength": 4,
+          "stickOut": 3,
+          "cutter": {
+            "triangles": 128,
+            "edges": 68,
+            "min": [
+              -1,
+              -1,
+              0
+            ],
+            "max": [
+              1,
+              1,
+              3
+            ],
+            "volume": 9.3643
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -2,
+              -2,
+              3
+            ],
+            "max": [
+              2,
+              2,
+              4
+            ],
+            "volume": 11.4843
+          }
+        },
+        {
+          "t": 5,
+          "kind": "chamfer",
+          "gaugeLength": 3.75,
+          "stickOut": 1.5,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.1875,
+              -0.1875,
+              0
+            ],
+            "max": [
+              0.1875,
+              0.1875,
+              1.5
+            ],
+            "volume": 0.1509
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1.5
+            ],
+            "max": [
+              0.625,
+              0.625,
+              3.75
+            ],
+            "volume": 2.4106
+          }
+        },
+        {
+          "t": 7,
+          "kind": "drill",
+          "gaugeLength": 4.6,
+          "stickOut": 1.875,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.1005,
+              -0.1005,
+              0
+            ],
+            "max": [
+              0.1005,
+              0.1005,
+              1.875
+            ],
+            "volume": 0.0578
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1.875
+            ],
+            "max": [
+              0.625,
+              0.625,
+              4.6
+            ],
+            "volume": 2.9195
+          }
+        },
+        {
+          "t": 12,
+          "kind": "drill",
+          "gaugeLength": 4.4,
+          "stickOut": 1.125,
+          "cutter": {
+            "triangles": 192,
+            "edges": 104,
+            "min": [
+              -0.125,
+              -0.125,
+              0
+            ],
+            "max": [
+              0.125,
+              0.125,
+              1.125
+            ],
+            "volume": 0.0524
+          },
+          "holder": {
+            "triangles": 256,
+            "edges": 136,
+            "min": [
+              -0.625,
+              -0.625,
+              1.125
+            ],
+            "max": [
+              0.625,
+              0.625,
+              4.4
+            ],
+            "volume": 3.5087
+          }
+        }
+      ],
+      "inProcess": {
+        "nx": 96,
+        "ny": 72,
+        "removedVolume": 0.3211,
+        "stockVolume": 9,
+        "applied": 10,
+        "skippedTilted": 0,
+        "approxTilted": 0,
+        "skippedNoTool": 0,
+        "threadMoves": 4,
+        "mesh": {
+          "triangles": 28448,
+          "edges": 980,
+          "min": [
+            -2,
+            -1.5,
+            -0.75
+          ],
+          "max": [
+            2,
+            1.5,
+            -0.02
+          ],
+          "volume": 8.733
+        },
+        "comparison": {
+          "onSize": 6912,
+          "remaining": 0,
+          "gouge": 0,
+          "maxRemaining": 0,
+          "maxGouge": 0
+        }
+      }
+    },
+    "placement": {
+      "version": "1.0",
+      "partBox": {
+        "min": [
+          -2,
+          -1.5,
+          -0.75
+        ],
+        "max": [
+          2,
+          1.5,
+          -0.02
+        ]
+      },
+      "stockBox": {
+        "min": [
+          -2,
+          -1.5,
+          -0.75
+        ],
+        "max": [
+          2,
+          1.5,
+          0
+        ]
+      },
+      "points": {
+        "npp": [
+          -2,
+          1.5,
+          -0.02
+        ],
+        "0pp": [
+          0,
+          1.5,
+          -0.02
+        ],
+        "ppp": [
+          2,
+          1.5,
+          -0.02
+        ],
+        "n0p": [
+          -2,
+          0,
+          -0.02
+        ],
+        "00p": [
+          0,
+          0,
+          -0.02
+        ],
+        "p0p": [
+          2,
+          0,
+          -0.02
+        ],
+        "nnp": [
+          -2,
+          -1.5,
+          -0.02
+        ],
+        "0np": [
+          0,
+          -1.5,
+          -0.02
+        ],
+        "pnp": [
+          2,
+          -1.5,
+          -0.02
+        ],
+        "np0": [
+          -2,
+          1.5,
+          -0.385
+        ],
+        "0p0": [
+          0,
+          1.5,
+          -0.385
+        ],
+        "pp0": [
+          2,
+          1.5,
+          -0.385
+        ],
+        "n00": [
+          -2,
+          0,
+          -0.385
+        ],
+        "000": [
+          0,
+          0,
+          -0.385
+        ],
+        "p00": [
+          2,
+          0,
+          -0.385
+        ],
+        "nn0": [
+          -2,
+          -1.5,
+          -0.385
+        ],
+        "0n0": [
+          0,
+          -1.5,
+          -0.385
+        ],
+        "pn0": [
+          2,
+          -1.5,
+          -0.385
+        ],
+        "npn": [
+          -2,
+          1.5,
+          -0.75
+        ],
+        "0pn": [
+          0,
+          1.5,
+          -0.75
+        ],
+        "ppn": [
+          2,
+          1.5,
+          -0.75
+        ],
+        "n0n": [
+          -2,
+          0,
+          -0.75
+        ],
+        "00n": [
+          0,
+          0,
+          -0.75
+        ],
+        "p0n": [
+          2,
+          0,
+          -0.75
+        ],
+        "nnn": [
+          -2,
+          -1.5,
+          -0.75
+        ],
+        "0nn": [
+          0,
+          -1.5,
+          -0.75
+        ],
+        "pnn": [
+          2,
+          -1.5,
+          -0.75
+        ]
+      },
+      "cases": {
+        "top-center": {
+          "origin": [
+            0,
+            0,
+            -0.02
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -2,
+              -1.5,
+              -0.73
+            ],
+            "max": [
+              2,
+              1.5,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -2,
+              -1.5,
+              -0.73
+            ],
+            "max": [
+              2,
+              1.5,
+              0.02
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0.02
+          ],
+          "workOffset": [
+            -15,
+            -8,
+            -15.52
+          ]
+        },
+        "top-front-left": {
+          "origin": [
+            -2,
+            -1.5,
+            -0.02
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              0,
+              0,
+              -0.73
+            ],
+            "max": [
+              4,
+              3,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              0,
+              0,
+              -0.73
+            ],
+            "max": [
+              4,
+              3,
+              0.02
+            ]
+          },
+          "workholdingShift": [
+            2,
+            1.5,
+            0.02
+          ],
+          "workOffset": [
+            -17,
+            -9.5,
+            -15.52
+          ]
+        },
+        "stock-top-front-left": {
+          "origin": [
+            -2,
+            -1.5,
+            0
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              0,
+              0,
+              -0.75
+            ],
+            "max": [
+              4,
+              3,
+              -0.02
+            ]
+          },
+          "stock": {
+            "min": [
+              0,
+              0,
+              -0.75
+            ],
+            "max": [
+              4,
+              3,
+              0
+            ]
+          },
+          "workholdingShift": [
+            2,
+            1.5,
+            0
+          ],
+          "workOffset": [
+            -17,
+            -9.5,
+            -15.5
+          ]
+        },
+        "rotZ90-top-center": {
+          "origin": [
+            0,
+            0,
+            -0.02
+          ],
+          "rotation": [
+            0,
+            -1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -1.5,
+              -2,
+              -0.73
+            ],
+            "max": [
+              1.5,
+              2,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -1.5,
+              -2,
+              -0.73
+            ],
+            "max": [
+              1.5,
+              2,
+              0.02
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0.02
+          ],
+          "workOffset": [
+            -15,
+            -8,
+            -15.52
+          ]
+        },
+        "flip-top-center": {
+          "origin": [
+            0,
+            0,
+            0.75
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            -1,
+            0,
+            0,
+            0,
+            -1
+          ],
+          "target": {
+            "min": [
+              -2,
+              -1.5,
+              -0.73
+            ],
+            "max": [
+              2,
+              1.5,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -2,
+              -1.5,
+              -0.73
+            ],
+            "max": [
+              2,
+              1.5,
+              0.02
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0.02
+          ],
+          "workOffset": [
+            -15,
+            -8,
+            -15.52
+          ]
+        },
+        "bore-center-align": {
+          "origin": [
+            -1.25,
+            -0.75,
+            -0.02
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -0.75,
+              -0.75,
+              -0.73
+            ],
+            "max": [
+              3.25,
+              2.25,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -0.75,
+              -0.75,
+              -0.73
+            ],
+            "max": [
+              3.25,
+              2.25,
+              0.02
+            ]
+          },
+          "workholdingShift": [
+            1.25,
+            0.75,
+            0.02
+          ],
+          "workOffset": [
+            -16.25,
+            -8.75,
+            -15.52
+          ]
+        },
+        "tri0-face-align-top": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            -1,
+            0,
+            0
+          ],
+          "target": {
+            "min": [
+              -0.75,
+              -1.5,
+              -2
+            ],
+            "max": [
+              -0.02,
+              1.5,
+              2
+            ]
+          },
+          "stock": {
+            "min": [
+              -0.75,
+              -1.5,
+              -2
+            ],
+            "max": [
+              -0.02,
+              1.5,
+              2.02
+            ]
+          },
+          "workholdingShift": [
+            -0.385,
+            0,
+            -1.25
+          ],
+          "workOffset": [
+            -14.615,
+            -8,
+            -14.25
+          ]
+        }
+      },
+      "features": {
+        "cylinder": {
+          "tri": 700,
+          "axisPoint": [
+            -1.25,
+            -0.75,
+            -0.385
+          ],
+          "axisDir": [
+            0,
+            0,
+            1
+          ],
+          "radius": 0.1005,
+          "bore": true,
+          "triangles": 168
+        },
+        "tri0Face": {
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "triangles": 2
+        },
+        "centerInStock": {
+          "offsets": {
+            "xMin": 0,
+            "xMax": 0,
+            "yMin": 0,
+            "yMax": 0,
+            "zMin": 0,
+            "zMax": 0.02
+          },
+          "stock": {
+            "min": [
+              -2,
+              -1.5,
+              -0.75
+            ],
+            "max": [
+              2,
+              1.5,
+              0
+            ]
+          },
+          "inside": true
+        }
+      }
+    }
+  },
+  "okuma-lb3000-lathe": {
+    "packId": "okuma-lb3000-shaft",
+    "correlation": {
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 0,
+        "pass": true
+      },
+      "findings": [],
+      "toolsUsed": [
+        1,
+        3,
+        5
+      ],
+      "workOffsetsUsed": [],
+      "segments": 38,
+      "machineExtents": {
+        "X": {
+          "min": -1.6,
+          "max": 400
+        },
+        "Z": {
+          "min": -360,
+          "max": -100
+        }
+      }
+    },
+    "geometry": {
+      "version": "1.2",
+      "packId": "okuma-lb3000-shaft",
+      "units": "mm",
+      "target": {
+        "triangles": 2516,
+        "edges": 1260,
+        "min": [
+          -40,
+          -40,
+          -120
+        ],
+        "max": [
+          40,
+          40,
+          0
+        ],
+        "volume": 471981.8236
+      },
+      "stock": {
+        "triangles": 192,
+        "edges": 100,
+        "min": [
+          -40,
+          -40,
+          -120
+        ],
+        "max": [
+          40,
+          40,
+          1
+        ],
+        "volume": 606476.8969
+      },
+      "workholding": [
+        {
+          "name": "8in chuck jaws",
+          "role": "chuck-jaw",
+          "object": "jaws",
+          "triangles": 384,
+          "edges": 196,
+          "min": [
+            -80,
+            -80,
+            -120
+          ],
+          "max": [
+            80,
+            80,
+            -85
+          ],
+          "volume": 526281.6048
+        }
+      ],
+      "grip": null,
+      "tools": [
+        {
+          "t": 1,
+          "kind": "turning",
+          "gaugeLength": 1,
+          "stickOut": 19.7577,
+          "cutter": {
+            "triangles": 12,
+            "edges": 12,
+            "min": [
+              0,
+              -2.3495,
+              -6.349
+            ],
+            "max": [
+              15.1369,
+              2.3495,
+              6.349
+            ],
+            "volume": 451.595
+          },
+          "holder": null
+        },
+        {
+          "t": 3,
+          "kind": "turning",
+          "gaugeLength": 1,
+          "stickOut": 14.8183,
+          "cutter": {
+            "triangles": 12,
+            "edges": 12,
+            "min": [
+              0,
+              -1.7621,
+              -4.7618
+            ],
+            "max": [
+              11.3527,
+              1.7621,
+              4.7618
+            ],
+            "volume": 190.5167
+          },
+          "holder": null
+        },
+        {
+          "t": 5,
+          "kind": "turning",
+          "gaugeLength": 1,
+          "stickOut": 4.6672,
+          "cutter": {
+            "triangles": 12,
+            "edges": 12,
+            "min": [
+              0,
+              -0.555,
+              -1.4998
+            ],
+            "max": [
+              3.5757,
+              0.555,
+              1.4998
+            ],
+            "volume": 5.9525
+          },
+          "holder": null
+        }
+      ],
+      "inProcess": null
+    },
+    "placement": {
+      "version": "1.0",
+      "partBox": {
+        "min": [
+          -40,
+          -40,
+          -120
+        ],
+        "max": [
+          40,
+          40,
+          0
+        ]
+      },
+      "stockBox": {
+        "min": [
+          -40,
+          -40,
+          -120
+        ],
+        "max": [
+          40,
+          40,
+          1
+        ]
+      },
+      "points": {
+        "npp": [
+          -40,
+          40,
+          0
+        ],
+        "0pp": [
+          0,
+          40,
+          0
+        ],
+        "ppp": [
+          40,
+          40,
+          0
+        ],
+        "n0p": [
+          -40,
+          0,
+          0
+        ],
+        "00p": [
+          0,
+          0,
+          0
+        ],
+        "p0p": [
+          40,
+          0,
+          0
+        ],
+        "nnp": [
+          -40,
+          -40,
+          0
+        ],
+        "0np": [
+          0,
+          -40,
+          0
+        ],
+        "pnp": [
+          40,
+          -40,
+          0
+        ],
+        "np0": [
+          -40,
+          40,
+          -60
+        ],
+        "0p0": [
+          0,
+          40,
+          -60
+        ],
+        "pp0": [
+          40,
+          40,
+          -60
+        ],
+        "n00": [
+          -40,
+          0,
+          -60
+        ],
+        "000": [
+          0,
+          0,
+          -60
+        ],
+        "p00": [
+          40,
+          0,
+          -60
+        ],
+        "nn0": [
+          -40,
+          -40,
+          -60
+        ],
+        "0n0": [
+          0,
+          -40,
+          -60
+        ],
+        "pn0": [
+          40,
+          -40,
+          -60
+        ],
+        "npn": [
+          -40,
+          40,
+          -120
+        ],
+        "0pn": [
+          0,
+          40,
+          -120
+        ],
+        "ppn": [
+          40,
+          40,
+          -120
+        ],
+        "n0n": [
+          -40,
+          0,
+          -120
+        ],
+        "00n": [
+          0,
+          0,
+          -120
+        ],
+        "p0n": [
+          40,
+          0,
+          -120
+        ],
+        "nnn": [
+          -40,
+          -40,
+          -120
+        ],
+        "0nn": [
+          0,
+          -40,
+          -120
+        ],
+        "pnn": [
+          40,
+          -40,
+          -120
+        ]
+      },
+      "cases": {
+        "top-center": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              1
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0
+          ],
+          "workOffset": [
+            0,
+            0,
+            -300
+          ]
+        },
+        "top-front-left": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              1
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0
+          ],
+          "workOffset": [
+            0,
+            0,
+            -300
+          ]
+        },
+        "stock-top-front-left": {
+          "origin": [
+            0,
+            0,
+            1
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -40,
+              -40,
+              -121
+            ],
+            "max": [
+              40,
+              40,
+              -1
+            ]
+          },
+          "stock": {
+            "min": [
+              -40,
+              -40,
+              -121
+            ],
+            "max": [
+              40,
+              40,
+              0
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            -1
+          ],
+          "workOffset": [
+            0,
+            0,
+            -299
+          ]
+        },
+        "rotZ90-top-center": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            -1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              1
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0
+          ],
+          "workOffset": [
+            0,
+            0,
+            -300
+          ]
+        },
+        "flip-top-center": {
+          "origin": [
+            0,
+            0,
+            120
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            -1,
+            0,
+            0,
+            0,
+            -1
+          ],
+          "target": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              1
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0
+          ],
+          "workOffset": [
+            0,
+            0,
+            -300
+          ]
+        },
+        "bore-center-align": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              1
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0
+          ],
+          "workOffset": [
+            0,
+            0,
+            -300
+          ]
+        },
+        "tri0-face-align-top": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -40,
+              -40,
+              -120
+            ],
+            "max": [
+              40,
+              40,
+              1
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0
+          ],
+          "workOffset": [
+            0,
+            0,
+            -300
+          ]
+        }
+      },
+      "features": {
+        "cylinder": {
+          "tri": 250,
+          "axisPoint": [
+            0,
+            0,
+            -7
+          ],
+          "axisDir": [
+            0,
+            0,
+            1
+          ],
+          "radius": 25,
+          "bore": false,
+          "triangles": 168
+        },
+        "tri0Face": {
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "triangles": 82
+        }
+      }
+    }
+  },
+  "trumpf-trulaser3030": {
+    "packId": "trumpf-trulaser3030-bracket-nest",
+    "correlation": {
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "infos": 0,
+        "pass": true
+      },
+      "findings": [],
+      "toolsUsed": [
+        1
+      ],
+      "workOffsetsUsed": [
+        "G54"
+      ],
+      "segments": 31,
+      "machineExtents": {
+        "X": {
+          "min": 150,
+          "max": 1050
+        },
+        "Y": {
+          "min": 150,
+          "max": 650
+        },
+        "Z": {
+          "min": 115,
+          "max": 115
+        }
+      }
+    },
+    "geometry": {
+      "version": "1.2",
+      "packId": "trumpf-trulaser3030-bracket-nest",
+      "units": "mm",
+      "target": {
+        "triangles": 72,
+        "edges": 72,
+        "min": [
+          50.1,
+          50.1,
+          -3
+        ],
+        "max": [
+          749.9,
+          449.9,
+          0
+        ],
+        "volume": 538740.7186
+      },
+      "stock": {
+        "triangles": 12,
+        "edges": 12,
+        "min": [
+          0,
+          0,
+          -3
+        ],
+        "max": [
+          1000,
+          600,
+          0
+        ],
+        "volume": 1800000
+      },
+      "workholding": [],
+      "grip": null,
+      "tools": [
+        {
+          "t": 1,
+          "kind": "laser",
+          "gaugeLength": 12,
+          "stickOut": 12,
+          "cutter": {
+            "triangles": 128,
+            "edges": 68,
+            "min": [
+              -6,
+              -6,
+              0
+            ],
+            "max": [
+              6,
+              6,
+              12
+            ],
+            "volume": 498.9318
+          },
+          "holder": null
+        }
+      ],
+      "inProcess": null
+    },
+    "placement": {
+      "version": "1.0",
+      "partBox": {
+        "min": [
+          50.1,
+          50.1,
+          -3
+        ],
+        "max": [
+          749.9,
+          449.9,
+          0
+        ]
+      },
+      "stockBox": {
+        "min": [
+          0,
+          0,
+          -3
+        ],
+        "max": [
+          1000,
+          600,
+          0
+        ]
+      },
+      "points": {
+        "npp": [
+          50.1,
+          449.9,
+          0
+        ],
+        "0pp": [
+          400,
+          449.9,
+          0
+        ],
+        "ppp": [
+          749.9,
+          449.9,
+          0
+        ],
+        "n0p": [
+          50.1,
+          250,
+          0
+        ],
+        "00p": [
+          400,
+          250,
+          0
+        ],
+        "p0p": [
+          749.9,
+          250,
+          0
+        ],
+        "nnp": [
+          50.1,
+          50.1,
+          0
+        ],
+        "0np": [
+          400,
+          50.1,
+          0
+        ],
+        "pnp": [
+          749.9,
+          50.1,
+          0
+        ],
+        "np0": [
+          50.1,
+          449.9,
+          -1.5
+        ],
+        "0p0": [
+          400,
+          449.9,
+          -1.5
+        ],
+        "pp0": [
+          749.9,
+          449.9,
+          -1.5
+        ],
+        "n00": [
+          50.1,
+          250,
+          -1.5
+        ],
+        "000": [
+          400,
+          250,
+          -1.5
+        ],
+        "p00": [
+          749.9,
+          250,
+          -1.5
+        ],
+        "nn0": [
+          50.1,
+          50.1,
+          -1.5
+        ],
+        "0n0": [
+          400,
+          50.1,
+          -1.5
+        ],
+        "pn0": [
+          749.9,
+          50.1,
+          -1.5
+        ],
+        "npn": [
+          50.1,
+          449.9,
+          -3
+        ],
+        "0pn": [
+          400,
+          449.9,
+          -3
+        ],
+        "ppn": [
+          749.9,
+          449.9,
+          -3
+        ],
+        "n0n": [
+          50.1,
+          250,
+          -3
+        ],
+        "00n": [
+          400,
+          250,
+          -3
+        ],
+        "p0n": [
+          749.9,
+          250,
+          -3
+        ],
+        "nnn": [
+          50.1,
+          50.1,
+          -3
+        ],
+        "0nn": [
+          400,
+          50.1,
+          -3
+        ],
+        "pnn": [
+          749.9,
+          50.1,
+          -3
+        ]
+      },
+      "cases": {
+        "top-center": {
+          "origin": [
+            400,
+            250,
+            0
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -349.9,
+              -199.9,
+              -3
+            ],
+            "max": [
+              349.9,
+              199.9,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -400,
+              -250,
+              -3
+            ],
+            "max": [
+              600,
+              350,
+              0
+            ]
+          },
+          "workholdingShift": [
+            -400,
+            -250,
+            0
+          ],
+          "workOffset": [
+            500,
+            350,
+            10
+          ]
+        },
+        "top-front-left": {
+          "origin": [
+            50.1,
+            50.1,
+            0
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              0,
+              0,
+              -3
+            ],
+            "max": [
+              699.8,
+              399.8,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -50.1,
+              -50.1,
+              -3
+            ],
+            "max": [
+              949.9,
+              549.9,
+              0
+            ]
+          },
+          "workholdingShift": [
+            -50.1,
+            -50.1,
+            0
+          ],
+          "workOffset": [
+            150.1,
+            150.1,
+            10
+          ]
+        },
+        "stock-top-front-left": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              50.1,
+              50.1,
+              -3
+            ],
+            "max": [
+              749.9,
+              449.9,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              0,
+              0,
+              -3
+            ],
+            "max": [
+              1000,
+              600,
+              0
+            ]
+          },
+          "workholdingShift": [
+            0,
+            0,
+            0
+          ],
+          "workOffset": [
+            100,
+            100,
+            10
+          ]
+        },
+        "rotZ90-top-center": {
+          "origin": [
+            -250,
+            400,
+            0
+          ],
+          "rotation": [
+            0,
+            -1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "target": {
+            "min": [
+              -199.9,
+              -349.9,
+              -3
+            ],
+            "max": [
+              199.9,
+              349.9,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -250,
+              -400,
+              -3
+            ],
+            "max": [
+              450,
+              500,
+              0
+            ]
+          },
+          "workholdingShift": [
+            -400,
+            -250,
+            0
+          ],
+          "workOffset": [
+            500,
+            350,
+            10
+          ]
+        },
+        "flip-top-center": {
+          "origin": [
+            400,
+            -250,
+            3
+          ],
+          "rotation": [
+            1,
+            0,
+            0,
+            0,
+            -1,
+            0,
+            0,
+            0,
+            -1
+          ],
+          "target": {
+            "min": [
+              -349.9,
+              -199.9,
+              -3
+            ],
+            "max": [
+              349.9,
+              199.9,
+              0
+            ]
+          },
+          "stock": {
+            "min": [
+              -400,
+              -250,
+              -3
+            ],
+            "max": [
+              600,
+              350,
+              0
+            ]
+          },
+          "workholdingShift": [
+            -400,
+            -250,
+            0
+          ],
+          "workOffset": [
+            500,
+            350,
+            10
+          ]
+        },
+        "tri0-face-align-top": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            -1,
+            0,
+            0
+          ],
+          "target": {
+            "min": [
+              -3,
+              50.1,
+              -749.9
+            ],
+            "max": [
+              0,
+              449.9,
+              -50.1
+            ]
+          },
+          "stock": {
+            "min": [
+              -53.1,
+              0,
+              -749.9
+            ],
+            "max": [
+              250.1,
+              600,
+              -50.1
+            ]
+          },
+          "workholdingShift": [
+            -401.5,
+            0,
+            -746.9
+          ],
+          "workOffset": [
+            501.5,
+            100,
+            756.9
+          ]
+        }
+      },
+      "features": {
+        "tri0Face": {
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "triangles": 2
+        },
+        "centerInStock": {
+          "offsets": {
+            "xMin": 150.1,
+            "xMax": 150.1,
+            "yMin": 100.1,
+            "yMax": 100.1,
+            "zMin": 0,
+            "zMax": 0
+          },
+          "stock": {
+            "min": [
+              -100,
+              -50,
+              -3
+            ],
+            "max": [
+              900,
+              550,
+              0
+            ]
+          },
+          "inside": true
+        }
+      }
+    }
+  }
+}

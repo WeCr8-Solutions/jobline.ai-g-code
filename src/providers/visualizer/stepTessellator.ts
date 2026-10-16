@@ -8,13 +8,18 @@ export interface TessellatedSTEP {
 
 const MAX_TRIANGLES = 300_000;
 
-export async function tessellateSTEP(content: Uint8Array): Promise<TessellatedSTEP> {
+export interface TessellateOptions {
+  /** Unit OpenCascade converts the model into. RevPack inch packs read STEP in inches. */
+  linearUnit?: 'millimeter' | 'inch';
+}
+
+export async function tessellateSTEP(content: Uint8Array, options: TessellateOptions = {}): Promise<TessellatedSTEP> {
   // occt-import-js ships without TypeScript declarations and initializes its WASM kernel asynchronously.
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const createOcct = require('occt-import-js') as () => Promise<any>;
   const occt = await createOcct();
   const result = occt.ReadStepFile(content, {
-    linearUnit: 'millimeter',
+    linearUnit: options.linearUnit ?? 'millimeter',
     linearDeflectionType: 'bounding_box_ratio',
     linearDeflection: 0.001,
     angularDeflection: 0.5,

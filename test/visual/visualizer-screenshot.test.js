@@ -19,9 +19,18 @@ async function waitForFile(file, timeoutMs) {
   throw new Error(`Timed out waiting for screenshot capture: ${file}`);
 }
 
-async function applyVisualCaseControls(Panel, visualCase) {
+async function applyVisualCaseControls(Panel, visualCase, document) {
   Panel.sendControl({ type: 'resetVisualScene' });
   await new Promise(resolve => setTimeout(resolve, 300));
+  if (visualCase.revpack || visualCase.origin?.pack) {
+    // Give the visualizer the room a user would: no Explorer, even split.
+    await vscode.commands.executeCommand('workbench.action.closeSidebar');
+    await vscode.commands.executeCommand('workbench.action.evenEditorWidths');
+    // The reset cleared the previous case's scene; re-open the program so the
+    // extension auto-detects its RevPack again, exactly as a user opening it.
+    await vscode.commands.executeCommand('jobline.gcode.openProgramInVisualizer', document.uri.toString());
+    await new Promise(resolve => setTimeout(resolve, 1500));
+  }
   if (visualCase.externalTargetFile) {
     const archive = fs.readFileSync(visualCase.externalTargetFile);
     assert.ok(archive.length > 4, 'Justin Fusion archive must not be empty');
@@ -104,6 +113,354 @@ async function applyVisualCaseControls(Panel, visualCase) {
   }
 }
 
+/**
+ * RevPack checks, run in the real extension host: the pack beside the program
+ * was auto-detected, its badge is on the panel, every layer renders from the
+ * pack in the requested mode (each layer drawn ALONE must light pixels), the
+ * correlation reached the Problems panel and the findings list, and clicking a
+ * finding moves the editor to that line.
+ */
+async function verifyRevPackCase(Panel, document, visualCase, artifactDir) {
+  const rp = visualCase.revpack;
+  const deadline = Date.now() + 40000;
+  let probe;
+  while (Date.now() < deadline) {
+    probe = await Panel.requestVisualProbe(3000);
+    // A STEP target arrives after OpenCascade has tessellated it.
+    const stepOk = !rp.stepTarget || probe?.activeTargetLoader === 'step-occt';
+    const modesOk = probe?.targetOnly === rp.targetOnly && probe?.compareMode === rp.compare && (probe?.layerPreset || '') === rp.preset;
+    if (probe && probe.revpackId === rp.id && probe.renderMode === rp.mode && probe.sharedKernel?.packId === rp.id && probe.targetLoaded && stepOk && modesOk) break;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  assert.equal(probe?.revpackId, rp.id, `RevPack ${rp.id} was not auto-detected for ${visualCase.id}`);
+  assert.equal(probe.revpackBadge, `RevPack: ${rp.name}`, 'RevPack badge is not shown on the panel');
+  assert.equal(probe.renderMode, rp.mode, 'layer render mode did not apply');
+  assert.equal(probe.sharedKernel.workholding, rp.workholding, 'every workholding solid must come from the shared kernel');
+  assert.equal(probe.sharedKernel.tools, rp.tools, 'tool solids from the shared kernel');
+  assert.equal(probe.sharedKernel.inProcess, rp.inProcess, 'in-process stock');
+  assert.equal(probe.workholdingShapes, rp.workholding);
+  // The finished part: the pack's own target, read through OpenCascade when it
+  // is STEP, cross-checked against its STL, and visibly gold on screen with the
+  // stock over it (pixels of the target hue in the composite frame).
+  assert.equal(probe.activeTargetSource, 'revpack', 'target must be the pack target');
+  if (rp.stepTarget) {
+    assert.equal(probe.activeTargetLoader, 'step-occt', 'STEP target must load through OpenCascade');
+    assert.ok(probe.targetStlCrossCheck?.ok, `STEP vs STL bounds disagree: ${JSON.stringify(probe.targetStlCrossCheck)}`);
+  }
+  // The part is gold inside the 50% stock; "All solid" buries it in solid
+  // stock and "Workholding only" hides it, so those two only check it is not drawn over.
+  const partShown = rp.preset !== 'all-solid' && rp.preset !== 'workholding';
+  const minTargetPixels = !partShown ? 0 : rp.mode === 'wireframe' ? 150 : 2500;
+  assert.ok(probe.targetHuePixels >= minTargetPixels,
+    `target not visibly distinguishable in ${rp.mode} for ${visualCase.id}: ${probe.targetHuePixels} gold pixels (< ${minTargetPixels})`);
+  if (rp.preset === 'workholding') assert.ok(probe.targetHuePixels < 200, `Workholding only still shows the part: ${probe.targetHuePixels} gold pixels`);
+
+  // Stock exactly where the setup puts it (the pack's stock = target bounds
+  // grown by the setup offsets, proven by the kernel test), with the part inside.
+  assert.ok(probe.stockBounds, `stock bounds not reported for ${visualCase.id}`);
+  const sb = probe.stockBounds;
+  const ext = Math.max(...rp.stockBounds.max.map((v, k) => v - rp.stockBounds.min[k]));
+  const tolStock = Math.max(ext * 0.002, 1e-4);
+  for (let k = 0; k < 3; k++) {
+    assert.ok(Math.abs(sb.min[k] - rp.stockBounds.min[k]) <= tolStock && Math.abs(sb.max[k] - rp.stockBounds.max[k]) <= tolStock,
+      `stock axis ${k} drawn at ${sb.min[k]}..${sb.max[k]}, setup says ${rp.stockBounds.min[k]}..${rp.stockBounds.max[k]} (${visualCase.id})`);
+  }
+  const tb = probe.targetPartBounds;
+  assert.ok(tb, 'target bounds reported');
+  for (let k = 0; k < 3; k++) {
+    assert.ok(tb.min[k] >= sb.min[k] - tolStock && tb.max[k] <= sb.max[k] + tolStock, `target axis ${k} ${tb.min[k]}..${tb.max[k]} outside the stock ${sb.min[k]}..${sb.max[k]} (${visualCase.id})`);
+  }
+  assert.equal(probe.gripShown, rp.grip, 'gripped stock region shown exactly when the setup states a grip on box stock');
+  // Default object styles: stock 50% transparent, the target solid inside it.
+  assert.ok(probe.objectStylesActive, 'per-object styles active for a pack');
+  if (!rp.preset && !rp.objectModes) {
+    assert.deepEqual(probe.objectStyles.stock, { visible: true, mode: 'transparent', opacity: 0.5 }, 'stock defaults to 50% transparent');
+    assert.deepEqual(probe.objectStyles.target, { visible: true, mode: 'solid', opacity: 1 }, 'target defaults to solid');
+  }
+  assert.equal(probe.targetOnly, rp.targetOnly, 'Target only toggle state');
+  if (rp.compare) {
+    assert.ok(probe.compareMode && probe.comparison, 'compare colouring is on');
+    if (rp.clean) assert.equal(probe.comparison.gouge, 0, 'clean pack gouges the target');
+  }
+  if (rp.seeded) {
+    assert.equal(probe.seededBanner, 'Seeded test pack: errors are intentional', 'seeded pack banner');
+  } else {
+    assert.equal(probe.seededBanner, '', 'only a seeded pack shows the seeded banner');
+  }
+
+  const layerProbe = await Panel.requestLayerProbe(15000);
+  assert.ok(layerProbe && !layerProbe.error, `layer probe failed: ${layerProbe?.error}`);
+  const objects = layerProbe.objects || {};
+  // The vise: jaws, body and zero-point stack each draw on their own.
+  if (rp.vise && !rp.targetOnly) {
+    for (const key of ['jaws', 'fixture', 'zeroPoint']) {
+      assert.ok(objects[key]?.present, `${key} object missing (${visualCase.id})`);
+      assert.ok(objects[key].litAlone > 0, `${key} drew nothing on its own (${visualCase.id})`);
+    }
+    // Display detail on the envelopes: serrated teeth + screws on every vise
+    // jaw, spindle / rib on the body, counterbores on the zero-point plate.
+    const detail = probe.workholdingDetail || {};
+    for (const [name, count] of Object.entries(detail)) {
+      if (/jaw/i.test(name) || /base body|vise body/i.test(name) || /zero-point|Quick-Point/i.test(name)) assert.ok(count > 0, `no detail drawn on ${name} (${visualCase.id})`);
+    }
+    if (rp.grip && rp.preset !== 'workholding' && !rp.targetOnly && rp.mode === 'solid') assert.ok(objects.grip?.litAlone > 0, `gripped stock region not drawn (${visualCase.id})`);
+  }
+  if (rp.preset) {
+    const want = { 'all-solid': { jaws: 'solid', fixture: 'solid', zeroPoint: 'solid', stock: 'solid', target: 'solid' }, inspect: { jaws: 'transparent', fixture: 'transparent', zeroPoint: 'transparent', stock: 'transparent', target: 'solid' }, workholding: { jaws: 'solid', fixture: 'solid', zeroPoint: 'solid' } }[rp.preset];
+    for (const [key, mode] of Object.entries(want)) assert.equal(probe.objectStyles[key].mode, mode, `${rp.preset}: ${key} style`);
+    if (rp.preset === 'workholding') {
+      for (const key of ['stock', 'target', 'tool', 'holder', 'toolpath']) assert.ok(!objects[key]?.visible, `Workholding only must hide ${key}`);
+    }
+  }
+  if (rp.objectModes) {
+    for (const [key, mode] of Object.entries(rp.objectModes)) {
+      assert.equal(probe.objectStyles[key].mode, mode, `${key} style`);
+      assert.ok(objects[key].litAlone > 0, `${key} in ${mode} drew nothing`);
+    }
+  }
+  const results = {};
+  const presetHides = rp.preset === 'workholding';
+  const layersToCheck = rp.targetOnly ? ['targetModel'] : presetHides ? ['workholding'] : ['targetModel', 'stock', ...(rp.workholding ? ['workholding'] : []), 'tool', 'path'];
+  if (rp.targetOnly) {
+    for (const layer of ['stock', 'workholding', 'tool', 'path']) {
+      assert.ok(!layerProbe.layers[layer]?.visible, `Target only must hide ${layer}`);
+    }
+  }
+  for (const layer of layersToCheck) {
+    const entry = layerProbe.layers[layer];
+    results[layer] = entry;
+    assert.ok(entry && entry.present && entry.visible, `${layer} layer missing in ${rp.mode} for ${visualCase.id}`);
+    assert.ok(entry.litAlone > 0, `${layer} layer drew nothing on its own in ${rp.mode} for ${visualCase.id}`);
+    if (layer === 'path') continue;
+    if (rp.objectModes && layer === 'workholding') continue; // mixed per-object styles, checked above
+    if (rp.mode === 'wireframe') {
+      assert.equal(entry.solidMeshes, 0, `${layer} still has shaded solids in wireframe mode (${visualCase.id})`);
+      assert.ok(entry.lines > 0 || entry.wireframeMeshes > 0, `${layer} has no wireframe in ${visualCase.id}`);
+    } else {
+      assert.ok(entry.solidMeshes > 0, `${layer} has no shaded solid in solid mode (${visualCase.id})`);
+    }
+  }
+
+  const diagnostics = vscode.languages.getDiagnostics(document.uri).filter(item => item.source === 'JobLine RevPack');
+  const errors = diagnostics.filter(item => item.severity === vscode.DiagnosticSeverity.Error);
+  if (rp.clean) assert.equal(errors.length, 0, `clean pack produced RevPack errors: ${errors.map(item => item.code).join(', ')}`);
+  else assert.ok(errors.length > 0, 'seeded pack produced no RevPack error diagnostics');
+  if (rp.seeded) {
+    for (const item of diagnostics) assert.match(item.message, /Seeded test pack: errors are intentional/, 'every seeded finding says it is intentional');
+  }
+  // Everything in the Problems panel for this file, every source, so a
+  // finding from the extension's own checks is not mistaken for the pack's.
+  const allDiagnostics = vscode.languages.getDiagnostics(document.uri);
+  assert.equal(probe.revpackFindingsRendered, diagnostics.length, 'findings list and Problems panel disagree');
+
+  let jaw = null;
+  if (rp.jawHit) {
+    jaw = diagnostics.find(item => (typeof item.code === 'object' ? item.code.value : item.code) === 'rapid-into-jaw');
+    assert.ok(jaw, `the seeded rapid into the jaw is not in the Problems panel: ${diagnostics.map(d => d.code).join(', ')}`);
+    assert.match(jaw.message, /jaw \+Y/, 'the jaw finding names the jaw');
+    assert.deepEqual(probe.hitSolids, ['Makro-Grip 77 jaw +Y (moves, serrated)'], 'the jaw the program crashes into is drawn red');
+  }
+  let clicked = null;
+  if (diagnostics.length) {
+    // The jaw case clicks the jaw finding, so it is the one in view for the screenshot.
+    const first = jaw || diagnostics.find(item => item.severity === vscode.DiagnosticSeverity.Error) || diagnostics[0];
+    const line1 = first.range.start.line + 1;
+    Panel.sendControl({ type: 'clickRevPackFinding', line: line1 });
+    const until = Date.now() + 5000;
+    while (Date.now() < until) {
+      const editor = vscode.window.visibleTextEditors.find(item => item.document.uri.toString() === document.uri.toString());
+      if (editor && editor.selection.active.line === first.range.start.line) { clicked = line1; break; }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    assert.equal(clicked, line1, 'clicking a RevPack finding did not reveal its line');
+  }
+  if (rp.showProblems) {
+    await vscode.commands.executeCommand('workbench.actions.view.problems');
+    await new Promise(resolve => setTimeout(resolve, 600));
+  }
+  fs.writeFileSync(path.join(artifactDir, `${visualCase.id}.revpack.json`), JSON.stringify({
+    id: visualCase.id, pack: rp.id, mode: rp.mode, badge: probe.revpackBadge, sharedKernel: probe.sharedKernel,
+    findingsSummary: probe.revpackFindingsSummary, diagnostics: diagnostics.map(item => ({ line: item.range.start.line + 1, severity: item.severity, code: item.code, message: item.message })),
+    clickToLine: clicked, layers: results,
+    target: { loader: probe.activeTargetLoader, format: probe.activeTargetFormat, bounds: probe.activeTargetBounds, stlCrossCheck: probe.targetStlCrossCheck, huePixels: probe.targetHuePixels },
+    targetOnly: probe.targetOnly, compareMode: probe.compareMode, comparison: probe.comparison, seededBanner: probe.seededBanner,
+    hitSolids: probe.hitSolids, stockBounds: probe.stockBounds, targetPartBounds: probe.targetPartBounds, gripShown: probe.gripShown, packSetup: probe.packSetup,
+    objectStyles: probe.objectStyles, layerPreset: probe.layerPreset, objects,
+    canvas: { width: probe.width, height: probe.height },
+    problemsPanel: allDiagnostics.map(item => ({ line: item.range.start.line + 1, severity: item.severity, source: item.source, code: typeof item.code === 'object' ? item.code.value : item.code, message: item.message })),
+  }, null, 2));
+}
+
+/** AR4 real part, imported through the STEP (OpenCascade) or STL path, in solid or wireframe. */
+async function verifyAr4Case(Panel, visualCase, artifactDir) {
+  const a = visualCase.ar4;
+  let probe;
+  const deadline = Date.now() + 40000;
+  while (Date.now() < deadline) {
+    probe = await Panel.requestVisualProbe(3000);
+    if (probe?.targetLoaded && probe.targetDisplayMode === a.mode && probe.renderMode === a.mode) break;
+    if (probe?.targetLoaded) {
+      // A slow STEP can land after the mode controls; apply them again.
+      Panel.sendControl({ type: 'setSceneRenderMode', mode: a.mode });
+      Panel.sendControl({ type: 'setTargetDisplayMode', mode: a.mode });
+    }
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  assert.ok(probe?.targetLoaded, `AR4 ${a.part} (${a.format}) did not load`);
+  assert.match(probe.activeTargetFormat || '', a.format === 'step' ? /^STEP/ : /^STL/, 'loaded through the requested path');
+  const b = probe.activeTargetBounds;
+  // STL bounds as the shared kernel reads them; STEP at its own design origin
+  // (Annin's STLs are moved to positive space), same extents either way.
+  const want = a.format === 'step' ? a.golden.step : a.golden.stl;
+  const stl = a.golden.stl;
+  const size = Math.max(...stl.max.map((v, k) => v - stl.min[k]));
+  const tol = Math.max(0.05, size * 0.002);
+  const got = [b.minX, b.minY, b.minZ, b.maxX, b.maxY, b.maxZ];
+  [...want.min, ...want.max].forEach((v, k) => assert.ok(Math.abs(got[k] - v) <= tol, `${a.part} ${a.format} bound ${k}: ${got[k]} vs ${v} (mm, part orientation)`));
+  for (let k = 0; k < 3; k++) {
+    const extent = got[k + 3] - got[k];
+    assert.ok(Math.abs(extent - (stl.max[k] - stl.min[k])) <= tol, `${a.part} ${a.format} extent axis ${k}: ${extent} vs STL ${stl.max[k] - stl.min[k]}`);
+  }
+  const layerProbe = await Panel.requestLayerProbe(15000);
+  const entry = layerProbe?.layers?.targetModel;
+  assert.ok(entry && entry.present && entry.litAlone > 0, `${a.part} drew nothing`);
+  if (a.mode === 'wireframe') assert.equal(entry.solidMeshes, 0, `${a.part} still shaded in wireframe`);
+  else assert.ok(entry.solidMeshes > 0, `${a.part} has no shaded solid`);
+  // The part must read as the gold target on screen, not a speck beside a
+  // previous program's stock.
+  const minGold = a.mode === 'wireframe' ? 150 : 2500;
+  assert.ok(probe.targetHuePixels >= minGold, `${a.part} ${a.format} not visibly gold in ${a.mode}: ${probe.targetHuePixels} gold pixels (< ${minGold})`);
+  // An uploaded part's stock sits around it: 3 mm sides, 1 mm top, 3 mm grip + 1 mm below
+  // (the shared kernel's uploadSetup), never a placeholder box at the origin.
+  const sb = probe.stockBounds;
+  const tb = probe.targetPartBounds;
+  assert.ok(sb && tb, `${a.part}: stock / part bounds not reported`);
+  const grow = { min: [3, 3, 4], max: [3, 3, 1] };
+  for (let k = 0; k < 3; k++) {
+    assert.ok(Math.abs(sb.min[k] - (tb.min[k] - grow.min[k])) < 1e-3 && Math.abs(sb.max[k] - (tb.max[k] + grow.max[k])) < 1e-3,
+      `${a.part}: stock axis ${k} ${sb.min[k]}..${sb.max[k]} is not the part ${tb.min[k]}..${tb.max[k]} grown by the upload setup`);
+  }
+  fs.writeFileSync(path.join(artifactDir, `${visualCase.id}.ar4.json`), JSON.stringify({
+    id: visualCase.id, part: a.part, format: probe.activeTargetFormat, mode: a.mode, bounds: b, expected: want, tolerance: tol,
+    triangles: probe.activeTargetPointCount ? probe.activeTargetPointCount / 3 : null, layer: entry, huePixels: probe.targetHuePixels,
+    stockBounds: sb, targetPartBounds: tb,
+  }, null, 2));
+}
+
+/** Resolve the AR4 upload's symbolic picks ('gear-bore', 'side-face') on its own triangles with the shared kernel. */
+function resolveUploadPick(extensionPath, targetFile, what) {
+  const kernel = require(path.join(extensionPath, 'out', 'src', 'providers', 'visualizer', 'revpackPlacement.js'));
+  const geo = require(path.join(extensionPath, 'out', 'src', 'providers', 'visualizer', 'revpackGeometry.js'));
+  const mesh = geo.loadStl(fs.readFileSync(targetFile));
+  const p = mesh.positions, n = mesh.triangleCount;
+  const adjacency = kernel.triangleAdjacency(p);
+  if (what === 'side-face') {
+    let best = -1, bestArea = 0;
+    for (let t = 0; t < n; t++) {
+      const tn = kernel.triangleNormal(p, t);
+      if (Math.abs(tn.normal[2]) < 0.05 && tn.area > bestArea) { bestArea = tn.area; best = t; }
+    }
+    return { tri: best };
+  }
+  // The central bore: walk the triangles nearest the part's centre until one fits a bore.
+  const c = [0, 1, 2].map(k => (mesh.bounds.min[k] + mesh.bounds.max[k]) / 2);
+  const order = Array.from({ length: n }, (_, t) => t).map(t => {
+    const ct = kernel.triangleNormal(p, t).centroid;
+    return [t, Math.hypot(ct[0] - c[0], ct[1] - c[1], ct[2] - c[2])];
+  }).sort((a, b) => a[1] - b[1]);
+  for (const [t] of order.slice(0, 4000)) {
+    const f = kernel.pickFeature(p, t, { adjacency });
+    if (f && f.kind === 'cylinder' && f.bore) return { tri: t };
+  }
+  throw new Error('no bore found on the uploaded part');
+}
+
+/**
+ * Part to origin (Origin panel): run the operations through the shared
+ * kernel (jobline.placement.run), then check where the target is drawn, that
+ * it is inside the stock, and that the WCS triad / feature highlight / view
+ * normal are on screen.
+ */
+async function verifyOriginCase(Panel, visualCase, artifactDir, extensionPath) {
+  const o = visualCase.origin;
+  let probe;
+  const deadline = Date.now() + 40000;
+  while (Date.now() < deadline) {
+    probe = await Panel.requestVisualProbe(3000);
+    const ready = o.pack
+      ? probe?.revpackId === o.pack && probe.targetLoaded && (!o.stepTarget || probe.activeTargetLoader === 'step-occt')
+      : probe?.targetLoaded;
+    if (ready) break;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  assert.ok(probe?.targetLoaded, `origin ${visualCase.id}: target not loaded`);
+  // Every case starts from the file origin (sessions outlive a case).
+  await vscode.commands.executeCommand('jobline.placement.run', { op: 'reset' });
+  await vscode.commands.executeCommand('jobline.placement.showPanel');
+  let state;
+  for (const raw of o.ops) {
+    const op = JSON.parse(JSON.stringify(raw));
+    if (op.pick && typeof op.pick.point === 'string') op.pick = resolveUploadPick(extensionPath, visualCase.targetFile, op.pick.point);
+    state = await vscode.commands.executeCommand('jobline.placement.run', op);
+    assert.ok(state, `origin ${visualCase.id}: ${op.op} returned no state`);
+    assert.ok(!state.error, `origin ${visualCase.id}: ${op.op} failed: ${state.error}`);
+    await new Promise(resolve => setTimeout(resolve, 900));
+  }
+  const e = o.expect;
+  // Wait for the moved target (and a STEP re-send) to be drawn.
+  const until = Date.now() + 30000;
+  const pb = state.partBox;
+  while (Date.now() < until) {
+    probe = await Panel.requestVisualProbe(3000);
+    const b = probe?.activeTargetBounds;
+    const drawn = b && Math.abs(b.maxZ - pb.max[2]) < 0.02 * Math.max(1, pb.max[2] - pb.min[2]) && Math.abs(b.minX - pb.min[0]) < 0.02 * Math.max(1, pb.max[0] - pb.min[0]);
+    const stepOk = !o.stepTarget || probe?.activeTargetLoader === 'step-occt';
+    if (drawn && stepOk && probe.placement?.wcsShown && (!e.feature || probe.placement.highlightTriangles > 0)) break;
+    await new Promise(resolve => setTimeout(resolve, 300));
+  }
+  if (e.hover && state.feature?.triangles?.length) {
+    Panel.sendControl({ type: 'placementHover', tri: state.feature.triangles[0] });
+    await new Promise(resolve => setTimeout(resolve, 300));
+    probe = await Panel.requestVisualProbe(3000);
+  }
+  const b = probe.activeTargetBounds;
+  const size = Math.max(b.maxX - b.minX, b.maxY - b.minY, b.maxZ - b.minZ);
+  const tol = Math.max(size * 0.003, 1e-4);
+  const at0 = (v, what) => assert.ok(Math.abs(v) <= tol, `origin ${visualCase.id}: ${what} = ${v}, expected 0 (tol ${tol})`);
+  if (e.label) assert.match(state.label, new RegExp(e.label), `origin ${visualCase.id}: WCS label`);
+  if (e.corner) { at0(b.minX, 'target min X'); at0(b.minY, 'target min Y'); at0(b.maxZ, 'target top Z'); }
+  if (e.topCenter) { at0((b.minX + b.maxX) / 2, 'target centre X'); at0((b.minY + b.maxY) / 2, 'target centre Y'); at0(b.maxZ, 'target top Z'); }
+  if (e.feature) {
+    assert.equal(state.feature?.kind, e.feature, `origin ${visualCase.id}: picked feature`);
+    assert.ok(probe.placement.highlightTriangles > 0, `origin ${visualCase.id}: picked feature not highlighted`);
+    assert.equal(probe.placement.featureKind, e.feature);
+  }
+  if (e.feature === 'cylinder') { at0(state.feature.point[0], 'bore axis X'); at0(state.feature.point[1], 'bore axis Y'); }
+  if (e.featureNormal) for (let k = 0; k < 3; k++) assert.ok(Math.abs(state.feature.normal[k] - e.featureNormal[k]) < 1e-6, `origin ${visualCase.id}: face normal ${state.feature.normal}`);
+  if (e.viewNormal) assert.ok(probe.placement.viewNormal, `origin ${visualCase.id}: view not normal to the face`);
+  if (e.hover) assert.ok(probe.placement.hoverShown, `origin ${visualCase.id}: hover highlight not drawn`);
+  assert.ok(probe.placement.open && probe.placement.active, `origin ${visualCase.id}: Origin panel not open / active`);
+  assert.ok(probe.placement.wcsShown, `origin ${visualCase.id}: WCS triad not drawn`);
+  // The target stays inside the stock, as the setup places it.
+  assert.equal(state.insideStock, true, `origin ${visualCase.id}: target outside the stock`);
+  const sb = probe.stockBounds;
+  if (sb) for (let k = 0; k < 3; k++) {
+    const lo = [b.minX, b.minY, b.minZ][k], hi = [b.maxX, b.maxY, b.maxZ][k];
+    assert.ok(lo >= sb.min[k] - tol && hi <= sb.max[k] + tol, `origin ${visualCase.id}: target axis ${k} ${lo}..${hi} outside drawn stock ${sb.min[k]}..${sb.max[k]}`);
+  }
+  if (o.pack) {
+    assert.ok(probe.sharedKernel?.workholding > 0, `origin ${visualCase.id}: vise solids missing after the move`);
+    assert.match(probe.packSetup?.partZero || '', /placed in JobLine/, `origin ${visualCase.id}: setup part zero not updated`);
+    assert.deepEqual(probe.objectStyles?.stock, { visible: true, mode: 'transparent', opacity: 0.5 }, 'stock stays 50% transparent after a move');
+  }
+  fs.writeFileSync(path.join(artifactDir, `${visualCase.id}.origin.json`), JSON.stringify({
+    id: visualCase.id, mode: o.mode, ops: o.ops, label: state.label, anchor: state.anchor, origin: state.origin, rotation: state.rotation,
+    readout: state.readout, workOffset: state.workOffset, partBox: state.partBox, stockBox: state.stockBox, insideStock: state.insideStock,
+    feature: state.feature ? { kind: state.feature.kind, label: state.feature.label, point: state.feature.point, normal: state.feature.normal, axisDir: state.feature.axisDir, radius: state.feature.radius, triangles: state.feature.triangles.length } : null,
+    drawn: { targetBounds: b, stockBounds: sb, loader: probe.activeTargetLoader, placement: probe.placement, packSetup: probe.packSetup, workholding: probe.sharedKernel?.workholding },
+  }, null, 2));
+}
+
 async function verifyRevgripsSetup(Panel, document, artifactDir) {
   const steps = [];
   // G54 identifies the work coordinate system; its measured machine datum is
@@ -141,6 +498,18 @@ suite('JobLine visualizer screenshot matrix', function () {
 
   const visualCases = JSON.parse(process.env.JOBLINE_VISUAL_CASES || '[]');
   for (const visualCase of visualCases) test(`renders ${visualCase.id}`, async () => {
+    try {
+      await renderCase(visualCase);
+    } catch (error) {
+      // Tell the capture side this case will never be ready, with the reason,
+      // so the runner reports it instead of timing out on the screenshot.
+      const dir = process.env.JOBLINE_VISUAL_ARTIFACT_DIR;
+      if (dir) fs.writeFileSync(path.join(dir, `${visualCase.id}.error`), String(error && error.stack || error));
+      throw error;
+    }
+  });
+
+  async function renderCase(visualCase) {
     const artifactDir = process.env.JOBLINE_VISUAL_ARTIFACT_DIR;
     assert.ok(artifactDir, 'JOBLINE_VISUAL_ARTIFACT_DIR must be supplied by the visual runner');
 
@@ -191,7 +560,16 @@ suite('JobLine visualizer screenshot matrix', function () {
     }
     assert.ok(ToolpathVisualizerPanel.renderStatus.reviewRendered, 'Program review must render before capture');
 
-    await applyVisualCaseControls(ToolpathVisualizerPanel, visualCase);
+    await applyVisualCaseControls(ToolpathVisualizerPanel, visualCase, document);
+    if (visualCase.revpack) {
+      await verifyRevPackCase(ToolpathVisualizerPanel, document, visualCase, artifactDir);
+    }
+    if (visualCase.ar4) {
+      await verifyAr4Case(ToolpathVisualizerPanel, visualCase, artifactDir);
+    }
+    if (visualCase.origin) {
+      await verifyOriginCase(ToolpathVisualizerPanel, visualCase, artifactDir, extension.extensionPath);
+    }
     if (visualCase.id === 'revgrips-stem-50-35-pro') {
       await verifyRevgripsSetup(ToolpathVisualizerPanel, document, artifactDir);
     }
@@ -209,7 +587,7 @@ suite('JobLine visualizer screenshot matrix', function () {
       probe.litRatio > 0.005,
       `Visualizer drew a blank scene for ${visualCase.id}: only ${probe.litPixels} of ${probe.sampledPixels} sampled pixels differ from the clear colour (${(probe.litRatio * 100).toFixed(3)}%)`
     );
-    if (!visualCase.targetModel && !visualCase.targetFile && !visualCase.targetFiles?.length && !visualCase.externalTargetFile) {
+    if (!visualCase.revpack && !visualCase.origin && !visualCase.targetModel && !visualCase.targetFile && !visualCase.targetFiles?.length && !visualCase.externalTargetFile) {
       assert.equal(probe.targetLoaded, false, `G-code-only case ${visualCase.id} retained an unrelated target model`);
     }
     const commands = await vscode.commands.getCommands(true);
@@ -279,5 +657,12 @@ suite('JobLine visualizer screenshot matrix', function () {
       assert.ok(fs.existsSync(screenshot), `Targeted ${area} screenshot should be retained as an artifact`);
       assert.ok(fs.statSync(screenshot).size > 500, `Targeted ${area} screenshot should contain rendered UI`);
     }
-  });
+    if (visualCase.origin) {
+      // Leave the next case the pack as authored and the tool on screen.
+      await vscode.commands.executeCommand('jobline.placement.run', { op: 'reset' });
+      ToolpathVisualizerPanel.sendControl({ type: 'setLayerVisible', layer: 'tool', visible: true });
+      ToolpathVisualizerPanel.sendControl({ type: 'setLayerVisible', layer: 'toolHolder', visible: true });
+      ToolpathVisualizerPanel.sendControl({ type: 'showOriginPanel', open: false });
+    }
+  }
 });

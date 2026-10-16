@@ -1,0 +1,98 @@
+{
+  "schema": "jobline.revpack/2",
+  "id": "okuma-lb3000-shaft",
+  "name": "Spaceturn LB3000 EX II stepped shaft (public sample)",
+  "units": "mm",
+  "program": {
+    "file": "O1000.min",
+    "dialect": "okuma"
+  },
+  "target": {
+    "file": "target.step",
+    "format": "step",
+    "stl": "target.stl"
+  },
+  "stock": {
+    "name": "4140 bar dia 80 x 120 (1 mm face stock)",
+    "diameter": 80,
+    "zMin": -120,
+    "zMax": 1
+  },
+  "workholding": [
+    {
+      "name": "8in chuck jaws",
+      "diameter": 160,
+      "innerDiameter": 80,
+      "zMin": -120,
+      "zMax": -85,
+      "role": "chuck-jaw"
+    }
+  ],
+  "setup": {
+    "partZero": "Z0 on the finished face, X0 on the spindle centreline (ZERO SET)",
+    "barOffsets": {
+      "radial": 0,
+      "zMin": 0,
+      "zMax": 1
+    },
+    "gripDepth": 35
+  },
+  "workOffsets": {
+    "ZERO-SET": {
+      "x": 0,
+      "z": -300
+    }
+  },
+  "tools": [
+    {
+      "t": 1,
+      "type": "Lathe Insert",
+      "diameter": 12.7,
+      "gaugeLength": 1,
+      "description": "OD ROUGH CNMG120408"
+    },
+    {
+      "t": 3,
+      "type": "Lathe Insert",
+      "diameter": 9.525,
+      "gaugeLength": 1,
+      "description": "OD FINISH VNMG160404"
+    },
+    {
+      "t": 5,
+      "type": "Lathe Grooving Insert",
+      "diameter": 3,
+      "gaugeLength": 1,
+      "description": "OD GROOVE 3.0 WIDE"
+    }
+  ],
+  "machine": {
+    "presetId": "builtin-okuma-lb3000-ex2",
+    "name": "Okuma Spaceturn LB3000 EX II (OSP-P300LA)",
+    "dialect": "okuma",
+    "controlModel": "OSP-P300LA",
+    "machineClass": "lathe",
+    "axes": [
+      {
+        "name": "X",
+        "min": -12.7,
+        "max": 508
+      },
+      {
+        "name": "Z",
+        "min": -565,
+        "max": 0
+      }
+    ],
+    "kinematics": "2-axis turn center (X diameter, Z), C500 bed",
+    "spindleMaxRpm": 5000,
+    "toolChangePosition": {
+      "x": 300,
+      "z": 150
+    }
+  },
+  "clearance": 2,
+  "expect": {
+    "clean": true
+  }
+}

@@ -9,6 +9,7 @@ import { ToolPreviewPanel } from './providers/toolPreviewPanel';
  */
 
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { loadConfig } from './config';
 import { getHoverMarkdown } from './providers/hoverProvider';
 import { registerSidebarTreeProviders, registerToolsCommands, getLastGCodeDoc } from './providers/sidebarTreeProviders';
@@ -23,7 +24,13 @@ import { RatingState, recordRatingChoice, recordSuccessfulValidation } from './v
 import { registerFormatter } from './providers/formatterProvider';
 import { registerSubprogramProvider } from './providers/subprogramProvider';
 import { buildVisualizerHarnessData } from './providers/visualizer/fixtureHarness';
+import { resolveControl, resolveControlType } from './utils/controlResolve';
 import { buildAutoSimulationMessages } from './providers/visualizer/simulationSetup';
+import { buildRevPackScene, clearRevPackMessages, findRevPackForProgram, readPartOnlyJbl, readRevPack, revPackStepTargetMessage, type LoadedRevPack } from './providers/visualizer/revpackLoader';
+import { isSeededTestPack, SEEDED_TEST_PACK_LABEL } from './providers/visualizer/revpack';
+import type { CorrelationFinding } from './providers/visualizer/revpackCorrelation';
+import { PlacementSessions, parseOffsetInput, placedUploadMessage, placementPanelMessage, type PlacementPanelMessage, type PlacementTarget } from './providers/visualizer/revpackPlacementHost';
+import { BOX_POINTS, PLACEMENT_PRESETS, type PlacementOp } from './providers/visualizer/revpackPlacement';
 import type { ToolpathPoint } from './providers/visualizer/toolpathParser';
 import { reviewGCodeProgram } from './providers/visualizer/programReview';
 import { loadStlMesh } from './providers/visualizer/stlMeshLoader';
@@ -36,10 +43,20 @@ import { MachinePresetStore } from './presets/presetStore';
 import { registerPresetCommands } from './presets/presetCommands';
 import { registerMachineSetupTree } from './providers/machineSetupTreeProvider';
 import { machineClassForKind } from './presets/jblMachine';
+import { ToolLibraryStore, setToolLibraryStore } from './tooling/toolLibraryStore';
+import { registerCamCommands } from './cam/camCommands';
+import { CONTROL_PROFILES } from './diagnostics/controlRules';
 
 const LANGUAGE_ID = 'gcode';
 
 export function activate(context: vscode.ExtensionContext): void {
+        // Tool library / linked setup sheets: the sidebar and diagnostics read
+        // these, so the store exists before either registers.
+        const toolLibraryStore = new ToolLibraryStore(context.workspaceState);
+        setToolLibraryStore(toolLibraryStore);
+        context.subscriptions.push(toolLibraryStore, { dispose: () => setToolLibraryStore(undefined) });
+        registerCamCommands(context, toolLibraryStore);
+
         // Machine presets come first: the sidebar, status bar and visualizer all
         // read the active machine from here.
         const presetStore = new MachinePresetStore();
@@ -47,6 +64,24 @@ export function activate(context: vscode.ExtensionContext): void {
         registerPresetCommands(context, presetStore);
         registerMachineSetupTree(context, presetStore);
         void presetStore.reload();
+
+        // RevPack state: packs the user pinned with "Load RevPack…", the pack
+        // each open program is currently drawn from, and its correlation
+        // findings in the Problems panel.
+        const pinnedRevPacks = new Map<string, string>();
+        const activeRevPacks = new Map<string, string>();
+        // Part placement / work origin (Origin panel + jobline.placement.*):
+        // one session per RevPack target or uploaded part, all maths in the
+        // shared kernel (revpackPlacement.ts).
+        const placementSessions = new PlacementSessions();
+        /** Uploaded target parts (no pack): their message as imported, PART coordinates. */
+        const uploadTargets = new Map<string, { message: { meshVertices?: number[]; bounds: Bounds3D } & Record<string, unknown>; positions: Float32Array }>();
+        /** STEP targets' tessellations, PART coordinates, per pack (picks use the triangles on screen). */
+        const stepPartPositions = new Map<string, Float32Array>();
+        let placementExtra: { feature?: PlacementPanelMessage['feature']; error?: string; view?: 'normal' } = {};
+        const revpackDiagnostics = vscode.languages.createDiagnosticCollection('jobline-revpack');
+        context.subscriptions.push(revpackDiagnostics);
+        context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(closed => revpackDiagnostics.delete(closed.uri)));
 
         /** What the active preset says about the machine, for the simulation. */
         function presetSimulationOverrides(): { workholding?: string; machineType?: string } {
@@ -170,21 +205,321 @@ export function activate(context: vscode.ExtensionContext): void {
         function loadSimulationSetupFromDocument(doc: vscode.TextDocument): boolean {
           if (!doc) return false;
           try {
-            const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
-            const harness = buildVisualizerHarnessData(doc.getText(), controlType);
-            playback.cutterSize = harness.tools[0]?.diameter || (harness.unit === 'mm' ? 6 : 0.25);
-            updateMachineStatusBar(harness.setup.machineType);
-            const overrides = presetSimulationOverrides();
-            for (const message of buildAutoSimulationMessages(harness, overrides.workholding, overrides.machineType)) {
-              ToolpathVisualizerPanel.queueMessage(message);
-            }
-            ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(doc.getText(), controlType) });
+            sendSimulationSetup(doc);
             return true;
           } catch (err) {
             vscode.window.showWarningMessage('JobLine: Unable to auto-load stock/tool setup: ' + String(err));
             return false;
           }
         }
+
+        /**
+         * The pack for a program: one the user picked with "Load RevPack…"
+         * wins, then a revpack.json beside the program (or in a parent
+         * revpack/ folder). Undefined means "guess the setup from the program".
+         */
+        function revPackForDocument(doc: vscode.TextDocument): LoadedRevPack | undefined {
+          if (doc.uri.scheme !== 'file') return undefined;
+          const key = doc.uri.toString();
+          const pinned = pinnedRevPacks.get(key);
+          if (pinned) {
+            try { return readRevPack(pinned); } catch (err) {
+              pinnedRevPacks.delete(key);
+              vscode.window.showWarningMessage('JobLine: RevPack could not be re-read: ' + String(err));
+            }
+          }
+          if (!vscode.workspace.getConfiguration('jobline').get<boolean>('revpack.autoDetect', true)) return undefined;
+          const folder = vscode.workspace.getWorkspaceFolder(doc.uri)?.uri.fsPath;
+          return findRevPackForProgram(doc.uri.fsPath, folder);
+        }
+
+        function publishRevPackDiagnostics(doc: vscode.TextDocument, findings: CorrelationFinding[], packName: string, seeded = false): void {
+          const diagnostics = findings.map(finding => {
+            const line = Math.max(0, Math.min(doc.lineCount - 1, finding.line - 1));
+            const range = doc.lineAt(line).range;
+            const severity = finding.severity === 'error' ? vscode.DiagnosticSeverity.Error
+              : finding.severity === 'warning' ? vscode.DiagnosticSeverity.Warning
+                : vscode.DiagnosticSeverity.Information;
+            // A seeded test pack's program is wrong on purpose; say so on every
+            // finding so nobody chases them as real problems.
+            const label = seeded ? `${SEEDED_TEST_PACK_LABEL} - RevPack: ${packName}` : `RevPack: ${packName}`;
+            const diagnostic = new vscode.Diagnostic(range, `${finding.message} [${label}]`, severity);
+            diagnostic.source = 'JobLine RevPack';
+            diagnostic.code = finding.id;
+            return diagnostic;
+          });
+          revpackDiagnostics.set(doc.uri, diagnostics);
+        }
+
+        /** Stock, workholding, tools, machine and review for one program: from its RevPack when it has one. */
+        function sendSimulationSetup(doc: vscode.TextDocument): void {
+          const text = doc.getText();
+          const controlType = resolveControlType(text, doc.uri);
+          const harness = buildVisualizerHarnessData(text, controlType);
+          const loaded = revPackForDocument(doc);
+          if (loaded) {
+            const placementKey = `revpack:${loaded.file}`;
+            const scene = buildRevPackScene(loaded, text, harness.tools, placementSessions.has(placementKey) ? placementSessions.session(placementKey) : undefined);
+            playback.cutterSize = scene.cutterSize;
+            updateMachineStatusBar(`${loaded.pack.machine.name} (RevPack)`);
+            // Shared-kernel solids first, so stock/workholding/tool build from them.
+            ToolpathVisualizerPanel.queueMessage(scene.sceneMessage);
+            for (const message of scene.setup) ToolpathVisualizerPanel.queueMessage(message);
+            if (scene.target) ToolpathVisualizerPanel.queueMessage(scene.target);
+            ToolpathVisualizerPanel.queueMessage(scene.findings);
+            publishRevPackDiagnostics(doc, scene.report.findings, loaded.pack.name || loaded.pack.id, isSeededTestPack(loaded.pack));
+            activeRevPacks.set(doc.uri.toString(), loaded.file);
+            // A STEP target replaces the STL one once OpenCascade has
+            // tessellated it (same id), unless the program moved on meanwhile.
+            // Picks land on the triangles on screen: the STEP tessellation once it has arrived.
+            const stepPositions = stepPartPositions.get(placementKey);
+            placementSessions.current = scene.placementTarget && stepPositions ? { ...scene.placementTarget, positions: stepPositions } : scene.placementTarget;
+            sendPlacementPanel();
+            if (loaded.pack.target?.format === 'step') {
+              const key = doc.uri.toString();
+              revPackStepTargetMessage(loaded, scene.targetTransform).then(message => {
+                if (message && activeRevPacks.get(key) === loaded.file) {
+                  ToolpathVisualizerPanel.queueMessage(message);
+                  // Picks now land on the STEP tessellation's triangles.
+                  const current = placementSessions.current;
+                  const positions = stepPartPositions.get(placementKey) ?? new Float32Array(message.partMeshVertices ?? message.meshVertices);
+                  stepPartPositions.set(placementKey, positions);
+                  if (current?.key === placementKey && current.positions !== positions) {
+                    placementSessions.current = { ...current, positions };
+                    sendPlacementPanel();
+                  }
+                }
+              }, err => {
+                console.warn('JobLine RevPack: STEP target could not be read, keeping its STL:', err);
+              });
+            }
+          } else {
+            playback.cutterSize = harness.tools[0]?.diameter || (harness.unit === 'mm' ? 6 : 0.25);
+            updateMachineStatusBar(harness.setup.machineType);
+            const overrides = presetSimulationOverrides();
+            // A previous program's pack must not leave its target, fixture or
+            // badge behind. User-imported targets are left alone.
+            ToolpathVisualizerPanel.forgetMessage('targetModel:revpack-target');
+            ToolpathVisualizerPanel.sendControl({ type: 'removeTargetModel', id: 'revpack-target' });
+            for (const message of clearRevPackMessages()) ToolpathVisualizerPanel.queueMessage(message);
+            for (const message of buildAutoSimulationMessages(harness, overrides.workholding, overrides.machineType)) {
+              ToolpathVisualizerPanel.queueMessage(message);
+            }
+            revpackDiagnostics.delete(doc.uri);
+            activeRevPacks.delete(doc.uri.toString());
+            if (placementSessions.current?.kind === 'revpack') {
+              // Back to the last uploaded part, if one is open.
+              const last = [...uploadTargets.entries()].pop();
+              placementSessions.current = last ? uploadPlacementTarget(last[0], last[1].message, last[1].positions) : undefined;
+            }
+            sendPlacementPanel();
+          }
+          ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(text, controlType) });
+        }
+
+        function sendPlacementPanel(): PlacementPanelMessage {
+          const target = placementSessions.current;
+          const message = placementPanelMessage(target, target ? placementSessions.session(target.key) : undefined, placementExtra);
+          placementExtra = {};
+          ToolpathVisualizerPanel.queueMessage(message);
+          return message;
+        }
+
+        /** An uploaded part, moved by its session (if any), back to the webview. */
+        function resendUploadTarget(id: string, upload: { message: { meshVertices?: number[]; bounds: Bounds3D } & Record<string, unknown>; positions: Float32Array }): void {
+          const key = `upload:${id}`;
+          const message = placementSessions.has(key) ? placedUploadMessage(upload.message, upload.positions, placementSessions.session(key)) : { ...upload.message, placementUpdate: true };
+          ToolpathVisualizerPanel.queueMessage(message);
+        }
+
+        function registerUploadTarget(id: string, message: { meshVertices?: number[]; bounds: Bounds3D; name?: unknown } & Record<string, unknown>): void {
+          if (!message.meshVertices || message.meshVertices.length < 9) return;
+          const positions = new Float32Array(message.meshVertices);
+          uploadTargets.set(id, { message, positions });
+          // A new upload starts from its file origin.
+          placementSessions.clear(`upload:${id}`);
+          if (placementSessions.current?.kind !== 'revpack') {
+            placementSessions.current = uploadPlacementTarget(id, message, positions);
+            sendPlacementPanel();
+          }
+        }
+
+        function uploadPlacementTarget(id: string, message: { bounds: Bounds3D; name?: unknown }, positions: Float32Array): PlacementTarget {
+          const b = message.bounds;
+          return {
+            key: `upload:${id}`, kind: 'upload', name: String(message.name ?? id), units: playback.units,
+            positions, bounds: { min: [b.minX, b.minY, b.minZ], max: [b.maxX, b.maxY, b.maxZ] },
+          };
+        }
+
+        /**
+         * Run one Origin / WCS operation on the current target (RevPack
+         * target or uploaded part) and redraw. Returns the panel state, so
+         * tests and the webview see the same answer.
+         */
+        async function runPlacement(arg: (PlacementOp & { view?: 'normal' }) | undefined): Promise<PlacementPanelMessage | undefined> {
+          const target: PlacementTarget | undefined = placementSessions.current;
+          if (!arg || typeof arg !== 'object' || !('op' in arg)) return undefined;
+          if (!target) {
+            vscode.window.showWarningMessage('JobLine: open a program with a RevPack, or import a target part, before setting the work origin.');
+            return undefined;
+          }
+          const { view, ...op } = arg;
+          const result = placementSessions.run(target, op as PlacementOp);
+          placementExtra = { feature: result.feature, error: result.error, view };
+          if (result.error) vscode.window.setStatusBarMessage(`JobLine Origin: ${result.error}`, 4000);
+          if (!result.changed) return sendPlacementPanel();
+          if (target.kind === 'revpack') {
+            const doc = getPreferredGCodeDoc();
+            if (doc) sendSimulationSetup(doc);
+            else sendPlacementPanel();
+          } else {
+            const id = target.key.slice('upload:'.length);
+            const upload = uploadTargets.get(id);
+            if (upload) resendUploadTarget(id, upload);
+            sendPlacementPanel();
+          }
+          return placementPanelMessage(target, placementSessions.session(target.key), { feature: result.feature, error: result.error });
+        }
+
+        context.subscriptions.push(
+          vscode.commands.registerCommand('jobline.placement.run', (arg?: PlacementOp & { view?: 'normal' }) => runPlacement(arg)),
+          vscode.commands.registerCommand('jobline.placement.state', () => {
+            const target = placementSessions.current;
+            return placementPanelMessage(target, target ? placementSessions.session(target.key) : undefined);
+          }),
+          vscode.commands.registerCommand('jobline.placement.showPanel', async () => {
+            if (!ToolpathVisualizerPanel.currentPanel) await vscode.commands.executeCommand('jobline.gcode.showVisualizer');
+            ToolpathVisualizerPanel.sendControl({ type: 'showOriginPanel', open: true });
+            sendPlacementPanel();
+          }),
+          vscode.commands.registerCommand('jobline.placement.boxPoint', async () => {
+            const ref = await vscode.window.showQuickPick([{ label: 'Part box', ref: 'part' as const }, { label: 'Stock box', ref: 'stock' as const }], { title: 'Work origin on the bounding box of…' });
+            if (!ref) return undefined;
+            const point = await vscode.window.showQuickPick(BOX_POINTS.map(bp => ({ label: bp.label, description: bp.kind, bp })), { title: 'Work origin at (27 box points)' });
+            if (!point) return undefined;
+            return runPlacement({ op: 'boxPoint', sel: point.bp.sel, ref: ref.ref });
+          }),
+          vscode.commands.registerCommand('jobline.placement.preset', async () => {
+            const items = PLACEMENT_PRESETS.flatMap(p => [
+              { label: `${p.label} of the part`, op: { op: 'preset', id: p.id, ref: 'part' } as PlacementOp },
+              { label: `${p.label} of the stock`, op: { op: 'preset', id: p.id, ref: 'stock' } as PlacementOp },
+            ]);
+            const pick = await vscode.window.showQuickPick(items, { title: 'Part to origin: preset' });
+            return pick ? runPlacement(pick.op) : undefined;
+          }),
+          vscode.commands.registerCommand('jobline.placement.face', async () => {
+            const faces = ['top', 'bottom', 'left', 'right', 'front', 'back', 'center'] as const;
+            const pick = await vscode.window.showQuickPick(faces.map(face => ({ label: face[0].toUpperCase() + face.slice(1), face })), { title: 'Move one axis to a face of the part box (Top = Z0 on the top face)' });
+            return pick ? runPlacement({ op: 'face', face: pick.face }) : undefined;
+          }),
+          vscode.commands.registerCommand('jobline.placement.rotate', async () => {
+            const items: Array<{ label: string; op: PlacementOp }> = [];
+            for (const [axis, name] of [[0, 'X'], [1, 'Y'], [2, 'Z']] as const) {
+              items.push({ label: `Rotate +90° about ${name}`, op: { op: 'rotate', axis, turns: 1 } });
+              items.push({ label: `Rotate -90° about ${name}`, op: { op: 'rotate', axis, turns: -1 } });
+            }
+            items.push({ label: 'Flip (180° about X, op 2)', op: { op: 'flip', axis: 0 } }, { label: 'Flip (180° about Y)', op: { op: 'flip', axis: 1 } });
+            items.push({ label: 'Align part +X to Z', op: { op: 'alignAxis', from: '+X', to: '+Z' } }, { label: 'Align part +Y to Z', op: { op: 'alignAxis', from: '+Y', to: '+Z' } });
+            const pick = await vscode.window.showQuickPick(items, { title: 'Re-orient the part about the work origin' });
+            return pick ? runPlacement(pick.op) : undefined;
+          }),
+          vscode.commands.registerCommand('jobline.placement.offset', async () => {
+            const text = await vscode.window.showInputBox({ title: 'Shift the work origin', prompt: 'dX dY dZ [rotate about Z, degrees] in program units, e.g. "0.5 0 -0.02 90"', validateInput: v => parseOffsetInput(v) ? undefined : 'Enter 1 to 4 numbers' });
+            const parsed = text ? parseOffsetInput(text) : undefined;
+            return parsed ? runPlacement({ op: 'offset', d: parsed.d, rotZ: parsed.rotZ }) : undefined;
+          }),
+          vscode.commands.registerCommand('jobline.placement.centerInStock', () => runPlacement({ op: 'centerInStock', axes: 'xy' })),
+          vscode.commands.registerCommand('jobline.placement.pick', async () => {
+            const modes = [
+              { label: 'Face: set axis to face', mode: 'face-axis' }, { label: 'Face: origin at face centre', mode: 'face-origin' },
+              { label: 'Face: align to top', mode: 'face-top' }, { label: 'Face: align to bottom', mode: 'face-bottom' },
+              { label: 'Bore / boss: centre on axis', mode: 'bore' }, { label: 'Bore / boss: centre and turn axis to Z', mode: 'bore-z' },
+              { label: 'Vertex / edge point', mode: 'point' }, { label: 'Two-point midpoint', mode: 'mid2' },
+              { label: 'Three-point circle centre', mode: 'circle3' }, { label: 'View normal to a face', mode: 'view-normal' },
+            ];
+            const pick = await vscode.window.showQuickPick(modes, { title: 'Pick on the part in the 3D view' });
+            if (!pick) return;
+            if (!ToolpathVisualizerPanel.currentPanel) await vscode.commands.executeCommand('jobline.gcode.showVisualizer');
+            ToolpathVisualizerPanel.sendControl({ type: 'showOriginPanel', open: true, pickMode: pick.mode });
+          }),
+          vscode.commands.registerCommand('jobline.placement.undo', () => runPlacement({ op: 'undo' })),
+          vscode.commands.registerCommand('jobline.placement.reset', () => runPlacement({ op: 'reset' })),
+        );
+
+        const loadRevPackCmd = vscode.commands.registerCommand('jobline.revpack.load', async (arg?: vscode.Uri | string) => {
+          const doc = getPreferredGCodeDoc();
+          if (!doc) {
+            vscode.window.showWarningMessage('JobLine: open a G-code program first, then load its RevPack.');
+            return undefined;
+          }
+          let file: string | undefined = typeof arg === 'string' ? arg : arg instanceof vscode.Uri ? arg.fsPath : undefined;
+          if (!file) {
+            const picked = await vscode.window.showOpenDialog({
+              canSelectMany: false,
+              openLabel: 'Load RevPack',
+              defaultUri: vscode.Uri.file(path.dirname(doc.uri.fsPath)),
+              filters: { 'RevPack or JobLine job': ['json', 'jbl'] },
+            });
+            file = picked?.[0]?.fsPath;
+          }
+          if (!file) return undefined;
+          // A part-only .jbl (Setup / WCS made in CAM on an uploaded part, no
+          // RevPack) opens as an uploaded part with CAM's origin applied.
+          if (file.toLowerCase().endsWith('.jbl')) {
+            try {
+              const part = readPartOnlyJbl(file);
+              if (part) {
+                if (!ToolpathVisualizerPanel.currentPanel) await vscode.commands.executeCommand('jobline.gcode.showVisualizer');
+                const mesh = loadStlMesh(part.targetStl.slice().buffer);
+                const id = 'jbl-part';
+                const targetMessage = {
+                  type: 'targetModel', id, targetId: id, role: 'target-part', displayMode: 'transparent', opacity: 0.35,
+                  name: part.name, format: `JobLine job (.jbl) · STL ${mesh.format}`, pointCount: mesh.triangleCount * 3,
+                  meshVertices: Array.from(mesh.positions), bounds: mesh.bounds, offset: { x: 0, y: 0, z: 0 },
+                };
+                registerUploadTarget(id, targetMessage);
+                placementSessions.seed(`upload:${id}`, part.placement);
+                const upload = uploadTargets.get(id);
+                if (upload) resendUploadTarget(id, upload);
+                else ToolpathVisualizerPanel.queueMessage(targetMessage);
+                sendPlacementPanel();
+                vscode.window.setStatusBarMessage(`JobLine: part "${part.name}" opened with its CAM setup`, 5000);
+                return id;
+              }
+            } catch (err) {
+              vscode.window.showErrorMessage('JobLine: ' + String(err instanceof Error ? err.message : err));
+              return undefined;
+            }
+          }
+          let loaded: LoadedRevPack;
+          try {
+            loaded = readRevPack(file);
+          } catch (err) {
+            vscode.window.showErrorMessage('JobLine: ' + String(err instanceof Error ? err.message : err));
+            return undefined;
+          }
+          pinnedRevPacks.set(doc.uri.toString(), loaded.file);
+          // A .jbl from jobline.ai-CAM carries its Setup / WCS: start the Origin panel there.
+          if (loaded.placement) placementSessions.seed(`revpack:${loaded.file}`, loaded.placement);
+          if (!ToolpathVisualizerPanel.currentPanel) {
+            await vscode.commands.executeCommand('jobline.gcode.showVisualizer');
+          } else {
+            refreshVisualizerForDocument(doc, true);
+          }
+          vscode.window.setStatusBarMessage(`JobLine: RevPack "${loaded.pack.name}" loaded for ${path.basename(doc.uri.fsPath)}`, 5000);
+          return loaded.pack.id;
+        });
+        context.subscriptions.push(loadRevPackCmd);
+
+        const clearRevPackCmd = vscode.commands.registerCommand('jobline.revpack.clear', () => {
+          const doc = getPreferredGCodeDoc();
+          if (!doc) return;
+          pinnedRevPacks.delete(doc.uri.toString());
+          revpackDiagnostics.delete(doc.uri);
+          refreshVisualizerForDocument(doc, false);
+        });
+        context.subscriptions.push(clearRevPackCmd);
 
         function refreshVisualizerForDocument(doc: vscode.TextDocument, resetPosition = true): boolean {
           if (!isGCodeFile(doc) || !ToolpathVisualizerPanel.currentPanel) return false;
@@ -434,7 +769,7 @@ export function activate(context: vscode.ExtensionContext): void {
                 format = 'Parasolid text';
                 pointCount = parsed.pointCount;
               }
-              ToolpathVisualizerPanel.queueMessage({
+              const targetMessage = {
                 type: 'targetModel',
                 id: uris.length === 1 ? targetId : `${targetId}-${index + 1}`,
                 targetId: uris.length === 1 ? targetId : `${targetId}-${index + 1}`,
@@ -447,7 +782,10 @@ export function activate(context: vscode.ExtensionContext): void {
                 meshVertices,
                 bounds,
                 offset: { x: 0, y: 0, z: 0 },
-              });
+              };
+              ToolpathVisualizerPanel.queueMessage(targetMessage);
+              // A part opened on its own can be placed with the Origin panel.
+              if (role === 'target-part') registerUploadTarget(targetMessage.id, targetMessage);
               loaded += 1;
             } catch (err) {
               vscode.window.showErrorMessage('JobLine: Could not import scene model: ' + String(err));
@@ -567,18 +905,25 @@ export function activate(context: vscode.ExtensionContext): void {
   const selectControlCmd = vscode.commands.registerCommand(
     'jobline.selectControl',
     async () => {
+      const cnc = (id: keyof typeof CONTROL_PROFILES, label: string, description: string) =>
+        ({ label: `$(circuit-board) ${label}`, description, detail: CONTROL_PROFILES[id].summary, id });
       const controls = [
-        { label: '$(circuit-board) Fanuc CNC',    description: '0i / 30i / 31i series',           id: 'fanuc' },
-        { label: '$(circuit-board) Haas',          description: 'NGC controls',                    id: 'haas' },
-        { label: '$(circuit-board) Siemens',       description: 'Sinumerik 840D / 828D',           id: 'siemens' },
-        { label: '$(circuit-board) Mazak',         description: 'Smooth / Matrix controls',        id: 'mazak' },
-        { label: '$(circuit-board) Okuma',         description: 'OSP-P controls',                  id: 'okuma' },
+        cnc('fanuc', 'Fanuc CNC', '0i / 30i / 31i series'),
+        cnc('haas', 'Haas', 'NGC controls'),
+        cnc('siemens', 'Siemens', 'Sinumerik 840D / 828D'),
+        cnc('mazak', 'Mazak', 'Smooth / Matrix EIA/ISO'),
+        cnc('okuma', 'Okuma', 'OSP-P controls'),
+        cnc('mitsubishi', 'Mitsubishi', 'M8 / M80 (Meldas)'),
+        cnc('heidenhain', 'Heidenhain', 'TNC Klartext and ISO'),
+        cnc('fadal', 'Fadal', 'Format 2'),
+        cnc('generic', 'Generic / LinuxCNC', 'ISO G-code, LinuxCNC O-words'),
         { label: '$(robot) Fanuc Robot',           description: 'TP / LS teach-pendant programs',  id: 'fanuc-robot' },
         { label: '$(robot) ABB RAPID',             description: 'ABB robot RAPID .mod programs',   id: 'abb' },
       ];
 
       const selected = await vscode.window.showQuickPick(controls, {
-        placeHolder: 'Select CNC control type',
+        placeHolder: 'Select CNC control type — each has its own validation rules',
+        matchOnDetail: true,
       });
 
       if (selected) {
@@ -668,8 +1013,13 @@ export function activate(context: vscode.ExtensionContext): void {
         '5-Axis Mill (Rotary Table)',
         'Turn Center (2-Axis)',
         '5-Axis Mill-Turn',
+        'Multi-Axis Mill-Turn (B-Axis, Sub-Spindle)',
+        'Turn/Mill (Y-Axis)',
+        'Swiss',
         'Multi-Spindle Transfer',
         'Grinding Center',
+        'CNC Laser Cutting System (2D Flatbed)',
+        'CNC Laser Cutting System (Tube)',
       ];
       const selected = await vscode.window.showQuickPick(machineTypes, {
         placeHolder: 'Select machine type',
@@ -699,9 +1049,21 @@ export function activate(context: vscode.ExtensionContext): void {
     100
   );
   controlStatusBar.command = 'jobline.selectControl';
-  updateStatusBar(controlStatusBar, config.controlType);
+  /** Show the control the active program is checked as (header auto-detect included). */
+  const refreshControlStatus = (): void => {
+    const doc = vscode.window.activeTextEditor?.document;
+    const resolved = doc && isGCodeFile(doc)
+      ? resolveControl(doc.getText(), doc.uri)
+      : { controlType: vscode.workspace.getConfiguration().get<string>('jobline.controlType', config.controlType), detected: false };
+    updateStatusBar(controlStatusBar, resolved.controlType, resolved.detected);
+  };
+  refreshControlStatus();
   controlStatusBar.show();
   context.subscriptions.push(controlStatusBar);
+  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(() => refreshControlStatus()));
+  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(doc => {
+    if (doc === vscode.window.activeTextEditor?.document) refreshControlStatus();
+  }));
 
   // Machine type status bar
   const machineStatusBar = vscode.window.createStatusBarItem(
@@ -779,10 +1141,8 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
       if (e.affectsConfiguration('jobline')) {
-        const newConfig = loadConfig(
-          (key: string) => vscode.workspace.getConfiguration().get(key)
-        );
-        updateStatusBar(controlStatusBar, newConfig.controlType);
+        loadConfig((key: string) => vscode.workspace.getConfiguration().get(key));
+        refreshControlStatus();
       }
     })
   );
@@ -803,12 +1163,9 @@ export function activate(context: vscode.ExtensionContext): void {
           playback.sourceVersion = e.document.version;
           playback.idx = Math.min(playback.idx, Math.max(0, result.path.length - 1));
           sendToolpathUpdate(result.path, playback.cutterSize, playback.idx, result.units);
-          const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
-          const overrides = presetSimulationOverrides();
-          for (const message of buildAutoSimulationMessages(buildVisualizerHarnessData(e.document.getText(), controlType), overrides.workholding, overrides.machineType)) {
-            ToolpathVisualizerPanel.queueMessage(message);
-          }
-          ToolpathVisualizerPanel.queueMessage({ type: 'review', review: reviewGCodeProgram(e.document.getText(), controlType) });
+          // Same path as opening the program, so an edit re-runs the RevPack
+          // correlation and the diagnostics follow the text.
+          sendSimulationSetup(e.document);
         } catch (err) {
           // Silently ignore parse errors during auto-reload
         }
@@ -845,17 +1202,23 @@ export function deactivate(): void {
 // Helpers
 // =============================================================================
 
-function updateStatusBar(item: vscode.StatusBarItem, controlType: string): void {
+function updateStatusBar(item: vscode.StatusBarItem, controlType: string, detected = false): void {
   const labels: Record<string, string> = {
     fanuc: 'Fanuc CNC',
     haas: 'Haas',
     siemens: 'Siemens',
     mazak: 'Mazak',
     okuma: 'Okuma',
+    mitsubishi: 'Mitsubishi',
+    heidenhain: 'Heidenhain',
+    fadal: 'Fadal',
+    generic: 'Generic',
     'fanuc-robot': 'Fanuc Robot',
     abb: 'ABB RAPID',
   };
   const icon = (controlType === 'fanuc-robot' || controlType === 'abb') ? '$(robot)' : '$(tools)';
-  item.text = `${icon} [${labels[controlType] ?? controlType}]`;
-  item.tooltip = 'JobLine: Click to change CNC / robot control type';
+  item.text = `${icon} [${labels[controlType] ?? controlType}${detected ? ' · from header' : ''}]`;
+  item.tooltip = detected
+    ? 'JobLine: control detected from the program header (jobline.controlAutoDetect). Click to set the control for this workspace.'
+    : 'JobLine: Click to change CNC / robot control type';
 }

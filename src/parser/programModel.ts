@@ -23,6 +23,7 @@ import {
   cloneModalState,
 } from './types';
 import { ModalStateUpdater } from '../utils/modalState';
+import { isMacroCallBlock, isNonMotionAddressBlock } from './blockKinds';
 
 // Canned cycle G-codes
 const CANNED_CYCLE_CODES = new Set([73, 74, 76, 81, 82, 83, 84, 85, 86, 87, 88, 89]);
@@ -77,9 +78,19 @@ export class ProgramModelBuilder {
     let currentOperation: Partial<Operation> | null = null;
     let currentCycle: CannedCycleInstance | null = null;
     const toolMap = new Map<number, ToolUsage>();
+    // Tool in the spindle (decoded). A mill T word without M06 once a tool is
+    // loaded is a next-tool PRESELECT (Haas/Fanuc "G43 H01 Z1. T2"): it does
+    // not start an operation and the loaded tool keeps its feeds and offsets.
+    let spindleTool: number | null = null;
+    let toolLoaded = false;
+    const hasM6 = (b: GCodeBlock | undefined) => !!b && b.mCodes.some(m => m.code === 6);
 
     for (let i = 0; i < blocks.length; i++) {
       const block = blocks[i];
+      const macroCall = isMacroCallBlock(block);
+      const blockTool = macroCall ? undefined : block.toolNumber;
+      const isPreselect = blockTool !== undefined && !hasM6(block) && !isLatheDialect
+        && toolLoaded && !hasM6(blocks[i + 1]);
 
       // -----------------------------------------------------------------------
       // Cycle repeat detection (BEFORE state update)
@@ -102,7 +113,7 @@ export class ProgramModelBuilder {
       // -----------------------------------------------------------------------
       // Tool change → operation boundary
       // -----------------------------------------------------------------------
-      if (block.toolNumber !== undefined || block.mCodes.some(m => m.code === 6)) {
+      if ((blockTool !== undefined && !isPreselect) || hasM6(block)) {
         // Close previous operation
         if (currentOperation && currentOperation.startLine !== undefined) {
           currentOperation.endLine = Math.max(i - 1, currentOperation.startLine);
@@ -112,8 +123,8 @@ export class ProgramModelBuilder {
           // e.g.  T01       ← this would otherwise be its own 1-line «stub» op
           //       M06       ← the real operation starts here
           const parentBlock = blocks[currentOperation.startLine];
-          const rawToolNum = block.toolNumber !== undefined
-            ? decodeToolNum(block.toolNumber)
+          const rawToolNum = blockTool !== undefined
+            ? decodeToolNum(blockTool)
             : (state.activeTool ?? 0);
           const isStubOp =
             currentOperation.endLine === currentOperation.startLine &&
@@ -128,9 +139,11 @@ export class ProgramModelBuilder {
         }
 
         // Start new operation — apply lathe T-word decode
-        const toolNum = block.toolNumber !== undefined
-          ? decodeToolNum(block.toolNumber)
+        const toolNum = blockTool !== undefined
+          ? decodeToolNum(blockTool)
           : (state.activeTool ? decodeToolNum(state.activeTool) : 0);
+        spindleTool = toolNum;
+        if (hasM6(block)) toolLoaded = true;
         const comment = block.comment ?? this.findNearbyComment(blocks, i);
 
         currentOperation = {
@@ -184,8 +197,9 @@ export class ProgramModelBuilder {
       // -----------------------------------------------------------------------
       // Track tool offsets
       // -----------------------------------------------------------------------
-      if (state.activeTool !== null && toolMap.has(state.activeTool)) {
-        const tool = toolMap.get(state.activeTool)!;
+      const trackedTool = spindleTool ?? state.activeTool;
+      if (trackedTool !== null && toolMap.has(trackedTool)) {
+        const tool = toolMap.get(trackedTool)!;
         if (state.activeToolOffset.H !== null) tool.offsetH = state.activeToolOffset.H;
         if (state.activeToolOffset.D !== null) tool.offsetD = state.activeToolOffset.D;
         if (state.activeS !== null) {
@@ -535,6 +549,9 @@ export class ProgramModelBuilder {
     let hasSurfaceSpeed = false;
 
     for (const block of blocks) {
+      // Macro-call arguments (G65 P9995 A13.), G10 offset values and G04 dwell
+      // words are not axis moves.
+      if (isNonMotionAddressBlock(block)) continue;
       if (block.addresses.has('A')) hasA = true;
       if (block.addresses.has('B')) hasB = true;
       if (block.addresses.has('C')) hasC = true;

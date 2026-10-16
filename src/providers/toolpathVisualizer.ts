@@ -15,7 +15,23 @@ const VISUALIZER_STATE_MESSAGE_TYPES = new Set([
   'fusionSetup',
   'review',
   'update',
+  'revpackScene',
+  'revpackInfo',
+  'revpackWorkholding',
+  'revpackFindings',
+  'sceneRenderMode',
 ]);
+
+export interface LayerProbeEntry {
+  present: boolean;
+  visible: boolean;
+  meshes: number;
+  lines: number;
+  wireframeMeshes: number;
+  solidMeshes: number;
+  /** Lit pixels with ONLY this layer drawn (layer probe only). */
+  litAlone: number;
+}
 
 export class ToolpathVisualizerPanel {
   public static currentPanel: ToolpathVisualizerPanel | undefined;
@@ -47,9 +63,68 @@ export class ToolpathVisualizerPanel {
     playbackSpeed?: number;
     opacity: Record<string, number>;
     orbit: { theta: number; phi: number };
+    renderMode?: string;
+    revpackId?: string;
+    revpackName?: string;
+    revpackBadge?: string;
+    revpackFindingsRendered?: number;
+    revpackFindingsSummary?: { errors: number; warnings: number; infos: number; pass: boolean } | null;
+    workholdingShapes?: number;
+    sharedKernel?: { packId: string; workholding: number; tools: number; inProcess: boolean; removedVolume: number | null } | null;
+    layers?: Record<string, LayerProbeEntry>;
+    activeToolNumber?: number | null;
+    toolDiameter?: number | null;
+    toolVisible?: boolean;
+    activeTargetSource?: string;
+    activeTargetLoader?: string;
+    activeTargetFormat?: string;
+    activeTargetPointCount?: number;
+    targetStlCrossCheck?: unknown;
+    targetHuePixels?: number;
+    targetOnly?: boolean;
+    compareMode?: boolean;
+    comparison?: { onSize: number; remaining: number; gouge: number; maxRemaining: number; maxGouge: number } | null;
+    seededBanner?: string;
+    fusionPreviewVisible?: boolean;
+    fusionReferenceVisible?: boolean;
+    /** Per-object layer styles (stock, target, fixture, jaws, zeroPoint, tool, holder, toolpath). */
+    objectStylesActive?: boolean;
+    objectStyles?: Record<string, { visible: boolean; mode: string; opacity: number }>;
+    layerPreset?: string;
+    /** Stock as drawn and the part inside it, G-code coordinates. */
+    stockBounds?: { min: number[]; max: number[] } | null;
+    targetPartBounds?: { min: number[]; max: number[] } | null;
+    gripShown?: boolean;
+    /** Workholding solids drawn red because an error finding names them. */
+    hitSolids?: string[];
+    packSetup?: { partZero: string; gripDepth?: number; recommendedGripDepth?: number; vise?: string } | null;
+    /** Origin panel: open, pick mode, WCS label, triad / highlight drawn, target bounds as drawn (WORK). */
+    placement?: { open: boolean; active: boolean; pickMode: string; label: string; anchor: string; wcsShown: boolean; highlightTriangles: number; hoverShown: boolean; featureKind: string; viewNormal: boolean; targetBounds: { min: number[]; max: number[] } | null; readout: string } | null;
     error?: string;
     at: number;
   } | undefined;
+
+  /** Last answer to 'requestLayerProbe': each layer drawn alone. */
+  public static lastLayerProbe: {
+    renderMode: string; revpackId: string; layers: Record<string, LayerProbeEntry>;
+    /** Each object drawn alone, with its style. */
+    objects?: Record<string, { present: boolean; visible?: boolean; mode?: string; opacity?: number; litAlone: number }>;
+    error?: string; at: number;
+  } | undefined;
+
+  public static async requestLayerProbe(timeoutMs = 8000): Promise<typeof ToolpathVisualizerPanel.lastLayerProbe> {
+    const panel = ToolpathVisualizerPanel.currentPanel;
+    if (!panel) return undefined;
+    const before = ToolpathVisualizerPanel.lastLayerProbe?.at ?? 0;
+    panel._panel.webview.postMessage({ type: 'requestLayerProbe' });
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const probe = ToolpathVisualizerPanel.lastLayerProbe;
+      if (probe && probe.at > before) return probe;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    return undefined;
+  }
 
   /**
    * Ask the webview to measure what it actually drew, and wait for the answer.
@@ -120,6 +195,11 @@ export class ToolpathVisualizerPanel {
     ToolpathVisualizerPanel.currentPanel?.postMessage(msg);
   }
 
+  /** Drop a replayed state message, e.g. a previous program's RevPack target. */
+  public static forgetMessage(key: string): void {
+    ToolpathVisualizerPanel._stateMessages.delete(key);
+  }
+
   public postMessage(msg: unknown) {
     const typed = msg as { type?: string } | undefined;
     if (typed?.type) {
@@ -181,6 +261,50 @@ export class ToolpathVisualizerPanel {
           playbackSpeed: Number(msg.playbackSpeed) || 0,
           opacity: (msg.opacity ?? {}) as Record<string, number>,
           orbit: (msg.orbit ?? { theta: 0, phi: 0 }) as { theta: number; phi: number },
+          renderMode: typeof msg.renderMode === 'string' ? msg.renderMode : '',
+          revpackId: typeof msg.revpackId === 'string' ? msg.revpackId : '',
+          revpackName: typeof msg.revpackName === 'string' ? msg.revpackName : '',
+          revpackBadge: typeof msg.revpackBadge === 'string' ? msg.revpackBadge : '',
+          revpackFindingsRendered: Number(msg.revpackFindingsRendered) || 0,
+          revpackFindingsSummary: msg.revpackFindingsSummary ?? null,
+          workholdingShapes: Number(msg.workholdingShapes) || 0,
+          sharedKernel: msg.sharedKernel ?? null,
+          layers: msg.layers ?? {},
+          activeToolNumber: Number(msg.activeToolNumber) || null,
+          toolDiameter: Number(msg.toolDiameter) || null,
+          toolVisible: Boolean(msg.toolVisible),
+          // Target / RevPack view state the visual gate asserts on (STEP loader,
+          // STL cross-check, gold pixels, Target only, Compare, seeded banner).
+          activeTargetSource: typeof msg.activeTargetSource === 'string' ? msg.activeTargetSource : '',
+          activeTargetLoader: typeof msg.activeTargetLoader === 'string' ? msg.activeTargetLoader : '',
+          activeTargetFormat: typeof msg.activeTargetFormat === 'string' ? msg.activeTargetFormat : '',
+          activeTargetPointCount: Number(msg.activeTargetPointCount) || 0,
+          targetStlCrossCheck: msg.targetStlCrossCheck ?? null,
+          targetHuePixels: Number(msg.targetHuePixels) || 0,
+          targetOnly: Boolean(msg.targetOnly),
+          compareMode: Boolean(msg.compareMode),
+          comparison: msg.comparison ?? null,
+          seededBanner: typeof msg.seededBanner === 'string' ? msg.seededBanner : '',
+          fusionPreviewVisible: Boolean(msg.fusionPreviewVisible),
+          fusionReferenceVisible: Boolean(msg.fusionReferenceVisible),
+          objectStylesActive: Boolean(msg.objectStylesActive),
+          objectStyles: msg.objectStyles ?? undefined,
+          layerPreset: typeof msg.layerPreset === 'string' ? msg.layerPreset : '',
+          stockBounds: msg.stockBounds ?? null,
+          targetPartBounds: msg.targetPartBounds ?? null,
+          gripShown: Boolean(msg.gripShown),
+          hitSolids: Array.isArray(msg.hitSolids) ? msg.hitSolids.map(String) : [],
+          packSetup: msg.packSetup ?? null,
+          placement: msg.placement ?? null,
+          error: typeof msg.error === 'string' ? msg.error : undefined,
+          at: Date.now(),
+        };
+      } else if (msg?.type === 'layerProbe') {
+        ToolpathVisualizerPanel.lastLayerProbe = {
+          renderMode: String(msg.renderMode || ''),
+          revpackId: String(msg.revpackId || ''),
+          layers: msg.layers ?? {},
+          objects: msg.objects ?? undefined,
           error: typeof msg.error === 'string' ? msg.error : undefined,
           at: Date.now(),
         };

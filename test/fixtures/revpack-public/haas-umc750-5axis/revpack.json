@@ -1,0 +1,247 @@
+{
+  "schema": "jobline.revpack/2",
+  "id": "haas-umc750-bracket",
+  "name": "UMC-750 5-axis bracket (public sample)",
+  "units": "in",
+  "program": {
+    "file": "O05001.nc",
+    "dialect": "haas"
+  },
+  "target": {
+    "file": "target.step",
+    "format": "step",
+    "stl": "target.stl"
+  },
+  "stock": {
+    "name": "6061 block 3.0 x 2.0 x 1.65, pre-stamped (3 mm in the jaws)",
+    "min": [
+      -1.5,
+      -1.0,
+      -1.65
+    ],
+    "max": [
+      1.5,
+      1.0,
+      0.0
+    ]
+  },
+  "workholding": [
+    {
+      "name": "Quick-Point 52 single plate 150x116x27 (zero-point)",
+      "role": "zero-point",
+      "min": [
+        -2.2835,
+        -2.9528,
+        -5.0358
+      ],
+      "max": [
+        2.2835,
+        2.9528,
+        -3.9728
+      ]
+    },
+    {
+      "name": "Riser to the C-table (modelled)",
+      "role": "riser",
+      "min": [
+        -2.2835,
+        -2.9528,
+        -5.5
+      ],
+      "max": [
+        2.2835,
+        2.9528,
+        -5.0358
+      ]
+    },
+    {
+      "name": "Makro-Grip 77 base body 130x77x38",
+      "role": "vise-body",
+      "min": [
+        -1.5157,
+        -2.5591,
+        -3.9728
+      ],
+      "max": [
+        1.5157,
+        2.5591,
+        -2.4767
+      ]
+    },
+    {
+      "name": "Makro-Grip 77 jaw +Y (moves, serrated)",
+      "role": "moving-jaw",
+      "min": [
+        -1.5157,
+        1.0,
+        -2.4767
+      ],
+      "max": [
+        1.5157,
+        1.4724,
+        -1.5319
+      ]
+    },
+    {
+      "name": "Makro-Grip 77 jaw -Y (moves, serrated)",
+      "role": "moving-jaw",
+      "min": [
+        -1.5157,
+        -1.4724,
+        -2.4767
+      ],
+      "max": [
+        1.5157,
+        -1.0,
+        -1.5319
+      ]
+    }
+  ],
+  "setup": {
+    "partZero": "G54 X0 Y0 on the part centre, Z0 on the finished top face; with G234/G254 it sits on the B/C rotary centreline (Haas MRZP), 3.0 in above it",
+    "stockOffsets": {
+      "xMin": 0.0,
+      "xMax": 0.0,
+      "yMin": 0.0,
+      "yMax": 0.0,
+      "zMin": 0.15,
+      "zMax": 0.05
+    },
+    "gripDepth": 0.1181,
+    "clampAxis": "Y"
+  },
+  "workholdingSpec": {
+    "manufacturer": "LANG Technik",
+    "model": "Makro-Grip 77 5-axis vise",
+    "itemNo": "48120-77",
+    "kind": "self-centering-vise",
+    "jawWidth": 3.0315,
+    "overallHeight": 2.4409,
+    "recommendedGripDepth": 0.1181,
+    "gripMethod": "form-fit-stamped",
+    "clampingRange": [
+      0,
+      4.7244
+    ],
+    "clampingForceN": 14000,
+    "maxTorqueNm": 60,
+    "sources": [
+      "https://lang-technik-usa.com/en/products/48120-77-makro-grip-77-5-axis-vise-jaw-width-77-mm-clamping-range-0-120-mm",
+      "https://lang-technik-usa.com/sites/default/files/zeichnungen/48120-77_Seite_3.jpg",
+      "https://lang-technik.de/sites/default/files/anleitung/02-2024_Makro-Grip_EN.pdf",
+      "https://lang-technik.de/en/solutions/workholding-milling",
+      "https://lang-technik-usa.com/en/products/45150-quick-point-52-single-plate-150-x-116-x-27-mm-bores-100-x-50-mm-and-clamping-edge"
+    ],
+    "notes": "Built parametrically from published numbers, not from LANG CAD: 130 x 77 x 65 mm overall, jaw width 77 mm, base body 38 mm and jaw top 62 mm above the vise's bottom face (drawing 48120-77 p.3; clamping studs 22 mm below), clamping range 0-120 mm (6-70 mm jaws forward), 14,000 N at 60 Nm, standard clamping depth / support height 3 mm on a pre-stamped blank (form-fit, 6 mm serration pitch). Jaw thickness (12 mm) is scaled from the drawing, not a published number. The stock rests on the jaws' 3 mm step, so the jaw top is 3 mm above the stock bottom. Quick-Point 52 single plate 45150: 150 x 116 x 27 mm. The riser to the C-table is modelled to keep the table at the pack's Z-5.5."
+  },
+  "workOffsets": {
+    "G54": {
+      "x": -15.0,
+      "y": -10.0,
+      "z": -18.0
+    }
+  },
+  "tools": [
+    {
+      "t": 1,
+      "h": 1,
+      "d": 1,
+      "type": "End Mill",
+      "diameter": 0.5,
+      "gaugeLength": 4.25,
+      "fluteLength": 1.0,
+      "maxRpm": 12000,
+      "description": "1/2 3FL CARBIDE FLAT"
+    },
+    {
+      "t": 2,
+      "h": 2,
+      "d": 2,
+      "type": "Chamfer Mill",
+      "diameter": 0.25,
+      "gaugeLength": 3.5,
+      "fluteLength": 0.5,
+      "maxRpm": 15000,
+      "description": "1/4 90DEG CHAMFER"
+    },
+    {
+      "t": 3,
+      "h": 3,
+      "d": 3,
+      "type": "Drill",
+      "diameter": 0.201,
+      "gaugeLength": 5.0,
+      "fluteLength": 1.25,
+      "maxRpm": 8000,
+      "description": "#7 (.201) DRILL FOR 1/4-20"
+    }
+  ],
+  "machine": {
+    "presetId": "builtin-haas-umc-750",
+    "name": "Haas UMC-750 (NGC)",
+    "dialect": "haas",
+    "controlModel": "NGC",
+    "machineClass": "mill",
+    "axes": [
+      {
+        "name": "X",
+        "min": -30,
+        "max": 0
+      },
+      {
+        "name": "Y",
+        "min": -20,
+        "max": 0
+      },
+      {
+        "name": "Z",
+        "min": -20,
+        "max": 0
+      },
+      {
+        "name": "B",
+        "min": -35,
+        "max": 120
+      },
+      {
+        "name": "C",
+        "min": -99999,
+        "max": 99999
+      }
+    ],
+    "kinematics": "table/table trunnion, C mounted on B (B about Y, C about Z)",
+    "rotaries": [
+      {
+        "name": "C",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "table": true
+      },
+      {
+        "name": "B",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "table": true
+      }
+    ],
+    "rotaryCenter": [
+      -15.0,
+      -10.0,
+      -21.0
+    ],
+    "spindleMaxRpm": 8100,
+    "toolChangeZ": 0,
+    "tcpcOn": "G234",
+    "dwoOn": "G254"
+  },
+  "clearance": 0.1,
+  "expect": {
+    "clean": true
+  }
+}

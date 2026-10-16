@@ -127,3 +127,75 @@ test('visual screenshot matrix captures targeted regions, not full workbench scr
   assert.match(visualTest, /type: 'resetVisualScene'/);
   assert.doesNotMatch(runner, /jobline\.ai-CAM/);
 });
+
+test('per-object layer styles: every setup object, three styles, opacity, presets, session state', () => {
+  const keys = html.match(/const OBJECT_KEYS = \[([^\]]+)\]/);
+  assert.ok(keys, 'OBJECT_KEYS missing');
+  assert.deepEqual(keys![1].split(',').map(k => k.trim().replace(/'/g, '')), ['stock', 'target', 'fixture', 'jaws', 'zeroPoint', 'tool', 'holder', 'toolpath']);
+  for (const mode of ['Solid', 'Transparent', 'Wireframe']) assert.match(html, new RegExp(`<option value="${mode.toLowerCase()}">${mode}</option>`));
+  assert.match(html, /<input type="range" min="5" max="100" aria-label="\$\{OBJECT_LABELS\[key\]\} opacity">/);
+  for (const preset of ['all-solid', 'inspect', 'workholding']) assert.match(html, new RegExp(`data-layer-preset="${preset}"`));
+  assert.match(html, />All solid</);
+  assert.match(html, />Inspect part</);
+  assert.match(html, />Workholding only</);
+  // Defaults: stock 50% transparent, target solid inside it.
+  assert.match(html, /stock: \{ visible: true, mode: 'transparent', opacity: 0\.5 \}/);
+  assert.match(html, /target: \{ visible: true, mode: 'solid', opacity: 1 \}/);
+  // Hardened jaws grey-blue, body darker, gripped region highlighted.
+  assert.match(html, /fixture: '#4b5768', jaws: '#b3c0d1'/);
+  assert.match(html, /grip: '#e05cff'/);
+  // Display-only vise detail on the kernel envelopes: 6 mm-pitch serrated
+  // teeth and screws on each jaw, spindle and guide rib on the body,
+  // counterbores on the zero-point plate - added to every RevPack solid.
+  assert.match(html, /const WH_DETAIL = \{ toothPitchMm: 6, toothHeightMm: 1\.2, screwDiaMm: 10 \}/);
+  assert.match(html, /addWorkholdingDetail\(solid, item, '#' \+ shade\.getHexString\(\)\);/);
+  for (const part of ['tooth', 'screw', 'centre spindle', 'guide rib', 'spindle end', 'counterbore']) assert.match(html, new RegExp('\\$\\{item\\.name\\} ' + part));
+  // Detail meshes end in ' body' so the Wireframe style shows their edges, not their triangles.
+  assert.match(html, /mesh\.name = name \+ ' detail body';/);
+  // The riser is drawn a hair narrower so it does not z-fight the plate.
+  assert.match(html, /if \(item\.role === 'riser'\) \{/);
+  // Remembered for the session through the webview state.
+  assert.match(html, /vscode\.setState\(Object\.assign\(\{\}, vscode\.getState\(\) \|\| \{\}, \{ objectStyles, layerPreset \}\)\)/);
+  assert.match(html, /case 'setObjectStyle'/);
+  assert.match(html, /case 'applyLayerPreset'/);
+  // Existing modes stay: Solid / Wireframe / Target only / Compare.
+  for (const id of ['btn-target-only', 'btn-compare']) assert.match(html, new RegExp(`id="${id}"`));
+  assert.match(html, /data-render-mode="solid"/);
+  assert.match(html, /data-render-mode="wireframe"/);
+});
+
+test('an uploaded part gets its stock from the shared kernel\'s upload setup, around the part', async () => {
+  const { uploadSetup } = await import('../src/providers/visualizer/revpack');
+  const setup = uploadSetup('mm');
+  const m = html.match(/const UPLOAD_STOCK_MM = \{ side: ([\d.]+), top: ([\d.]+), below: ([\d.]+), grip: ([\d.]+) \}/);
+  assert.ok(m, 'UPLOAD_STOCK_MM missing');
+  const [side, top, below, grip] = m!.slice(1).map(Number);
+  const o = setup.stockOffsets!;
+  assert.deepEqual([o.xMin, o.xMax, o.yMin, o.yMax], [side, side, side, side]);
+  assert.equal(o.zMax, top);
+  assert.equal(o.zMin, below);
+  assert.equal(setup.gripDepth, grip);
+  assert.match(html, /const upload = !stockIsDeclared && !isTurning \? uploadTarget\(\) : null;/);
+});
+
+test('the View panel re-stacks between the playback and RevPack panels', () => {
+  assert.match(html, /function layoutSidePanels\(\)/);
+  assert.match(html, /view\.style\.bottom = bottom \+ 'px';/);
+  assert.match(html, /new ResizeObserver\(/);
+  // Never observes the View panel it resizes (a ResizeObserver loop), and a benign loop notice never shows the error banner.
+  assert.match(html, /for \(const id of \['playback-panel', 'revpack-panel'\]\) \{ const el = document\.getElementById\(id\); if \(el\) ro\.observe\(el\); \}/);
+  assert.match(html, /if \(\/ResizeObserver loop\/\.test/);
+  assert.match(html, /case 'setPanelOpen'/);
+  assert.match(html, /case 'zoomBy'/);
+  assert.match(html, /case 'panBy'/);
+  // The depth range follows the view distance (no fixed 0.0001..1e6 z-fighting).
+  assert.match(html, /const near = Math\.max\(1e-4, orbitRadius \/ 2000\);/);
+  assert.match(html, /camera\.near = near; camera\.far = far; camera\.updateProjectionMatrix\(\);/);
+});
+
+test('the legend sits left of the view cube, not under its buttons', () => {
+  const legend = html.match(/#legend \{\s*position: absolute; bottom: 8px; right: (\d+)px;/);
+  const cube = html.match(/#view-cube \{\s*position: absolute; right: (\d+)px; bottom: \d+px; width: (\d+)px;/);
+  assert.ok(legend && cube);
+  assert.ok(Number(legend![1]) >= Number(cube![1]) + Number(cube![2]) + 8, 'legend overlaps the view cube column');
+});

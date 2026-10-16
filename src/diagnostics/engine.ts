@@ -9,6 +9,8 @@
 
 import { GCodeBlock, ModalState } from '../parser/types';
 import type { MachineLibraryEntry } from '../types/machineLibrary';
+import { runControlRules, genericRulesApply, normalizeControl } from './controlRules';
+import { isNonMotionAddressBlock } from '../parser/blockKinds';
 
 // ── Public types ─────────────────────────────────────────────────────────────
 
@@ -34,6 +36,12 @@ export interface DiagnosticConfig {
    * If absent, travel-limit checks are silently skipped (graceful no-op).
    */
   machineProfile?: MachineLibraryEntry;
+  /**
+   * Program text. When given, the per-control rule set for `controlType`
+   * (controlRules.ts) runs as well, and programs that are not ISO G-code
+   * (Heidenhain Klartext, Mazatrol) skip the generic ISO rules below.
+   */
+  sourceText?: string;
 }
 
 export const DEFAULT_CONFIG: DiagnosticConfig = {
@@ -47,6 +55,17 @@ export const DEFAULT_CONFIG: DiagnosticConfig = {
 
 // Note: G76 removed — Fanuc G76 uses 2-line format (line 1 has no Z)
 const CANNED_CYCLE_CODES = new Set([73, 74, 81, 82, 83, 84, 85, 86, 87, 88, 89]);
+
+/**
+ * Straight Z plunges fed faster than this (per minute, G94) are flagged.
+ * 100 in/min (2540 mm/min) is well above any end mill or drill plunge feed;
+ * a value this high is almost always a cutting or rapid-like feed left modal.
+ */
+const MAX_PLUNGE_FEED = { inch: 100, mm: 2540 } as const;
+
+/** Coolant / air commands: M07 mist, M08 flood, M88 Haas through-spindle, M83 Haas air. */
+const COOLANT_ON_CODES = new Set([7, 8, 88, 83]);
+
 
 // ── Main engine entry point ───────────────────────────────────────────────────
 
@@ -65,11 +84,26 @@ export function runDiagnosticEngine(
 ): EngineDiagnostic[] {
   const diags: EngineDiagnostic[] = [];
 
+  if (config.sourceText !== undefined) {
+    diags.push(...runControlRules(config.sourceText, config.controlType));
+    if (!genericRulesApply(config.controlType, config.sourceText)) {
+      diags.sort((a, b) => a.line - b.line);
+      return diags;
+    }
+  }
+
   // End-of-program state tracking
   let spindleOn = false;
   let coolantOn = false;
   let seenM05 = false;
   let seenM09 = false;
+
+  const control = normalizeControl(config.controlType);
+  let toolChanges = 0;
+  let feedSetSinceToolChange = false;
+  let carriedFeedReported = false;
+  let firstSpindleLine: number | null = null;
+  let coolantEver = false;
 
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
@@ -77,7 +111,11 @@ export function runDiagnosticEngine(
 
     // ── Track spindle / coolant state ────────────────────────────────────
     for (const m of block.mCodes) {
-      if (m.code === 3 || m.code === 4) { spindleOn = true; seenM05 = false; }
+      if (m.code === 3 || m.code === 4) {
+        spindleOn = true; seenM05 = false;
+        if (firstSpindleLine === null) firstSpindleLine = block.line;
+      }
+      if (COOLANT_ON_CODES.has(m.code)) coolantEver = true;
       if (m.code === 5)                  { seenM05 = true; }
       if (m.code === 8 || m.code === 7)  { coolantOn = true; seenM09 = false; }
       if (m.code === 9)                  { seenM09 = true; }
@@ -141,8 +179,48 @@ export function runDiagnosticEngine(
         if (hasG28 || hasG30 || hasG53Z) { foundSafeZ = true; break; }
       }
       if (!foundSafeZ) {
+        if (control === 'haas') {
+          // Haas M06 retracts Z to the tool-change position on its own.
+          diags.push(info(block.line,
+            'No G28/G53 Z retract before M06. Haas retracts Z for the tool change itself; check the path to the tool-change position is clear.'));
+        } else {
+          diags.push(warn(block.line,
+            'Possible unsafe tool change: no safe-Z retract found before M06'));
+        }
+      }
+    }
+
+    // ── Rule set 2b: Feed carried across a tool change / plunge feed ─────
+    if (block.mCodes.some(m => m.code === 6)) {
+      toolChanges++;
+      feedSetSinceToolChange = false;
+      carriedFeedReported = false;
+    }
+    if (block.addresses.has('F')) feedSetSinceToolChange = true;
+    const motion = currentMotion(block, state);
+    const isFeedMove = (motion === 1 || motion === 2 || motion === 3) &&
+      ['X', 'Y', 'Z'].some(a => block.addresses.has(a)) && !isNonMotionAddressBlock(block);
+    if (config.enableSafetyChecks && isFeedMove) {
+      if (toolChanges >= 2 && !feedSetSinceToolChange && !carriedFeedReported && state.activeF !== null) {
+        carriedFeedReported = true;
         diags.push(warn(block.line,
-          'Possible unsafe tool change: no safe-Z retract found before M06'));
+          `Feed F${fmt(state.activeF)} is carried over from the previous tool: no F word since the last tool change`));
+      }
+      const perMinute = state.activeFeedMode === 94 || state.activeFeedMode === 98;
+      if (motion === 1 && perMinute && state.activeF !== null) {
+        const entering = stateAtBlock[i > 0 ? i - 1 : 0];
+        const exit = stateAtBlock[i] ?? entering;
+        const z0 = entering?.currentPosition.Z;
+        const z1 = exit.currentPosition.Z;
+        const xyMoved = ['X', 'Y'].some(a => {
+          const k = a as 'X' | 'Y';
+          return Math.abs((exit.currentPosition[k] ?? 0) - (entering?.currentPosition[k] ?? 0)) > 1e-6;
+        });
+        const limit = state.activeUnits === 21 ? MAX_PLUNGE_FEED.mm : MAX_PLUNGE_FEED.inch;
+        if (z0 !== undefined && z1 !== undefined && z1 < z0 - 1e-6 && !xyMoved && state.activeF > limit) {
+          diags.push(warn(block.line,
+            `Plunge feed F${fmt(state.activeF)} is very high for a straight Z plunge (over ${limit} ${state.activeUnits === 21 ? 'mm' : 'in'}/min)`));
+        }
       }
     }
 
@@ -185,6 +263,12 @@ export function runDiagnosticEngine(
     }
   }
 
+  // Spindle ran but no coolant / air command anywhere: a note, not a fault
+  // (dry cutting and MQL are real choices), but usually an omission.
+  if (config.enableSafetyChecks && firstSpindleLine !== null && !coolantEver) {
+    diags.push(info(firstSpindleLine, 'No coolant or air command (M07/M08/M88/M83) in this program'));
+  }
+
   // Tag source and sort
   for (const d of diags) d.source = 'JobLine';
   diags.sort((a, b) => a.line - b.line);
@@ -218,11 +302,16 @@ function checkArcGeometry(
     Y: state.currentPosition.Y ?? 0,
     Z: state.currentPosition.Z ?? 0,
   };
-  const end = {
-    X: block.addresses.get('X')?.resolvedValue ?? start.X,
-    Y: block.addresses.get('Y')?.resolvedValue ?? start.Y,
-    Z: block.addresses.get('Z')?.resolvedValue ?? start.Z,
+  // G91 incremental arcs (modal, or G91 on the arc's own block) give the end
+  // point as a distance from the start, not as an absolute coordinate.
+  const incremental = block.gCodes.some(g => g.code === 91)
+    || (!block.gCodes.some(g => g.code === 90) && state.activePositioning === 91);
+  const word = (axis: 'X' | 'Y' | 'Z', from: number): number => {
+    const v = block.addresses.get(axis)?.resolvedValue;
+    if (v === null || v === undefined) return from;
+    return incremental ? from + v : v;
   };
+  const end = { X: word('X', start.X), Y: word('Y', start.Y), Z: word('Z', start.Z) };
 
   let startA: number, startB: number, endA: number, endB: number;
   let offsetA: number | null, offsetB: number | null;
@@ -234,8 +323,10 @@ function checkArcGeometry(
     [startA, startB, endA, endB, offsetA, offsetB] = [start.X, start.Y, end.X, end.Y, I, J];
   }
 
-  const centerA = startA + (offsetA ?? 0);
-  const centerB = startB + (offsetB ?? 0);
+  // G90.1: I/J/K are absolute centre coordinates; G91.1 (default): offsets from the start.
+  const absoluteCenter = state.arcCenterMode === 90.1;
+  const centerA = absoluteCenter && offsetA !== null ? offsetA : startA + (offsetA ?? 0);
+  const centerB = absoluteCenter && offsetB !== null ? offsetB : startB + (offsetB ?? 0);
   const r1 = Math.hypot(startA - centerA, startB - centerB);
   const r2 = Math.hypot(endA - centerA, endB - centerB);
   const delta = Math.abs(r1 - r2);
@@ -296,4 +387,18 @@ function err(line: number, message: string): EngineDiagnostic {
 
 function warn(line: number, message: string): EngineDiagnostic {
   return { line, severity: 'warning', message, source: 'JobLine' };
+}
+
+function info(line: number, message: string): EngineDiagnostic {
+  return { line, severity: 'info', message, source: 'JobLine' };
+}
+
+function fmt(value: number): string {
+  return Number.isInteger(value) ? `${value}.` : String(value);
+}
+
+/** Motion mode in force for this block: a G0–G3 on the block, else the modal one. */
+function currentMotion(block: GCodeBlock, state: ModalState): number | null {
+  const own = block.gCodes.map(g => g.code).find(c => c === 0 || c === 1 || c === 2 || c === 3);
+  return own ?? state.activeMotion;
 }

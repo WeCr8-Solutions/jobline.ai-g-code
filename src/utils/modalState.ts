@@ -14,6 +14,7 @@ import {
   MCode,
   cloneModalState,
 } from '../parser/types';
+import { isMacroCallBlock, isNonMotionAddressBlock } from '../parser/blockKinds';
 
 // =============================================================================
 // Modal group definitions — which G-codes cancel which
@@ -264,24 +265,29 @@ export class ModalStateUpdater {
   // ===========================================================================
 
   private applyAddresses(state: ModalState, block: GCodeBlock): void {
+    // G65/G66 macro calls: F, S, T and axis letters are macro arguments.
+    const macroCall = isMacroCallBlock(block);
+
     // Feed rate
-    const fAddr = block.addresses.get('F');
+    const fAddr = macroCall ? undefined : block.addresses.get('F');
     if (fAddr && fAddr.resolvedValue !== null) {
       state.activeF = fAddr.resolvedValue;
     }
 
     // Spindle speed
-    const sAddr = block.addresses.get('S');
+    const sAddr = macroCall ? undefined : block.addresses.get('S');
     if (sAddr && sAddr.resolvedValue !== null) {
       state.activeS = sAddr.resolvedValue;
     }
 
     // Tool number
-    if (block.toolNumber !== undefined) {
+    if (block.toolNumber !== undefined && !macroCall) {
       state.activeTool = block.toolNumber;
     }
 
-    // Position tracking — only for resolved literal coordinates
+    // Position tracking — only for resolved literal coordinates, and not for
+    // macro arguments, G10 offset values or a G04 dwell time.
+    if (isNonMotionAddressBlock(block)) return;
     this.updateAxis(state, block, 'X');
     this.updateAxis(state, block, 'Y');
     this.updateAxis(state, block, 'Z');

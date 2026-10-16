@@ -54,7 +54,7 @@ const COMMAND_GROUPS: CommandGroup[] = [
   },
 ];
 
-const FOUNDING_SHOP_URL = 'https://jobline.ai/founding-shop?utm_source=vscode';
+const SHOPS_URL = 'https://jobline.ai/shops?utm_source=vscode&utm_medium=extension&utm_campaign=jobline-gcode&utm_content=sidebar';
 
 class CommandTreeItem extends vscode.TreeItem {
   constructor(item: CommandItem) {
@@ -90,9 +90,9 @@ class CommandsTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeIte
     }
     const groups: vscode.TreeItem[] = COMMAND_GROUPS.map(group => new CommandGroupTreeItem(group));
     if (vscode.workspace.getConfiguration('jobline.ui').get<boolean>('showLinks', true)) {
-      const link = new vscode.TreeItem('Run shift handoffs for your shop free (Founding Shop)');
+      const link = new vscode.TreeItem('Run shift handoffs for your shop (JobLine for shops)');
       link.iconPath = new vscode.ThemeIcon('link-external');
-      link.command = { command: 'vscode.open', title: 'Founding Shop', arguments: [vscode.Uri.parse(FOUNDING_SHOP_URL)] };
+      link.command = { command: 'vscode.open', title: 'JobLine for shops', arguments: [vscode.Uri.parse(SHOPS_URL)] };
       groups.push(link);
     }
     return Promise.resolve(element ? [] : groups);

@@ -8,6 +8,13 @@ const { runTests } = require('@vscode/test-electron');
 const root = path.resolve(__dirname, '..');
 const artifactDir = path.join(root, 'test-results', 'visual');
 const debugPort = 9333;
+// Workbench size for every capture. --window-size alone is not honoured by
+// VS Code (it restores its own 1024x768), so the size is also forced through
+// the DevTools protocol once the window is up.
+const windowWidth = Number(process.env.JOBLINE_VISUAL_WIDTH || 1600);
+const windowHeight = Number(process.env.JOBLINE_VISUAL_HEIGHT || 1000);
+// Device pixel ratio for the captures (2 gives retina-sharp listing images).
+const windowScale = Number(process.env.JOBLINE_VISUAL_SCALE || 1);
 // expectedPoints pins each case to its OWN program. The panel is reused across
 // cases, and the probe used to read whatever was still on screen: case 2
 // reported case 1's 195 points and case 3 reported case 2's 17, so only the
@@ -122,6 +129,193 @@ const visualCases = [
   },
 ];
 
+// RevPack cases: the program is opened from its pack folder, so the extension
+// must AUTO-DETECT revpack.json and draw the pack's target, stock (in-process
+// where the shared kernel cuts it), every workholding solid and the tool, in
+// both Solid and Wireframe layer modes. Each layer is also rendered alone to
+// prove it is on screen, and the correlation findings must reach the Problems
+// panel and the visualizer list.
+const revpackCases = [
+  { pack: 'haas-umc750-5axis', id: 'umc750-clean', clean: true, inProcess: true },
+  { pack: 'haas-umc750-5axis-seeded', id: 'umc750-seeded', clean: false, inProcess: true, problems: true },
+  { pack: 'haas-vf2-vise', id: 'vf2-vise', clean: true, inProcess: true },
+  { pack: 'okuma-lb3000-lathe', id: 'lb3000', clean: true, inProcess: false },
+  { pack: 'trumpf-trulaser3030', id: 'trulaser3030', clean: true, inProcess: false },
+];
+// Extra views of one mode: Target only (every other layer hidden) and the
+// remaining-material vs gouge colouring of the in-process stock.
+const revpackExtras = revpackCases.flatMap(rp => [
+  { pack: rp.pack, id: `${rp.id}-targetonly`, base: rp.id, mode: 'solid', controls: [{ type: 'setTargetOnly', on: true }], targetOnly: true },
+  // Compare colours the in-process stock cell by cell, so it needs a pack the
+  // shared kernel cuts (the lathe and laser packs have no in-process stock and
+  // the panel disables the Compare button for them).
+  ...(rp.inProcess ? [{ pack: rp.pack, id: `${rp.id}-compare`, base: rp.id, mode: 'solid', controls: [{ type: 'setCompareMode', on: true }], compare: true }] : []),
+]);
+// The Makro-Grip vise on the UMC-750: each layer preset, plus the seeded
+// rapid into the +Y jaw shown with the workholding see-through.
+revpackExtras.push(
+  { pack: 'haas-umc750-5axis', id: 'umc750-vise-allsolid', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'applyLayerPreset', preset: 'all-solid' }], preset: 'all-solid' },
+  { pack: 'haas-umc750-5axis', id: 'umc750-vise-inspect', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'applyLayerPreset', preset: 'inspect' }], preset: 'inspect' },
+  { pack: 'haas-umc750-5axis', id: 'umc750-vise-workholding', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'applyLayerPreset', preset: 'workholding' }], preset: 'workholding' },
+  { pack: 'haas-umc750-5axis', id: 'umc750-vise-jaws-wire', base: 'umc750-clean', mode: 'solid', controls: [{ type: 'setObjectStyle', object: 'jaws', mode: 'wireframe' }, { type: 'setObjectStyle', object: 'fixture', mode: 'transparent', opacity: 0.3 }], objectModes: { jaws: 'wireframe', fixture: 'transparent' } },
+  { pack: 'haas-umc750-5axis-seeded', id: 'umc750-seeded-jawhit', base: 'umc750-seeded', mode: 'solid', controls: [{ type: 'applyLayerPreset', preset: 'inspect' }, { type: 'setPresetView', view: 'right' }], preset: 'inspect', jawHit: true },
+);
+/** Stock bounds the shared kernel draws for a pack (a bar is its bounding box). */
+function packStockBounds(stock) {
+  if (typeof stock.diameter === 'number') { const r = stock.diameter / 2; return { min: [-r, -r, stock.zMin], max: [r, r, stock.zMax] }; }
+  return { min: stock.min, max: stock.max };
+}
+function revpackCase(rp, mode, extra) {
+  const packJson = JSON.parse(fs.readFileSync(path.join(root, 'test', 'fixtures', 'revpack-public', rp.pack, 'revpack.json'), 'utf8'));
+  return {
+    id: `revpack-${extra ? extra.id : rp.id + '-' + mode}`,
+    fixture: `test/fixtures/revpack-public/${rp.pack}/${packJson.program.file}`,
+    expectedPoints: null,
+    captureAreas: ['visualizer', 'workbench'],
+    controls: [
+      { type: 'setPresetView', view: 'iso' },
+      // The cut solid would sit over the pack's in-process stock; the
+      // screenshots are about the pack's target, stock, fixture and tool.
+      { type: 'setLayerVisible', layer: 'sweptTube', visible: false },
+      { type: 'setSceneRenderMode', mode },
+      ...(extra ? extra.controls : []),
+    ],
+    revpack: {
+      id: packJson.id,
+      name: packJson.name,
+      mode,
+      clean: rp.clean,
+      seeded: packJson.purpose === 'seeded-errors',
+      workholding: packJson.workholding.length,
+      tools: packJson.tools.length,
+      inProcess: rp.inProcess,
+      stepTarget: packJson.target?.format === 'step',
+      targetOnly: !!extra?.targetOnly,
+      compare: !!extra?.compare,
+      preset: extra?.preset || '',
+      objectModes: extra?.objectModes || null,
+      jawHit: !!extra?.jawHit,
+      showProblems: !!rp.problems && (!extra || !!extra.jawHit),
+      // The stock exactly where the setup puts it, with the target inside.
+      stockBounds: packStockBounds(packJson.stock),
+      vise: !!packJson.workholdingSpec,
+      grip: !!packJson.setup?.gripDepth && typeof packJson.stock.diameter !== 'number',
+    },
+    expect: { targetLoaded: true },
+  };
+}
+for (const rp of revpackCases) {
+  for (const mode of ['solid', 'wireframe']) visualCases.push(revpackCase(rp, mode));
+}
+for (const extra of revpackExtras) visualCases.push(revpackCase(revpackCases.find(rp => rp.id === extra.base), extra.mode, extra));
+
+// Part to origin / Set WCS (Origin panel): the shared placement kernel run
+// through jobline.placement.run on the UMC-750 and VF-2 packs and on an AR4
+// part uploaded on its own - top-front-left corner, top centre, bore centre
+// and a face turned to the top with the view normal to it. Each case checks
+// where the target is drawn, that it stays inside the stock, and the WCS
+// triad / feature highlight on screen.
+const ORIGIN_OPS = {
+  corner: () => ({ ops: [{ op: 'preset', id: 'top-front-left' }], expect: { corner: true, label: /top-front-left corner of the part/ } }),
+  'top-center': () => ({ ops: [{ op: 'preset', id: 'top-center' }], expect: { topCenter: true, label: /top face center of the part/ } }),
+};
+const originPackCases = [
+  { pack: 'haas-umc750-5axis', id: 'umc750', bore: { point: [-1.280193 + 0.15, 0.5 + 0.1005, -0.75], align: true }, face: { point: [0, -1, -0.8] } },
+  { pack: 'haas-vf2-vise', id: 'vf2', bore: { point: [1.25 + 0.1005, 0.75, -0.385], align: false }, face: { point: [0, -1.5, -0.4] } },
+];
+for (const oc of originPackCases) {
+  const packJson = JSON.parse(fs.readFileSync(path.join(root, 'test', 'fixtures', 'revpack-public', oc.pack, 'revpack.json'), 'utf8'));
+  const modes = {
+    ...ORIGIN_OPS,
+    'bore-center': () => ({ ops: [{ op: 'preset', id: 'top-center' }, { op: 'pickCylinder', pick: { tri: -1, point: oc.bore.point }, align: oc.bore.align }], expect: { feature: 'cylinder', label: /bore axis/ } }),
+    'face-align': () => ({ ops: [{ op: 'preset', id: 'top-center' }, { op: 'pickFace', pick: { tri: -1, point: oc.face.point }, action: 'alignTop', view: 'normal' }], expect: { feature: 'plane', viewNormal: true, featureNormal: [0, 0, 1], hover: true } }),
+  };
+  for (const [mode, make] of Object.entries(modes)) {
+    const spec = make();
+    visualCases.push({
+      id: `origin-${oc.id}-${mode}`,
+      fixture: `test/fixtures/revpack-public/${oc.pack}/${packJson.program.file}`,
+      expectedPoints: null,
+      captureAreas: ['visualizer'],
+      controls: [
+        { type: 'setPresetView', view: 'iso' },
+        { type: 'setLayerVisible', layer: 'sweptTube', visible: false },
+        { type: 'setSceneRenderMode', mode: 'solid' },
+        // Looking straight down a face, the tool parked over the part would hide it.
+        ...(mode === 'face-align' ? [{ type: 'setLayerVisible', layer: 'tool', visible: false }, { type: 'setLayerVisible', layer: 'toolHolder', visible: false }] : []),
+      ],
+      origin: { pack: packJson.id, packName: packJson.name, stepTarget: packJson.target?.format === 'step', mode, ops: spec.ops, expect: { ...spec.expect, label: spec.expect.label ? spec.expect.label.source : '' } },
+    });
+  }
+}
+
+// AR4 real parts (local only - the Annin licence forbids redistributing the
+// files; see test/ar4Parts.ts). Each part is imported through the STEP
+// (OpenCascade) path and the STL path, in solid and wireframe, and its bounds
+// are checked against ar4-parts.golden.json.
+const ar4Root = process.env.JOBLINE_AR4_DIR || path.join(root, 'test', 'fixtures', 'external-local', 'ar4');
+const ar4GoldenFile = path.join(root, 'test', 'fixtures', 'ar4-parts.golden.json');
+const AR4_VISUAL_PARTS = [
+  { id: 'sg1-base', stl: 'AR4_SG1_base.STL', step: 'AR4_SG1_base.STEP' },
+  { id: 'sg1-carriage', stl: 'AR4_SG1_carriage.STL', step: 'AR4_SG1_carriage.STEP' },
+  { id: 'sg1-gear', stl: 'AR4_SG1_gear.STL', step: 'AR4_SG1_gear.STEP' },
+  { id: 'sg1-jaw1', stl: 'AR4_SG1_jaw1.STL', step: 'AR4_SG1_jaw1.STEP' },
+  { id: 'sg1-center-bar', stl: 'AR4_SG1_center_bar.STL', step: 'AR4_SG1_center_bar.STEP' },
+];
+if (fs.existsSync(ar4GoldenFile) && AR4_VISUAL_PARTS.every(part => fs.existsSync(path.join(ar4Root, part.stl)))) {
+  const ar4Golden = JSON.parse(fs.readFileSync(ar4GoldenFile, 'utf8'));
+  for (const part of AR4_VISUAL_PARTS) {
+    for (const format of ['step', 'stl']) {
+      for (const mode of ['solid', 'wireframe']) {
+        visualCases.push({
+          id: `ar4-${part.id}-${format}-${mode}`,
+          fixture: 'test/fixtures/scene/visual-import-only.nc',
+          expectedPoints: 1,
+          importOnly: true,
+          targetFile: path.join(ar4Root, part[format]),
+          targetModel: `ar4-${part.id}`,
+          captureAreas: ['visualizer'],
+          controls: [
+            { type: 'setPresetView', view: 'iso' },
+            { type: 'setSceneRenderMode', mode },
+            { type: 'setTargetDisplayMode', mode },
+          ],
+          ar4: { part: part.id, format, mode, golden: ar4Golden[part.id] },
+          expect: { targetLoaded: true, targetDisplayMode: mode },
+        });
+      }
+    }
+  }
+}
+
+// An AR4 part uploaded on its own (no pack), placed with the Origin panel.
+if (fs.existsSync(path.join(ar4Root, 'AR4_SG1_gear.STL'))) {
+  for (const [mode, ops, expect] of [
+    ['corner', [{ op: 'preset', id: 'top-front-left' }], { corner: true, label: 'top-front-left corner of the part' }],
+    ['top-center', [{ op: 'preset', id: 'top-center' }], { topCenter: true, label: 'top face center of the part' }],
+    ['bore-center', [{ op: 'preset', id: 'top-center' }, { op: 'pickCylinder', pick: { tri: -1, point: 'gear-bore' }, align: true }], { feature: 'cylinder', label: 'axis' }],
+    ['face-align', [{ op: 'preset', id: 'top-center' }, { op: 'pickFace', pick: { tri: -1, point: 'side-face' }, action: 'alignTop', view: 'normal' }], { feature: 'plane', viewNormal: true, featureNormal: [0, 0, 1], hover: true }],
+  ]) {
+    visualCases.push({
+      id: `origin-ar4-gear-${mode}`,
+      fixture: 'test/fixtures/scene/visual-import-only.nc',
+      expectedPoints: 1,
+      importOnly: true,
+      targetFile: path.join(ar4Root, 'AR4_SG1_gear.STL'),
+      targetModel: 'ar4-sg1-gear',
+      captureAreas: ['visualizer'],
+      controls: [
+        { type: 'setPresetView', view: 'iso' },
+        { type: 'setSceneRenderMode', mode: 'solid' },
+        { type: 'setTargetDisplayMode', mode: 'solid' },
+        ...(mode === 'face-align' ? [{ type: 'setLayerVisible', layer: 'tool', visible: false }, { type: 'setLayerVisible', layer: 'toolHolder', visible: false }] : []),
+      ],
+      origin: { upload: true, mode, ops, expect },
+      expect: { targetLoaded: true },
+    });
+  }
+}
+
 const justinFusionArchive = process.env.JOBLINE_JUSTIN_F3D || 'C:/Users/zach/Downloads/Drawing1.f3d';
 if (fs.existsSync(justinFusionArchive)) {
   visualCases.push({
@@ -182,8 +376,71 @@ if (fs.existsSync(revgripsProgram) && fs.existsSync(revgripsTarget)) {
   });
 }
 
+// Marketplace / jobline.ai listing captures (JOBLINE_VISUAL_MARKETPLACE=1):
+// the real sample programs on the UMC-750 Makro-Grip pack, framed for the
+// listing. They run through the same RevPack / origin checks as every other
+// case, so a listing image is never of a scene the tests did not verify.
+const MKT_STYLES = [
+  { type: 'setObjectStyle', object: 'stock', mode: 'transparent', opacity: 0.28 },
+  { type: 'setObjectStyle', object: 'target', mode: 'solid', opacity: 1 },
+  { type: 'setObjectStyle', object: 'jaws', mode: 'solid', opacity: 1 },
+  { type: 'setObjectStyle', object: 'fixture', mode: 'solid', opacity: 1 },
+  { type: 'setObjectStyle', object: 'zeroPoint', mode: 'solid', opacity: 1 },
+  { type: 'setObjectStyle', object: 'holder', mode: 'transparent', opacity: 0.22 },
+];
+const panels = (revpack, view, review) => [
+  { type: 'setPanelOpen', id: 'revpack-panel', open: revpack },
+  { type: 'setPanelOpen', id: 'view-panel', open: view },
+  { type: 'setPanelOpen', id: 'review-panel', open: review },
+];
+const MKT_VIEW = [{ type: 'setPresetView', view: 'xyz' }, { type: 'orbitBy', dTheta: 0.35, dPhi: 0.2 }];
+const mktCase = (rp, id, controls, extra, areas) => {
+  const c = revpackCase(rp, 'solid', { id, controls, ...extra });
+  c.id = id;
+  c.captureAreas = areas;
+  c.marketplace = true;
+  return c;
+};
+const mktCases = [
+  // (a) Hero: vise body, both serrated jaws, the gripped stock see-through,
+  // the finished part solid gold, the toolpath and the tool.
+  mktCase(revpackCases[0], 'mkt-hero', [...MKT_STYLES, { type: 'setLayerVisible', layer: 'toolHolder', visible: false }, ...panels(true, false, true), ...MKT_VIEW, { type: 'zoomBy', factor: 1.5 }, { type: 'panBy', dy: -0.09 }],
+    { objectModes: { stock: 'transparent', target: 'solid', jaws: 'solid', fixture: 'solid', zeroPoint: 'solid' } }, ['visualizer', 'workbench']),
+  // (b) Per-object Solid / Transparent / Wireframe in the View panel.
+  mktCase(revpackCases[0], 'mkt-object-styles', [...MKT_STYLES, { type: 'setObjectStyle', object: 'jaws', mode: 'wireframe' }, { type: 'setObjectStyle', object: 'fixture', mode: 'transparent', opacity: 0.35 }, ...panels(false, true, false), ...MKT_VIEW, { type: 'zoomBy', factor: 1.4 }, { type: 'panBy', dy: -0.08 }],
+    { objectModes: { jaws: 'wireframe', fixture: 'transparent', stock: 'transparent' } }, ['visualizer']),
+  // (c) The seeded rapid into the +Y jaw: the jaw drawn red and the finding naming it.
+  mktCase(revpackCases[1], 'mkt-jaw-collision', [...MKT_STYLES, { type: 'setObjectStyle', object: 'tool', mode: 'transparent', opacity: 0.35 }, { type: 'setLayerVisible', layer: 'toolHolder', visible: false }, ...panels(true, false, false), ...MKT_VIEW, { type: 'zoomBy', factor: 1.4 }, { type: 'panBy', dy: -0.08 }],
+    { objectModes: { jaws: 'solid', stock: 'transparent' }, jawHit: true }, ['visualizer']),
+  // Code review: the flagged lines in the editor and the Problems panel.
+  mktCase(revpackCases[1], 'mkt-review', [...MKT_STYLES, { type: 'setLayerVisible', layer: 'toolHolder', visible: false }, ...panels(true, false, true), ...MKT_VIEW],
+    { objectModes: { jaws: 'solid' }, jawHit: true }, ['workbench']),
+];
+mktCases.find(c => c.id === 'mkt-review').revpack.showProblems = true;
+mktCases.find(c => c.id === 'mkt-jaw-collision').revpack.showProblems = false;
+{
+  // (d) Origin / WCS panel after "Top center".
+  const umc = visualCases.find(item => item.id === 'origin-umc750-top-center');
+  if (umc) mktCases.push({ ...umc, id: 'mkt-origin', controls: [...umc.controls, ...panels(false, false, false)], captureAreas: ['visualizer'], marketplace: true });
+}
+// The review case opens the Problems panel, so it runs last.
+mktCases.push(mktCases.splice(mktCases.findIndex(c => c.id === 'mkt-review'), 1)[0]);
+if (process.env.JOBLINE_VISUAL_MARKETPLACE) {
+  visualCases.splice(0, visualCases.length, ...mktCases);
+}
+
+if (process.env.JOBLINE_VISUAL_REVPACK_ONLY) {
+  visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.revpack || item.origin || (process.env.JOBLINE_VISUAL_AR4 !== '0' && item.ar4)));
+}
+if (process.env.JOBLINE_VISUAL_ORIGIN_ONLY) {
+  visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.origin));
+}
+if (process.env.JOBLINE_VISUAL_AR4_ONLY) {
+  visualCases.splice(0, visualCases.length, ...visualCases.filter(item => item.ar4));
+}
 if (process.env.JOBLINE_VISUAL_CASE) {
-  const selected = visualCases.filter(item => item.id === process.env.JOBLINE_VISUAL_CASE);
+  const wanted = process.env.JOBLINE_VISUAL_CASE.split(',').map(id => id.trim());
+  const selected = visualCases.filter(item => wanted.includes(item.id));
   if (!selected.length) throw new Error('Unknown JOBLINE_VISUAL_CASE');
   visualCases.splice(0, visualCases.length, ...selected);
 }
@@ -324,12 +581,66 @@ async function capturePage(webSocketDebuggerUrl, area) {
   });
 }
 
+let sizeSession = null;
+/**
+ * Resize the real window (Browser.setWindowBounds); if the screen cannot fit
+ * it, keep a DevTools session open that emulates the size, so the workbench
+ * lays out at windowWidth x windowHeight for every case.
+ */
+async function forceWindowSize() {
+  const target = await findWorkbenchTarget(120000);
+  const version = await (await fetch(`http://127.0.0.1:${debugPort}/json/version`)).json();
+  const browserCall = (method, params) => new Promise((resolve, reject) => {
+    const socket = new WebSocket(version.webSocketDebuggerUrl);
+    socket.addEventListener('open', () => socket.send(JSON.stringify({ id: 1, method, params })));
+    socket.addEventListener('message', event => { const m = JSON.parse(String(event.data)); if (m.id === 1) { socket.close(); m.error ? reject(new Error(m.error.message)) : resolve(m.result); } });
+    socket.addEventListener('error', () => reject(new Error('browser socket failed')));
+  });
+  try {
+    const { windowId } = await browserCall('Browser.getWindowForTarget', { targetId: target.id });
+    await browserCall('Browser.setWindowBounds', { windowId, bounds: { windowState: 'normal' } });
+    await browserCall('Browser.setWindowBounds', { windowId, bounds: { left: 0, top: 0, width: windowWidth, height: windowHeight } });
+  } catch (error) {
+    console.warn('Browser.setWindowBounds failed:', error.message);
+  }
+  await delay(800);
+  sizeSession = new WebSocket(target.webSocketDebuggerUrl);
+  await new Promise((resolve, reject) => { sizeSession.addEventListener('open', resolve); sizeSession.addEventListener('error', reject); });
+  let id = 1;
+  const call = (method, params = {}) => new Promise(resolve => {
+    const myId = id++;
+    const onMessage = event => { const m = JSON.parse(String(event.data)); if (m.id === myId) { sizeSession.removeEventListener('message', onMessage); resolve(m.result || m.error); } };
+    sizeSession.addEventListener('message', onMessage);
+    sizeSession.send(JSON.stringify({ id: myId, method, params }));
+  });
+  const inner = await call('Runtime.evaluate', { returnByValue: true, expression: '[window.innerWidth, window.innerHeight]' });
+  const [w, h] = inner?.result?.value || [0, 0];
+  if (w < windowWidth || h < windowHeight || windowScale !== 1) {
+    await call('Emulation.setDeviceMetricsOverride', { width: windowWidth, height: windowHeight, deviceScaleFactor: windowScale, mobile: false });
+    console.log(`Workbench was ${w}x${h}; emulating ${windowWidth}x${windowHeight} for the captures.`);
+  } else {
+    sizeSession.close();
+    sizeSession = null;
+    console.log(`Workbench is ${w}x${h}.`);
+  }
+}
+
 async function captureWhenReady() {
   const results = [];
+  await forceWindowSize().catch(error => console.warn('Could not force the window size:', error.message));
   for (const visualCase of visualCases) {
     const readyFile = path.join(artifactDir, `${visualCase.id}.ready`);
     const capturedFile = path.join(artifactDir, `${visualCase.id}.captured`);
-    await waitForFile(readyFile, 90000);
+    const errorFile = path.join(artifactDir, `${visualCase.id}.error`);
+    const deadline = Date.now() + 150000;
+    while (!fs.existsSync(readyFile) && !fs.existsSync(errorFile) && Date.now() < deadline) await delay(100);
+    if (fs.existsSync(errorFile)) {
+      const reason = fs.readFileSync(errorFile, 'utf8');
+      console.error(`Visual case ${visualCase.id} FAILED in the extension host:\n${reason}`);
+      results.push({ ...visualCase, failed: reason.split('\n')[0], screenshots: [] });
+      continue;
+    }
+    if (!fs.existsSync(readyFile)) throw new Error(`Timed out waiting for ${path.basename(readyFile)}`);
     // Allow the WebGL render loop two frames after the fixture signals readiness.
     await delay(1000);
     const target = await findWorkbenchTarget(30000);
@@ -347,6 +658,7 @@ async function captureWhenReady() {
     results.push({ ...visualCase, screenshots });
     fs.writeFileSync(capturedFile, 'ok');
   }
+  if (sizeSession) sizeSession.close();
   fs.writeFileSync(path.join(artifactDir, 'visual-matrix.json'), JSON.stringify({
     capturedAt: new Date().toISOString(),
     cases: results,
@@ -359,6 +671,7 @@ async function main() {
   const protocolFiles = visualCases.flatMap(visualCase => [
     path.join(artifactDir, `${visualCase.id}.ready`),
     path.join(artifactDir, `${visualCase.id}.captured`),
+    path.join(artifactDir, `${visualCase.id}.error`),
     path.join(artifactDir, visualCase.id + '.png'),
   ]);
   for (const file of [...protocolFiles, path.join(artifactDir, 'visual-matrix.json')]) {
@@ -372,11 +685,31 @@ async function main() {
     process.exit(1);
   });
   const userDataDir = path.join(artifactDir, `vscode-profile-${process.pid}`);
+  if (process.env.JOBLINE_VISUAL_MARKETPLACE) {
+    // A clean listing look: Dark Modern, a readable editor font, a title that
+    // shows only the file (no folder, user or [Administrator]), no minimap.
+    fs.mkdirSync(path.join(userDataDir, 'User'), { recursive: true });
+    fs.writeFileSync(path.join(userDataDir, 'User', 'settings.json'), JSON.stringify({
+      'workbench.colorTheme': 'Default Dark Modern',
+      'editor.fontSize': 15,
+      'editor.lineHeight': 22,
+      'editor.minimap.enabled': false,
+      'window.title': '${activeEditorShort} - JobLine G-Code Intelligence',
+      'window.commandCenter': false,
+      'workbench.startupEditor': 'none',
+      'workbench.tips.enabled': false,
+      'git.enabled': false,
+      'scm.diffDecorations': 'none',
+      'chat.commandCenter.enabled': false,
+      'workbench.statusBar.visible': true,
+      'telemetry.telemetryLevel': 'off',
+    }, null, 2));
+  }
   const tests = runTests({
     version: process.env.JOBLINE_VSCODE_TEST_VERSION || '1.96.4',
     extensionDevelopmentPath: process.env.JOBLINE_EXTENSION_UNDER_TEST || root,
     extensionTestsPath: path.join(root, 'test', 'visual', 'runTest.js'),
-    launchArgs: [root, '--new-window', '--disable-updates', '--skip-welcome', '--skip-release-notes', '--window-size=1600,1000', '--use-gl=swiftshader', '--enable-unsafe-swiftshader', `--user-data-dir=${userDataDir}`, `--remote-debugging-port=${debugPort}`],
+    launchArgs: [...(windowScale !== 1 ? [`--force-device-scale-factor=${windowScale}`] : []), root, '--new-window', '--disable-updates', '--skip-welcome', '--skip-release-notes', `--window-size=${windowWidth},${windowHeight}`, '--use-gl=swiftshader', '--enable-unsafe-swiftshader', `--user-data-dir=${userDataDir}`, `--remote-debugging-port=${debugPort}`],
     extensionTestsEnv: {
       JOBLINE_VISUAL_ARTIFACT_DIR: artifactDir,
       JOBLINE_VISUAL_CASES: JSON.stringify(visualCases),

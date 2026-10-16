@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1010" viewBox="0 0 1500 1010" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1500" height="1010" fill="#0f141a"/>
+<text x="40" y="44" fill="#ffffff" font-size="26" font-weight="600">UMC-750 bracket with seeded errors — old harness view</text>
+<text x="40" y="78" fill="#9fb3c8" font-size="16">Haas UMC-750 (NGC) · haas NGC · table/table trunnion, C mounted on B (B about Y, C about Z) · program O05002.nc (haas) · units in</text>
+<text x="40" y="102" fill="#7d8b99" font-size="14">BEFORE: what the old RevPack harness used — the program text only. No stock, workholding, work-offset location, tool lengths or machine limits were loaded or checked.</text>
+<rect x="40" y="150" width="460" height="460" fill="#161d25" stroke="#2a3542"/>
+<text x="40" y="142" fill="#cfd8e3" font-size="15">Top (XY)</text>
+<clipPath id="c40"><rect x="40" y="150" width="460" height="460"/></clipPath><g clip-path="url(#c40)">
+<line x1="84.5" y1="431.6" x2="84.5" y2="431.6" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="84.5" y1="431.6" x2="84.5" y2="431.6" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="84.5" y1="431.6" x2="84.5" y2="431.6" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="84.5" y1="431.6" x2="84.5" y2="431.6" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="84.5" y1="431.6" x2="418.1" y2="431.6" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="418.1" y1="431.6" x2="418.1" y2="431.6" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="418.1" y1="431.6" x2="251.3" y2="372.1" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="251.3" y1="372.1" x2="251.3" y2="372.1" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="116.3" y1="467.4" x2="116.3" y2="467.4" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="116.3" y1="467.4" x2="116.3" y2="467.4" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="116.3" y1="467.4" x2="116.3" y2="467.4" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="116.3" y1="467.4" x2="317.7" y2="467.4" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="317.7" y1="467.4" x2="303.1" y2="467.4" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1323.3" y1="372.1" x2="1323.3" y2="372.1" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1323.3" y1="372.1" x2="455.5" y2="372.1" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="455.5" y1="372.1" x2="251.3" y2="372.1" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="251.3" y1="372.1" x2="251.3" y2="372.1" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+</g>
+<text x="490" y="628" fill="#7d8b99" font-size="13" text-anchor="end">X →   Y ↑</text>
+<rect x="540" y="150" width="460" height="460" fill="#161d25" stroke="#2a3542"/>
+<text x="540" y="142" fill="#cfd8e3" font-size="15">Front (XZ)</text>
+<clipPath id="c540"><rect x="540" y="150" width="460" height="460"/></clipPath><g clip-path="url(#c540)">
+<line x1="653.5" y1="-394.6" x2="653.5" y2="-394.6" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="653.5" y1="-394.6" x2="653.5" y2="241.3" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="653.5" y1="241.3" x2="653.5" y2="286.2" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="653.5" y1="286.2" x2="653.5" y2="293.7" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="653.5" y1="293.7" x2="863.0" y2="293.7" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="863.0" y1="293.7" x2="863.0" y2="316.1" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="863.0" y1="316.1" x2="758.3" y2="316.1" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="758.3" y1="316.1" x2="758.3" y2="286.2" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="673.5" y1="248.8" x2="673.5" y2="248.8" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="673.5" y1="248.8" x2="673.5" y2="203.9" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="673.5" y1="203.9" x2="673.5" y2="256.8" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="673.5" y1="256.8" x2="800.0" y2="246.6" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="800.0" y1="246.6" x2="790.8" y2="194.5" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1431.5" y1="-361.5" x2="1431.5" y2="-361.5" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1431.5" y1="-361.5" x2="886.5" y2="288.0" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="886.5" y1="288.0" x2="758.3" y2="241.3" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="758.3" y1="241.3" x2="758.3" y2="390.9" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+</g>
+<text x="990" y="628" fill="#7d8b99" font-size="13" text-anchor="end">X →   Z ↑</text>
+<rect x="1020" y="150" width="460" height="460" fill="#161d25" stroke="#2a3542"/>
+<text x="1020" y="142" fill="#cfd8e3" font-size="15">Side (YZ)</text>
+<clipPath id="c1020"><rect x="1020" y="150" width="460" height="460"/></clipPath><g clip-path="url(#c1020)">
+<line x1="1217.6" y1="-394.6" x2="1217.6" y2="-394.6" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1217.6" y1="-394.6" x2="1217.6" y2="241.3" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1217.6" y1="241.3" x2="1217.6" y2="286.2" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1217.6" y1="286.2" x2="1217.6" y2="293.7" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="1217.6" y1="293.7" x2="1217.6" y2="293.7" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="1217.6" y1="293.7" x2="1217.6" y2="316.1" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1217.6" y1="316.1" x2="1255.0" y2="316.1" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1255.0" y1="316.1" x2="1255.0" y2="286.2" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1195.1" y1="248.8" x2="1195.1" y2="248.8" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1195.1" y1="248.8" x2="1195.1" y2="203.9" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1195.1" y1="203.9" x2="1195.1" y2="256.8" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="1195.1" y1="256.8" x2="1195.1" y2="246.6" stroke="#9fb3c8" stroke-width="1.6"/>
+<line x1="1195.1" y1="246.6" x2="1195.1" y2="194.5" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1255.0" y1="-361.5" x2="1255.0" y2="-361.5" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1255.0" y1="-361.5" x2="1255.0" y2="288.0" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1255.0" y1="288.0" x2="1255.0" y2="241.3" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+<line x1="1255.0" y1="241.3" x2="1255.0" y2="390.9" stroke="#9fb3c8" stroke-width="1" stroke-dasharray="5 4"/>
+</g>
+<text x="1470" y="628" fill="#7d8b99" font-size="13" text-anchor="end">Y →   Z ↑</text>
+<text x="40" y="670" fill="#cfd8e3" font-size="16">Old harness output for this program: fixtureMode=none, machineType=5-Axis Mill (Trunnion), work offsets G54, G55, 3 tools parsed from comments.</text>
+<text x="40" y="696" fill="#cfd8e3" font-size="16">Not loaded: stock, workholding, where the work offset sits on the machine, tool gauge lengths, machine axes/limits/kinematics.</text>
+<text x="40" y="722" fill="#cfd8e3" font-size="16">Not checked: travel limits, rapids into stock or workholding, H vs T, spindle/feed state, tool-change retracts, TCPC.</text>
+<text x="40" y="748" fill="#cfd8e3" font-size="16">The same program checked against its RevPack now: 10 error(s), 0 warning(s).</text>
+</svg>

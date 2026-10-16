@@ -8,5 +8,5 @@
     "zh-cn": "l10n/zh.json",
     "ja": "l10n/ja.json"
   },
-  "comments": "Language pack for JobLine G-Code Intelligence. Translations are community-driven. To contribute, submit pull requests to https://github.com/WeCr8-Solutions/jobline.ai-g-code"
+  "comments": "Language pack for JobLine G-Code Intelligence. Translations are community-driven. To contribute a translation, use jobline.ai/help"
 }

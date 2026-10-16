@@ -8,6 +8,82 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.14] - 2026-10-16
+
+### Field fixes (Oct 16 2026 check on a Haas program and a Renishaw probe sub)
+
+- Fix: a G91 incremental arc (`G91 G3 Y0.0984 J0.0492`) was checked as absolute and reported a false "arc endpoint doesn't match" error. G90.1 absolute arc centres are honoured too.
+- Fix: G65/G66 macro-call arguments (`G65 P9995 A13. X3.`) were read as axis moves, so a probe routine showed as a 4-axis mill and moved the tracked position. G10 offset values and G04 dwell words are not motion either.
+- Fix: M99 is accepted as the end of a subprogram (no "no M02/M30" warning on probe/sub programs).
+- New: the control is detected from the program header ("HAAS MILL NGC", Okuma, Mazak, Siemens, Fadal, Mitsubishi, Heidenhain) and from Haas-only codes; the status bar shows "· from header". A control set for the workspace still wins; turn it off with `jobline.controlAutoDetect`.
+- Haas: an M06 with no G28/G53 before it is a note, not a warning (Haas retracts Z for the tool change). Fanuc and others keep the warning.
+- New checks: a very high feed on a straight Z plunge (over 100 in/min or 2540 mm/min), a feed carried over from the previous tool, and a note when the spindle runs with no coolant or air command.
+- Tools: a Renishaw / spindle probe is typed Probe (drawn as a stylus), and a T word on a G43 line is a next-tool preselect, not a cutting tool; the loaded tool keeps its feeds and offsets. Header tool comments without a dash (`(T31 RENISHAW PROBE)`) are read.
+
+### Visualizer fixes (Oct 16 2026)
+
+- View cube is sharp on HiDPI screens: the canvas follows devicePixelRatio (also after moving the window or zooming), the cube is drawn into the exact box of its panel, and nothing translucent covers it.
+- First frame: the canvas stays hidden until the program, machine, RevPack / .jbl setup, placement and target messages have arrived, then the camera is fitted to the placed setup (G54 origin applied) and the view is shown. It is never left blank for more than 1.5 s.
+- Framing fits the bounding sphere against the narrower field of view, so wide flat parts (AR4 gear, jaw1) are no longer clipped in narrow panels.
+- The controls legend follows the cube panel's width and drops the mouse help lines when they would overlap the cube or a panel.
+- **JobLine: Load RevPack…** opens a part-only `.jbl` (Setup / WCS made in jobline.ai-CAM on an uploaded part) as an uploaded part with CAM's origin.
+
+### Tool libraries, CAM output and per-control checks
+
+- **Tool-library import** (was an empty stub): Fusion `.json` / `.tools`, HSMWorks / Inventor CAM `.hsmlib` (UTF-16 XML) and CSV (`T, H, D, diameter, flute length, gauge length, description`). Imported tools feed the Tools view and new checks: tools not in the library, T/H and T/D register mismatches, comment diameter vs library diameter (unit-aware). Lathe T0101 decoding is respected; Siemens/Heidenhain skip H/D register checks.
+- **File-based CAM integrations** replace the ESPRIT, Mastercam, GibbsCAM, Hexagon, Fusion, Cura, laser and sheet-metal stubs: CAM detection from the NC header, tool lists from post header comments, setup-sheet readers (HTML column tables, per-tool key/value tables, XML, CSV), automatic linking of a same-name setup sheet, and output-folder watching. The UI says plainly that there is no live connection to the CAM application.
+- **Per-control validation rules** for Fanuc, Haas NGC, Siemens 840D, Okuma OSP, Mazak EIA/ISO, Mitsubishi M8/M80, Heidenhain TNC (Klartext and ISO), Fadal and generic/LinuxCNC. Mitsubishi, Heidenhain, Fadal and generic are now selectable controls. Klartext programs skip the ISO rules.
+- **Convert Program to Another Control**: common-code repost from ISO dialects to Haas, Mazak, Mitsubishi, Siemens 840D, Okuma OSP and Heidenhain Klartext, with every unconverted line marked `JL MANUAL`.
+
+### Visualizer and listing
+
+- Vise detail: each RevPack jaw now shows its serrated gripping edge (6 mm pitch) and jaw screws, the vise body its guide rib, centre spindle and spindle ends, and the zero-point plate its counterbores. Display only: the collision and grip checks still use the kernel's envelope solids, so CAM and the hub stay byte-identical. Jaws are bright steel and the body darker; the riser no longer z-fights the plate.
+- Fix: the View panel stacks between the playback and RevPack panels instead of sliding under the playback controls (it was fixed at 112 px from the bottom). A benign ResizeObserver notice no longer shows the "could not start" banner.
+- New webview controls for tests and captures: `setPanelOpen`, `zoomBy`, `panBy`.
+- Marketplace README: rewritten for 0.3.14, led by Simulation, Code review with flags, and Toolbar and simulation controls. New screenshots captured from the Extension Development Host (`JOBLINE_VISUAL_MARKETPLACE=1`, 2x). Images are served from jobline.ai, not raw.githubusercontent.com.
+
+### RevPacks
+
+- New: RevPack v2 setups. A program is checked against its pack (travel, rapids into stock or workholding, offsets, tools and gauge lengths, spindle limits, TCPC/DWO) and drawn from it: auto-detected `revpack.json` beside a program, **JobLine: Load RevPack...** / **Clear RevPack**, stock, every workholding solid, tools at gauge length and the in-process stock from the shared kernel, correlation findings as diagnostics with click-to-line.
+- **Real target parts.** Every public pack's target is now a solid of what its program cuts, as STEP (B-rep, loaded through OpenCascade in the pack's units) with an STL of the same solid beside it: the UMC-750 bracket (faced top, R0.25 pocket, two side holes drilled at B90, 0.09 x 45 deg chamfers on two top edges), the VF-2 vise plate (faced, four 1/4-20 tap-drill holes), the LB3000 shaft (dia 50 / 70, 2 x 45 chamfer, two 3 mm grooves) and the TruLaser nest (six 200 x 150 x 3 parts). They replace placeholder boxes. Generator: `scripts/revpack-targets/generate_targets.py` (CadQuery).
+- The UMC-750 sample now drills two side holes and its chamfer pass actually reaches the edges (it stopped 0.19 in short before); the LB3000 sample grooves the shaft with a new T05 3 mm grooving insert. Both packs still check clean.
+- The target draws as an opaque gold solid with the stock translucent over it (RevPack fixtures in steel grey), feature edges only in Wireframe.
+- **Target only** shows just the finished part. **Compare** colours the in-process stock against the target: on size, remaining material, gouge (seen from +Z, with the cell counts and largest values).
+- The seeded-error pack is labelled everywhere: its name, a "Seeded test pack: errors are intentional" banner on the panel, and the same text on each of its Problems entries.
+- **5-axis workholding.** The UMC-750 packs hold the part in a LANG Makro-Grip 77 5-axis self-centering vise (48120-77) on a Quick-Point 52 zero-point plate, built parametrically from LANG's published numbers (130 x 77 x 65 mm, 77 mm jaws, base body 38 mm and jaw top 62 mm above the vise bottom, 0-120 mm clamping range, 14,000 N at 60 Nm, 3 mm clamping depth on a pre-stamped blank), not from LANG CAD. The vise body, both moving jaws, the zero-point plate and the riser are separate solids with roles; the blank (now 3.0 x 2.0 x 1.65 in) sits 3 mm deep in the jaws and the gripped region is its own highlighted solid. Sources are in each pack's `workholdingSpec.sources` and in `docs/revpack-workholding.md`.
+- Collisions are named by what they hit: `rapid-into-jaw`, `feed-into-vise-body`, `rapid-into-zero-point`, `feed-into-chuck-jaw`... with the solid's name (the seeded pack's rapid now goes into the +Y jaw). New `workholding` checks: grip depth below the vise maker's recommendation (`grip-depth-below-recommended`), a feed into the gripped stock at a clamped face (`feed-into-grip-zone`), and a tilted tool whose shank or holder reaches the jaws or vise (`tilted-tool-hits-jaw`, the clearance 5-sided access needs). The clean O05001 stays at zero findings.
+- **Stock where it really sits.** A pack states its setup: part zero, stock offsets around the target, grip depth. The stock must equal the target's bounds grown by those offsets, with the target inside; every public pack is checked (and the AR4 uploads against the upload setup: 3 mm sides, 1 mm top, 3 mm grip + 1 mm below). A part opened without a pack gets its stock around it instead of a placeholder box at the origin.
+- **Per-object layer styles.** Stock, target, fixture / vise body, jaws, zero-point / riser, tool, holder and toolpath each have their own visibility and Solid / Transparent (with an opacity slider) / Wireframe style in the View panel, with **All solid**, **Inspect part** (workholding transparent) and **Workholding only** presets, remembered for the session. By default the stock is 50% transparent and the target a solid inside it; jaws draw hardened grey-blue, the vise body darker, the gripped region magenta. Solid, Wireframe, Target only and Compare work as before.
+
+- **Part to origin / Set WCS** (Origin panel in the visualizer, and **JobLine: Part to Origin…** commands), the way Fusion, Mastercam and ESPRIT set a work origin, for a RevPack target or a part imported on its own (the AR4 uploads):
+  - Bounding box: the WCS at any of the 27 box points (8 corners, 12 edge midpoints, 6 face centres, centre) from a 3 x 3 x 3 picker, on the **part box** or the **stock box**; **Top / Bottom / Left / Right / Front / Back** move one axis to that face (Top = Z0 on the top, X/Y kept), **Center**; presets **Top center** and **Top-front-left corner**.
+  - Picks in 3D: planar face (that axis to the face, origin at the face centre, turn the face to the top or bottom), bore or boss (centre on its fitted cylinder axis, optionally turning that axis onto Z), vertex / edge point, two-point midpoint, three-point circle centre. Hover highlights the triangle under the cursor; the picked face or bore stays highlighted.
+  - Orientation: rotate 90 deg about X / Y / Z, flip, align an axis; numeric offset (X Y Z + rotation about Z); **Undo** (50 steps) and **Reset**; **Center in stock** (XY or XYZ).
+  - The pack is redrawn and re-checked as placed: target moved, stock rebuilt from the setup around it (the target always inside), vise / jaw / zero-point solids following the stock (same grip depth, same collision solids, stock still 50% transparent), the active work offset (G54) moved the other way, `setup.partZero` updated. Lathe / bar stock keeps X0 on the spindle axis.
+  - Views: **View normal to face**, a WCS triad at the work origin, and a readout of the origin against the part box and on the machine (G54).
+  - All maths is in the new framework-free `revpackPlacement.ts`, byte-identical in jobline.ai-CAM and the JobLine.ai hub and proven by the shared parity golden (each pack's `placement` key: 27 box points, fixed placements, first bore centred and turned to Z, a face turned up, centre in stock). New `test/revpack-placement.test.ts` covers every mode; the visual E2E adds corner, top-center, bore-center and face-align cases on the UMC-750, VF-2 and an uploaded AR4 gear.
+- **Open a `.jbl` from jobline.ai-CAM.** **JobLine: Load RevPack…** also opens a `.jbl` job file: the pack, the Setup / WCS made on it in CAM and the target STL in one file. The Origin panel starts on CAM's setup, so the origin, readout, G54, part zero and stock match what CAM showed (shared `revpackPlacement.ts` `buildJbl` / `parseJbl`, proven by a CAM-exported fixture in `test:revpack`). The file also says when the program must be re-posted after the move.
+
+### Fixed
+
+- RevPack checker: a rapid that crashed into stock was reported a second time on the retract out of it; the crash path now counts as cut.
+- RevPack checker: a tool with no known diameter sitting exactly on a heightmap cell corner touched no cell, so a rapid straight down through the stock went unreported.
+- In-process stock: a tap removed a full cylinder of its major diameter (shown as a gouge against the tap-drill bore); TCPC passes tilted up to 30 deg are now cut instead of skipped.
+- Visual E2E: the window is forced to 1600 x 1000 (VS Code ignored `--window-size` and captured at 1024 x 768).
+- Visualizer: the legend sat under the view cube's preset buttons; it now sits left of the cube.
+- Visualizer: a preset view (ISO, Top...) counted as the user moving the camera, so a part that loaded after it (a slow STEP) stayed framed for the empty scene and was clipped (AR4 gear, jaw1). A preset now sets the angle and new geometry is framed again at it.
+
+## [0.3.13] - 2026-10-13
+
+### Marketplace listing
+
+- Rewrote the Marketplace README. The published 0.3.12 listing still described v0.1: it called Validate Program and Format G-Code placeholders, listed diagnostics (0.2), the formatter (0.3) and subprogram navigation as future work, and never mentioned robot languages, probing, machine presets, the Toolbox, model imports or tap drill checks. It now documents the shipped features, real known issues and the current roadmap.
+- Commands and Settings tables are generated from package.json by `scripts/gen-readme-tables.cjs` (`--check` fails when they drift).
+- README images use absolute https URLs so they render on the Marketplace.
+- New description, keywords (Fanuc TP, ABB RAPID, Macro B, machinist and others; dropped "dnc", which is not shipped), the Visualization category, a gallery banner that matches the icon, and a jobline.ai homepage link.
+- Added a free machining calculators section (jobline.ai/tools) with Marketplace UTM tags.
+- The sidebar shop link now opens jobline.ai/shops tagged `utm_source=vscode&utm_medium=extension` instead of /founding-shop.
+
 ### Added
 
 - Machine presets: save a machine (control, machine type, units, travel, options, workholding) once and reuse it for every program. Choose per workspace or set a default for all workspaces.
@@ -18,6 +94,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Synced `data/reference/jobline-shop-reference.json` to v1.2.1 from the JobLine shop app (shift-handover-hub PRs #184 and #185): corrected 50% tap drills, NPT tap drills and carbide milling SFM; a larger cutting-speed table; and #10-32 is now UNF only (75% tap drill #21), with #10-24 the only #10 UNC thread (#25). The earlier bundle also listed #10-32 under UNC.
 - The Commands view is grouped into Machine Setup, Check & Explain, Edit Program and Navigate.
 - The visualizer uses the active preset's machine type and workholding when the program text alone cannot tell (e.g. a plain G0/G1 lathe program).
 - **Select Machine Type** also sets the broad `jobline.machineType` profile, so cycle lists and lathe T-word decoding follow the pick.

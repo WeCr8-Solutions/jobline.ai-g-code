@@ -63,12 +63,15 @@
     .cube-btn:hover { background: #2a3654; border-color: #5c6f9b; }
 
     /* Legend — bottom-right */
+    /* Left of the view cube column (198 px + margins), so the legend never
+       sits under the cube's preset buttons. */
     #legend {
-      position: absolute; bottom: 8px; right: 10px;
+      position: absolute; bottom: 8px; right: 222px;
       color: #556; font-family: monospace; font-size: 10px;
       pointer-events: none; -webkit-user-select: none; user-select: none; text-align: right;
       line-height: 1.6;
     }
+    #legend.legend-compact .legend-controls, #legend.legend-compact .legend-controls ~ div { display: none; }
     .legend-rapid { color: #4fc3f7; }
     .legend-cut { color: #66bb6a; }
     .legend-mstop { color: #ff8a65; }
@@ -104,7 +107,7 @@
     /* View panel — appearance controls, kept in the viewport so the effect of a
        slider is visible while you drag it. */
     #view-panel {
-      position: absolute; left: 10px; bottom: 112px; width: 232px;
+      position: absolute; left: 10px; bottom: 112px; width: 262px; max-height: calc(100vh - 140px); overflow: auto;
       color: #d7dde8; background: rgba(18, 22, 38, 0.94);
       border: 1px solid #39445f; border-radius: 6px; font: 11px/1.4 sans-serif;
       box-shadow: 0 4px 18px rgba(0,0,0,.35);
@@ -123,6 +126,16 @@
       text-transform: uppercase; letter-spacing: .08em; border-top: 1px solid #2b344a; padding-top: 6px;
     }
     .view-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; }
+    /* Per-object layer styles: visible, Solid / Transparent / Wireframe, opacity. */
+    #object-styles { display: grid; gap: 4px; }
+    .obj-row { display: grid; grid-template-columns: 16px 1fr 92px; grid-template-rows: auto auto; gap: 1px 5px; align-items: center; }
+    .obj-row .obj-name { color: #aeb8c9; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .obj-row .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; flex: 0 0 9px; }
+    .obj-row select { font: 10px sans-serif; background: rgba(8, 13, 25, .88); color: #d7dde8; border: 1px solid #39445f; border-radius: 5px; padding: 1px 2px; }
+    .obj-row input[type=range] { grid-column: 2 / 3; min-width: 0; accent-color: #66bb6a; height: 12px; }
+    .obj-row .view-val { grid-column: 3 / 4; flex: none; text-align: left; }
+    .obj-row.off .obj-name { opacity: .45; }
+    #layer-preset-row .play-btn { font-size: 10px; padding: 2px 6px; }
     .view-toggles label { display: flex; align-items: center; gap: 4px; color: #aeb8c9; cursor: pointer; }
     .view-toggles input { accent-color: #66bb6a; }
     .stock-transform-grid {
@@ -168,6 +181,31 @@
     }
     .target-btn:hover { background: #382b58; }
 
+    /* RevPack badge + correlation findings. Top-left under the HUD so the
+       badge is visible without opening anything. */
+    #revpack-panel {
+      position: absolute; top: 64px; left: 10px; width: min(330px, 40vw); max-height: 38vh;
+      overflow: auto; background: rgba(20, 26, 42, 0.94); color: #d7dde8;
+      border: 1px solid #b084ff; border-radius: 10px; font: 11px/1.4 sans-serif; display: none; z-index: 6;
+    }
+    #revpack-panel summary { padding: 6px 10px; cursor: pointer; }
+    #revpack-badge {
+      display: inline-block; background: #3b2a66; color: #f3ecff; border: 1px solid #b084ff;
+      border-radius: 10px; padding: 2px 9px; font-weight: 700; max-width: 92%;
+      white-space: normal; overflow-wrap: anywhere; vertical-align: middle;
+    }
+    #revpack-status { margin-left: 6px; font-weight: 700; }
+    #revpack-status.pass { color: #71d995; }
+    #revpack-status.fail { color: #ff7b72; }
+    #revpack-meta { padding: 0 10px 6px; color: #aeb8c8; }
+    #revpack-findings .review-item { padding: 6px 10px; }
+    #render-mode-row .play-btn.active { background: #3b2a66; border-color: #b084ff; color: #fff; }
+    #render-mode-row .play-btn.toggle.active { background: #5a3d00; border-color: #ffb000; color: #fff; }
+    #render-mode-row .play-btn:disabled { opacity: 0.4; cursor: default; }
+    #compare-legend { display: none; font-size: 11px; color: #c9d1d9; padding: 2px 0 4px; }
+    #compare-legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 3px 0 8px; vertical-align: -1px; }
+    #revpack-seeded { display: none; margin: 0 10px 6px; padding: 5px 8px; border-radius: 4px; background: #4a2a00; border: 1px solid #ffb000; color: #ffd27a; font-weight: 700; }
+
     /* JobLine polish pass: small, low-risk visual overrides. */
     #hud, #playback-panel, #review-panel, #view-panel, #target-panel, #view-cube {
       backdrop-filter: blur(10px);
@@ -195,10 +233,18 @@
       border-radius: 7px;
       background: rgba(8, 13, 25, .88);
     }
+    /* The 3D view cube is drawn in the WebGL canvas underneath this panel, so a
+       backdrop blur here smeared the cube itself. Keep the panel crisp. */
+    #view-cube { backdrop-filter: none; -webkit-backdrop-filter: none; background: transparent; border-color: transparent; box-shadow: none; }
+    /* Only the preset buttons get a panel; nothing semi-transparent sits over the
+       WebGL cube, which was what made it look soft. */
+    #view-cube .cube-row { background: rgba(18, 22, 38, 0.72); border: 1px solid rgba(57, 68, 95, 0.45); border-radius: 8px; padding: 4px; }
+    #view-cube .viewcube-caption { text-shadow: 0 1px 2px #000; }
     @media (max-width: 760px) {
       #target-panel { display: none; }
       #playback-panel { width: min(360px, calc(100vw - 20px)); }
-      #view-cube { right: 8px; transform: scale(.82); transform-origin: right bottom; }
+      #view-cube { right: 8px; }
+      #view-cube .cube-row { transform: scale(.86); transform-origin: right bottom; }
       #review-panel { width: min(300px, calc(100vw - 20px)); }
     }
     @media (max-height: 520px) {
@@ -216,6 +262,41 @@
       #view-cube, #legend { display: none; }
       .play-btn { padding: 4px 6px; }
     }
+
+    /* Origin / WCS panel: part to origin the CAM way (box points, picks, orientation). */
+    #origin-panel {
+      position: absolute; top: 8px; right: 10px; width: 300px; max-height: calc(100vh - 330px); overflow: auto; z-index: 7;
+      color: #d7dde8; background: rgba(18, 22, 38, 0.95); border: 1px solid rgba(63, 208, 255, .45); border-radius: 10px;
+      font: 11px/1.35 sans-serif; box-shadow: 0 12px 34px rgba(0,0,0,.38);
+    }
+    #origin-panel:not([open]) { top: auto; bottom: 8px; right: 222px; width: auto; max-height: none; overflow: hidden; }
+    #origin-panel summary { cursor: pointer; padding: 6px 10px; font-weight: 700; color: #3fd0ff; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; user-select: none; }
+    body.origin-open #review-panel { display: none; }
+    .org-body { padding: 2px 9px 8px; border-top: 1px solid #39445f; }
+    .org-sec { margin: 7px 0 3px; color: #8491a8; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; display: flex; align-items: center; gap: 6px; }
+    .org-row { display: flex; flex-wrap: wrap; gap: 3px; }
+    .org-btn { border: 1px solid #39445f; background: #1f2940; color: #d7dde8; border-radius: 6px; padding: 2px 6px; font: 10px sans-serif; cursor: pointer; }
+    .org-btn:hover { background: #2a3654; border-color: #5c6f9b; }
+    .org-btn.active { background: #0d4a5c; border-color: #3fd0ff; color: #fff; }
+    .org-btn:disabled { opacity: .4; cursor: default; }
+    .org-btn.primary { border-color: #3fd0ff; }
+    .box27 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .box27-layer { display: grid; grid-template-columns: repeat(3, 20px); gap: 2px; justify-content: center; }
+    .box27-cap { text-align: center; color: #8491a8; font-size: 9px; margin-bottom: 1px; }
+    .bp { width: 20px; height: 20px; padding: 0; border: 1px solid #39445f; background: #151c2e; color: #9fb4d8; border-radius: 3px; cursor: pointer; font: 9px sans-serif; }
+    .bp.corner { background: #24324f; }
+    .bp.face { border-radius: 50%; }
+    .bp.center { border-radius: 50%; background: #2f2547; }
+    .bp:hover { border-color: #3fd0ff; }
+    .bp.active { background: #3fd0ff; border-color: #3fd0ff; color: #0b1020; }
+    #org-label { color: #3fd0ff; font-weight: 700; overflow-wrap: anywhere; }
+    #org-readout { font: 10px/1.45 monospace; color: #aeb8c9; background: rgba(8, 13, 25, .88); border-radius: 6px; padding: 5px 6px; margin-top: 4px; white-space: pre-wrap; }
+    #org-status { color: #ffd27a; min-height: 13px; margin-top: 4px; }
+    #org-status.err { color: #ff8a80; }
+    .org-offset { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 3px; align-items: center; }
+    .org-offset input { width: 100%; min-width: 0; background: rgba(8, 13, 25, .88); color: #d7dde8; border: 1px solid #39445f; border-radius: 5px; padding: 2px 3px; font: 10px monospace; }
+    .org-seg { display: inline-flex; border: 1px solid #39445f; border-radius: 6px; overflow: hidden; }
+    .org-seg button { border: 0; border-radius: 0; }
   </style>
 </head>
 <body>
@@ -228,6 +309,13 @@
     <div id="stat-units"></div>
   </div>
 
+  <details id="revpack-panel" open aria-label="RevPack setup and correlation findings">
+    <summary><span id="revpack-badge">RevPack: none</span><span id="revpack-status"></span></summary>
+    <div id="revpack-seeded" role="note"></div>
+    <div id="revpack-meta"></div>
+    <div id="revpack-findings"></div>
+  </details>
+
   <div id="playback-panel" aria-label="Simulation playback controls">
     <div class="title">Program</div>
     <div class="play-row">
@@ -235,6 +323,19 @@
         <option value="">Open a G-code tab...</option>
       </select>
     </div>
+    <div class="title">Layers</div>
+    <div class="play-row" id="render-mode-row" aria-label="Layer render mode">
+      <button class="play-btn active" data-render-mode="solid" title="Stock, workholding, target and tool as shaded solids">Solid</button>
+      <button class="play-btn" data-render-mode="wireframe" title="Stock, workholding, target and tool as wireframes">Wireframe</button>
+      <button class="play-btn toggle" id="btn-target-only" title="Show only the finished part (the RevPack target)">Target only</button>
+      <button class="play-btn toggle" id="btn-compare" title="Colour the in-process stock against the target: remaining material vs gouge">Compare</button>
+    </div>
+    <div class="play-row" id="layer-preset-row" aria-label="Layer style presets">
+      <button class="play-btn" data-layer-preset="all-solid" title="Every object as a shaded solid">All solid</button>
+      <button class="play-btn" data-layer-preset="inspect" title="Workholding and tool transparent, the part solid inside 50% stock">Inspect part</button>
+      <button class="play-btn" data-layer-preset="workholding" title="Only the vise body, jaws and zero-point / riser">Workholding only</button>
+    </div>
+    <div id="compare-legend" aria-live="polite"></div>
     <div class="title">Simulation speed <span id="speed-readout">1x</span></div>
     <div class="play-row">
       <button class="play-btn primary" id="play">Play / Resume</button>
@@ -345,10 +446,8 @@
     <summary>View</summary>
     <div id="view-body">
       <div class="view-row"><label for="op-tube">Cut solid</label><input type="range" id="op-tube" min="0" max="100" value="55"><span class="view-val" id="op-tube-v">55%</span></div>
-      <div class="view-row"><label for="op-stock">Stock</label><input type="range" id="op-stock" min="0" max="100" value="55"><span class="view-val" id="op-stock-v">55%</span></div>
-      <div class="view-row"><label for="op-work">Workholding</label><input type="range" id="op-work" min="0" max="100" value="35"><span class="view-val" id="op-work-v">35%</span></div>
-      <div class="view-row"><label for="op-tool">Tool</label><input type="range" id="op-tool" min="0" max="100" value="100"><span class="view-val" id="op-tool-v">100%</span></div>
-      <div class="view-row"><label for="op-path">Toolpath</label><input type="range" id="op-path" min="0" max="100" value="100"><span class="view-val" id="op-path-v">100%</span></div>
+      <div class="view-sep">Objects · visible · style · opacity</div>
+      <div id="object-styles" aria-label="Per-object layer styles"></div>
       <div class="view-sep">Show</div>
       <div class="view-toggles">
         <label><input type="checkbox" data-layer="path" checked> Toolpath</label>
@@ -378,6 +477,65 @@
         <input type="number" id="stock-rot-x" aria-label="Stock X rotation in degrees" step="1" value="0">
         <input type="number" id="stock-rot-y" aria-label="Stock Y rotation in degrees" step="1" value="0">
         <input type="number" id="stock-rot-z" aria-label="Stock Z rotation in degrees" step="1" value="0">
+      </div>
+    </div>
+  </details>
+
+  <details id="origin-panel" aria-label="Origin and work offset">
+    <summary>Origin / WCS · part to origin</summary>
+    <div class="org-body">
+      <div id="org-label">No part to place yet</div>
+      <div id="org-readout"></div>
+      <div id="org-status"></div>
+      <div class="org-sec">Box point
+        <span class="org-seg" role="group" aria-label="Bounding box">
+          <button class="org-btn active" data-org-ref="part">Part box</button><button class="org-btn" data-org-ref="stock">Stock box</button>
+        </span>
+      </div>
+      <div class="box27" id="org-box27" aria-label="27 bounding-box points"></div>
+      <div class="org-sec">Quick</div>
+      <div class="org-row" id="org-faces">
+        <button class="org-btn" data-org-face="top">Top</button><button class="org-btn" data-org-face="bottom">Bottom</button>
+        <button class="org-btn" data-org-face="left">Left</button><button class="org-btn" data-org-face="right">Right</button>
+        <button class="org-btn" data-org-face="front">Front</button><button class="org-btn" data-org-face="back">Back</button>
+        <button class="org-btn" data-org-face="center">Center</button>
+      </div>
+      <div class="org-row" style="margin-top:3px">
+        <button class="org-btn primary" data-org-preset="top-center">Top center</button>
+        <button class="org-btn primary" data-org-preset="top-front-left">Top-front-left corner</button>
+      </div>
+      <div class="org-sec">Pick on the part</div>
+      <div class="org-row" id="org-picks">
+        <button class="org-btn" data-org-pick="face-axis" title="Planar face: the axis along its normal gets 0 on it">Face → axis</button>
+        <button class="org-btn" data-org-pick="face-origin" title="WCS at the face centre">Face center</button>
+        <button class="org-btn" data-org-pick="face-top" title="Turn the face up (normal to +Z)">Face to top</button>
+        <button class="org-btn" data-org-pick="face-bottom" title="Turn the face down (normal to -Z)">Face to bottom</button>
+        <button class="org-btn" data-org-pick="bore" title="Centre X/Y on a bore or boss axis">Bore/boss center</button>
+        <button class="org-btn" data-org-pick="bore-z" title="Centre on the axis and turn it onto Z">Bore axis → Z</button>
+        <button class="org-btn" data-org-pick="point" title="Nearest vertex or edge midpoint">Vertex / edge</button>
+        <button class="org-btn" data-org-pick="mid2" title="Midpoint of two picked points">2-pt mid</button>
+        <button class="org-btn" data-org-pick="circle3" title="Centre of a circle through three picked points">3-pt circle</button>
+        <button class="org-btn" data-org-pick="view-normal" title="Look straight at a picked face">View ⟂ face</button>
+      </div>
+      <div class="org-sec">Orientation</div>
+      <div class="org-row">
+        <button class="org-btn" data-org-rot="0,1">X +90</button><button class="org-btn" data-org-rot="0,-1">X −90</button>
+        <button class="org-btn" data-org-rot="1,1">Y +90</button><button class="org-btn" data-org-rot="1,-1">Y −90</button>
+        <button class="org-btn" data-org-rot="2,1">Z +90</button><button class="org-btn" data-org-rot="2,-1">Z −90</button>
+        <button class="org-btn" data-org-flip="0">Flip</button>
+      </div>
+      <div class="org-sec">Offset (program units) + rotate Z°</div>
+      <div class="org-offset">
+        <input id="org-dx" type="number" step="0.001" value="0" aria-label="Shift origin X">
+        <input id="org-dy" type="number" step="0.001" value="0" aria-label="Shift origin Y">
+        <input id="org-dz" type="number" step="0.001" value="0" aria-label="Shift origin Z">
+        <input id="org-rz" type="number" step="1" value="0" aria-label="Rotate about Z, degrees">
+        <button class="org-btn" id="org-apply-offset">Apply</button>
+      </div>
+      <div class="org-sec">Stock</div>
+      <div class="org-row">
+        <button class="org-btn" data-org-center="xy">Center in stock XY</button><button class="org-btn" data-org-center="xyz">XYZ</button>
+        <button class="org-btn" id="org-undo">Undo</button><button class="org-btn" id="org-reset">Reset</button>
       </div>
     </div>
   </details>
@@ -413,6 +571,8 @@
 
     // Catch module-level errors (e.g. import rejected, three.min.js corrupted)
     window.addEventListener('error', function (ev) {
+      // Chromium's benign layout notice, not a failure of the renderer.
+      if (/ResizeObserver loop/.test(String(ev.message || ''))) return;
       const banner = document.getElementById('three-error');
       const detail = document.getElementById('three-error-detail');
       if (banner) banner.style.display = 'block';
@@ -443,10 +603,33 @@
     // -----------------------------------------------------------------------
     const container = document.getElementById('canvas-container');
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    // Render at the display's real pixel density. The ratio is re-read on every
+    // resize and whenever devicePixelRatio changes (window moved to a HiDPI
+    // monitor, VS Code zoom), otherwise the canvas - view cube included - was
+    // drawn at the old density and CSS-upscaled, i.e. blurry.
+    const MAX_PIXEL_RATIO = 3;
+    function currentPixelRatio() { return Math.min(Math.max(window.devicePixelRatio || 1, 1), MAX_PIXEL_RATIO); }
+    renderer.setPixelRatio(currentPixelRatio());
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setClearColor(0x1a1a2e);
     container.appendChild(renderer.domElement);
+    // Hidden until the first settled fit, so the first visible frame already
+    // has the setup placement and G54 origin applied (see scheduleSettledFit).
+    renderer.domElement.style.opacity = '0';
+    renderer.domElement.style.transition = 'opacity .12s ease-out';
+    function syncPixelRatio() {
+      const ratio = currentPixelRatio();
+      if (Math.abs(renderer.getPixelRatio() - ratio) > 1e-3) {
+        renderer.setPixelRatio(ratio);
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      }
+    }
+    (function watchPixelRatio() {
+      if (typeof window.matchMedia !== 'function') return;
+      const mq = window.matchMedia('(resolution: ' + (window.devicePixelRatio || 1) + 'dppx)');
+      const onChange = () => { syncPixelRatio(); if (mq.removeEventListener) mq.removeEventListener('change', onChange); watchPixelRatio(); };
+      if (mq.addEventListener) mq.addEventListener('change', onChange, { once: true });
+    })();
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -506,6 +689,85 @@
     // "Cannot access 'viewOpacity' before initialization", killing the whole
     // script: no toolpath, no renderReady, a silent blank viewport.
     const viewOpacity = { sweptTube: 0.55, stock: 0.55, workholding: 0.35, targetModel: 0.35, tool: 1, path: 1 };
+    // 'solid' | 'wireframe' for every solid layer (stock, workholding, target,
+    // tool, holder, cut solid). Declared here for the same TDZ reason as
+    // viewOpacity: setLayer() reapplies it on the very first build.
+    let sceneRenderMode = 'solid';
+    // RevPack state. packShapes replaces the single derived jaw pair whenever
+    // a pack says what actually holds the part.
+    let revpackInfo = null;
+    // Target-only view and target-vs-stock comparison colouring (RevPack).
+    let targetOnly = false;
+    let compareMode = false;
+    const TARGET_ONLY_HIDES = ['stock', 'workholding', 'tool', 'toolHolder', 'path', 'sweptTube', 'origin', 'fusionReference'];
+    // The finished part draws as an opaque gold solid; the stock over it is
+    // kept this translucent so the part reads through it.
+    const STOCK_OVER_TARGET = 0.18;
+    // Compare colours the stock by cell; kept see-through so the part stays gold.
+    const COMPARE_STOCK_OPACITY = 0.4;
+    const REVPACK_TARGET_COLOR = 0xffb000;
+    // A cutter with no colour of its own draws steel: gold is the finished part's alone.
+    const TOOL_DEFAULT_COLOR = '#b8c4d2';
+    const COMPARE_COLORS = { 0: [0.42, 0.50, 0.60], 1: [0.21, 0.84, 1.0], 2: [1.0, 0.23, 0.23] };
+    function packTargetLoaded() { return targetModels.some(item => item.source === 'revpack'); }
+
+    // Per-object layer styles. Each object the setup is made of - stock,
+    // target, fixture / vise body, jaws, zero-point plate / riser, tool,
+    // holder, toolpath - is shown or hidden and drawn Solid, Transparent (at
+    // its own opacity) or Wireframe on its own. They apply in a RevPack scene
+    // and to an imported part; the Wireframe layer mode still draws everything
+    // as wireframe. Remembered for the session (webview state).
+    const OBJECT_KEYS = ['stock', 'target', 'fixture', 'jaws', 'zeroPoint', 'tool', 'holder', 'toolpath'];
+    const OBJECT_LABELS = { stock: 'Stock', target: 'Target', fixture: 'Fixture / vise body', jaws: 'Jaws', zeroPoint: 'Zero-point / riser', tool: 'Tool', holder: 'Holder', toolpath: 'Toolpath' };
+    // Hardened jaws bright steel, the vise body dark, the zero-point stack
+    // between; the gripped stock region is the one magenta solid.
+    const OBJECT_COLORS = { stock: '#58a6ff', target: '#ffb000', fixture: '#4b5768', jaws: '#b3c0d1', zeroPoint: '#667386', tool: '#b8c4d2', holder: '#c9d1d9', toolpath: '#66bb6a', grip: '#e05cff' };
+    const DEFAULT_OBJECT_STYLES = {
+      stock: { visible: true, mode: 'transparent', opacity: 0.5 },
+      target: { visible: true, mode: 'solid', opacity: 1 },
+      fixture: { visible: true, mode: 'solid', opacity: 1 },
+      jaws: { visible: true, mode: 'solid', opacity: 1 },
+      zeroPoint: { visible: true, mode: 'solid', opacity: 1 },
+      tool: { visible: true, mode: 'solid', opacity: 1 },
+      holder: { visible: true, mode: 'solid', opacity: 1 },
+      toolpath: { visible: true, mode: 'solid', opacity: 1 },
+    };
+    const T = (mode, opacity, visible = true) => ({ visible, mode, opacity });
+    const LAYER_PRESETS = {
+      'all-solid': Object.fromEntries(OBJECT_KEYS.map(key => [key, T('solid', 1)])),
+      inspect: {
+        stock: T('transparent', 0.5), target: T('solid', 1), fixture: T('transparent', 0.18), jaws: T('transparent', 0.3),
+        zeroPoint: T('transparent', 0.15), tool: T('transparent', 0.35), holder: T('transparent', 0.2), toolpath: T('solid', 1),
+      },
+      workholding: {
+        stock: T('transparent', 0.5, false), target: T('solid', 1, false), fixture: T('solid', 1), jaws: T('solid', 1),
+        zeroPoint: T('solid', 1), tool: T('solid', 1, false), holder: T('solid', 1, false), toolpath: T('solid', 1, false),
+      },
+    };
+    // Stock for a part opened without a pack (an upload such as the AR4
+    // parts): the target's bounds grown by the same offsets the shared kernel's
+    // uploadSetup() uses - 3 mm sides, 1 mm top, 3 mm grip + 1 mm below.
+    const UPLOAD_STOCK_MM = { side: 3, top: 1, below: 4, grip: 3 };
+    function cloneStyles(styles) { return Object.fromEntries(OBJECT_KEYS.map(key => [key, Object.assign({}, DEFAULT_OBJECT_STYLES[key], styles && styles[key])])); }
+    let objectStyles = cloneStyles((() => { try { return (vscode.getState() || {}).objectStyles; } catch { return null; } })());
+    let layerPreset = (() => { try { return (vscode.getState() || {}).layerPreset || ''; } catch { return ''; } })();
+    function saveObjectStyles() {
+      try { vscode.setState(Object.assign({}, vscode.getState() || {}, { objectStyles, layerPreset })); } catch { /* state is best-effort */ }
+    }
+    // A workholding solid named by an error finding (rapid-into-jaw ...).
+    const HIT_COLOR = '#ff4d4f';
+    const OBJECT_LAYER = { stock: 'stock', tool: 'tool', holder: 'toolHolder', toolpath: 'path', target: 'targetModel' };
+    // G-code-coordinate bounds of the stock as drawn (pack or upload), for the probe.
+    let stockBoundsDrawn = null;
+    // Angles of the last preset view; a refit after new geometry keeps them.
+    let presetAngles = null;
+    let packShapes = [];
+    let revpackFindings = null;
+    // Solids from the shared RevPack geometry kernel (revpackGeometry.ts, the
+    // same file CAM and the hub use). When set, stock, workholding and the
+    // milling tool are drawn from these arrays instead of local primitives.
+    let packScene = null;
+    const RENDER_MODE_LAYERS = ['stock', 'workholding', 'targetModel', 'tool', 'toolHolder', 'sweptTube'];
 
     const layerMeshes = {
       tool: null,
@@ -538,7 +800,7 @@
       }
       layerMeshes[key] = obj;
       if (obj) {
-        obj.visible = layerVis[key] !== false;
+        obj.visible = layerVis[key] !== false && !(targetOnly && TARGET_ONLY_HIDES.includes(key));
         scene.add(obj);
         // A rebuilt mesh arrives at its constructor opacity, so without this the
         // View sliders would stop describing the scene the moment anything
@@ -554,6 +816,7 @@
       if (layerMeshes[layer]) layerMeshes[layer].visible = isVisible;
       const checkbox = document.querySelector('.view-toggles input[data-layer="' + layer + '"]');
       if (checkbox) checkbox.checked = isVisible;
+      if (typeof applyObjectStyles === 'function') applyObjectStyles();
     }
 
     // -----------------------------------------------------------------------
@@ -646,17 +909,28 @@
     const gnomonCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
     gnomonCamera.position.set(0, 0, 3.2);
 
+    // View-cube labels are drawn large and mip-mapped so they stay sharp when
+    // the cube is minified on HiDPI screens instead of a blurry 64-128px stretch.
+    function sharpenTexture(tex) {
+      tex.generateMipmaps = true;
+      tex.minFilter = THREE.LinearMipmapLinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      tex.needsUpdate = true;
+      return tex;
+    }
+
     function axisLabelSprite(text, color) {
       const cv = document.createElement('canvas');
-      cv.width = 64; cv.height = 64;
+      cv.width = 256; cv.height = 256;
       const ctx = cv.getContext('2d');
       ctx.fillStyle = color;
-      ctx.font = 'bold 44px monospace';
+      ctx.font = 'bold 176px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(text, 32, 34);
+      ctx.fillText(text, 128, 136);
       const tex = new THREE.CanvasTexture(cv);
-      tex.needsUpdate = true;
+      sharpenTexture(tex);
       const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
       sprite.scale.set(0.62, 0.62, 0.62);
       return sprite;
@@ -664,23 +938,23 @@
 
     function faceLabelTexture(text) {
       const cv = document.createElement('canvas');
-      cv.width = 128; cv.height = 128;
+      cv.width = 512; cv.height = 512;
       const ctx = cv.getContext('2d');
-      const grad = ctx.createLinearGradient(0, 0, 128, 128);
+      const grad = ctx.createLinearGradient(0, 0, 512, 512);
       grad.addColorStop(0, '#f2edbc');
       grad.addColorStop(1, '#a7a16e');
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 128, 128);
+      ctx.fillRect(0, 0, 512, 512);
       ctx.strokeStyle = '#5e5a40';
-      ctx.lineWidth = 5;
-      ctx.strokeRect(3, 3, 122, 122);
+      ctx.lineWidth = 20;
+      ctx.strokeRect(10, 10, 492, 492);
       ctx.fillStyle = '#1f2430';
-      ctx.font = '900 26px sans-serif';
+      ctx.font = '900 104px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(text, 64, 64);
+      ctx.fillText(text, 256, 260);
       const tex = new THREE.CanvasTexture(cv);
-      tex.needsUpdate = true;
+      sharpenTexture(tex);
       return tex;
     }
 
@@ -724,13 +998,36 @@
 
     let gnomonVisible = true;
 
-    function gnomonViewportCss(widthCss, _heightCss) {
+    // The cube is drawn into the exact box of the .cube-stage element (in GL
+    // coordinates, origin bottom-left), so it can't drift from its panel or
+    // sit half under the preset buttons when the panel is scaled or moved.
+    function gnomonViewportCss(widthCss, heightCss) {
+      const stage = document.querySelector('#view-cube .cube-stage');
+      const host = renderer.domElement.getBoundingClientRect();
+      if (stage && host.width > 0) {
+        const r = stage.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          const size = Math.round(Math.min(r.width, r.height + 18, GNOMON_PX));
+          const cx = r.left - host.left + r.width / 2;
+          const cyTop = r.top - host.top + r.height / 2;
+          return {
+            x: Math.round(cx - size / 2),
+            y: Math.round(heightCss - cyTop - size / 2),
+            size,
+          };
+        }
+      }
       return {
         x: Math.max(GNOMON_MARGIN, widthCss - 198 + 18),
         y: 112,
         size: GNOMON_PX,
       };
     }
+    window.__joblineGnomonViewport = () => {
+      const w = renderer.domElement.width / renderer.getPixelRatio();
+      const h = renderer.domElement.height / renderer.getPixelRatio();
+      return Object.assign(gnomonViewportCss(w, h), { pixelRatio: renderer.getPixelRatio(), devicePixelRatio: window.devicePixelRatio || 1 });
+    };
 
     function renderGnomon() {
       if (!gnomonVisible) return;
@@ -765,9 +1062,125 @@
     // jaw form, so both are rebuilt when it arrives.
     let isTurning = false;
 
+    /** Shared-kernel arrays (part coords, G-code axes) -> lit mesh + edge lines. */
+    function sharedMeshGroup(wireMesh, color, opacity, name, triClass) {
+      const group = new THREE.Group();
+      group.name = name || 'RevPack solid';
+      if (!wireMesh) return group;
+      const src = wireMesh.positions || [];
+      const pos = new Float32Array(src.length);
+      for (let i = 0; i + 2 < src.length; i += 3) {
+        pos[i] = src[i]; pos[i + 1] = src[i + 2]; pos[i + 2] = -src[i + 1];
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.computeVertexNormals();
+      const col = new THREE.Color(color);
+      const colored = Array.isArray(triClass) && triClass.length * 9 === src.length;
+      if (colored) {
+        // Remaining-vs-gouge colouring: one class per kernel triangle.
+        const colors = new Float32Array(src.length);
+        for (let t = 0; t < triClass.length; t++) {
+          const c = COMPARE_COLORS[triClass[t]] || COMPARE_COLORS[0];
+          for (let v = 0; v < 3; v++) colors.set(c, t * 9 + v * 3);
+        }
+        geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      }
+      const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+        color: colored ? 0xffffff : col, vertexColors: colored, opacity, transparent: opacity < 0.999, side: THREE.DoubleSide, shininess: 30,
+      }));
+      mesh.name = (name || 'solid') + ' body';
+      group.add(mesh);
+      const e = wireMesh.edges || [];
+      if (e.length) {
+        const ep = new Float32Array(e.length);
+        for (let i = 0; i + 2 < e.length; i += 3) { ep[i] = e[i]; ep[i + 1] = e[i + 2]; ep[i + 2] = -e[i + 1]; }
+        const eg = new THREE.BufferGeometry();
+        eg.setAttribute('position', new THREE.BufferAttribute(ep, 3));
+        const lines = new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ color: col.clone().offsetHSL(0, 0, 0.15), opacity: 0.95, transparent: true }));
+        lines.name = (name || 'solid') + ' edges';
+        group.add(lines);
+      }
+      return group;
+    }
+
+    /** Bounds of kernel positions (G-code axes) as {min, max}. */
+    function wireBounds(positions) {
+      if (!positions || positions.length < 3) return null;
+      const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+      for (let i = 0; i + 2 < positions.length; i += 3) for (let k = 0; k < 3; k++) {
+        const v = Number(positions[i + k]);
+        if (v < min[k]) min[k] = v;
+        if (v > max[k]) max[k] = v;
+      }
+      return { min, max };
+    }
+
+    /** Kernel-style box (positions + edges, G-code axes) for a stock or grip region drawn here. */
+    function boxWire(min, max) {
+      const [x0, y0, z0] = min, [x1, y1, z1] = max;
+      const c = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]];
+      const quads = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [3, 7, 6, 2], [0, 4, 7, 3], [1, 2, 6, 5]];
+      const positions = [];
+      for (const [a, b, cc, d] of quads) positions.push(...c[a], ...c[b], ...c[cc], ...c[a], ...c[cc], ...c[d]);
+      const edges = [];
+      for (const [a, b] of [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]]) edges.push(...c[a], ...c[b]);
+      return { positions, edges };
+    }
+
+    /** The gripped stock region (the bottom grip depth held in the jaws), highlighted. */
+    function gripGroup(wire) {
+      const grip = sharedMeshGroup(wire, OBJECT_COLORS.grip, 0.45, 'Gripped stock');
+      grip.userData.grip = true;
+      grip.traverse(node => { node.userData.grip = true; node.renderOrder = 3; });
+      return grip;
+    }
+
+    /** The part a stock is derived for when no pack or program states one: the first imported target part. */
+    function uploadTarget() {
+      return targetModels.find(item => item.role === 'target-part' && item.source !== 'revpack' && item.bounds) || null;
+    }
+
     function buildStock() {
       const { w, d, h, color } = stockCfg;
       const group = new THREE.Group();
+      stockBoundsDrawn = null;
+
+      if (packScene && packScene.stock) {
+        // RevPack: the in-process stock (Z-map after the program's 3-axis
+        // cuts) when the kernel produced one, with the raw blank's outline;
+        // otherwise the raw blank solid. Part coordinates - no stock transform.
+        const comparing = compareMode && packScene.inProcess && Array.isArray(packScene.inProcess.triClass);
+        const solid = sharedMeshGroup(packScene.inProcess || packScene.stock, color, 0.55, packScene.inProcess ? 'In-process stock' : 'Stock',
+          comparing ? packScene.inProcess.triClass : undefined);
+        if (packScene.inProcess) {
+          const outline = sharedMeshGroup({ positions: [], edges: packScene.stock.edges }, color, 0.55, 'Raw stock outline');
+          solid.add(...outline.children);
+        }
+        // The pack's stock is where the setup puts it (target bounds grown by
+        // the setup's offsets, checked by the shared kernel): part coordinates,
+        // no stock home transform.
+        stockBoundsDrawn = wireBounds(packScene.stock.positions);
+        if (packScene.grip) solid.add(gripGroup(packScene.grip));
+        setLayer('stock', solid);
+        return;
+      }
+
+      // A part opened on its own (no pack, no stock in the program): the stock
+      // sits around the part, never at a placeholder box at the origin.
+      const upload = !stockIsDeclared && !isTurning ? uploadTarget() : null;
+      if (upload) {
+        const b = upload.bounds, o = upload.offset || { x: 0, y: 0, z: 0 };
+        const k = currentUnits === 'in' ? 1 / 25.4 : 1;
+        const s = UPLOAD_STOCK_MM.side * k, top = UPLOAD_STOCK_MM.top * k, below = UPLOAD_STOCK_MM.below * k;
+        const min = [Number(b.minX) + o.x - s, Number(b.minY) + o.y - s, Number(b.minZ) + o.z - below];
+        const max = [Number(b.maxX) + o.x + s, Number(b.maxY) + o.y + s, Number(b.maxZ) + o.z + top];
+        const solid = sharedMeshGroup(boxWire(min, max), color, 0.5, 'Stock (around the part)');
+        solid.add(gripGroup(boxWire(min, [max[0], max[1], min[2] + UPLOAD_STOCK_MM.grip * k])));
+        stockBoundsDrawn = { min, max };
+        setLayer('stock', solid);
+        return;
+      }
 
       if (isTurning) {
         // A turned blank is a BAR on the spindle axis, not a block. G-code Z is
@@ -794,12 +1207,19 @@
       }
 
       // In Three.js coords: X=w, Y=h (G-code Z), Z=d (G-code Y depth)
+      // A filled body so Solid mode actually shows a solid block (the stock
+      // used to be edges only, so it looked identical in both modes), plus
+      // the edges so the outline reads in either mode.
       const geo = new THREE.BoxGeometry(w, h, d);
+      const body = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+        color: new THREE.Color(color), opacity: 0.55, transparent: true, side: THREE.DoubleSide, shininess: 20,
+      }));
+      body.position.set(w / 2, h / 2, -d / 2);
+      group.add(body);
       const edges = new THREE.EdgesGeometry(geo);
-      geo.dispose();
       const mat = new THREE.LineBasicMaterial({
         color: new THREE.Color(color),
-        opacity: 0.55,
+        opacity: 0.9,
         transparent: true
       });
       const box = new THREE.LineSegments(edges, mat);
@@ -817,7 +1237,194 @@
     // default - 'none' - so nothing appears until a setup is actually declared.
     let workCfg = { mode: 'none', jawHeight: 1.0, jawThickness: 0.75, gripDepth: 0.5, color: '#c0704f' };
 
+    // -----------------------------------------------------------------------
+    // Workholding detail (display only)
+    // -----------------------------------------------------------------------
+    // The shared kernel models each workholding solid as its envelope box,
+    // which is what the collision and grip checks use and what CAM and the hub
+    // draw byte-for-byte. On screen a plain box does not read as a vise, so the
+    // viewer adds what a machinist recognises on top of the envelope: the
+    // serrated gripping teeth along each jaw's inner edge and the jaw screws,
+    // the vise body's centre spindle, guide rib and spindle ends, and the
+    // zero-point plate's mounting counterbores. These meshes are cosmetic -
+    // they never enter a check - and they inherit the object's style
+    // (Solid / Transparent / Wireframe) through the same traversal.
+    const WH_DETAIL = { toothPitchMm: 6, toothHeightMm: 1.2, screwDiaMm: 10 };
+    function whDetailMesh(geo, color, name) {
+      const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color, side: THREE.DoubleSide, shininess: 55 }));
+      // Ends in ' body' so the Wireframe style hides the fill and shows the edges, like a kernel solid.
+      mesh.name = name + ' detail body';
+      const lines = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 25), new THREE.LineBasicMaterial({ color: new THREE.Color(color).offsetHSL(0, 0, 0.18), opacity: 0.95, transparent: true }));
+      lines.name = name + ' detail edges';
+      const g = new THREE.Group();
+      g.name = name + ' detail';
+      g.userData.detail = true;
+      g.add(mesh, lines);
+      return g;
+    }
+    /** A detail box from G-code min / max corners. */
+    function whBox(x0, y0, z0, x1, y1, z1, color, name) {
+      const g = whDetailMesh(new THREE.BoxGeometry(Math.max(x1 - x0, 1e-4), Math.max(z1 - z0, 1e-4), Math.max(y1 - y0, 1e-4)), color, name);
+      g.position.copy(gc3((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2));
+      return g;
+    }
+    /** A cylinder whose axis is G-code 'x', 'y' or 'z', centred on (x, y, z). */
+    function whCyl(axis, x, y, z, r, len, color, name, segments) {
+      const g = whDetailMesh(new THREE.CylinderGeometry(r, r, len, segments || 24), color, name);
+      g.position.copy(gc3(x, y, z));
+      // CylinderGeometry stands on Three Y, which is G-code Z.
+      if (axis === 'x') g.rotation.z = Math.PI / 2;
+      else if (axis === 'y') g.rotation.x = Math.PI / 2;
+      return g;
+    }
+    /**
+     * Detail meshes for one workholding solid, from its kernel bounds and role.
+     * Returns the meshes added (for the probe and the tests).
+     */
+    function addWorkholdingDetail(solid, item, color) {
+      const b = wireBounds(item.mesh?.positions || item.positions);
+      if (!b) return 0;
+      const [x0, y0, z0] = b.min, [x1, y1, z1] = b.max;
+      const mm = packScene && packScene.units === 'mm' ? 1 : 1 / 25.4;
+      const role = item.role || '';
+      const dark = new THREE.Color(color).offsetHSL(0, 0, -0.16).getHex();
+      const bright = new THREE.Color(color).offsetHSL(0, 0, 0.1).getHex();
+      const parts = [];
+      if (/jaw/.test(role) && role !== 'chuck-jaw') {
+        // The jaw closes across its thinner horizontal side; its gripping face
+        // is the one nearer the part centre (X0 Y0).
+        const alongX = (x1 - x0) >= (y1 - y0);
+        const pitch = WH_DETAIL.toothPitchMm * mm, th = WH_DETAIL.toothHeightMm * mm;
+        const depth = Math.min(alongX ? (y1 - y0) : (x1 - x0), 4 * mm);
+        if (alongX) {
+          const inner = Math.abs(y0) < Math.abs(y1) ? y0 : y1;
+          const dir = inner === y0 ? 1 : -1;  // into the jaw
+          const count = Math.max(2, Math.floor((x1 - x0) / pitch));
+          const start = (x0 + x1) / 2 - ((count - 1) * pitch) / 2;
+          for (let i = 0; i < count; i++) {
+            const cx = start + i * pitch;
+            // A triangular ridge (three-sided prism) across the gripping edge.
+            const t = whCyl('y', cx, inner + dir * depth / 2, z1 + th * 0.35, th, depth, bright, `${item.name} tooth ${i + 1}`, 3);
+            parts.push(t);
+          }
+          // Two jaw screws on top, toward the outer face.
+          const outer = inner === y0 ? y1 : y0;
+          const sy = outer - dir * Math.min((y1 - y0) * 0.35, 4 * mm);
+          for (const fx of [0.28, 0.72]) parts.push(whCyl('z', x0 + (x1 - x0) * fx, sy, z1 + 0.15 * mm, WH_DETAIL.screwDiaMm * mm / 2, 0.6 * mm, dark, `${item.name} screw`, 20));
+        } else {
+          const inner = Math.abs(x0) < Math.abs(x1) ? x0 : x1;
+          const dir = inner === x0 ? 1 : -1;
+          const count = Math.max(2, Math.floor((y1 - y0) / pitch));
+          const start = (y0 + y1) / 2 - ((count - 1) * pitch) / 2;
+          for (let i = 0; i < count; i++) parts.push(whCyl('x', inner + dir * depth / 2, start + i * pitch, z1 + th * 0.35, th, depth, bright, `${item.name} tooth ${i + 1}`, 3));
+          const outer = inner === x0 ? x1 : x0;
+          const sx = outer - dir * Math.min((x1 - x0) * 0.35, 4 * mm);
+          for (const fy of [0.28, 0.72]) parts.push(whCyl('z', sx, y0 + (y1 - y0) * fy, z1 + 0.15 * mm, WH_DETAIL.screwDiaMm * mm / 2, 0.6 * mm, dark, `${item.name} screw`, 20));
+        }
+      } else if (role === 'vise-body') {
+        // Centre guide rib and the clamping spindle along the long (clamp) axis,
+        // with the spindle's hex ends proud of both end faces.
+        const alongY = (y1 - y0) >= (x1 - x0);
+        const w = Math.min(x1 - x0, y1 - y0);
+        const rib = w * 0.22, ribH = 2 * mm, r = Math.min(w * 0.09, 7 * mm);
+        const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+        if (alongY) {
+          parts.push(whBox(cx - rib / 2, y0, z1, cx + rib / 2, y1, z1 + ribH, bright, `${item.name} guide rib`));
+          parts.push(whCyl('y', cx, cy, z1 + ribH + r * 0.6, r * 0.6, (y1 - y0) * 0.5, dark, `${item.name} centre spindle`, 20));
+          for (const e of [y0, y1]) parts.push(whCyl('y', cx, e + (e === y0 ? -1 : 1) * 2 * mm, (z0 + z1) / 2, r, 4 * mm, dark, `${item.name} spindle end`, 6));
+        } else {
+          parts.push(whBox(x0, cy - rib / 2, z1, x1, cy + rib / 2, z1 + ribH, bright, `${item.name} guide rib`));
+          parts.push(whCyl('x', cx, cy, z1 + ribH + r * 0.6, r * 0.6, (x1 - x0) * 0.5, dark, `${item.name} centre spindle`, 20));
+          for (const e of [x0, x1]) parts.push(whCyl('x', e + (e === x0 ? -1 : 1) * 2 * mm, cy, (z0 + z1) / 2, r, 4 * mm, dark, `${item.name} spindle end`, 6));
+        }
+      } else if (role === 'zero-point') {
+        // Mounting counterbores near the corners of the plate.
+        const inset = Math.min(x1 - x0, y1 - y0) * 0.1;
+        for (const [px, py] of [[x0 + inset, y0 + inset], [x1 - inset, y0 + inset], [x0 + inset, y1 - inset], [x1 - inset, y1 - inset]]) {
+          parts.push(whCyl('z', px, py, z1 + 0.1 * mm, 6 * mm, 0.4 * mm, dark, `${item.name} counterbore`, 24));
+        }
+      }
+      for (const p of parts) solid.add(p);
+      solid.userData.detailCount = parts.length;
+      return parts.length;
+    }
+
+    /** Every RevPack workholding solid, from the shared kernel (part coords). */
+    function buildPackWorkholding() {
+      // Steel grey for a RevPack's fixture, so the gold target is the only
+      // warm-coloured solid on screen.
+      const col = new THREE.Color(packScene ? '#8d97a8' : (workCfg.color || '#c0704f'));
+      const group = new THREE.Group();
+      group.name = 'RevPack workholding';
+      if (packScene && Array.isArray(packScene.workholding) && packScene.workholding.length) {
+        packScene.workholding.forEach((item, index) => {
+          // Each solid in its object's colour (jaws grey-blue, body darker,
+          // zero-point / riser between); role-less fixtures alternate shades.
+          const obj = item.object || 'fixture';
+          const hit = (revpackFindings?.findings || []).some(f => f.severity === 'error' && f.object === item.name);
+          const shade = hit ? new THREE.Color(HIT_COLOR) : item.role ? new THREE.Color(OBJECT_COLORS[obj]) : col.clone().offsetHSL(0, 0, index % 2 ? 0.08 : -0.02);
+          const solid = sharedMeshGroup(item, '#' + shade.getHexString(), 0.35, item.name);
+          solid.userData.obj = obj;
+          solid.userData.role = item.role || '';
+          solid.userData.hit = hit;
+          addWorkholdingDetail(solid, item, '#' + shade.getHexString());
+          if (item.role === 'riser') {
+            // The riser shares the zero-point plate's footprint, so their side
+            // faces are coplanar and z-fight into stair-steps. Draw it a hair
+            // narrower about its own centre (display only).
+            const rb = wireBounds(item.positions);
+            if (rb) {
+              const k = 0.996, c = gc3((rb.min[0] + rb.max[0]) / 2, (rb.min[1] + rb.max[1]) / 2, 0);
+              solid.scale.set(k, 1, k);
+              solid.position.set(c.x * (1 - k), 0, c.z * (1 - k));
+            }
+          }
+          group.add(solid);
+        });
+        setLayer('workholding', group);
+        if (didFit && !userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
+        return;
+      }
+      packShapes.forEach((shape, index) => {
+        // Alternate shades so neighbouring jaws / parallels read apart.
+        const shade = col.clone().offsetHSL(0, 0, index % 2 ? 0.08 : -0.02);
+        const mat = new THREE.MeshPhongMaterial({ color: shade, opacity: 0.35, transparent: true, side: THREE.DoubleSide, shininess: 30 });
+        const edgeMat = new THREE.LineBasicMaterial({ color: shade, opacity: 0.9, transparent: true });
+        let geo;
+        let pos;
+        if (shape.kind === 'cylinder') {
+          const ro = Math.max(Number(shape.diameter) / 2, 0.0001);
+          const ri = Math.max(0, Math.min(ro * 0.999, Number(shape.innerDiameter || 0) / 2));
+          const z0 = Number(shape.zMin), z1 = Number(shape.zMax);
+          // Annulus revolved about Three Y, which is G-code Z (the spindle).
+          const profile = ri > 0
+            ? [new THREE.Vector2(ri, z0), new THREE.Vector2(ro, z0), new THREE.Vector2(ro, z1), new THREE.Vector2(ri, z1), new THREE.Vector2(ri, z0)]
+            : [new THREE.Vector2(0, z0), new THREE.Vector2(ro, z0), new THREE.Vector2(ro, z1), new THREE.Vector2(0, z1)];
+          geo = new THREE.LatheGeometry(profile, 48);
+          pos = new THREE.Vector3(0, 0, 0);
+        } else {
+          const [x0, y0, z0] = shape.min.map(Number);
+          const [x1, y1, z1] = shape.max.map(Number);
+          geo = new THREE.BoxGeometry(Math.max(x1 - x0, 0.0001), Math.max(z1 - z0, 0.0001), Math.max(y1 - y0, 0.0001));
+          pos = gc3((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+        }
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.copy(pos);
+        mesh.name = shape.name || `workholding ${index + 1}`;
+        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat);
+        edges.position.copy(pos);
+        const holder = new THREE.Group();
+        holder.name = mesh.name;
+        holder.userData.obj = /jaw/.test(shape.role || '') ? 'jaws' : /zero-point|riser/.test(shape.role || '') ? 'zeroPoint' : 'fixture';
+        holder.add(mesh, edges);
+        group.add(holder);
+      });
+      setLayer('workholding', group);
+      if (didFit && !userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
+    }
+
     function buildWorkholding() {
+      if (packShapes.length) { buildPackWorkholding(); return; }
       if (workCfg.mode === 'none') { setLayer('workholding', null); return; }
 
       const { w, d, h } = stockCfg;
@@ -1043,7 +1650,7 @@
       shape.closePath();
       const insert = new THREE.Mesh(
         new THREE.ExtrudeGeometry(shape, { depth: Math.max(Number(toolData?.insertThickness) || diameter * 0.16, 0.04), bevelEnabled: true, bevelSize: Math.max(diameter * 0.015, 0.004), bevelThickness: Math.max(diameter * 0.015, 0.004), bevelSegments: 1 }),
-        new THREE.MeshPhongMaterial({ color: toolData?.color || '#f6c85f', shininess: 90 })
+        new THREE.MeshPhongMaterial({ color: toolData?.color || TOOL_DEFAULT_COLOR, shininess: 90 })
       );
       insert.position.set(0, holderHeight * 0.62, -Math.max(diameter * 0.08, 0.02));
       insert.rotation.x = -Math.PI / 2;
@@ -1124,6 +1731,14 @@
         insert.position.set(radius * 0.55, radius * 0.18, 0);
         insert.rotation.y = Math.PI / 4;
         group.add(insert);
+      } else if (type === 'Probe') {
+        // Spindle probe: ruby ball on a thin stylus, then the probe body.
+        const ballRadius = Math.max(radius, 0.01);
+        const ball = new THREE.Mesh(new THREE.SphereGeometry(ballRadius, 20, 14), new THREE.MeshPhongMaterial({ color: 0xe5484d, shininess: 120 }));
+        ball.position.y = ballRadius;
+        group.add(ball);
+        const stylusLength = Math.max(stickOut - ballRadius, ballRadius * 4);
+        addCylinder(ballRadius * 0.35, ballRadius * 0.35, stylusLength, ballRadius + stylusLength / 2, 12, new THREE.MeshPhongMaterial({ color: 0xc9ccd1, shininess: 60 }));
       } else if (type === 'Slitting Saw') {
         const bladeThickness = Math.max(diameter * 0.06, stickOut * 0.08);
         addCylinder(radius, radius, bladeThickness, bladeThickness / 2, 48);
@@ -1160,10 +1775,47 @@
       const stickOut = Math.max(Number(activeToolData?.stickOut) || diameter * 3, diameter * 1.2);
       const totalLength = Math.max(Number(activeToolData?.length) || stickOut * 1.8, stickOut);
       const holderType = activeToolData?.holder || 'CAT40';
-      const toolColor = new THREE.Color(activeToolData?.color || '#f6c85f');
+      const toolColor = new THREE.Color(activeToolData?.color || TOOL_DEFAULT_COLOR);
 
       if (isTurning || activeToolData?.insertCode) {
         setLayer('tool', buildTurningInsertTool(activeToolData, tip, diameter, stickOut, totalLength));
+        setLayer('toolHolder', null);
+        return;
+      }
+
+      // RevPack milling tool: cutter + holder solids from the shared kernel,
+      // tip at the live position, so the assembly is exactly the pack's gauge
+      // length.
+      const packTool = packScene && Array.isArray(packScene.tools)
+        ? packScene.tools.find(entry => entry.t === Number(tipPoint.toolNumber ?? activeToolData?.toolNumber))
+        : null;
+      if (packTool && (packTool.kind === 'mill' || packTool.kind === 'drill' || packTool.kind === 'chamfer')) {
+        const cutter = sharedMeshGroup(packTool.cutter, activeToolData?.color || TOOL_DEFAULT_COLOR, 1, `T${packTool.t} cutter`);
+        cutter.position.copy(tip);
+        setLayer('tool', cutter);
+        if (packTool.holder) {
+          const holder = sharedMeshGroup(packTool.holder, '#c9d1d9', 1, `T${packTool.t} holder`);
+          holder.position.copy(tip);
+          setLayer('toolHolder', holder);
+        } else {
+          setLayer('toolHolder', null);
+        }
+        return;
+      }
+
+      // RevPack laser head: the kernel's nozzle, drawn at a readable size (a
+      // 1.7 mm nozzle over a 1000 mm sheet is under a pixel), tip on the beam.
+      if (packTool && packTool.kind === 'laser') {
+        const head = sharedMeshGroup(packTool.cutter, '#c9d1d9', 1, `T${packTool.t} laser head`);
+        let s = 1;
+        if (layerMeshes.stock) {
+          const size = new THREE.Box3().setFromObject(layerMeshes.stock).getSize(new THREE.Vector3());
+          const nozzleH = Math.max(Number(packTool.stickOut) || 0, 1e-6);
+          s = Math.max(1, (Math.max(size.x, size.z) * 0.06) / nozzleH);
+        }
+        head.scale.setScalar(s);
+        head.position.copy(tip);
+        setLayer('tool', head);
         setLayer('toolHolder', null);
         return;
       }
@@ -1194,7 +1846,9 @@
 
     function targetColor(role) {
       return {
-        'target-part': 0xb084ff,
+        // The finished part is gold everywhere (RevPack or imported), the
+        // only warm solid on screen.
+        'target-part': 0xffb000,
         fixture: 0x9aa7b8,
         stock: 0x58a6ff,
         jaws: 0xffb454,
@@ -1221,8 +1875,48 @@
       const isHidden = itemDisplayMode === 'hidden';
       const isWireframe = itemDisplayMode === 'wireframe';
       const isSolid = itemDisplayMode === 'solid';
-      const color = targetColor(item.role);
-      if (Array.isArray(item.meshVertices) && item.meshVertices.length >= 9) {
+      const isPackTarget = item.source === 'revpack';
+      const color = isPackTarget ? REVPACK_TARGET_COLOR : (Number.isFinite(Number(item.color)) ? Number(item.color) : targetColor(item.role));
+      if (Array.isArray(item.meshVertices) && item.meshVertices.length >= 9 && isPackTarget) {
+        // RevPack finished part: an opaque gold solid with its feature edges,
+        // or feature edges alone in Wireframe (named "... body" so the Layers
+        // toggle treats it like the shared-kernel solids).
+        const pos = [];
+        for (let i = 0; i + 2 < item.meshVertices.length; i += 3) {
+          const p = gc3(Number(item.meshVertices[i]) + itemOffset.x, Number(item.meshVertices[i + 1]) + itemOffset.y, Number(item.meshVertices[i + 2]) + itemOffset.z);
+          pos.push(p.x, p.y, p.z);
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        geo.computeVertexNormals();
+        const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+          color, emissive: 0x2a1800, specular: 0xfff1c0, shininess: 60, side: THREE.DoubleSide,
+          transparent: false, opacity: 1, depthWrite: true,
+        }));
+        mesh.name = 'target body';
+        mesh.renderOrder = 1;
+        mesh.visible = !isHidden && !isWireframe;
+        // In Wireframe the part's gold edges draw last and over the stock's
+        // line work (the in-process stock's Z-map edges sit on the same
+        // faces and used to paint the part blue), with a faint gold fill so
+        // the part still reads as one gold body.
+        const edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(geo, 20),
+          new THREE.LineBasicMaterial({ color: isWireframe ? 0xffc640 : 0x4a2c00, transparent: true, opacity: isWireframe ? 1 : 0.6, depthTest: !isWireframe })
+        );
+        edges.name = 'target edges';
+        edges.visible = !isHidden;
+        if (isWireframe) edges.renderOrder = 12;
+        group.add(mesh, edges);
+        if (isWireframe && !isHidden) {
+          const ghost = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+            color: REVPACK_TARGET_COLOR, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide,
+          }));
+          ghost.name = 'target ghost';
+          ghost.renderOrder = 11;
+          group.add(ghost);
+        }
+      } else if (Array.isArray(item.meshVertices) && item.meshVertices.length >= 9) {
         const pos = [];
         for (let i = 0; i + 2 < item.meshVertices.length; i += 3) {
           const p = gc3(
@@ -1250,7 +1944,8 @@
         mesh.visible = !isHidden;
         const edges = new THREE.LineSegments(
           new THREE.EdgesGeometry(geo),
-          new THREE.LineBasicMaterial({ color: 0xe8d7ff, transparent: true, opacity: isWireframe ? 0.95 : 0.35 })
+          // A finished part's edges stay gold, so it reads as the target in Wireframe too.
+          new THREE.LineBasicMaterial({ color: color === REVPACK_TARGET_COLOR ? 0xffc640 : 0xe8d7ff, transparent: true, opacity: isWireframe ? 0.95 : 0.35 })
         );
         edges.visible = !isHidden && !isSolid;
         group.add(mesh, edges);
@@ -1318,6 +2013,8 @@
         if (obj) root.add(obj);
       }
       setLayer('targetModel', root.children.length ? root : null);
+      // The picked-feature highlight follows the target's triangles.
+      if (typeof refreshPlacementOverlays === 'function' && originUi) refreshPlacementOverlays();
     }
 
     function rebuildSimulationLayers() {
@@ -1354,6 +2051,9 @@
     // Camera fit
     // -----------------------------------------------------------------------
     let axisLen = 1.0;
+    /** Breathing room around the framed bounding sphere (12%). */
+    const FIT_MARGIN = 1.12;
+    window.__joblineFitInfo = () => ({ orbitRadius, fov: camera.fov, aspect: camera.aspect });
 
     function fitCamera(path) {
       if (!path || path.length === 0) return;
@@ -1378,16 +2078,49 @@
         }
       }
 
+      // A RevPack's subject is the part: frame its stock and finished part
+      // (only the part in Target only). Rapids to a lathe's turret home or a
+      // tall trunnion pedestal used to shrink the gold target to a speck.
+      let fitFactor = 2.2;
+      if (packScene && packTargetLoaded()) {
+        const partBox = new THREE.Box3();
+        for (const name of targetOnly ? ['targetModel'] : ['stock', 'targetModel']) {
+          const obj = layerMeshes[name];
+          if (obj) partBox.expandByObject(obj);
+        }
+        if (!partBox.isEmpty() && !targetOnly) {
+          // Keep the cutting moves and a nearby tool in frame; a tool parked
+          // at a far home position is left out.
+          for (let i = 1; i < path.length; i++) if (!path[i].isRapid) partBox.expandByPoint(gc3(path[i].x, path[i].y, path[i].z));
+          const toolObj = layerMeshes.tool;
+          if (toolObj) {
+            const toolBox = new THREE.Box3().setFromObject(toolObj);
+            const pc = partBox.getCenter(new THREE.Vector3());
+            const ps = partBox.getSize(new THREE.Vector3()).length();
+            if (!toolBox.isEmpty() && toolBox.getCenter(new THREE.Vector3()).distanceTo(pc) < ps * 1.25) partBox.union(toolBox);
+          }
+        }
+        if (!partBox.isEmpty()) { bbox.copy(partBox); fitFactor = targetOnly ? 2.6 : 2.9; }
+      }
+
       const center = new THREE.Vector3();
       bbox.getCenter(center);
       const size = new THREE.Vector3();
       bbox.getSize(size);
       const maxDim = Math.max(size.x, size.y, size.z, 0.01);
       axisLen = maxDim * 0.15;
-      orbitRadius = maxDim * 2.2;
+      // Frame the bounding SPHERE against the narrower of the two fields of
+      // view. maxDim x factor alone clipped wide, flat parts (the AR4 gear,
+      // jaw1) at ISO and in a narrow panel, where the horizontal FOV is the
+      // limit. The old factor stays as the lower bound so nothing gets tighter.
+      const vFov = THREE.MathUtils.degToRad(camera.fov);
+      const hFov = 2 * Math.atan(Math.tan(vFov / 2) * Math.max(camera.aspect, 0.05));
+      const sphereRadius = Math.max(size.length() / 2, 0.005);
+      const sphereFit = sphereRadius / Math.sin(Math.min(vFov, hFov) / 2) * FIT_MARGIN;
+      orbitRadius = Math.max(maxDim * fitFactor, sphereFit);
       orbitTarget.copy(center);
-      orbitPhi = Math.PI / 3.5;
-      orbitTheta = Math.PI / 4;
+      orbitPhi = presetAngles ? presetAngles.phi : Math.PI / 3.5;
+      orbitTheta = presetAngles ? presetAngles.theta : Math.PI / 4;
       updateCameraOrbit();
     }
 
@@ -1412,6 +2145,15 @@
         orbitTarget.z + orbitRadius * sinP * cosT
       );
       camera.lookAt(orbitTarget);
+      // Depth range follows the view distance. A fixed 0.0001..1e6 range
+      // (10 orders of magnitude) left too little depth precision: coplanar
+      // and nearby faces z-fought into stair-steps and solid workholding
+      // looked see-through. Keep about 1e5 between near and far.
+      const near = Math.max(1e-4, orbitRadius / 2000);
+      const far = Math.max(near * 1e5, orbitRadius * 50);
+      if (Math.abs(camera.near - near) > near * 0.01 || Math.abs(camera.far - far) > far * 0.01) {
+        camera.near = near; camera.far = far; camera.updateProjectionMatrix();
+      }
     }
     function setPresetView(name) {
       const n = String(name || 'iso');
@@ -1436,7 +2178,12 @@
       } else {
         orbitTheta = Math.PI / 4; orbitPhi = Math.PI / 3.5;
       }
-      userMovedCamera = true;
+      // A preset is an angle, not a framing: geometry that arrives later (a
+      // slow STEP part, the pack's stock) is framed again at these angles.
+      // It used to count as the user moving the camera, so a part that loaded
+      // after the ISO preset stayed framed for the empty scene - clipped AR4
+      // gear and jaw views.
+      presetAngles = { theta: orbitTheta, phi: orbitPhi };
       updateCameraOrbit();
     }
     updateCameraOrbit();
@@ -1497,12 +2244,373 @@
     });
 
     // -----------------------------------------------------------------------
+    // Origin / WCS panel (part to origin). Every calculation is the shared
+    // kernel's, run by the extension host (jobline.placement.run): this code
+    // only sends operations, raycasts picks on the target's triangles, and
+    // draws the WCS triad, the hover / picked-feature highlight and the
+    // view-normal-to-face camera.
+    // -----------------------------------------------------------------------
+    var originUi = {
+      state: null, pickMode: '', picks: [], ref: 'part', viewNormal: false,
+      wcs: null, highlight: null, hover: null, hoverTri: -1, downAt: null, hoverQueued: false,
+    };
+    const originPanel = document.getElementById('origin-panel');
+    const ORIGIN_PICK_HINT = {
+      'face-axis': 'Pick a planar face: the axis along its normal gets 0 on it.',
+      'face-origin': 'Pick a planar face: the WCS goes to its centre.',
+      'face-top': 'Pick a face to turn up (normal to +Z).',
+      'face-bottom': 'Pick a face to turn down (normal to -Z).',
+      'bore': 'Pick the wall of a bore or boss: X/Y go on its axis.',
+      'bore-z': 'Pick a bore or boss: its axis turns onto Z and X0 Y0 go on it.',
+      'point': 'Pick near a vertex or an edge: the WCS snaps to it.',
+      'mid2': 'Pick two points: the WCS goes half way between.',
+      'circle3': 'Pick three points on a circular edge: the WCS goes to its centre.',
+      'view-normal': 'Pick a face to look straight at it.',
+    };
+    const PICK_COUNT = { mid2: 2, circle3: 3 };
+    function placementRun(op) { vscode.postMessage({ command: 'jobline.placement.run', arg: op }); }
+    function setOriginStatus(text, isError) {
+      const el = document.getElementById('org-status');
+      if (!el) return;
+      el.textContent = text || '';
+      el.classList.toggle('err', !!isError);
+    }
+    (function buildBox27() {
+      const box = document.getElementById('org-box27');
+      if (!box) return;
+      const layers = [[1, 'Top'], [0, 'Middle'], [-1, 'Bottom']];
+      for (const [z, cap] of layers) {
+        const wrap = document.createElement('div');
+        const c = document.createElement('div'); c.className = 'box27-cap'; c.textContent = cap; wrap.appendChild(c);
+        const grid = document.createElement('div'); grid.className = 'box27-layer';
+        for (const y of [1, 0, -1]) for (const x of [-1, 0, 1]) {
+          const n = (x ? 1 : 0) + (y ? 1 : 0) + (z ? 1 : 0);
+          const kind = n === 3 ? 'corner' : n === 2 ? 'edge' : n === 1 ? 'face' : 'center';
+          const b = document.createElement('button');
+          const id = (x < 0 ? 'n' : x > 0 ? 'p' : '0') + (y < 0 ? 'n' : y > 0 ? 'p' : '0') + (z < 0 ? 'n' : z > 0 ? 'p' : '0');
+          b.className = 'bp ' + kind; b.dataset.bp = id;
+          const words = [z > 0 ? 'top' : z < 0 ? 'bottom' : '', y > 0 ? 'back' : y < 0 ? 'front' : '', x > 0 ? 'right' : x < 0 ? 'left' : ''].filter(Boolean).join('-');
+          b.title = (words || 'center') + ' ' + (kind === 'center' ? '' : kind);
+          b.textContent = kind === 'center' ? '+' : '';
+          b.addEventListener('click', () => placementRun({ op: 'boxPoint', sel: { x, y, z }, ref: originUi.ref }));
+          grid.appendChild(b);
+        }
+        wrap.appendChild(grid);
+        box.appendChild(wrap);
+      }
+    })();
+    if (originPanel) {
+      originPanel.addEventListener('toggle', () => {
+        document.body.classList.toggle('origin-open', originPanel.open);
+        if (!originPanel.open) setPickMode('');
+      });
+      originPanel.querySelectorAll('[data-org-ref]').forEach(btn => btn.addEventListener('click', () => {
+        originUi.ref = btn.dataset.orgRef;
+        originPanel.querySelectorAll('[data-org-ref]').forEach(b => b.classList.toggle('active', b === btn));
+        renderOriginState();
+      }));
+      originPanel.querySelectorAll('[data-org-face]').forEach(btn => btn.addEventListener('click', () => placementRun({ op: 'face', face: btn.dataset.orgFace, ref: originUi.ref })));
+      originPanel.querySelectorAll('[data-org-preset]').forEach(btn => btn.addEventListener('click', () => placementRun({ op: 'preset', id: btn.dataset.orgPreset, ref: originUi.ref })));
+      originPanel.querySelectorAll('[data-org-rot]').forEach(btn => btn.addEventListener('click', () => {
+        const [axis, turns] = btn.dataset.orgRot.split(',').map(Number);
+        placementRun({ op: 'rotate', axis, turns });
+      }));
+      originPanel.querySelectorAll('[data-org-flip]').forEach(btn => btn.addEventListener('click', () => placementRun({ op: 'flip', axis: Number(btn.dataset.orgFlip) })));
+      originPanel.querySelectorAll('[data-org-center]').forEach(btn => btn.addEventListener('click', () => placementRun({ op: 'centerInStock', axes: btn.dataset.orgCenter })));
+      originPanel.querySelectorAll('[data-org-pick]').forEach(btn => btn.addEventListener('click', () => setPickMode(originUi.pickMode === btn.dataset.orgPick ? '' : btn.dataset.orgPick)));
+      document.getElementById('org-undo').addEventListener('click', () => placementRun({ op: 'undo' }));
+      document.getElementById('org-reset').addEventListener('click', () => placementRun({ op: 'reset' }));
+      document.getElementById('org-apply-offset').addEventListener('click', () => {
+        const v = id => Number(document.getElementById(id).value) || 0;
+        placementRun({ op: 'offset', d: [v('org-dx'), v('org-dy'), v('org-dz')], rotZ: v('org-rz') });
+        for (const id of ['org-dx', 'org-dy', 'org-dz', 'org-rz']) document.getElementById(id).value = '0';
+      });
+    }
+
+    function setPickMode(mode) {
+      originUi.pickMode = mode || '';
+      originUi.picks = [];
+      if (originPanel) originPanel.querySelectorAll('[data-org-pick]').forEach(b => b.classList.toggle('active', b.dataset.orgPick === originUi.pickMode));
+      renderer.domElement.style.cursor = originUi.pickMode ? 'crosshair' : '';
+      setOriginStatus(originUi.pickMode ? ORIGIN_PICK_HINT[originUi.pickMode] : '');
+      if (!originUi.pickMode) setHover(-1);
+    }
+
+    /** The part mesh the picks land on: the pack target, else the first uploaded target part. */
+    function pickableTarget() {
+      const item = targetModels.find(i => i.source === 'revpack' && Array.isArray(i.meshVertices))
+        || targetModels.find(i => i.role === 'target-part' && Array.isArray(i.meshVertices) && i.meshVertices.length >= 9);
+      const root = layerMeshes.targetModel;
+      if (!item || !root) return null;
+      const count = item.meshVertices.length / 3;
+      let found = null;
+      root.traverse(node => {
+        if (found || !node.isMesh || !node.geometry || !node.geometry.attributes.position) return;
+        if (node.geometry.index) return;
+        if (node.geometry.attributes.position.count === count) found = node;
+      });
+      return found;
+    }
+
+    const originRaycaster = new THREE.Raycaster();
+    function raycastTarget(clientX, clientY) {
+      const mesh = pickableTarget();
+      if (!mesh) return null;
+      const rect = renderer.domElement.getBoundingClientRect();
+      const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+      originRaycaster.setFromCamera(ndc, camera);
+      const hit = originRaycaster.intersectObject(mesh, false)[0];
+      if (!hit || hit.faceIndex === undefined || hit.faceIndex === null) return null;
+      // Three (x, y, z) -> G-code (x, -z, y)
+      return { tri: hit.faceIndex, point: [hit.point.x, -hit.point.z, hit.point.y] };
+    }
+
+    /** A highlight mesh from some triangles of the pickable target. */
+    function triangleOverlay(tris, color, opacity) {
+      const mesh = pickableTarget();
+      if (!mesh) return null;
+      const src = mesh.geometry.attributes.position.array;
+      const total = src.length / 9;
+      const pos = [];
+      for (const t of tris) {
+        if (!(t >= 0 && t < total)) continue;
+        for (let k = 0; k < 9; k++) pos.push(src[t * 9 + k]);
+      }
+      if (!pos.length) return null;
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      const overlay = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
+      overlay.renderOrder = 20;
+      overlay.userData.triangles = tris.length;
+      return overlay;
+    }
+
+    function setHover(tri) {
+      if (originUi.hoverTri === tri) return;
+      originUi.hoverTri = tri;
+      if (originUi.hover) { scene.remove(originUi.hover); disposeObject(originUi.hover); originUi.hover = null; }
+      if (tri >= 0) {
+        originUi.hover = triangleOverlay([tri], 0xffee58, 0.75);
+        if (originUi.hover) scene.add(originUi.hover);
+      }
+    }
+
+    function refreshPlacementOverlays() {
+      if (!originUi) return;
+      if (originUi.highlight) { scene.remove(originUi.highlight); disposeObject(originUi.highlight); originUi.highlight = null; }
+      const f = originUi.state && originUi.state.feature;
+      if (f && Array.isArray(f.triangles) && f.triangles.length) {
+        originUi.highlight = triangleOverlay(f.triangles, f.kind === 'cylinder' ? 0x3fd0ff : f.kind === 'point' ? 0xff6ad5 : 0x52ffa8, 0.55);
+        if (originUi.highlight) scene.add(originUi.highlight);
+      }
+      buildWcsTriad();
+    }
+
+    /** WCS triad at the work origin (X0 Y0 Z0 of the program), sized to the part. */
+    function buildWcsTriad() {
+      if (originUi.wcs) { scene.remove(originUi.wcs); disposeObject(originUi.wcs); originUi.wcs = null; }
+      const st = originUi.state;
+      if (!st || !st.active) return;
+      const box = st.partBox;
+      const size = box ? Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]) : 1;
+      const len = Math.max(size * 0.28, 1e-3);
+      const group = new THREE.Group();
+      group.name = 'WCS triad';
+      const axes = [[[1, 0, 0], 0xff4d4d, 'X'], [[0, 1, 0], 0x4dff7a, 'Y'], [[0, 0, 1], 0x4d9dff, 'Z']];
+      for (const [d, color, name] of axes) {
+        const dir = gc3(d[0], d[1], d[2]).normalize();
+        const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0, 0, 0), len, color, len * 0.22, len * 0.11);
+        arrow.traverse(node => { if (node.material) { node.material.depthTest = false; node.material.transparent = true; } node.renderOrder = 30; });
+        group.add(arrow);
+        const label = axisLabelSprite(name, '#' + color.toString(16).padStart(6, '0'));
+        label.position.copy(dir.clone().multiplyScalar(len * 1.18));
+        label.scale.multiplyScalar(len * 0.35);
+        if (label.material) label.material.depthTest = false;
+        label.renderOrder = 31;
+        group.add(label);
+      }
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(len * 0.06, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false }));
+      dot.renderOrder = 31;
+      group.add(dot);
+      scene.add(group);
+      originUi.wcs = group;
+    }
+
+    /** Camera straight at a face: look along -normal at the feature point. */
+    function viewNormalTo(normal, point) {
+      if (!normal) return;
+      const n = gc3(normal[0], normal[1], normal[2]).normalize();
+      orbitPhi = Math.max(0.0001, Math.min(Math.PI - 0.0001, Math.acos(Math.max(-1, Math.min(1, n.y)))));
+      orbitTheta = Math.atan2(n.x, n.z);
+      if (Math.abs(n.y) > 0.9999) orbitTheta = 0;
+      if (point) orbitTarget.copy(gc3(point[0], point[1], point[2]));
+      // Frame the part, not whatever the previous view was zoomed to.
+      const box = originUi.state && originUi.state.partBox;
+      if (box) orbitRadius = Math.max(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2], 1e-3) * 2.4;
+      presetAngles = { theta: orbitTheta, phi: orbitPhi };
+      originUi.viewNormal = true;
+      updateCameraOrbit();
+    }
+
+    function fmt(v) { const n = Number(v) || 0; return (Math.abs(n) < 5e-7 ? 0 : n).toFixed(4); }
+    function renderOriginState() {
+      const st = originUi.state;
+      const label = document.getElementById('org-label');
+      const readout = document.getElementById('org-readout');
+      if (!label || !readout) return;
+      document.querySelectorAll('#org-box27 .bp').forEach(b => b.classList.toggle('active', !!(st && st.anchor && st.anchor.id === b.dataset.bp && st.anchor.ref === originUi.ref)));
+      if (!st || !st.active) {
+        label.textContent = 'No part to place yet: open a program with a RevPack, or import a target part.';
+        readout.textContent = '';
+        return;
+      }
+      label.textContent = 'WCS: ' + st.label;
+      const r = st.readout || {};
+      const lines = [];
+      if (r.fromPartMin) lines.push('from part min  X' + fmt(r.fromPartMin[0]) + ' Y' + fmt(r.fromPartMin[1]) + ' Z' + fmt(r.fromPartMin[2]));
+      if (r.fromPartCenter) lines.push('from part ctr  X' + fmt(r.fromPartCenter[0]) + ' Y' + fmt(r.fromPartCenter[1]) + ' Z' + fmt(r.fromPartCenter[2]));
+      if (r.partSize) lines.push('part size      ' + fmt(r.partSize[0]) + ' x ' + fmt(r.partSize[1]) + ' x ' + fmt(r.partSize[2]) + ' ' + (st.units || ''));
+      if (st.workOffset) lines.push(st.workOffset.name + ' (machine)  X' + fmt(st.workOffset.x) + ' Y' + fmt(st.workOffset.y) + ' Z' + fmt(st.workOffset.z));
+      if (st.stockBox) lines.push('stock          ' + fmt(st.stockBox.min[0]) + '..' + fmt(st.stockBox.max[0]) + ', ' + fmt(st.stockBox.min[1]) + '..' + fmt(st.stockBox.max[1]) + ', ' + fmt(st.stockBox.min[2]) + '..' + fmt(st.stockBox.max[2]) + (st.insideStock === false ? '  PART OUTSIDE STOCK' : ''));
+      if (!st.identity && Array.isArray(st.rotation) && st.rotation.some((v, i) => v !== [1, 0, 0, 0, 1, 0, 0, 0, 1][i])) lines.push('part re-oriented (R ' + st.rotation.map(v => Math.round(v * 1000) / 1000).join(' ') + ')');
+      for (const note of st.notes || []) lines.push('• ' + note);
+      readout.textContent = lines.join('\n');
+      const undo = document.getElementById('org-undo');
+      if (undo) undo.disabled = !st.canUndo;
+    }
+
+    function onPlacementMessage(msg) {
+      originUi.state = msg;
+      originUi.viewNormal = false;
+      renderOriginState();
+      if (msg.error) setOriginStatus(msg.error, true);
+      else if (msg.feature) setOriginStatus('Picked ' + msg.feature.label + '.');
+      else if (!originUi.pickMode) setOriginStatus('');
+      refreshPlacementOverlays();
+      if (msg.view === 'normal' && msg.feature) viewNormalTo(msg.feature.normal || msg.feature.axisDir, msg.feature.point);
+    }
+
+    function handleOriginPick(pick) {
+      const mode = originUi.pickMode;
+      if (!mode || !pick) return;
+      if (PICK_COUNT[mode]) {
+        originUi.picks.push(pick);
+        if (originUi.picks.length < PICK_COUNT[mode]) { setOriginStatus(ORIGIN_PICK_HINT[mode] + ' (' + originUi.picks.length + '/' + PICK_COUNT[mode] + ')'); return; }
+        placementRun({ op: mode === 'mid2' ? 'midpoint' : 'circle3', picks: originUi.picks.slice() });
+        setPickMode('');
+        return;
+      }
+      const ops = {
+        'face-axis': { op: 'pickFace', pick, action: 'axis' },
+        'face-origin': { op: 'pickFace', pick, action: 'origin' },
+        'face-top': { op: 'pickFace', pick, action: 'alignTop' },
+        'face-bottom': { op: 'pickFace', pick, action: 'alignBottom' },
+        'bore': { op: 'pickCylinder', pick },
+        'bore-z': { op: 'pickCylinder', pick, align: true },
+        'point': { op: 'pickPoint', pick },
+        'view-normal': { op: 'inspect', pick, view: 'normal' },
+      };
+      placementRun(ops[mode]);
+      setPickMode('');
+    }
+
+    renderer.domElement.addEventListener('mousedown', e => {
+      originUi.downAt = originUi.pickMode && e.button === 0 ? { x: e.clientX, y: e.clientY } : null;
+    });
+    renderer.domElement.addEventListener('mouseup', e => {
+      const d = originUi.downAt; originUi.downAt = null;
+      if (!d || !originUi.pickMode) return;
+      if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 4) return; // that was an orbit drag
+      const pick = raycastTarget(e.clientX, e.clientY);
+      if (pick) handleOriginPick(pick);
+      else setOriginStatus('Missed the part - pick on the target.', true);
+    });
+    renderer.domElement.addEventListener('mousemove', e => {
+      if (!originUi.pickMode || mouse.down || originUi.hoverQueued) return;
+      originUi.hoverQueued = true;
+      requestAnimationFrame(() => {
+        originUi.hoverQueued = false;
+        const hit = raycastTarget(e.clientX, e.clientY);
+        setHover(hit ? hit.tri : -1);
+      });
+    });
+    window.addEventListener('keydown', e => { if (e.key === 'Escape' && originUi.pickMode) setPickMode(''); });
+
+    function originProbe() {
+      const st = originUi.state;
+      const tb = (() => { const m = pickableTarget(); if (!m) return null; const b = new THREE.Box3().setFromObject(m); return { min: [b.min.x, -b.max.z, b.min.y], max: [b.max.x, -b.min.z, b.max.y] }; })();
+      return {
+        open: !!(originPanel && originPanel.open), active: !!(st && st.active), pickMode: originUi.pickMode, label: st ? st.label : '',
+        anchor: st && st.anchor ? st.anchor.id + ':' + st.anchor.ref : '', wcsShown: !!originUi.wcs,
+        highlightTriangles: originUi.highlight ? originUi.highlight.userData.triangles : 0, hoverShown: !!originUi.hover,
+        featureKind: st && st.feature ? st.feature.kind : '', viewNormal: originUi.viewNormal, targetBounds: tb,
+        readout: (document.getElementById('org-readout') || {}).textContent || '',
+      };
+    }
+
+    // -----------------------------------------------------------------------
     // Resize
     // -----------------------------------------------------------------------
+    // The View panel stacks above the playback panel and below the RevPack
+    // panel. Both of those change height (layer presets, a long findings list,
+    // collapsing), and a fixed bottom: 112px let the View panel slide under
+    // the playback controls and over the RevPack badge. Re-stack whenever any
+    // of the three changes size.
+    function layoutSidePanels() {
+      const view = document.getElementById('view-panel');
+      const play = document.getElementById('playback-panel');
+      const rp = document.getElementById('revpack-panel');
+      if (!view || !play) return;
+      const bottom = Math.round(play.getBoundingClientRect().height + 16);
+      view.style.bottom = bottom + 'px';
+      const rpShown = rp && getComputedStyle(rp).display !== 'none';
+      const top = rpShown ? Math.round(rp.getBoundingClientRect().bottom + 8) : 64;
+      view.style.maxHeight = Math.max(120, window.innerHeight - bottom - top) + 'px';
+      layoutLegend();
+    }
+
+    // The controls legend sits left of the view cube column and above nothing
+    // else. Its right edge follows the cube panel's real width, and the mouse
+    // help lines hide when they would overlap the cube, the playback panel or
+    // the View panel (narrow VS Code editor groups).
+    function layoutLegend() {
+      const legend = document.getElementById('legend');
+      const cube = document.getElementById('view-cube');
+      if (!legend || !cube) return;
+      const cubeShown = getComputedStyle(cube).display !== 'none';
+      const cubeWidth = cubeShown ? cube.getBoundingClientRect().width : 0;
+      legend.style.right = Math.round((cubeShown ? cubeWidth + 24 : 10)) + 'px';
+      legend.classList.remove('legend-compact');
+      const overlaps = (a, b) => a && b && !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+      const lr = legend.getBoundingClientRect();
+      const others = ['view-cube', 'playback-panel', 'view-panel', 'review-panel', 'revpack-panel']
+        .map(id => document.getElementById(id))
+        .filter(el => el && getComputedStyle(el).display !== 'none')
+        .map(el => el.getBoundingClientRect());
+      if (others.some(r => overlaps(lr, r))) legend.classList.add('legend-compact');
+    }
+    window.__joblineLegendLayout = () => {
+      layoutLegend();
+      const legend = document.getElementById('legend');
+      const cube = document.getElementById('view-cube');
+      const a = legend.getBoundingClientRect(), b = cube.getBoundingClientRect();
+      return { compact: legend.classList.contains('legend-compact'), overlapsCube: !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom) };
+    };
+    if (typeof ResizeObserver === 'function') {
+      // Observes only the two panels it stacks against (never the View panel
+      // it resizes), and lays out on the next frame, so it cannot loop.
+      let pending = 0;
+      const ro = new ResizeObserver(() => { if (!pending) pending = requestAnimationFrame(() => { pending = 0; layoutSidePanels(); }); });
+      for (const id of ['playback-panel', 'revpack-panel']) { const el = document.getElementById(id); if (el) ro.observe(el); }
+    }
+    for (const id of ['revpack-panel', 'view-panel']) document.getElementById(id)?.addEventListener('toggle', layoutSidePanels);
+    layoutSidePanels();
     window.addEventListener('resize', () => {
+      layoutSidePanels();
       const w = container.clientWidth, h = container.clientHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      renderer.setPixelRatio(currentPixelRatio());
       renderer.setSize(w, h);
     });
 
@@ -1518,9 +2626,10 @@
     // viewport. This is the only check that distinguishes "rendered" from
     // "rendered nothing".
     let probeRequested = false;
+    let layerProbeRequested = false;
     const CLEAR_RGB = [0x1a, 0x1a, 0x2e];
 
-    function readLitPixels(beforeOverlay) {
+    function readLitPixels(beforeOverlay, stride = 16) {
       const gl = renderer.getContext();
       const w = renderer.domElement.width;
       const h = renderer.domElement.height;
@@ -1547,7 +2656,7 @@
       let gnomonTotal = 0;
       // Step across the buffer rather than every pixel; a real toolpath covers
       // far more than one sample in 16.
-      for (let i = 0; i < buf.length; i += 16 * 4) {
+      for (let i = 0; i < buf.length; i += stride * 4) {
         const p = i / 4;
         const x = p % w;
         const y = Math.floor(p / w);   // readPixels origin is bottom-left
@@ -1582,6 +2691,14 @@
         gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, beforeOverlay);
       }
       renderGnomon();
+      if (layerProbeRequested) {
+        layerProbeRequested = false;
+        try {
+          vscode.postMessage({ type: 'layerProbe', renderMode: sceneRenderMode, revpackId: revpackInfo?.id || '', layers: layerReport(true), objects: objectReport() });
+        } catch (err) {
+          vscode.postMessage({ type: 'layerProbe', error: String(err && err.message || err) });
+        }
+      }
       if (probeRequested) {
         probeRequested = false;
         try {
@@ -1617,6 +2734,41 @@
             playbackSpeed,
             opacity: Object.assign({}, viewOpacity),
             orbit: { theta: orbitTheta, phi: orbitPhi },
+            renderMode: sceneRenderMode,
+            revpackId: revpackInfo?.id || '',
+            revpackName: revpackInfo?.name || '',
+            revpackBadge: document.getElementById('revpack-panel')?.style.display === 'block' ? (document.getElementById('revpack-badge')?.textContent || '') : '',
+            revpackFindingsRendered: document.querySelectorAll('#revpack-findings .review-item').length,
+            revpackFindingsSummary: revpackFindings?.summary || null,
+            workholdingShapes: packShapes.length,
+            targetOnly,
+            compareMode,
+            comparison: comparisonSummary(),
+            activeTargetFormat: getActiveTarget()?.format || '',
+            activeTargetPointCount: Number(getActiveTarget()?.pointCount) || 0,
+            activeTargetSource: getActiveTarget()?.source || '',
+            activeTargetLoader: getActiveTarget()?.loader || '',
+            targetStlCrossCheck: getActiveTarget()?.stlCrossCheck || null,
+            targetHuePixels: countTargetHuePixels(beforeOverlay, renderer.domElement.width, renderer.domElement.height),
+            seededBanner: document.getElementById('revpack-seeded')?.style.display === 'block' ? (document.getElementById('revpack-seeded')?.textContent || '') : '',
+            sharedKernel: packScene ? { packId: packScene.packId, workholding: (packScene.workholding || []).length, tools: (packScene.tools || []).length, inProcess: !!packScene.inProcess, removedVolume: packScene.inProcess?.removedVolume ?? null } : null,
+            layers: layerReport(false),
+            objectStylesActive: objectStylesActive(),
+            objectStyles: JSON.parse(JSON.stringify(objectStyles)),
+            layerPreset,
+            stockBounds: stockBoundsDrawn,
+            targetPartBounds: (() => {
+              const part = targetModels.find(isPartItem);
+              if (!part || !part.bounds) return null;
+              const o = part.offset || { x: 0, y: 0, z: 0 };
+              const b = part.bounds;
+              return { min: [b.minX + o.x, b.minY + o.y, b.minZ + o.z], max: [b.maxX + o.x, b.maxY + o.y, b.maxZ + o.z] };
+            })(),
+            gripShown: !!packScene?.grip,
+            hitSolids: (layerMeshes.workholding?.children || []).filter(child => child.userData.hit).map(child => child.name),
+            workholdingDetail: Object.fromEntries((layerMeshes.workholding?.children || []).map(child => [child.name, child.userData.detailCount || 0])),
+            packSetup: packScene?.setup || null,
+            placement: originProbe(),
           });
         } catch (err) {
           vscode.postMessage({ type: 'visualProbe', error: String(err && err.message || err) });
@@ -1647,12 +2799,34 @@
         root.traverse?.((node) => {
           const mats = Array.isArray(node.material) ? node.material : (node.material ? [node.material] : []);
           for (const m of mats) {
-            const forceSolid = layer === 'targetModel' && getActiveTarget()?.displayMode === 'solid';
+            const forceSolid = layer === 'targetModel' && (getActiveTarget()?.displayMode === 'solid' || packTargetLoaded());
             const forceWire = layer === 'targetModel' && getActiveTarget()?.displayMode === 'wireframe';
-            m.opacity = forceSolid ? 1 : value;
-            m.transparent = !forceSolid && value < 0.999;
-            m.depthWrite = forceSolid || value >= 0.999;
-            if (typeof m.wireframe === 'boolean') m.wireframe = forceWire;
+            // The stock over a RevPack's finished part stays see-through so
+            // the part reads through it (Compare draws the stock coloured).
+            let eff = value;
+            if (node.name === 'target ghost') { m.needsUpdate = true; continue; }
+            if (name === 'stock' && packTargetLoaded()) {
+              eff = (node.isLine || node.isLineSegments) ? Math.min(value, 0.6) : Math.min(value, compareMode ? COMPARE_STOCK_OPACITY : STOCK_OVER_TARGET);
+            }
+            if (forceSolid && (node.isLine || node.isLineSegments) && packTargetLoaded()) {
+              m.needsUpdate = true;
+              continue; // target edge lines keep their own look
+            }
+            m.opacity = forceSolid ? 1 : eff;
+            m.transparent = !forceSolid && eff < 0.999;
+            m.depthWrite = forceSolid || eff >= 0.999;
+            // Wireframe follows the Layers toggle for every solid layer, and the
+            // target's own display mode on top of it. Line work has no
+            // wireframe flag and is left alone.
+            const wireMode = RENDER_MODE_LAYERS.includes(name) && sceneRenderMode === 'wireframe';
+            if (node.isMesh && typeof node.name === 'string' && node.name.endsWith(' body')) {
+              // Shared-kernel solid: Wireframe shows its feature edges (the
+              // kernel's wireframe), not the triangulation.
+              node.visible = !wireMode;
+              m.wireframe = false;
+            } else if (typeof m.wireframe === 'boolean' && node.isMesh) {
+              m.wireframe = layer === 'targetModel' ? forceWire : wireMode;
+            }
             m.needsUpdate = true;
           }
         });
@@ -1824,7 +2998,18 @@
     });
     targetDisplay?.addEventListener('change', () => {
       updateActiveTarget((active) => { active.displayMode = targetDisplay.value || 'transparent'; });
+      syncTargetStyleFromItem(getActiveTarget());
     });
+    /** The target panel edits the part item directly; keep the Target object's row in step. */
+    function syncTargetStyleFromItem(item) {
+      if (!isPartItem(item) || sceneRenderMode === 'wireframe') { reapplyViewOpacity(); return; }
+      const mode = item.displayMode === 'hidden' ? objectStyles.target.mode : item.displayMode;
+      objectStyles.target = { visible: item.displayMode !== 'hidden', mode, opacity: Number(item.opacity) || objectStyles.target.opacity };
+      layerPreset = '';
+      saveObjectStyles();
+      renderObjectStyleControls();
+      reapplyViewOpacity();
+    }
     function bindTargetOffset(axis) {
       const input = document.getElementById('target-' + axis);
       input?.addEventListener('input', () => {
@@ -1843,11 +3028,403 @@
 
     // Re-apply after anything rebuilds geometry, or a fresh mesh comes back at
     // its constructor opacity and the panel silently stops describing the view.
+    function setSceneRenderMode(mode) {
+      sceneRenderMode = mode === 'wireframe' ? 'wireframe' : 'solid';
+      for (const btn of document.querySelectorAll('#render-mode-row [data-render-mode]')) {
+        btn.classList.toggle('active', btn.getAttribute('data-render-mode') === sceneRenderMode);
+      }
+      // Targets carry their own display mode; the Layers toggle sets all of them.
+      for (const item of targetModels) item.displayMode = sceneRenderMode === 'wireframe' ? 'wireframe' : 'solid';
+      targetDisplayMode = sceneRenderMode === 'wireframe' ? 'wireframe' : 'solid';
+      syncTargetControls();
+      buildTargetModel();
+      // The Target object's own style comes back when the layers are Solid again.
+      if (objectStylesActive()) applyTargetObjectStyle();
+      reapplyViewOpacity();
+      applyOpacity('targetModel', viewOpacity.targetModel);
+      applyObjectStyles();
+    }
+    for (const btn of document.querySelectorAll('#render-mode-row [data-render-mode]')) {
+      btn.addEventListener('click', () => {
+        setSceneRenderMode(btn.getAttribute('data-render-mode'));
+        vscode.postMessage({ type: 'sceneRenderMode', mode: sceneRenderMode });
+      });
+    }
+
+    /** Only the finished part: every other layer hidden (their checkboxes keep their state). */
+    function setTargetOnly(on) {
+      targetOnly = !!on;
+      document.getElementById('btn-target-only')?.classList.toggle('active', targetOnly);
+      for (const key of TARGET_ONLY_HIDES) {
+        if (layerMeshes[key]) layerMeshes[key].visible = layerVis[key] !== false && !targetOnly;
+      }
+      if (layerMeshes.targetModel && targetOnly) layerMeshes.targetModel.visible = true;
+      applyObjectStyles();
+      if (!userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
+    }
+
+    function comparisonSummary() {
+      return packScene && packScene.inProcess && packScene.inProcess.comparison ? packScene.inProcess.comparison : null;
+    }
+
+    function renderCompareLegend() {
+      const legend = document.getElementById('compare-legend');
+      const btn = document.getElementById('btn-compare');
+      const cmp = comparisonSummary();
+      if (btn) { btn.disabled = !cmp; btn.classList.toggle('active', compareMode && !!cmp); }
+      if (!legend) return;
+      if (!compareMode || !cmp) { legend.style.display = 'none'; legend.textContent = ''; return; }
+      const u = packScene.units === 'mm' ? 'mm' : 'in';
+      const sw = (c) => `<span class="sw" style="background: rgb(${c.map(v => Math.round(v * 255)).join(',')})"></span>`;
+      legend.innerHTML = `${sw(COMPARE_COLORS[0])}on size ${cmp.onSize}` +
+        `${sw(COMPARE_COLORS[1])}remaining ${cmp.remaining}${cmp.remaining ? ` (max ${cmp.maxRemaining.toFixed(u === 'mm' ? 2 : 4)} ${u})` : ''}` +
+        `${sw(COMPARE_COLORS[2])}gouge ${cmp.gouge}${cmp.gouge ? ` (max ${cmp.maxGouge.toFixed(u === 'mm' ? 2 : 4)} ${u})` : ''}` +
+        ` · cells, tol ${cmp.tolerance} ${u}, seen from +Z`;
+      legend.style.display = 'block';
+    }
+
+    function setCompareMode(on) {
+      compareMode = !!on && !!comparisonSummary();
+      buildStock();
+      renderCompareLegend();
+      reapplyViewOpacity();
+    }
+    document.getElementById('btn-target-only')?.addEventListener('click', () => setTargetOnly(!targetOnly));
+    document.getElementById('btn-compare')?.addEventListener('click', () => setCompareMode(!compareMode));
+
+    /** Pixels of the composite frame in the gold target hue: proof the part shows through the stock. */
+    function countTargetHuePixels(buf, w, h) {
+      if (!buf) return 0;
+      let n = 0;
+      for (let i = 0; i < w * h * 4; i += 4) {
+        const r = buf[i] / 255, g = buf[i + 1] / 255, b = buf[i + 2] / 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        if (max < 0.42 || max - min < 0.3 || max !== r) continue;
+        const hue = 60 * ((g - b) / (max - min));
+        if ((max - min) / max > 0.55 && hue >= 30 && hue <= 56) n++;
+      }
+      return n;
+    }
+
+    /**
+     * What each layer holds and whether it draws, for the visual test bed:
+     * meshes vs line work, how many meshes are wireframe, and how many pixels
+     * the layer covers when it is drawn ALONE. Rendering a layer alone is the
+     * only way to prove that layer (not its neighbours) is on screen.
+     */
+    function layerReport(withPixels) {
+      const names = ['targetModel', 'stock', 'workholding', 'tool', 'toolHolder', 'path', 'sweptTube'];
+      const report = {};
+      const saved = {};
+      for (const name of Object.keys(layerMeshes)) saved[name] = layerMeshes[name] ? layerMeshes[name].visible : null;
+      const gridVisible = grid.visible;
+      for (const name of names) {
+        const root = layerMeshes[name];
+        const entry = { present: !!root, visible: !!(root && saved[name]), meshes: 0, lines: 0, wireframeMeshes: 0, solidMeshes: 0, litAlone: 0 };
+        root?.traverse?.((node) => {
+          // The Wireframe target's faint gold tint is not a shaded solid.
+          if (node.name === 'target ghost') { entry.ghostFill = node.visible; return; }
+          if (node.isMesh) {
+            entry.meshes++;
+            const mats = Array.isArray(node.material) ? node.material : [node.material];
+            const edgeOnlyBody = typeof node.name === 'string' && node.name.endsWith(' body') && !node.visible;
+            if (edgeOnlyBody || mats.some(m => m && m.wireframe)) entry.wireframeMeshes++; else entry.solidMeshes++;
+          } else if (node.isLine || node.isLineSegments) {
+            entry.lines++;
+          }
+        });
+        if (withPixels && root && saved[name]) {
+          for (const other of Object.keys(layerMeshes)) if (layerMeshes[other]) layerMeshes[other].visible = other === name;
+          grid.visible = false;
+          renderer.render(scene, camera);
+          // Every pixel: a thin toolpath or a small cutter can fall between
+          // the 1-in-16 samples the whole-scene probe uses.
+          entry.litAlone = readLitPixels(null, 1).lit;
+        }
+        report[name] = entry;
+      }
+      for (const name of Object.keys(layerMeshes)) if (layerMeshes[name] && saved[name] !== null) layerMeshes[name].visible = saved[name];
+      grid.visible = gridVisible;
+      if (withPixels) renderer.render(scene, camera);
+      return report;
+    }
+
+    function renderRevPack() {
+      const panel = document.getElementById('revpack-panel');
+      if (!panel) return;
+      const active = !!(revpackInfo && revpackInfo.id);
+      panel.style.display = active ? 'block' : 'none';
+      if (!active) return;
+      document.getElementById('revpack-badge').textContent = `RevPack: ${revpackInfo.name || revpackInfo.id}`;
+      const seeded = revpackInfo.purpose === 'seeded-errors';
+      const seededEl = document.getElementById('revpack-seeded');
+      if (seededEl) {
+        seededEl.textContent = seeded ? (revpackInfo.seededLabel || 'Seeded test pack: errors are intentional') : '';
+        seededEl.style.display = seeded ? 'block' : 'none';
+      }
+      document.getElementById('revpack-badge').title = revpackInfo.source || revpackInfo.id;
+      const offsets = Object.entries(revpackInfo.workOffsets || {})
+        .map(([code, o]) => `${code} X${o.x} Y${o.y ?? 0} Z${o.z}`).join(' · ');
+      const tools = (revpackInfo.tools || []).map(t => `T${t.t} Ø${t.diameter} GL${t.gaugeLength}`).join(' · ');
+      document.getElementById('revpack-meta').textContent =
+        `${revpackInfo.machine} (${revpackInfo.dialect}) · ${revpackInfo.kinematics}` +
+        (offsets ? `\nOffsets: ${offsets}` : '') + (tools ? `\nTools: ${tools}` : '') +
+        `\nWorkholding: ${packShapes.length} shape(s)`;
+      document.getElementById('revpack-meta').style.whiteSpace = 'pre-line';
+      const status = document.getElementById('revpack-status');
+      const list = document.getElementById('revpack-findings');
+      list.replaceChildren();
+      const findings = Array.isArray(revpackFindings?.findings) ? revpackFindings.findings : [];
+      const sum = revpackFindings?.summary || { errors: 0, warnings: 0, infos: 0, pass: true };
+      const intentional = revpackInfo.purpose === 'seeded-errors';
+      status.textContent = revpackFindings
+        ? (sum.errors ? `${sum.errors} ${intentional ? 'seeded (intentional) errors' : 'errors'}, ${sum.warnings} warnings` : `pass · ${sum.warnings} warnings`)
+        : '';
+      status.className = sum.errors ? 'fail' : 'pass';
+      for (const finding of findings) {
+        const item = document.createElement('div');
+        item.className = `review-item ${finding.severity || 'info'}`;
+        item.title = 'Click to reveal this line in the G-code editor';
+        item.setAttribute('data-line', String(finding.line));
+        const meta = document.createElement('div');
+        meta.className = 'review-meta';
+        meta.textContent = `${finding.severity} · ${finding.category} · line ${finding.line}`;
+        const message = document.createElement('div');
+        message.textContent = finding.message;
+        item.append(meta, message);
+        // Correlation lines are 1-based; revealLine takes a 0-based line.
+        item.addEventListener('click', () => vscode.postMessage({ command: 'jobline.gcode.revealLine', arg: Math.max(0, (finding.line || 1) - 1) }));
+        list.appendChild(item);
+      }
+    }
+
     function reapplyViewOpacity() {
       for (const layer of Object.keys(viewOpacity)) {
         if (layer === 'targetModel') continue;
         applyOpacity(layer, viewOpacity[layer]);
       }
+      applyObjectStyles();
+    }
+
+    // -----------------------------------------------------------------------
+    // Per-object layer styles
+    // -----------------------------------------------------------------------
+    function objectStylesActive() {
+      return !!packScene || targetModels.some(item => item.role === 'target-part');
+    }
+
+    /** Scene nodes that make up one object. Workholding solids are children of the workholding layer. */
+    function objectRoots(key) {
+      if (OBJECT_LAYER[key]) return layerMeshes[OBJECT_LAYER[key]] ? [layerMeshes[OBJECT_LAYER[key]]] : [];
+      const wh = layerMeshes.workholding;
+      return wh ? wh.children.filter(child => (child.userData.obj || 'fixture') === key) : [];
+    }
+
+    /** Is a target scene item the finished part (styled by the Target object)? */
+    function isPartItem(item) { return item && (item.source === 'revpack' || item.role === 'target-part'); }
+
+    function styleMaterial(node, key, st) {
+      const mats = Array.isArray(node.material) ? node.material : (node.material ? [node.material] : []);
+      const isLine = node.isLine || node.isLineSegments;
+      const grip = !!node.userData.grip;
+      for (const m of mats) {
+        if (isLine) {
+          if (key === 'toolpath') {
+            const a = st.mode === 'transparent' ? st.opacity : 1;
+            m.opacity = a; m.transparent = a < 0.999 || !!m.userData?.keepTransparent;
+          } else {
+            m.opacity = st.mode === 'transparent' ? Math.min(0.9, st.opacity + 0.25) : 0.95;
+            m.transparent = true;
+          }
+          m.needsUpdate = true;
+          continue;
+        }
+        if (!node.isMesh) continue;
+        const kernelBody = typeof node.name === 'string' && node.name.endsWith(' body');
+        if (st.mode === 'wireframe') {
+          // Wireframe: a kernel solid shows its feature edges, anything else its triangulation.
+          if (kernelBody) { node.visible = false; m.wireframe = false; } else { node.visible = true; m.wireframe = true; m.opacity = 1; m.transparent = false; }
+          m.needsUpdate = true;
+          continue;
+        }
+        node.visible = true;
+        m.wireframe = false;
+        let a = st.mode === 'solid' ? 1 : st.opacity;
+        if (key === 'stock' && compareMode && !grip) a = COMPARE_STOCK_OPACITY;
+        if (grip) a = a >= 0.999 ? 1 : 0.45;
+        m.opacity = a;
+        m.transparent = a < 0.999;
+        m.depthWrite = a >= 0.999;
+        // Translucent stock draws before the part (renderOrder 2 < 6), so the
+        // finished part reads as a solid inside it.
+        if (key === 'stock' && !grip) node.renderOrder = 2;
+        m.needsUpdate = true;
+      }
+    }
+
+    /** Apply every object's style to the scene as it is now (after any rebuild). */
+    function applyObjectStyles() {
+      if (!objectStylesActive()) return;
+      const wireAll = sceneRenderMode === 'wireframe';
+      for (const key of OBJECT_KEYS) {
+        const st = objectStyles[key];
+        const layerKey = OBJECT_LAYER[key];
+        for (const root of objectRoots(key)) {
+          if (layerKey) {
+            const forcedByTargetOnly = targetOnly && key === 'target';
+            root.visible = layerVis[layerKey] !== false && !(targetOnly && TARGET_ONLY_HIDES.includes(layerKey)) && (st.visible || forcedByTargetOnly);
+          } else {
+            root.visible = st.visible;
+          }
+          if (key === 'target') { styleTargetNodes(root); continue; }
+          if (wireAll) continue; // the Wireframe layer mode owns materials
+          root.traverse?.(node => styleMaterial(node, key, st));
+        }
+      }
+    }
+
+    /**
+     * The finished part: a solid part joins the transparent pass after the
+     * translucent stock (renderOrder 6), so it draws as a solid inside the
+     * 50% stock instead of being tinted by it; its edges go over it.
+     */
+    function styleTargetNodes(root) {
+      if (sceneRenderMode === 'wireframe') return;
+      for (const group of root.children) {
+        const item = targetModels.find(entry => group.name === `${entry.role || 'scene'}: ${entry.name || 'model'}`);
+        if (!isPartItem(item) || item.displayMode !== 'solid') continue;
+        group.traverse(node => {
+          if (!node.material || node.name === 'target ghost') return;
+          const m = node.material;
+          // Pulled a hair toward the camera: where the cut stock is exactly on
+          // size (a faced top) the part wins instead of z-fighting the stock.
+          if (node.isMesh) { m.transparent = true; m.opacity = 1; m.depthWrite = true; m.polygonOffset = true; m.polygonOffsetFactor = -1; m.polygonOffsetUnits = -2; node.renderOrder = 6; }
+          else if (node.isLine || node.isLineSegments) node.renderOrder = 7;
+          m.needsUpdate = true;
+        });
+      }
+    }
+
+    /** Push the Target object's style onto the part items (they carry their own display mode). */
+    function applyTargetObjectStyle() {
+      const st = objectStyles.target;
+      let changed = false;
+      for (const item of targetModels) {
+        if (!isPartItem(item)) continue;
+        const mode = sceneRenderMode === 'wireframe' ? 'wireframe' : st.mode;
+        if (item.displayMode !== mode || Number(item.opacity) !== st.opacity) changed = true;
+        item.displayMode = mode;
+        item.opacity = st.mode === 'solid' ? 1 : st.opacity;
+      }
+      if (changed) { targetDisplayMode = getActiveTarget()?.displayMode || targetDisplayMode; syncTargetControls(); buildTargetModel(); }
+    }
+
+    function setObjectStyle(key, patch, fromPreset) {
+      if (!OBJECT_KEYS.includes(key)) return;
+      const next = Object.assign({}, objectStyles[key], patch || {});
+      if (!['solid', 'transparent', 'wireframe'].includes(next.mode)) next.mode = objectStyles[key].mode;
+      next.opacity = Math.max(0.05, Math.min(1, Number(next.opacity) || objectStyles[key].opacity));
+      next.visible = next.visible !== false;
+      objectStyles[key] = next;
+      if (!fromPreset) layerPreset = '';
+      if (key === 'target') applyTargetObjectStyle();
+      saveObjectStyles();
+      renderObjectStyleControls();
+      applyObjectStyles();
+    }
+
+    function applyLayerPreset(name) {
+      const preset = LAYER_PRESETS[name] || (name === 'default' ? DEFAULT_OBJECT_STYLES : null);
+      if (!preset) return;
+      for (const key of OBJECT_KEYS) objectStyles[key] = Object.assign({}, preset[key]);
+      layerPreset = name === 'default' ? '' : name;
+      applyTargetObjectStyle();
+      saveObjectStyles();
+      renderObjectStyleControls();
+      applyObjectStyles();
+    }
+
+    function renderObjectStyleControls() {
+      for (const btn of document.querySelectorAll('#layer-preset-row [data-layer-preset]')) {
+        btn.classList.toggle('active', btn.getAttribute('data-layer-preset') === layerPreset);
+      }
+      const host = document.getElementById('object-styles');
+      if (!host) return;
+      if (!host.children.length) {
+        for (const key of OBJECT_KEYS) {
+          const row = document.createElement('div');
+          row.className = 'obj-row';
+          row.setAttribute('data-object', key);
+          row.innerHTML = `<input type="checkbox" aria-label="Show ${OBJECT_LABELS[key]}">` +
+            `<span class="obj-name"><span class="sw" style="background:${OBJECT_COLORS[key]}"></span>${OBJECT_LABELS[key]}</span>` +
+            `<select aria-label="${OBJECT_LABELS[key]} style"><option value="solid">Solid</option><option value="transparent">Transparent</option><option value="wireframe">Wireframe</option></select>` +
+            `<input type="range" min="5" max="100" aria-label="${OBJECT_LABELS[key]} opacity"><span class="view-val"></span>`;
+          const [box, , select, range] = [row.children[0], row.children[1], row.children[2], row.children[3]];
+          box.addEventListener('change', () => setObjectStyle(key, { visible: box.checked }));
+          select.addEventListener('change', () => setObjectStyle(key, { mode: select.value }));
+          range.addEventListener('input', () => setObjectStyle(key, { opacity: Number(range.value) / 100, mode: 'transparent' }));
+          host.appendChild(row);
+        }
+      }
+      for (const row of host.children) {
+        const key = row.getAttribute('data-object');
+        const st = objectStyles[key];
+        row.classList.toggle('off', !st.visible);
+        row.children[0].checked = st.visible;
+        row.children[2].value = st.mode;
+        row.children[3].value = String(Math.round((st.mode === 'solid' ? 1 : st.opacity) * 100));
+        row.children[3].disabled = st.mode !== 'transparent';
+        row.children[4].textContent = st.mode === 'transparent' ? `${Math.round(st.opacity * 100)}%` : (st.mode === 'solid' ? '100%' : 'edges');
+      }
+    }
+
+    for (const btn of document.querySelectorAll('#layer-preset-row [data-layer-preset]')) {
+      btn.addEventListener('click', () => applyLayerPreset(btn.getAttribute('data-layer-preset')));
+    }
+    renderObjectStyleControls();
+
+    /**
+     * Each object drawn ALONE: how many pixels it covers, with its style. The
+     * visual tests use it for the jaw / body / grip checks a composite frame
+     * cannot separate.
+     */
+    function objectReport() {
+      const report = {};
+      const saved = new Map();
+      for (const name of Object.keys(layerMeshes)) if (layerMeshes[name]) saved.set(layerMeshes[name], layerMeshes[name].visible);
+      const whKids = layerMeshes.workholding ? layerMeshes.workholding.children.slice() : [];
+      for (const child of whKids) saved.set(child, child.visible);
+      const gripNodes = [];
+      layerMeshes.stock?.traverse?.(node => { if (node.userData.grip && node.isGroup) gripNodes.push(node); });
+      const gridVisible = grid.visible;
+      grid.visible = false;
+      const renderAlone = (roots, parentLayer) => {
+        for (const [node] of saved) node.visible = false;
+        if (parentLayer) parentLayer.visible = true;
+        for (const root of roots) root.visible = true;
+        renderer.render(scene, camera);
+        return readLitPixels(null, 1).lit;
+      };
+      for (const key of OBJECT_KEYS) {
+        const roots = objectRoots(key);
+        const st = objectStyles[key];
+        const visible = roots.some(root => (saved.has(root) ? saved.get(root) : root.visible));
+        const entry = { present: roots.length > 0, visible, mode: st.mode, opacity: st.opacity, styleVisible: st.visible, items: roots.length, litAlone: 0 };
+        if (entry.present && visible) entry.litAlone = renderAlone(roots, OBJECT_LAYER[key] ? null : layerMeshes.workholding);
+        report[key] = entry;
+      }
+      report.grip = { present: gripNodes.length > 0, litAlone: 0 };
+      if (gripNodes.length && layerMeshes.stock && saved.get(layerMeshes.stock)) {
+        const siblings = layerMeshes.stock.children.filter(child => !child.userData.grip);
+        const hidden = siblings.map(child => [child, child.visible]);
+        for (const child of siblings) child.visible = false;
+        report.grip.litAlone = renderAlone([layerMeshes.stock]);
+        for (const [child, v] of hidden) child.visible = v;
+      }
+      for (const [node, v] of saved) node.visible = v;
+      grid.visible = gridVisible;
+      renderer.render(scene, camera);
+      return report;
     }
 
     // -----------------------------------------------------------------------
@@ -1908,9 +3485,55 @@
       if (!programs.some(program => program.uri === activeUri)) select.value = '';
     }
 
+    // -----------------------------------------------------------------------
+    // First-frame settle. A program arrives as several messages (path, machine
+    // type, RevPack scene, workholding, target, placement / G54). Fitting on the
+    // first one framed the scene before the setup was placed, so the part and
+    // tools showed up off-plane or out of frame "out of the gate". Every scene
+    // message re-arms a short timer; when the messages stop, the camera is fitted
+    // to the placed setup and only then is the canvas shown.
+    // -----------------------------------------------------------------------
+    const SCENE_MESSAGES = new Set(['update', 'machineType', 'stockSettings', 'stockOrigin', 'workholdingSettings',
+      'revpackScene', 'revpackWorkholding', 'revpackPlacement', 'targetModel', 'toolLibrary', 'setActiveToolData', 'fusionSetup']);
+    const SETTLE_MS = 140;
+    const SETTLE_MAX_MS = 1500;
+    let sceneSettled = false;
+    let settleTimer = 0;
+    let settleDeadline = 0;
+    function revealCanvas() {
+      sceneSettled = true;
+      renderer.domElement.style.opacity = '1';
+    }
+    function scheduleSettledFit() {
+      if (sceneSettled) return;
+      if (!settleDeadline) settleDeadline = performance.now() + SETTLE_MAX_MS;
+      clearTimeout(settleTimer);
+      const wait = Math.max(0, Math.min(SETTLE_MS, settleDeadline - performance.now()));
+      settleTimer = setTimeout(() => {
+        if (!userMovedCamera && currentPath && currentPath.length) {
+          fitCamera(currentPath);
+          didFit = true;
+          buildOrigin();
+        }
+        revealCanvas();
+      }, wait);
+    }
+    function resetSettle() {
+      sceneSettled = false;
+      settleDeadline = 0;
+      clearTimeout(settleTimer);
+      renderer.domElement.style.opacity = '0';
+      // Never leave the view blank: reveal even if no scene message follows.
+      settleTimer = setTimeout(revealCanvas, SETTLE_MAX_MS);
+    }
+    resetSettle();
+    window.__joblineSceneSettled = () => sceneSettled;
+
     window.addEventListener('message', e => {
       const msg = e.data;
       if (!msg || !msg.type) return;
+      if (msg.type === 'resetVisualScene') resetSettle();
+      else if (SCENE_MESSAGES.has(msg.type)) queueMicrotask(scheduleSettledFit);
 
       switch (msg.type) {
 
@@ -1997,6 +3620,25 @@
           updateCameraOrbit();
           break;
         }
+        case 'setPanelOpen': {
+          // Open or close one of the overlay panels (View, Program review,
+          // RevPack info), so a capture or a test sees the panel as a user would.
+          const panel = document.getElementById(String(msg.id || ''));
+          if (panel && panel.tagName === 'DETAILS') panel.open = msg.open !== false;
+          break;
+        }
+        case 'panBy': {
+          // Move the orbit centre up / down by a fraction of the view distance.
+          const dy = Number(msg.dy) || 0;
+          if (Math.abs(dy) < 2) { orbitTarget.y += dy * orbitRadius; userMovedCamera = true; updateCameraOrbit(); }
+          break;
+        }
+        case 'zoomBy': {
+          // Scale the orbit distance (< 1 moves in), the same as the wheel.
+          const f = Number(msg.factor);
+          if (f > 0.05 && f < 20) { orbitRadius *= f; userMovedCamera = true; updateCameraOrbit(); }
+          break;
+        }
         case 'setPresetView': {
           // Drives the same function as the view-cube buttons so the screenshot
           // matrix can prove Top/Right/Left/Iso are not dead labels.
@@ -2028,8 +3670,15 @@
           updateActiveTarget((active) => {
             active.displayMode = ['solid', 'transparent', 'wireframe', 'hidden'].includes(msg.mode) ? msg.mode : 'transparent';
           });
+          syncTargetStyleFromItem(getActiveTarget());
           break;
         }
+        case 'setObjectStyle':
+          setObjectStyle(msg.object, { visible: msg.visible, mode: msg.mode, opacity: msg.opacity });
+          break;
+        case 'applyLayerPreset':
+          applyLayerPreset(msg.preset);
+          break;
         case 'requestVisualProbe': {
           // Answered from inside the render loop, so the pixels read are the
           // ones just drawn. Used by the visual test bed to prove the scene
@@ -2081,7 +3730,12 @@
 
         case 'targetModel': {
           const item = normalizeTargetItem(msg);
+          if (msg.source === 'revpack') item.displayMode = sceneRenderMode === 'wireframe' ? 'wireframe' : (msg.displayMode || 'transparent');
           const idx = targetModels.findIndex(existing => existing.id === item.id);
+          // Origin panel moved an uploaded part: same part, keep how the user shows it.
+          if (idx >= 0 && msg.placementUpdate) {
+            for (const key of ['displayMode', 'opacity', 'offset', 'color']) if (targetModels[idx][key] !== undefined) item[key] = targetModels[idx][key];
+          }
           if (idx >= 0) targetModels[idx] = item;
           else targetModels.push(item);
           activeTargetId = item.id;
@@ -2089,6 +3743,9 @@
           targetDisplayMode = item.displayMode;
           syncTargetControls();
           buildTargetModel();
+          // A part opened without a pack gets its stock around it.
+          if (!packScene && !stockIsDeclared) buildStock();
+          reapplyViewOpacity();
           if (!userMovedCamera && currentPath && currentPath.length) fitCamera(currentPath);
           break;
         }
@@ -2106,7 +3763,25 @@
           currentToolData = null;
           stockIsDeclared = false;
           fusionSetup = null;
-          for (const layer of ['targetModel', 'stock', 'workholding', 'tool', 'fusionReference']) {
+          revpackInfo = null; packShapes = []; revpackFindings = null; packScene = null;
+          // The previous program's stock (a 1000 x 600 laser sheet) must not
+          // carry over to the next one.
+          stockCfg = { w: 4, d: 4, h: 2, unit: 'in', color: '#4488ff' };
+          // A new scene gets framed again (the last one's preset view or a
+          // 1000 mm laser sheet framing left the next part a speck).
+          userMovedCamera = false;
+          didFit = false;
+          presetAngles = null;
+          compareMode = false;
+          // Every visual case starts from the default object styles.
+          objectStyles = cloneStyles(null);
+          layerPreset = '';
+          saveObjectStyles();
+          renderObjectStyleControls();
+          setTargetOnly(false);
+          renderCompareLegend();
+          renderRevPack();
+          for (const layer of ['targetModel', 'stock', 'workholding', 'tool', 'toolHolder', 'sweptTube', 'fusionReference']) {
             setLayer(layer, null);
           }
           syncTargetControls();
@@ -2132,6 +3807,90 @@
 
         case 'review':
           renderReview(msg.review);
+          break;
+
+        case 'revpackScene': {
+          const newPack = !!msg.packId && msg.packId !== (packScene && packScene.packId);
+          packScene = msg.packId ? msg : null;
+          if (newPack || !packScene) compareMode = false;
+          renderCompareLegend();
+          buildStock();
+          buildWorkholding();
+          buildToolLayer(currentToolData);
+          // A different pack is a different setup (a 160 mm chuck after a 4 in
+          // vise plate): frame it, or the camera can sit inside the new parts.
+          if (newPack) {
+            stockIsDeclared = true;
+            userMovedCamera = false;
+            if (currentPath && currentPath.length) { fitCamera(currentPath); didFit = true; buildOrigin(); }
+          }
+          break;
+        }
+
+        case 'revpackInfo':
+          revpackInfo = msg.id ? msg : null;
+          renderRevPack();
+          break;
+
+        case 'revpackWorkholding':
+          packShapes = Array.isArray(msg.shapes) ? msg.shapes : [];
+          buildWorkholding();
+          renderRevPack();
+          break;
+
+        case 'revpackFindings':
+          revpackFindings = msg.packId ? msg : null;
+          renderRevPack();
+          // A solid the program crashes into is drawn red.
+          if (packScene) buildWorkholding();
+          break;
+
+        case 'revpackPlacement':
+          onPlacementMessage(msg);
+          break;
+        case 'placementHover':
+          // Test bed / tooling: the hover highlight for one triangle (the mouse path calls the same function).
+          setHover(Number(msg.tri));
+          break;
+        case 'showOriginPanel':
+          if (originPanel) { originPanel.open = msg.open !== false; document.body.classList.toggle('origin-open', originPanel.open); }
+          if (msg.pickMode) setPickMode(msg.pickMode);
+          break;
+        case 'sceneRenderMode':
+        case 'setSceneRenderMode':
+          setSceneRenderMode(msg.mode);
+          break;
+
+        case 'setTargetOnly':
+          setTargetOnly(msg.on);
+          break;
+
+        case 'setCompareMode':
+          setCompareMode(msg.on);
+          break;
+
+        case 'removeTargetModel': {
+          const before = targetModels.length;
+          targetModels = targetModels.filter(item => item.id !== msg.id);
+          if (targetModels.length !== before) {
+            if (!targetModels.some(item => item.id === activeTargetId)) activeTargetId = targetModels[0]?.id || '';
+            syncTargetControls();
+            buildTargetModel();
+          }
+          break;
+        }
+
+        case 'clickRevPackFinding': {
+          // Test hook: clicks the real list item, so click-to-line is proven
+          // through the same handler a user's click runs.
+          const item = document.querySelector(`#revpack-findings .review-item[data-line="${Number(msg.line)}"]`)
+            || document.querySelector('#revpack-findings .review-item');
+          if (item) { item.scrollIntoView({ block: 'nearest' }); item.click(); }
+          break;
+        }
+
+        case 'requestLayerProbe':
+          layerProbeRequested = true;
           break;
       }
     });

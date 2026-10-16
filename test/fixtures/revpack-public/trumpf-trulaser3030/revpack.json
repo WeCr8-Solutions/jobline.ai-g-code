@@ -1,0 +1,84 @@
+{
+  "schema": "jobline.revpack/2",
+  "id": "trumpf-trulaser3030-bracket-nest",
+  "name": "TruLaser 3030 bracket nest (public sample)",
+  "units": "mm",
+  "program": {
+    "file": "LASER01.MPF",
+    "dialect": "siemens"
+  },
+  "target": {
+    "file": "target.step",
+    "format": "step",
+    "stl": "target.stl"
+  },
+  "stock": {
+    "name": "3 mm mild steel sheet 1000 x 600",
+    "min": [
+      0,
+      0,
+      -3
+    ],
+    "max": [
+      1000,
+      600,
+      0
+    ]
+  },
+  "workholding": [],
+  "setup": {
+    "partZero": "G54 X0 Y0 at the sheet's front-left corner, Z0 on the sheet top",
+    "stockOffsets": {
+      "xMin": 50.1,
+      "xMax": 250.1,
+      "yMin": 50.1,
+      "yMax": 150.1,
+      "zMin": 0,
+      "zMax": 0
+    }
+  },
+  "workOffsets": {
+    "G54": {
+      "x": 100,
+      "y": 100,
+      "z": 10
+    }
+  },
+  "tools": [
+    {
+      "t": 1,
+      "type": "Laser head",
+      "diameter": 0.2,
+      "gaugeLength": 0,
+      "description": "1.7 mm nozzle, fiber 4 kW"
+    }
+  ],
+  "machine": {
+    "presetId": "builtin-trumpf-trulaser-3030",
+    "name": "TRUMPF TruLaser 3030 fiber (SINUMERIK 840D sl)",
+    "dialect": "siemens",
+    "controlModel": "SINUMERIK 840D sl",
+    "machineClass": "laser",
+    "axes": [
+      {
+        "name": "X",
+        "min": 0,
+        "max": 3000
+      },
+      {
+        "name": "Y",
+        "min": 0,
+        "max": 1500
+      },
+      {
+        "name": "Z",
+        "min": 0,
+        "max": 115
+      }
+    ],
+    "kinematics": "2D flying-optics gantry, Z height-follow"
+  },
+  "expect": {
+    "clean": true
+  }
+}
