@@ -72,6 +72,21 @@ export function readJbl(file: string): LoadedRevPack {
   return { pack: jbl.pack, file: path.resolve(file), dir: path.dirname(path.resolve(file)), jbl, targetStl: jblTargetStl(jbl), placement: jblSession(jbl) };
 }
 
+/**
+ * A .jbl that holds a part set up on its own (CAM's Setup / WCS on an uploaded
+ * STL, no RevPack): its target STL and setup session, or undefined when the
+ * file carries a pack (use readJbl) or no part.
+ */
+export function readPartOnlyJbl(file: string): { jbl: JblJob; targetStl: Uint8Array; placement: PlacementSession; name: string } | undefined {
+  const parsed = parseJbl(fs.readFileSync(file, 'utf8'));
+  if (!parsed.ok) throw new Error(`${path.basename(file)} is not a JobLine .jbl: ${parsed.errors.join('; ')}`);
+  const jbl = parsed.jbl;
+  if (jbl.pack) return undefined;
+  const targetStl = jblTargetStl(jbl);
+  if (!targetStl || targetStl.length < 84) throw new Error(`${path.basename(file)} has no pack and no part to show`);
+  return { jbl, targetStl, placement: jblSession(jbl), name: jbl.target?.file ?? path.basename(file, path.extname(file)) + '.stl' };
+}
+
 /** The pack's target STL: inside a .jbl, or the file the pack names. */
 function targetStlBytes(loaded: LoadedRevPack): { bytes: Uint8Array; name: string } | undefined {
   if (loaded.targetStl) return { bytes: loaded.targetStl, name: loaded.jbl?.target?.file ?? 'target.stl' };

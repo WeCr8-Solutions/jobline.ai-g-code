@@ -8,7 +8,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.3.14] - 2026-10-15
+## [0.3.14] - 2026-10-16
+
+### Field fixes (Oct 16 2026 check on a Haas program and a Renishaw probe sub)
+
+- Fix: a G91 incremental arc (`G91 G3 Y0.0984 J0.0492`) was checked as absolute and reported a false "arc endpoint doesn't match" error. G90.1 absolute arc centres are honoured too.
+- Fix: G65/G66 macro-call arguments (`G65 P9995 A13. X3.`) were read as axis moves, so a probe routine showed as a 4-axis mill and moved the tracked position. G10 offset values and G04 dwell words are not motion either.
+- Fix: M99 is accepted as the end of a subprogram (no "no M02/M30" warning on probe/sub programs).
+- New: the control is detected from the program header ("HAAS MILL NGC", Okuma, Mazak, Siemens, Fadal, Mitsubishi, Heidenhain) and from Haas-only codes; the status bar shows "· from header". A control set for the workspace still wins; turn it off with `jobline.controlAutoDetect`.
+- Haas: an M06 with no G28/G53 before it is a note, not a warning (Haas retracts Z for the tool change). Fanuc and others keep the warning.
+- New checks: a very high feed on a straight Z plunge (over 100 in/min or 2540 mm/min), a feed carried over from the previous tool, and a note when the spindle runs with no coolant or air command.
+- Tools: a Renishaw / spindle probe is typed Probe (drawn as a stylus), and a T word on a G43 line is a next-tool preselect, not a cutting tool; the loaded tool keeps its feeds and offsets. Header tool comments without a dash (`(T31 RENISHAW PROBE)`) are read.
+
+### Visualizer fixes (Oct 16 2026)
+
+- View cube is sharp on HiDPI screens: the canvas follows devicePixelRatio (also after moving the window or zooming), the cube is drawn into the exact box of its panel, and nothing translucent covers it.
+- First frame: the canvas stays hidden until the program, machine, RevPack / .jbl setup, placement and target messages have arrived, then the camera is fitted to the placed setup (G54 origin applied) and the view is shown. It is never left blank for more than 1.5 s.
+- Framing fits the bounding sphere against the narrower field of view, so wide flat parts (AR4 gear, jaw1) are no longer clipped in narrow panels.
+- The controls legend follows the cube panel's width and drops the mouse help lines when they would overlap the cube or a panel.
+- **JobLine: Load RevPack…** opens a part-only `.jbl` (Setup / WCS made in jobline.ai-CAM on an uploaded part) as an uploaded part with CAM's origin.
 
 ### Tool libraries, CAM output and per-control checks
 

@@ -71,6 +71,7 @@
       pointer-events: none; -webkit-user-select: none; user-select: none; text-align: right;
       line-height: 1.6;
     }
+    #legend.legend-compact .legend-controls, #legend.legend-compact .legend-controls ~ div { display: none; }
     .legend-rapid { color: #4fc3f7; }
     .legend-cut { color: #66bb6a; }
     .legend-mstop { color: #ff8a65; }
@@ -234,11 +235,16 @@
     }
     /* The 3D view cube is drawn in the WebGL canvas underneath this panel, so a
        backdrop blur here smeared the cube itself. Keep the panel crisp. */
-    #view-cube { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(18, 22, 38, 0.10); }
+    #view-cube { backdrop-filter: none; -webkit-backdrop-filter: none; background: transparent; border-color: transparent; box-shadow: none; }
+    /* Only the preset buttons get a panel; nothing semi-transparent sits over the
+       WebGL cube, which was what made it look soft. */
+    #view-cube .cube-row { background: rgba(18, 22, 38, 0.72); border: 1px solid rgba(57, 68, 95, 0.45); border-radius: 8px; padding: 4px; }
+    #view-cube .viewcube-caption { text-shadow: 0 1px 2px #000; }
     @media (max-width: 760px) {
       #target-panel { display: none; }
       #playback-panel { width: min(360px, calc(100vw - 20px)); }
-      #view-cube { right: 8px; transform: scale(.82); transform-origin: right bottom; }
+      #view-cube { right: 8px; }
+      #view-cube .cube-row { transform: scale(.86); transform-origin: right bottom; }
       #review-panel { width: min(300px, calc(100vw - 20px)); }
     }
     @media (max-height: 520px) {
@@ -597,10 +603,33 @@
     // -----------------------------------------------------------------------
     const container = document.getElementById('canvas-container');
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    // Render at the display's real pixel density. The ratio is re-read on every
+    // resize and whenever devicePixelRatio changes (window moved to a HiDPI
+    // monitor, VS Code zoom), otherwise the canvas - view cube included - was
+    // drawn at the old density and CSS-upscaled, i.e. blurry.
+    const MAX_PIXEL_RATIO = 3;
+    function currentPixelRatio() { return Math.min(Math.max(window.devicePixelRatio || 1, 1), MAX_PIXEL_RATIO); }
+    renderer.setPixelRatio(currentPixelRatio());
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setClearColor(0x1a1a2e);
     container.appendChild(renderer.domElement);
+    // Hidden until the first settled fit, so the first visible frame already
+    // has the setup placement and G54 origin applied (see scheduleSettledFit).
+    renderer.domElement.style.opacity = '0';
+    renderer.domElement.style.transition = 'opacity .12s ease-out';
+    function syncPixelRatio() {
+      const ratio = currentPixelRatio();
+      if (Math.abs(renderer.getPixelRatio() - ratio) > 1e-3) {
+        renderer.setPixelRatio(ratio);
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      }
+    }
+    (function watchPixelRatio() {
+      if (typeof window.matchMedia !== 'function') return;
+      const mq = window.matchMedia('(resolution: ' + (window.devicePixelRatio || 1) + 'dppx)');
+      const onChange = () => { syncPixelRatio(); if (mq.removeEventListener) mq.removeEventListener('change', onChange); watchPixelRatio(); };
+      if (mq.addEventListener) mq.addEventListener('change', onChange, { once: true });
+    })();
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -969,13 +998,36 @@
 
     let gnomonVisible = true;
 
-    function gnomonViewportCss(widthCss, _heightCss) {
+    // The cube is drawn into the exact box of the .cube-stage element (in GL
+    // coordinates, origin bottom-left), so it can't drift from its panel or
+    // sit half under the preset buttons when the panel is scaled or moved.
+    function gnomonViewportCss(widthCss, heightCss) {
+      const stage = document.querySelector('#view-cube .cube-stage');
+      const host = renderer.domElement.getBoundingClientRect();
+      if (stage && host.width > 0) {
+        const r = stage.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          const size = Math.round(Math.min(r.width, r.height + 18, GNOMON_PX));
+          const cx = r.left - host.left + r.width / 2;
+          const cyTop = r.top - host.top + r.height / 2;
+          return {
+            x: Math.round(cx - size / 2),
+            y: Math.round(heightCss - cyTop - size / 2),
+            size,
+          };
+        }
+      }
       return {
         x: Math.max(GNOMON_MARGIN, widthCss - 198 + 18),
         y: 112,
         size: GNOMON_PX,
       };
     }
+    window.__joblineGnomonViewport = () => {
+      const w = renderer.domElement.width / renderer.getPixelRatio();
+      const h = renderer.domElement.height / renderer.getPixelRatio();
+      return Object.assign(gnomonViewportCss(w, h), { pixelRatio: renderer.getPixelRatio(), devicePixelRatio: window.devicePixelRatio || 1 });
+    };
 
     function renderGnomon() {
       if (!gnomonVisible) return;
@@ -1999,6 +2051,9 @@
     // Camera fit
     // -----------------------------------------------------------------------
     let axisLen = 1.0;
+    /** Breathing room around the framed bounding sphere (12%). */
+    const FIT_MARGIN = 1.12;
+    window.__joblineFitInfo = () => ({ orbitRadius, fov: camera.fov, aspect: camera.aspect });
 
     function fitCamera(path) {
       if (!path || path.length === 0) return;
@@ -2054,7 +2109,15 @@
       bbox.getSize(size);
       const maxDim = Math.max(size.x, size.y, size.z, 0.01);
       axisLen = maxDim * 0.15;
-      orbitRadius = maxDim * fitFactor;
+      // Frame the bounding SPHERE against the narrower of the two fields of
+      // view. maxDim x factor alone clipped wide, flat parts (the AR4 gear,
+      // jaw1) at ISO and in a narrow panel, where the horizontal FOV is the
+      // limit. The old factor stays as the lower bound so nothing gets tighter.
+      const vFov = THREE.MathUtils.degToRad(camera.fov);
+      const hFov = 2 * Math.atan(Math.tan(vFov / 2) * Math.max(camera.aspect, 0.05));
+      const sphereRadius = Math.max(size.length() / 2, 0.005);
+      const sphereFit = sphereRadius / Math.sin(Math.min(vFov, hFov) / 2) * FIT_MARGIN;
+      orbitRadius = Math.max(maxDim * fitFactor, sphereFit);
       orbitTarget.copy(center);
       orbitPhi = presetAngles ? presetAngles.phi : Math.PI / 3.5;
       orbitTheta = presetAngles ? presetAngles.theta : Math.PI / 4;
@@ -2503,7 +2566,36 @@
       const rpShown = rp && getComputedStyle(rp).display !== 'none';
       const top = rpShown ? Math.round(rp.getBoundingClientRect().bottom + 8) : 64;
       view.style.maxHeight = Math.max(120, window.innerHeight - bottom - top) + 'px';
+      layoutLegend();
     }
+
+    // The controls legend sits left of the view cube column and above nothing
+    // else. Its right edge follows the cube panel's real width, and the mouse
+    // help lines hide when they would overlap the cube, the playback panel or
+    // the View panel (narrow VS Code editor groups).
+    function layoutLegend() {
+      const legend = document.getElementById('legend');
+      const cube = document.getElementById('view-cube');
+      if (!legend || !cube) return;
+      const cubeShown = getComputedStyle(cube).display !== 'none';
+      const cubeWidth = cubeShown ? cube.getBoundingClientRect().width : 0;
+      legend.style.right = Math.round((cubeShown ? cubeWidth + 24 : 10)) + 'px';
+      legend.classList.remove('legend-compact');
+      const overlaps = (a, b) => a && b && !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+      const lr = legend.getBoundingClientRect();
+      const others = ['view-cube', 'playback-panel', 'view-panel', 'review-panel', 'revpack-panel']
+        .map(id => document.getElementById(id))
+        .filter(el => el && getComputedStyle(el).display !== 'none')
+        .map(el => el.getBoundingClientRect());
+      if (others.some(r => overlaps(lr, r))) legend.classList.add('legend-compact');
+    }
+    window.__joblineLegendLayout = () => {
+      layoutLegend();
+      const legend = document.getElementById('legend');
+      const cube = document.getElementById('view-cube');
+      const a = legend.getBoundingClientRect(), b = cube.getBoundingClientRect();
+      return { compact: legend.classList.contains('legend-compact'), overlapsCube: !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom) };
+    };
     if (typeof ResizeObserver === 'function') {
       // Observes only the two panels it stacks against (never the View panel
       // it resizes), and lays out on the next frame, so it cannot loop.
@@ -2518,6 +2610,7 @@
       const w = container.clientWidth, h = container.clientHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      renderer.setPixelRatio(currentPixelRatio());
       renderer.setSize(w, h);
     });
 
@@ -3392,9 +3485,55 @@
       if (!programs.some(program => program.uri === activeUri)) select.value = '';
     }
 
+    // -----------------------------------------------------------------------
+    // First-frame settle. A program arrives as several messages (path, machine
+    // type, RevPack scene, workholding, target, placement / G54). Fitting on the
+    // first one framed the scene before the setup was placed, so the part and
+    // tools showed up off-plane or out of frame "out of the gate". Every scene
+    // message re-arms a short timer; when the messages stop, the camera is fitted
+    // to the placed setup and only then is the canvas shown.
+    // -----------------------------------------------------------------------
+    const SCENE_MESSAGES = new Set(['update', 'machineType', 'stockSettings', 'stockOrigin', 'workholdingSettings',
+      'revpackScene', 'revpackWorkholding', 'revpackPlacement', 'targetModel', 'toolLibrary', 'setActiveToolData', 'fusionSetup']);
+    const SETTLE_MS = 140;
+    const SETTLE_MAX_MS = 1500;
+    let sceneSettled = false;
+    let settleTimer = 0;
+    let settleDeadline = 0;
+    function revealCanvas() {
+      sceneSettled = true;
+      renderer.domElement.style.opacity = '1';
+    }
+    function scheduleSettledFit() {
+      if (sceneSettled) return;
+      if (!settleDeadline) settleDeadline = performance.now() + SETTLE_MAX_MS;
+      clearTimeout(settleTimer);
+      const wait = Math.max(0, Math.min(SETTLE_MS, settleDeadline - performance.now()));
+      settleTimer = setTimeout(() => {
+        if (!userMovedCamera && currentPath && currentPath.length) {
+          fitCamera(currentPath);
+          didFit = true;
+          buildOrigin();
+        }
+        revealCanvas();
+      }, wait);
+    }
+    function resetSettle() {
+      sceneSettled = false;
+      settleDeadline = 0;
+      clearTimeout(settleTimer);
+      renderer.domElement.style.opacity = '0';
+      // Never leave the view blank: reveal even if no scene message follows.
+      settleTimer = setTimeout(revealCanvas, SETTLE_MAX_MS);
+    }
+    resetSettle();
+    window.__joblineSceneSettled = () => sceneSettled;
+
     window.addEventListener('message', e => {
       const msg = e.data;
       if (!msg || !msg.type) return;
+      if (msg.type === 'resetVisualScene') resetSettle();
+      else if (SCENE_MESSAGES.has(msg.type)) queueMicrotask(scheduleSettledFit);
 
       switch (msg.type) {
 

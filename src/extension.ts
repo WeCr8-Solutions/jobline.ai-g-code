@@ -26,7 +26,7 @@ import { registerSubprogramProvider } from './providers/subprogramProvider';
 import { buildVisualizerHarnessData } from './providers/visualizer/fixtureHarness';
 import { resolveControl, resolveControlType } from './utils/controlResolve';
 import { buildAutoSimulationMessages } from './providers/visualizer/simulationSetup';
-import { buildRevPackScene, clearRevPackMessages, findRevPackForProgram, readRevPack, revPackStepTargetMessage, type LoadedRevPack } from './providers/visualizer/revpackLoader';
+import { buildRevPackScene, clearRevPackMessages, findRevPackForProgram, readPartOnlyJbl, readRevPack, revPackStepTargetMessage, type LoadedRevPack } from './providers/visualizer/revpackLoader';
 import { isSeededTestPack, SEEDED_TEST_PACK_LABEL } from './providers/visualizer/revpack';
 import type { CorrelationFinding } from './providers/visualizer/revpackCorrelation';
 import { PlacementSessions, parseOffsetInput, placedUploadMessage, placementPanelMessage, type PlacementPanelMessage, type PlacementTarget } from './providers/visualizer/revpackPlacementHost';
@@ -464,6 +464,34 @@ export function activate(context: vscode.ExtensionContext): void {
             file = picked?.[0]?.fsPath;
           }
           if (!file) return undefined;
+          // A part-only .jbl (Setup / WCS made in CAM on an uploaded part, no
+          // RevPack) opens as an uploaded part with CAM's origin applied.
+          if (file.toLowerCase().endsWith('.jbl')) {
+            try {
+              const part = readPartOnlyJbl(file);
+              if (part) {
+                if (!ToolpathVisualizerPanel.currentPanel) await vscode.commands.executeCommand('jobline.gcode.showVisualizer');
+                const mesh = loadStlMesh(part.targetStl.slice().buffer);
+                const id = 'jbl-part';
+                const targetMessage = {
+                  type: 'targetModel', id, targetId: id, role: 'target-part', displayMode: 'transparent', opacity: 0.35,
+                  name: part.name, format: `JobLine job (.jbl) · STL ${mesh.format}`, pointCount: mesh.triangleCount * 3,
+                  meshVertices: Array.from(mesh.positions), bounds: mesh.bounds, offset: { x: 0, y: 0, z: 0 },
+                };
+                registerUploadTarget(id, targetMessage);
+                placementSessions.seed(`upload:${id}`, part.placement);
+                const upload = uploadTargets.get(id);
+                if (upload) resendUploadTarget(id, upload);
+                else ToolpathVisualizerPanel.queueMessage(targetMessage);
+                sendPlacementPanel();
+                vscode.window.setStatusBarMessage(`JobLine: part "${part.name}" opened with its CAM setup`, 5000);
+                return id;
+              }
+            } catch (err) {
+              vscode.window.showErrorMessage('JobLine: ' + String(err instanceof Error ? err.message : err));
+              return undefined;
+            }
+          }
           let loaded: LoadedRevPack;
           try {
             loaded = readRevPack(file);
