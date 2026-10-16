@@ -9,13 +9,9 @@
     "name": "WeCr8 Solutions, LLC",
     "url": "https://github.com/WeCr8-Solutions"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/WeCr8-Solutions/jobline.ai-g-code.git"
-  },
   "homepage": "https://jobline.ai/tools?utm_source=vscode&utm_medium=marketplace&utm_campaign=jobline-gcode",
   "bugs": {
-    "url": "https://github.com/WeCr8-Solutions/jobline.ai-g-code/issues"
+    "url": "https://jobline.ai/help?utm_source=vscode&utm_medium=marketplace&utm_campaign=jobline-gcode"
   },
   "icon": "images/icon.png",
   "galleryBanner": {
@@ -1137,5 +1133,6 @@
     "fzstd": "^0.1.1",
     "occt-import-js": "^0.0.23",
     "three": "^0.183.2"
-  }
+  },
+  "qna": "marketplace"
 }

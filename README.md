@@ -151,7 +151,7 @@ A preset stores one machine: control and model, machine type, units, axis travel
 | **Fanuc Robot TP / LS** | `.ls` / `.tp` language mode with highlighting, a Fanuc Robot control type, and robot-vs-CNC preset checks |
 | **ABB RAPID** | `.mod` / `.pgf` language mode with highlighting, an ABB control type, and robot-vs-CNC preset checks |
 
-The CNC controls share one ISO / Fanuc-style engine; picking a control sets the dialect used for parsing and validation and shows it in the status bar. This is not full controller emulation.
+The CNC controls share one ISO / Fanuc-style engine; picking a control sets the dialect used for parsing and validation and shows it in the status bar. When a program's header names its control (a Haas post writes `HAAS MILL NGC`), that program is checked as that control and the status bar says "from header"; a control you set for the workspace always wins (`jobline.controlAutoDetect`). This is not full controller emulation.
 
 Machine types: mill, lathe, mill-turn, and grinder. Lathe programs get diameter-mode X, T-word decoding, and turning cycle lists.
 
@@ -374,10 +374,6 @@ Next:
 
 ## Feedback
 
-Report problems on [GitHub Issues](https://github.com/WeCr8-Solutions/jobline.ai-g-code/issues). Include the extension version, control and machine type, units, a short NC example, what you expected, and a screenshot for visual problems.
-
-- [Changelog](https://github.com/WeCr8-Solutions/jobline.ai-g-code/blob/main/CHANGELOG.md)
-- [Source and contributor setup](https://github.com/WeCr8-Solutions/jobline.ai-g-code/blob/main/SETUP.md)
-- [Test coverage and known gaps](https://github.com/WeCr8-Solutions/jobline.ai-g-code/blob/main/docs/testing/USER_FEEDBACK_MATRIX.md)
+Ask a question or report a problem in the **Q & A** tab of this Marketplace page or from [jobline.ai/help](https://jobline.ai/help?utm_source=vscode&utm_medium=marketplace&utm_campaign=jobline-gcode). Include the extension version, control and machine type, units, a short NC example, what you expected, and a screenshot for visual problems. Release notes are in the **Changelog** tab.
 
 Set `jobline.ui.showLinks` to `false` to hide the optional JobLine links in the sidebar and hover cards. Built by **WeCr8 Solutions, LLC**. Extension code is MIT-licensed; bundled dependencies (three.js, OpenCascade / occt-import-js, fzstd) keep their own licenses.
