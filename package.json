@@ -216,6 +216,11 @@
           ],
           "description": "CNC or robot control dialect. Each CNC control has its own validation rules (codes, macro syntax, loops and jumps, limits)."
         },
+        "jobline.controlAutoDetect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Check each program as the control its header names (a Haas post writes \"HAAS MILL NGC\"; Okuma, Mazak, Siemens, Fadal, Mitsubishi and Heidenhain are recognised too). A control set for this workspace or folder (Select CNC / Robot Control Type, or a machine preset) always wins."
+        },
         "jobline.machineType": {
           "type": "string",
           "default": "mill",
@@ -1084,7 +1089,7 @@
     "test:cam-integrations": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/cam-integrations.test.ts');require('./test/contributions.test.ts');\"",
     "test:control-rules": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/control-rules.test.ts');\"",
     "test:dialect-convert": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/dialect-convert.test.ts');\"",
-    "test:all": "npm test && npm run test:feedback-matrix && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:revpack && npm run test:simulation-matrix && npm run test:pipeline-gate && npm run test:visualizer-ui && npm run test:hover-cards && npm run test:rating && npm run test:tool-library && npm run test:cam-integrations && npm run test:control-rules && npm run test:dialect-convert",
+    "test:all": "npm test && npm run test:feedback-matrix && npm run test:diagnostics && npm run test:review && npm run test:verification && npm run test:visualizer:harness && npm run test:revpack && npm run test:simulation-matrix && npm run test:pipeline-gate && npm run test:visualizer-ui && npm run test:hover-cards && npm run test:rating && npm run test:tool-library && npm run test:cam-integrations && npm run test:control-rules && npm run test:dialect-convert && npm run test:field",
     "test:smoke": "node ./scripts/run-extension-smoke.js",
     "test:e2e:visual": "npm run compile && node ./scripts/run-visual-e2e.js",
     "test:e2e:hover": "npm run compile && node ./scripts/run-hover-e2e.js",
@@ -1106,7 +1111,8 @@
     "agent:gate": "node tools/agent-loop/cli.mjs gate",
     "agent:status": "node tools/agent-loop/cli.mjs status",
     "test:agent-loop": "node --test tools/agent-loop/test/unit.test.mjs tools/agent-loop/test/e2e.test.mjs tools/agent-loop/test/multi.test.mjs tools/agent-loop/test/overnight.test.mjs",
-    "revpack:golden": "node -r ts-node/register/transpile-only ./scripts/revpack-parity-golden.ts"
+    "revpack:golden": "node -r ts-node/register/transpile-only ./scripts/revpack-parity-golden.ts",
+    "test:field": "node -e \"require('ts-node').register({transpileOnly:true,compilerOptions:{module:'commonjs',target:'ES2022',esModuleInterop:true,resolveJsonModule:true,strict:false}});require('./test/field-2026-10-16.test.ts');\""
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",

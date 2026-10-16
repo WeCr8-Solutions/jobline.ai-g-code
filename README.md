@@ -318,6 +318,7 @@ Find these under **Settings > Extensions > JobLine G-Code**.
 | --- | --- | --- |
 | `jobline.ui.showLinks` | `true` | Show optional JobLine for shops and G-Code Academy links in the sidebar and hover cards. |
 | `jobline.controlType` | `"fanuc"` | CNC or robot control dialect. Each CNC control has its own validation rules (codes, macro syntax, loops and jumps, limits). Values: `fanuc`, `haas`, `siemens`, `mazak`, `okuma`, `mitsubishi`, `heidenhain`, `fadal`, `generic`, `fanuc-robot`, `abb`. |
+| `jobline.controlAutoDetect` | `true` | Check each program as the control its header names (a Haas post writes "HAAS MILL NGC"; Okuma, Mazak, Siemens, Fadal, Mitsubishi and Heidenhain are recognised too). A control set for this workspace or folder (Select CNC / Robot Control Type, or a machine preset) always wins. |
 | `jobline.machineType` | `"mill"` | Machine type profile used to tailor cycle lists and axis assumptions in JobLine views. Values: `mill`, `lathe`, `mill-turn`, `grinder`, `laser`. |
 | `jobline.units` | `"inch"` | Default unit system (can be overridden by G20/G21 in program). Values: `inch`, `metric`. |
 | `jobline.validation.enableSafetyChecks` | `true` | Enable crash-prevention safety rules (safe Z before tool change, spindle stop, etc.). |
@@ -337,7 +338,7 @@ Find these under **Settings > Extensions > JobLine G-Code**.
 | `jobline.cam.watchFolders` | `[]` | Folders your CAM posts NC programs into. JobLine offers to open new programs and link their setup sheets. File-based only: no connection to the CAM application. |
 | `jobline.cam.autoLinkSetupSheets` | `true` | When a program opens, link a setup sheet (HTML, XML or CSV) with the same name in the same folder, so its tool list feeds the tool checks. |
 
-_20 settings, generated from package.json for v0.3.14._
+_21 settings, generated from package.json for v0.3.14._
 
 <!-- settings:end -->
 

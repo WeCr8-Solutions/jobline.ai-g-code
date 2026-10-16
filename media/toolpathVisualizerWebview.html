@@ -1679,6 +1679,14 @@
         insert.position.set(radius * 0.55, radius * 0.18, 0);
         insert.rotation.y = Math.PI / 4;
         group.add(insert);
+      } else if (type === 'Probe') {
+        // Spindle probe: ruby ball on a thin stylus, then the probe body.
+        const ballRadius = Math.max(radius, 0.01);
+        const ball = new THREE.Mesh(new THREE.SphereGeometry(ballRadius, 20, 14), new THREE.MeshPhongMaterial({ color: 0xe5484d, shininess: 120 }));
+        ball.position.y = ballRadius;
+        group.add(ball);
+        const stylusLength = Math.max(stickOut - ballRadius, ballRadius * 4);
+        addCylinder(ballRadius * 0.35, ballRadius * 0.35, stylusLength, ballRadius + stylusLength / 2, 12, new THREE.MeshPhongMaterial({ color: 0xc9ccd1, shininess: 60 }));
       } else if (type === 'Slitting Saw') {
         const bladeThickness = Math.max(diameter * 0.06, stickOut * 0.08);
         addCylinder(radius, radius, bladeThickness, bladeThickness / 2, 48);

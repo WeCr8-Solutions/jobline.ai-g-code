@@ -116,8 +116,10 @@ export function reviewGCodeProgram(gcode: string, dialect = 'fanuc'): ProgramRev
       'Set the datum with G50, or call the tool with its offset register such as T0101.'
     ));
   }
-  if (!/M0*(2|30)(?=[A-Z+\-\s%]|$)/.test(code)) {
-    findings.push(advisory('missing-program-end', 'No explicit program end found (M02/M30).', 'Add the control-appropriate program end after spindle and coolant shutdown.'));
+  // M99 ends a subprogram or macro (M98 / G65 / M97 called, e.g. a Renishaw
+  // probing routine), so it counts as a program end.
+  if (!/M0*(2|30|99)(?=[A-Z+\-\s%]|$)/.test(code)) {
+    findings.push(advisory('missing-program-end', 'No explicit program end found (M02/M30, or M99 for a subprogram).', 'Add the control-appropriate program end after spindle and coolant shutdown.'));
   }
 
   findings.push(...tapDrillFindings(model.tools, /G0*21(?=[A-Z+\-\s]|$)/.test(code) ? 'mm' : 'in'));

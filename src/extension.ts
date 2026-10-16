@@ -24,6 +24,7 @@ import { RatingState, recordRatingChoice, recordSuccessfulValidation } from './v
 import { registerFormatter } from './providers/formatterProvider';
 import { registerSubprogramProvider } from './providers/subprogramProvider';
 import { buildVisualizerHarnessData } from './providers/visualizer/fixtureHarness';
+import { resolveControl, resolveControlType } from './utils/controlResolve';
 import { buildAutoSimulationMessages } from './providers/visualizer/simulationSetup';
 import { buildRevPackScene, clearRevPackMessages, findRevPackForProgram, readRevPack, revPackStepTargetMessage, type LoadedRevPack } from './providers/visualizer/revpackLoader';
 import { isSeededTestPack, SEEDED_TEST_PACK_LABEL } from './providers/visualizer/revpack';
@@ -252,8 +253,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
         /** Stock, workholding, tools, machine and review for one program: from its RevPack when it has one. */
         function sendSimulationSetup(doc: vscode.TextDocument): void {
-          const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
           const text = doc.getText();
+          const controlType = resolveControlType(text, doc.uri);
           const harness = buildVisualizerHarnessData(text, controlType);
           const loaded = revPackForDocument(doc);
           if (loaded) {
@@ -1020,9 +1021,21 @@ export function activate(context: vscode.ExtensionContext): void {
     100
   );
   controlStatusBar.command = 'jobline.selectControl';
-  updateStatusBar(controlStatusBar, config.controlType);
+  /** Show the control the active program is checked as (header auto-detect included). */
+  const refreshControlStatus = (): void => {
+    const doc = vscode.window.activeTextEditor?.document;
+    const resolved = doc && isGCodeFile(doc)
+      ? resolveControl(doc.getText(), doc.uri)
+      : { controlType: vscode.workspace.getConfiguration().get<string>('jobline.controlType', config.controlType), detected: false };
+    updateStatusBar(controlStatusBar, resolved.controlType, resolved.detected);
+  };
+  refreshControlStatus();
   controlStatusBar.show();
   context.subscriptions.push(controlStatusBar);
+  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(() => refreshControlStatus()));
+  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(doc => {
+    if (doc === vscode.window.activeTextEditor?.document) refreshControlStatus();
+  }));
 
   // Machine type status bar
   const machineStatusBar = vscode.window.createStatusBarItem(
@@ -1100,10 +1113,8 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
       if (e.affectsConfiguration('jobline')) {
-        const newConfig = loadConfig(
-          (key: string) => vscode.workspace.getConfiguration().get(key)
-        );
-        updateStatusBar(controlStatusBar, newConfig.controlType);
+        loadConfig((key: string) => vscode.workspace.getConfiguration().get(key));
+        refreshControlStatus();
       }
     })
   );
@@ -1163,17 +1174,23 @@ export function deactivate(): void {
 // Helpers
 // =============================================================================
 
-function updateStatusBar(item: vscode.StatusBarItem, controlType: string): void {
+function updateStatusBar(item: vscode.StatusBarItem, controlType: string, detected = false): void {
   const labels: Record<string, string> = {
     fanuc: 'Fanuc CNC',
     haas: 'Haas',
     siemens: 'Siemens',
     mazak: 'Mazak',
     okuma: 'Okuma',
+    mitsubishi: 'Mitsubishi',
+    heidenhain: 'Heidenhain',
+    fadal: 'Fadal',
+    generic: 'Generic',
     'fanuc-robot': 'Fanuc Robot',
     abb: 'ABB RAPID',
   };
   const icon = (controlType === 'fanuc-robot' || controlType === 'abb') ? '$(robot)' : '$(tools)';
-  item.text = `${icon} [${labels[controlType] ?? controlType}]`;
-  item.tooltip = 'JobLine: Click to change CNC / robot control type';
+  item.text = `${icon} [${labels[controlType] ?? controlType}${detected ? ' · from header' : ''}]`;
+  item.tooltip = detected
+    ? 'JobLine: control detected from the program header (jobline.controlAutoDetect). Click to set the control for this workspace.'
+    : 'JobLine: Click to change CNC / robot control type';
 }

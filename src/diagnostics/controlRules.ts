@@ -124,6 +124,46 @@ export function normalizeControl(controlType: string | undefined, text?: string)
   return 'fanuc';
 }
 
+/**
+ * The control a program says it was written for, or null when it doesn't say.
+ * Reads the header comments (CAM posts write "HAAS MILL NGC", "OKUMA OSP-P300",
+ * "SIEMENS 840D"…) and a few codes only one control uses. The earliest brand
+ * named in the header wins, so "(POST: FANUC TO HAAS)" style notes are rare
+ * edge cases rather than the rule.
+ */
+export function detectControlFromProgram(text: string): ControlId | null {
+  if (!text) return null;
+  if (isHeidenhainKlartext(text) || isHeidenhainIso(text)) return 'heidenhain';
+  const head = text.split(/\r?\n/).slice(0, 40);
+  const comments = head
+    .map(line => [...line.matchAll(/\(([^)]*)\)?/g)].map(m => m[1]).join(' ') + ' ' + (line.match(/;(.*)$/)?.[1] ?? ''))
+    .join(' \n ')
+    .toUpperCase();
+  const brands: Array<[RegExp, ControlId]> = [
+    [/\bHAAS\b/, 'haas'],
+    [/\bOKUMA\b|\bOSP-?[PE]?\d{2,3}/, 'okuma'],
+    [/\bMAZAK\b|\bMAZATROL\b/, 'mazak'],
+    [/\bSIEMENS\b|\bSINUMERIK\b|\b8[24]0D\b|\b828D\b/, 'siemens'],
+    [/\bFADAL\b/, 'fadal'],
+    [/\bMITSUBISHI\b|\bMELDAS\b/, 'mitsubishi'],
+    [/\bHEIDENHAIN\b|\bTNC\s?\d{3}\b/, 'heidenhain'],
+    [/\bLINUXCNC\b|\bGRBL\b/, 'generic'],
+    [/\bFANUC\b/, 'fanuc'],
+  ];
+  let best: { at: number; id: ControlId } | null = null;
+  for (const [re, id] of brands) {
+    const m = re.exec(comments);
+    if (m && (best === null || m.index < best.at)) best = { at: m.index, id };
+  }
+  if (best) return best.id;
+
+  // Codes only one control family writes.
+  const code = text.slice(0, 20000).replace(/\([^)]*\)?/g, ' ').replace(/;.*$/gm, ' ').toUpperCase();
+  if (/\bG187\b|\bG154\s*P\d|\bM97\s*P\d/.test(code)) return 'haas';
+  if (/\bCYCLE\d{2,3}\s*\(|\bMSG\s*\(|\bTRANS\b|\bG291\b/.test(code)) return 'siemens';
+  return null;
+}
+
 export function isHeidenhainKlartext(text: string): boolean {
   return /^\s*\d+\s+BEGIN\s+PGM\s+\S+\s+(MM|INCH)\b/im.test(text.slice(0, 2000));
 }

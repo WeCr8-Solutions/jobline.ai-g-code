@@ -10,6 +10,7 @@
  */
 
 import * as vscode from 'vscode';
+import { resolveControlType } from '../utils/controlResolve';
 import { Tokenizer } from '../parser/tokenizer';
 import { BlockParser } from '../parser/blockParser';
 import { ProgramModelBuilder } from '../parser/programModel';
@@ -315,7 +316,7 @@ function refreshPanel(): void {
   }
 
   const text = editor.document.getText();
-  const dialect = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
+  const dialect = resolveControlType(text, editor.document.uri);
   const explanations = buildExplanations(text, dialect);
 
   if (explanations.length === 0) {

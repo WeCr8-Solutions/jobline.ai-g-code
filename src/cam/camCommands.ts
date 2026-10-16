@@ -5,6 +5,7 @@
  */
 
 import * as vscode from 'vscode';
+import { resolveControlType } from '../utils/controlResolve';
 import * as path from 'node:path';
 import { parseToolLibrary, ToolLibrary } from '../tooling/toolLibrary';
 import { ToolLibraryStore } from '../tooling/toolLibraryStore';
@@ -219,7 +220,7 @@ export function registerCamCommands(context: vscode.ExtensionContext, store: Too
   context.subscriptions.push(vscode.commands.registerCommand('jobline.convertDialect', async () => {
     const doc = activeProgram();
     if (!doc) { void vscode.window.showWarningMessage('Open a G-code program first.'); return; }
-    let from = normalizeControl(vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc'), doc.getText());
+    let from = normalizeControl(resolveControlType(doc.getText(), doc.uri), doc.getText());
     if (!CONVERT_SOURCES.includes(from)) {
       const pick = await vscode.window.showQuickPick(CONVERT_SOURCES.map(id => ({ label: CONTROL_PROFILES[id].label, id })), {
         placeHolder: `${CONTROL_PROFILES[from].label} programs can't be converted. Which ISO dialect is this program written in?`,

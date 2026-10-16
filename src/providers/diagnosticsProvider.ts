@@ -7,6 +7,7 @@
  */
 
 import * as vscode from 'vscode';
+import { resolveControlType } from '../utils/controlResolve';
 import { Tokenizer } from '../parser/tokenizer';
 import { BlockParser } from '../parser/blockParser';
 import { ProgramModelBuilder } from '../parser/programModel';
@@ -33,7 +34,7 @@ export function runDiagnostics(
 
   const cfg = vscode.workspace.getConfiguration();
   const engineConfig: DiagnosticConfig = {
-    controlType:        cfg.get<string>('jobline.controlType', 'fanuc'),
+    controlType:        resolveControlType(document.getText(), document.uri),
     arcTolerance:       cfg.get<number>('jobline.validation.arcTolerance', 0.001),
     enableSafetyChecks: cfg.get<boolean>('jobline.validation.enableSafetyChecks', true),
     enableArcValidation:cfg.get<boolean>('jobline.validation.enableArcValidation', true),

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { resolveControlType } from '../utils/controlResolve';
 import { Tokenizer } from '../parser/tokenizer';
 import { BlockParser } from '../parser/blockParser';
 import { ProgramModelBuilder } from '../parser/programModel';
@@ -150,7 +151,7 @@ function buildModelFromDocument(doc: vscode.TextDocument): ProgramModel | null {
   const text = doc.getText();
   if (!text) return null;
   try {
-    const controlType = vscode.workspace.getConfiguration().get<string>('jobline.controlType', 'fanuc');
+    const controlType = resolveControlType(text, doc.uri);
     const tokenized = tokenizer.tokenizeDocument(text);
     const blocks = blockParser.parseDocument(tokenized);
     return modelBuilder.build(blocks, controlType);

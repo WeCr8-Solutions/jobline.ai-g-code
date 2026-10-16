@@ -7,7 +7,7 @@ import { insertOutline, parseInsertCode } from '../../parser/insertCode';
 export type VisualizerToolType =
   | 'End Mill' | 'Ball End Mill' | 'Bull Nose End Mill'
   | 'Drill' | 'Spot Drill' | 'Tap' | 'Reamer' | 'Chamfer Mill'
-  | 'Face Mill' | 'Boring Bar' | 'Slitting Saw' | 'Lathe Insert' | 'Custom';
+  | 'Face Mill' | 'Boring Bar' | 'Slitting Saw' | 'Lathe Insert' | 'Probe' | 'Custom';
 export type VisualizerHolderType = 'CAT40' | 'CAT50' | 'BT40' | 'BT50' | 'HSK-A63' | 'R8' | 'None';
 
 export interface VisualizerHarnessManifest {
@@ -72,7 +72,7 @@ function extractHeaderToolDescriptions(gcode: string): Map<number, string> {
   const descriptions = new Map<number, string>();
 
   for (const line of gcode.split(/\r?\n/)) {
-    const match = line.match(/^\(T(\d+)\s*-[\s]*(.*?)\)$/i);
+    const match = line.match(/^\(T(\d+)(?:\s*-\s*|\s+)(.*?)\)$/i);
     if (!match) continue;
 
     const toolNumber = Number.parseInt(match[1], 10);
@@ -152,6 +152,8 @@ function parseHolder(description: string, holder?: string): VisualizerHolderType
 function inferToolType(description: string, insertCode?: string): VisualizerToolType {
   const upper = description.toUpperCase();
   if (insertCode) return 'Lathe Insert';
+  // Spindle probes (Renishaw OMP/RMP, "PROBE", "STYLUS") are not cutters.
+  if (/\bPROBE\b|\bSTYLUS\b|\bRENISHAW\b|\b[OR]MP\s?\d{2}\b/.test(upper)) return 'Probe';
   if (upper.includes('TAP')) return 'Tap';
   if (/SPOT\s*DRILL|CENTER\s*DRILL/.test(upper)) return 'Spot Drill';
   if (upper.includes('DRILL')) return 'Drill';
@@ -174,6 +176,7 @@ function inferFlutes(description: string, type: VisualizerToolType): number {
     if (Number.isFinite(value) && value > 0) return value;
   }
 
+  if (type === 'Probe') return 0;
   if (type === 'Drill' || type === 'Spot Drill' || type === 'Tap') return 2;
   if (type === 'Reamer') return 6;
   if (type === 'Face Mill') return 5;
@@ -194,6 +197,8 @@ function toolColor(type: VisualizerToolType): string {
       return '#c792ea';
     case 'Lathe Insert':
       return '#f78c6c';
+    case 'Probe':
+      return '#e5484d';
     case 'Custom':
       return '#8b949e';
     default:
